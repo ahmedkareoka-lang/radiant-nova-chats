@@ -14,6 +14,7 @@ const mockRooms = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen pb-20">
       {/* Header */}
