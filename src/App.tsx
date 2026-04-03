@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import TopUpPage from "./pages/TopUpPage.tsx";
 import CreateRoom from "./pages/CreateRoom.tsx";
 import VoiceRoom from "./pages/VoiceRoom.tsx";
 import Profile from "./pages/Profile.tsx";
