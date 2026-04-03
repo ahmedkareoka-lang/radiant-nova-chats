@@ -1,4 +1,5 @@
 import { Coins, Diamond, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import RoomCard from "@/components/RoomCard";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
