@@ -1,4 +1,5 @@
 import { Coins, Diamond, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import RoomCard from "@/components/RoomCard";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
@@ -13,6 +14,7 @@ const mockRooms = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen pb-20">
       {/* Header */}
@@ -31,14 +33,14 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1">
+            <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1 hover:bg-secondary/80 transition-colors">
               <Coins className="w-3.5 h-3.5 text-gold" />
               <span className="text-xs font-bold text-gold">14,000</span>
-            </div>
-            <div className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1">
+            </button>
+            <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1 hover:bg-secondary/80 transition-colors">
               <Diamond className="w-3.5 h-3.5 text-neon-purple" />
               <span className="text-xs font-bold text-neon-purple">5,000</span>
-            </div>
+            </button>
             <button className="relative">
               <Bell className="w-5 h-5 text-muted-foreground" />
               <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-destructive" />

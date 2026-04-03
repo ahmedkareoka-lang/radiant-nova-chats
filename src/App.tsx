@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import TopUpPage from "./pages/TopUpPage.tsx";
 import CreateRoom from "./pages/CreateRoom.tsx";
 import VoiceRoom from "./pages/VoiceRoom.tsx";
 import Profile from "./pages/Profile.tsx";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/top-up" element={<TopUpPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
