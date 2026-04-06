@@ -2,7 +2,7 @@ import Lottie from "lottie-react";
 import { useMemo } from "react";
 
 // Lightweight procedural Lottie data for common icons
-const generatePulseCircle = (color: string) => ({
+const generatePulseCircle = (color: number[]) => ({
   v: "5.7.4",
   fr: 30,
   ip: 0,
