@@ -105,8 +105,16 @@
   }
 
   .card-nova {
-    @apply bg-card rounded-2xl border border-border;
+    @apply bg-card rounded-3xl border border-border;
     box-shadow: var(--shadow-card);
+  }
+
+  .card-glass {
+    @apply rounded-3xl border border-border/40;
+    background: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-card), inset 0 1px 0 hsl(0 0% 100% / 0.05);
   }
 
   .btn-nova {
@@ -115,10 +123,27 @@
 
   .btn-nova:hover {
     transform: scale(1.05);
+    box-shadow: var(--shadow-neon);
   }
 
   .btn-nova:active {
     transform: scale(0.97);
+  }
+
+  .btn-glass {
+    @apply rounded-full font-semibold transition-all duration-200;
+    background: hsl(var(--secondary) / 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .btn-glass:hover {
+    background: hsl(var(--secondary) / 0.8);
+    transform: scale(1.05);
+  }
+
+  .btn-glass:active {
+    transform: scale(0.95);
   }
 }
 
