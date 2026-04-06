@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,22 +15,31 @@ import ChatPage from "./pages/ChatPage.tsx";
 
 const queryClient = new QueryClient();
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Index />} />
+        <Route path="/create-room" element={<CreateRoom />} />
+        <Route path="/voice-room" element={<VoiceRoom />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/top-up" element={<TopUpPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/create-room" element={<CreateRoom />} />
-          <Route path="/voice-room" element={<VoiceRoom />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/top-up" element={<TopUpPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnimatedRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
