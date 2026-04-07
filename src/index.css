@@ -206,3 +206,64 @@
   background-size: 200% auto;
   animation: shimmer 2s linear infinite;
 }
+
+/* BOSS God Frame - RGB Lightning Border */
+.boss-god-frame {
+  position: relative;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(90deg, hsl(0 100% 50%), hsl(45 100% 55%), hsl(180 100% 50%), hsl(270 100% 65%));
+  background-size: 400% 400%;
+  animation: rgb-move 2s linear infinite, lightning-glow 0.4s infinite alternate;
+}
+
+@keyframes rgb-move {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes lightning-glow {
+  from { box-shadow: 0 0 20px hsl(45 100% 55%); }
+  to { box-shadow: 0 0 50px hsl(0 80% 50%), 0 0 20px hsl(0 0% 100%); }
+}
+
+/* BOSS Fire Text */
+.boss-fire-text {
+  background: linear-gradient(0deg, hsl(15 100% 50%), hsl(45 100% 60%), hsl(15 100% 50%));
+  background-size: 100% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fireMove 1.5s infinite linear;
+  font-weight: 900;
+  filter: drop-shadow(0 0 15px hsl(15 100% 50% / 0.8));
+}
+
+@keyframes fireMove {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+/* Admin metallic shimmer frames */
+.admin-frame-red {
+  background-image: linear-gradient(90deg, transparent, hsl(0 80% 50% / 0.15), transparent);
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+.admin-frame-blue {
+  background-image: linear-gradient(90deg, transparent, hsl(220 80% 50% / 0.15), transparent);
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Mic active burning pulse */
+@keyframes mic-burn {
+  0%, 100% { box-shadow: 0 0 8px hsl(0 100% 50% / 0.4); }
+  50% { box-shadow: 0 0 24px hsl(0 100% 50% / 0.8), 0 0 48px hsl(15 100% 50% / 0.3); }
+}
+
+.animate-mic-burn {
+  animation: mic-burn 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
