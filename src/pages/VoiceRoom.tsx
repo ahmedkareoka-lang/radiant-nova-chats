@@ -34,6 +34,8 @@ const VoiceRoom = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [showBossEntrance, setShowBossEntrance] = useState(false);
+  const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
