@@ -83,11 +83,11 @@ const VoiceRoom = () => {
                 <>
                   <div className={`relative w-14 h-14 rounded-full overflow-hidden ${
                     slot.vipLevel >= 5
-                      ? "ring-2 ring-gold animate-pulse-glow"
+                      ? "ring-2 ring-accent animate-pulse-glow"
                       : slot.vipLevel > 0
-                      ? "ring-2 ring-neon-purple/60"
+                      ? "ring-2 ring-primary/60"
                       : "ring-2 ring-border"
-                  }`}>
+                  } ${slot.active ? "animate-mic-burn" : ""}`}>
                     <img src={slot.image} alt={slot.name} className="w-full h-full object-cover" />
                     {slot.vipLevel >= 10 && (
                       <div className="absolute inset-0 rounded-full border-2 border-gold animate-pulse" />
