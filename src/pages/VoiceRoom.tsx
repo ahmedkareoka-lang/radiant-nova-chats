@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
 import VipBadge from "@/components/VipBadge";
+import BossEntrance from "@/components/BossEntrance";
 
 const hostData = {
   name: "Ahmed",
