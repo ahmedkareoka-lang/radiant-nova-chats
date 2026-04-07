@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
 import VipBadge from "@/components/VipBadge";
+import BossEntrance from "@/components/BossEntrance";
 
 const hostData = {
   name: "Ahmed",
@@ -33,6 +34,8 @@ const VoiceRoom = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [showBossEntrance, setShowBossEntrance] = useState(false);
+  const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -80,11 +83,11 @@ const VoiceRoom = () => {
                 <>
                   <div className={`relative w-14 h-14 rounded-full overflow-hidden ${
                     slot.vipLevel >= 5
-                      ? "ring-2 ring-gold animate-pulse-glow"
+                      ? "ring-2 ring-accent animate-pulse-glow"
                       : slot.vipLevel > 0
-                      ? "ring-2 ring-neon-purple/60"
+                      ? "ring-2 ring-primary/60"
                       : "ring-2 ring-border"
-                  }`}>
+                  } ${slot.active ? "animate-mic-burn" : ""}`}>
                     <img src={slot.image} alt={slot.name} className="w-full h-full object-cover" />
                     {slot.vipLevel >= 10 && (
                       <div className="absolute inset-0 rounded-full border-2 border-gold animate-pulse" />
@@ -162,6 +165,7 @@ const VoiceRoom = () => {
       </div>
 
       <GiftAnimation isOpen={showGifts} onClose={() => setShowGifts(false)} />
+      <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
     </div>
   );
 };
