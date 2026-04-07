@@ -165,6 +165,7 @@ const VoiceRoom = () => {
       </div>
 
       <GiftAnimation isOpen={showGifts} onClose={() => setShowGifts(false)} />
+      <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
     </div>
   );
 };
