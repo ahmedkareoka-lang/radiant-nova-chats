@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          room_id: string | null
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          room_id?: string | null
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          room_id?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -53,6 +116,98 @@ export type Database = {
           phone?: string | null
           user_id?: string
           vip_level?: number
+        }
+        Relationships: []
+      }
+      room_members: {
+        Row: {
+          id: string
+          is_on_mic: boolean
+          joined_at: string
+          mic_slot: number | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_on_mic?: boolean
+          joined_at?: string
+          mic_slot?: number | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_on_mic?: boolean
+          joined_at?: string
+          mic_slot?: number | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          host_id: string
+          id: string
+          is_active: boolean
+          is_private: boolean
+          mic_count: number
+          name: string
+          password: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          host_id: string
+          id?: string
+          is_active?: boolean
+          is_private?: boolean
+          mic_count?: number
+          name: string
+          password?: string | null
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          is_private?: boolean
+          mic_count?: number
+          name?: string
+          password?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      user_presence: {
+        Row: {
+          country_code: string | null
+          is_online: boolean
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          country_code?: string | null
+          is_online?: boolean
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          country_code?: string | null
+          is_online?: boolean
+          last_seen?: string
+          user_id?: string
         }
         Relationships: []
       }
