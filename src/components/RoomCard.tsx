@@ -10,7 +10,7 @@ interface RoomCardProps {
   onClick?: () => void;
 }
 
-const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category }: RoomCardProps) => {
+const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick }: RoomCardProps) => {
   const categoryColors: Record<string, string> = {
     Chat: "bg-neon-purple/20 text-neon-purple",
     Music: "bg-pink-500/20 text-pink-400",
