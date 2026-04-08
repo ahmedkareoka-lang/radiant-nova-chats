@@ -7,6 +7,7 @@ interface RoomCardProps {
   viewerCount: number;
   isVip?: boolean;
   category: string;
+  onClick?: () => void;
 }
 
 const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category }: RoomCardProps) => {
