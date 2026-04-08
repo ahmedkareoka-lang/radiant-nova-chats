@@ -7,24 +7,32 @@ import VipBadge from "@/components/VipBadge";
 import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import AnimatedIcon from "@/components/AnimatedIcon";
+import { useRooms } from "@/hooks/useRooms";
+import { usePresence } from "@/hooks/usePresence";
+import { supabase } from "@/integrations/supabase/client";
 
-const mockRooms = [
-  { name: "Night Vibes 🎵", hostName: "Ahmed", hostImage: "https://i.pravatar.cc/100?img=11", viewerCount: 24, isVip: true, category: "Music" },
-  { name: "Chill Zone", hostName: "Sara", hostImage: "https://i.pravatar.cc/100?img=5", viewerCount: 12, category: "Chat" },
-  { name: "Gaming Squad 🎮", hostName: "Omar", hostImage: "https://i.pravatar.cc/100?img=12", viewerCount: 31, category: "Gaming" },
-  { name: "VIP Lounge ✨", hostName: "Nour", hostImage: "https://i.pravatar.cc/100?img=9", viewerCount: 8, isVip: true, category: "VIP" },
-  { name: "Late Night Talk", hostName: "Youssef", hostImage: "https://i.pravatar.cc/100?img=15", viewerCount: 19, category: "Chat" },
-  { name: "DJ Session 🔥", hostName: "Layla", hostImage: "https://i.pravatar.cc/100?img=20", viewerCount: 45, isVip: true, category: "Music" },
-];
+const categories = ["All", "Music", "Chat", "Gaming", "VIP"];
 
 const Index = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const { rooms, loading } = useRooms();
+  const { onlineUsers } = usePresence();
+  const [profile, setProfile] = useState<any>(null);
+  const [activeCategory, setActiveCategory] = useState("All");
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile(data);
+    };
+    fetchProfile();
   }, []);
+
+  const filteredRooms = activeCategory === "All"
+    ? rooms
+    : rooms.filter((r) => r.type === activeCategory);
 
   return (
     <PageTransition>
@@ -32,38 +40,39 @@ const Index = () => {
         {/* Header */}
         <header className="sticky top-0 z-40 border-b border-border/40" style={{ background: "hsl(260 20% 6% / 0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
           <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-neon-purple">
-                <img src="https://i.pravatar.cc/100?img=3" alt="Profile" className="w-full h-full object-cover" />
+            <div className="flex items-center gap-3" onClick={() => navigate("/profile")} role="button">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary">
+                <img src={profile?.avatar_url || "https://i.pravatar.cc/100?img=3"} alt="Profile" className="w-full h-full object-cover" />
+                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm">Nova User</span>
-                  <VipBadge level={5} />
+                  <span className="font-bold text-sm">{profile?.display_name || "User"}</span>
+                  <VipBadge level={profile?.vip_level || 0} />
                 </div>
-                <span className="text-[10px] text-muted-foreground">ID: 482917</span>
+                <span className="text-[10px] text-muted-foreground">ID: {profile?.user_id}</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 btn-glass px-2.5 py-1">
-                <Coins className="w-3.5 h-3.5 text-gold" />
-                <span className="text-xs font-bold text-gold">14,000</span>
+                <Coins className="w-3.5 h-3.5 text-accent" />
+                <span className="text-xs font-bold text-accent">{(profile?.coins || 0).toLocaleString()}</span>
               </button>
               <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 btn-glass px-2.5 py-1">
-                <Diamond className="w-3.5 h-3.5 text-neon-purple" />
-                <span className="text-xs font-bold text-neon-purple">5,000</span>
+                <Diamond className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-bold text-primary">{(profile?.diamonds || 0).toLocaleString()}</span>
               </button>
-              <button className="relative transition-transform duration-200 hover:scale-110 active:scale-90">
+              <div className="relative">
                 <Bell className="w-5 h-5 text-muted-foreground" />
-                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-destructive" />
-              </button>
+                <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-green-500" />
+                <span className="absolute -top-2 -left-2 text-[8px] text-green-400 font-bold">{onlineUsers.length}</span>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
         <main className="px-4 py-4 max-w-lg mx-auto">
-          {/* Section Title */}
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-extrabold flex items-center gap-2">
               <AnimatedIcon type="live" className="w-5 h-5" />
@@ -71,11 +80,12 @@ const Index = () => {
               <span className="text-muted-foreground font-normal text-base">Rooms</span>
             </h1>
             <div className="flex gap-2">
-              {["All", "Music", "Chat", "Gaming", "VIP"].map((cat, i) => (
+              {categories.map((cat) => (
                 <button
                   key={cat}
+                  onClick={() => setActiveCategory(cat)}
                   className={`text-[10px] px-3 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
-                    i === 0
+                    activeCategory === cat
                       ? "gradient-neon text-primary-foreground glow-neon"
                       : "btn-glass text-muted-foreground hover:text-foreground"
                   }`}
@@ -86,15 +96,31 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Rooms List */}
           <div className="space-y-3">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => <RoomSkeleton key={i} />)
-              : mockRooms.map((room, i) => (
-                  <div key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.06}s` }}>
-                    <RoomCard {...room} />
-                  </div>
-                ))}
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => <RoomSkeleton key={i} />)
+            ) : filteredRooms.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-sm">لا توجد غرف حالياً</p>
+                <button onClick={() => navigate("/create-room")} className="mt-3 text-primary font-bold text-sm">
+                  + إنشاء غرفة جديدة
+                </button>
+              </div>
+            ) : (
+              filteredRooms.map((room, i) => (
+                <div key={room.id} className="animate-fade-in" style={{ animationDelay: `${i * 0.06}s` }}>
+                  <RoomCard
+                    name={room.name}
+                    hostName={room.host_profile?.display_name || "Host"}
+                    hostImage={room.host_profile?.avatar_url || "https://i.pravatar.cc/100?img=3"}
+                    viewerCount={room.member_count || 0}
+                    isVip={(room.host_profile?.vip_level || 0) >= 5}
+                    category={room.type}
+                    onClick={() => navigate(`/voice-room?id=${room.id}`)}
+                  />
+                </div>
+              ))
+            )}
           </div>
         </main>
 

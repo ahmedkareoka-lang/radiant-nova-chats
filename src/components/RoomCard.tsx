@@ -7,9 +7,10 @@ interface RoomCardProps {
   viewerCount: number;
   isVip?: boolean;
   category: string;
+  onClick?: () => void;
 }
 
-const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category }: RoomCardProps) => {
+const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick }: RoomCardProps) => {
   const categoryColors: Record<string, string> = {
     Chat: "bg-neon-purple/20 text-neon-purple",
     Music: "bg-pink-500/20 text-pink-400",
@@ -18,7 +19,7 @@ const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category }: R
   };
 
   return (
-    <div className={`card-glass p-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-neon-purple/40 hover:shadow-[0_0_20px_hsl(270_100%_65%/0.2)] active:scale-[0.98] ${isVip ? "border-gold/30 animate-pulse-glow" : ""}`}>
+    <div onClick={onClick} className={`card-glass p-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] active:scale-[0.98] ${isVip ? "border-accent/30 animate-pulse-glow" : ""}`}>
       <div className="flex items-center gap-3">
         <div className={`relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${isVip ? "ring-2 ring-gold" : "ring-2 ring-neon-purple/50"}`}>
           <img src={hostImage} alt={hostName} className="w-full h-full object-cover" />
