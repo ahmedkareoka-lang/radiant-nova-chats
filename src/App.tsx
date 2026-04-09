@@ -17,6 +17,10 @@ import Profile from "./pages/Profile";
 import SearchPage from "./pages/SearchPage";
 import ChatPage from "./pages/ChatPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import StorePage from "./pages/StorePage";
+import WalletPage from "./pages/WalletPage";
+import InventoryPage from "./pages/InventoryPage";
+import AgenciesPage from "./pages/AgenciesPage";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +54,10 @@ const AnimatedRoutes = () => {
         <Route path="/chat" element={<AuthGate><ChatPage /></AuthGate>} />
         <Route path="/top-up" element={<AuthGate><TopUpPage /></AuthGate>} />
         <Route path="/admin" element={<AuthGate><AdminDashboard /></AuthGate>} />
+        <Route path="/store" element={<AuthGate><StorePage /></AuthGate>} />
+        <Route path="/wallet" element={<AuthGate><WalletPage /></AuthGate>} />
+        <Route path="/inventory" element={<AuthGate><InventoryPage /></AuthGate>} />
+        <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
