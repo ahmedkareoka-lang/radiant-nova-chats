@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      agencies: {
+        Row: {
+          broadcast_enabled: boolean
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          owner_id: string
+          recharge_enabled: boolean
+        }
+        Insert: {
+          broadcast_enabled?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          owner_id: string
+          recharge_enabled?: boolean
+        }
+        Update: {
+          broadcast_enabled?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_id?: string
+          recharge_enabled?: boolean
+        }
+        Relationships: []
+      }
+      agency_members: {
+        Row: {
+          agency_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -32,6 +94,63 @@ export type Database = {
           id?: string
           user1_id?: string
           user2_id?: string
+        }
+        Relationships: []
+      }
+      gift_transactions: {
+        Row: {
+          created_at: string
+          diamond_amount: number
+          gift_name: string
+          gold_amount: number
+          id: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          diamond_amount: number
+          gift_name: string
+          gold_amount: number
+          id?: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          diamond_amount?: number
+          gift_name?: string
+          gold_amount?: number
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      inventory: {
+        Row: {
+          acquired_at: string
+          id: string
+          item_data: Json | null
+          item_name: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          id?: string
+          item_data?: Json | null
+          item_name: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          id?: string
+          item_data?: Json | null
+          item_name?: string
+          item_type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -77,45 +196,123 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pricing_plans: {
+        Row: {
+          coin_price: number
+          country_code: string
+          country_name: string
+          created_at: string
+          currency: string
+          diamond_price: number
+          id: string
+        }
+        Insert: {
+          coin_price?: number
+          country_code: string
+          country_name: string
+          created_at?: string
+          currency?: string
+          diamond_price?: number
+          id?: string
+        }
+        Update: {
+          coin_price?: number
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          currency?: string
+          diamond_price?: number
+          id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          charisma_level: number
+          charisma_xp: number
           coins: number
+          country_code: string | null
           created_at: string
           diamonds: number
           display_name: string
+          gender: string | null
           id: string
           is_boss: boolean
           level: number
           phone: string | null
           user_id: string
           vip_level: number
+          wealth_level: number
+          wealth_xp: number
         }
         Insert: {
           avatar_url?: string | null
+          charisma_level?: number
+          charisma_xp?: number
           coins?: number
+          country_code?: string | null
           created_at?: string
           diamonds?: number
           display_name?: string
+          gender?: string | null
           id: string
           is_boss?: boolean
           level?: number
           phone?: string | null
           user_id: string
           vip_level?: number
+          wealth_level?: number
+          wealth_xp?: number
         }
         Update: {
           avatar_url?: string | null
+          charisma_level?: number
+          charisma_xp?: number
           coins?: number
+          country_code?: string | null
           created_at?: string
           diamonds?: number
           display_name?: string
+          gender?: string | null
           id?: string
           is_boss?: boolean
           level?: number
           phone?: string | null
           user_id?: string
           vip_level?: number
+          wealth_level?: number
+          wealth_xp?: number
         }
         Relationships: []
       }
@@ -187,6 +384,60 @@ export type Database = {
           name?: string
           password?: string | null
           type?: string
+        }
+        Relationships: []
+      }
+      store_items: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price_coins: number
+          price_diamonds: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price_coins?: number
+          price_diamonds?: number
+          type: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price_coins?: number
+          price_diamonds?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }
