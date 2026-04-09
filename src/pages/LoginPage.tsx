@@ -14,6 +14,7 @@ const LoginPage = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [gender, setGender] = useState<"male" | "female">("male");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +26,7 @@ const LoginPage = () => {
         const signUpData: any = {
           password,
           options: {
-            data: { display_name: displayName || "User" },
+            data: { display_name: displayName || "User", gender },
             emailRedirectTo: window.location.origin,
           },
         };
@@ -60,7 +61,6 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden">
-      {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
@@ -72,7 +72,6 @@ const LoginPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <img src={novaLogo} alt="NOVA" className="w-40 h-auto" />
         </div>
@@ -102,9 +101,7 @@ const LoginPage = () => {
           <button
             onClick={() => setMethod("email")}
             className={`flex-1 py-2 rounded-2xl text-xs font-bold border transition-all ${
-              method === "email"
-                ? "border-primary text-primary glow-neon"
-                : "border-border text-muted-foreground"
+              method === "email" ? "border-primary text-primary glow-neon" : "border-border text-muted-foreground"
             }`}
           >
             <Mail className="w-3.5 h-3.5 inline mr-1" /> البريد
@@ -112,9 +109,7 @@ const LoginPage = () => {
           <button
             onClick={() => setMethod("phone")}
             className={`flex-1 py-2 rounded-2xl text-xs font-bold border transition-all ${
-              method === "phone"
-                ? "border-primary text-primary glow-neon"
-                : "border-border text-muted-foreground"
+              method === "phone" ? "border-primary text-primary glow-neon" : "border-border text-muted-foreground"
             }`}
           >
             <Phone className="w-3.5 h-3.5 inline mr-1" /> الهاتف
@@ -123,14 +118,41 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "signup" && (
-            <input
-              type="text"
-              placeholder="الاسم"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full bg-secondary/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border"
-              required
-            />
+            <>
+              <input
+                type="text"
+                placeholder="الاسم"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full bg-secondary/50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border"
+                required
+              />
+              {/* Gender selection */}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setGender("male")}
+                  className={`flex-1 py-2.5 rounded-2xl text-sm font-bold border transition-all flex items-center justify-center gap-2 ${
+                    gender === "male"
+                      ? "border-blue-500 bg-blue-500/20 text-blue-400"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  👨 ذكر
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGender("female")}
+                  className={`flex-1 py-2.5 rounded-2xl text-sm font-bold border transition-all flex items-center justify-center gap-2 ${
+                    gender === "female"
+                      ? "border-pink-500 bg-pink-500/20 text-pink-400"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  👩 أنثى
+                </button>
+              </div>
+            </>
           )}
 
           {method === "email" ? (
