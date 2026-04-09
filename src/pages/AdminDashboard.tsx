@@ -82,8 +82,8 @@ const AdminDashboard = () => {
     toast.success("تم حظر المستخدم وتصفير رصيده");
   };
 
-  const toggleAgency = async (id: string, field: string, value: boolean) => {
-    await supabase.from("agencies").update({ [field]: value }).eq("id", id);
+  const toggleAgency = async (id: string, field: "broadcast_enabled" | "recharge_enabled" | "is_active", value: boolean) => {
+    await supabase.from("agencies").update({ [field]: value } as any).eq("id", id);
     setAgencies(agencies.map((a) => a.id === id ? { ...a, [field]: value } : a));
     toast.success("تم التحديث");
   };
