@@ -79,7 +79,7 @@ export const useConversations = () => {
     fetchConversations();
 
     const channel = supabase
-      .channel("conversations-realtime")
+      .channel(`conversations-realtime-${Date.now()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
         fetchConversations();
       })
@@ -145,7 +145,7 @@ export const useChatMessages = (conversationId: string | null) => {
     if (!conversationId) return;
 
     const channel = supabase
-      .channel(`chat-${conversationId}`)
+      .channel(`chat-${conversationId}-${Date.now()}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",

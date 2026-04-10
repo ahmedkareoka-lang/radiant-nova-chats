@@ -131,6 +131,11 @@ const VoiceRoom = () => {
 
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
+    // Slot 0 is reserved for host
+    if (slotIndex === 0 && currentUserId !== roomData?.host_id) {
+      toast.error("هذا المقعد مخصص للمضيف");
+      return;
+    }
     const existing = members.find((m) => m.user_id === currentUserId);
     if (existing?.mic_slot === slotIndex) {
       // Leave mic
@@ -138,6 +143,12 @@ const VoiceRoom = () => {
       setIsMuted(true);
       toast.success("نزلت من المايك");
     } else {
+      // Check if slot is taken
+      const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
+      if (slotTaken) {
+        toast.error("هذا المايك مشغول");
+        return;
+      }
       // Sit on mic
       await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
       setIsMuted(false);
@@ -162,7 +173,12 @@ const VoiceRoom = () => {
   const isHost = currentUserId === roomData?.host_id;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
-    const member = members.find((m) => m.mic_slot === i || (i === 0 && m.user_id === roomData?.host_id));
+    // Slot 0 is always the host
+    if (i === 0) {
+      const hostMember = members.find((m) => m.user_id === roomData?.host_id);
+      return hostMember || null;
+    }
+    const member = members.find((m) => m.mic_slot === i);
     return member || null;
   });
 

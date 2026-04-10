@@ -58,7 +58,7 @@ export const useRooms = () => {
     fetchRooms();
 
     const channel = supabase
-      .channel("rooms-realtime")
+      .channel(`rooms-realtime-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "rooms" }, () => {
         fetchRooms();
       })

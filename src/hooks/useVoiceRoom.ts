@@ -90,7 +90,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     init();
 
     const channel = supabase
-      .channel(`room-${roomId}`)
+      .channel(`room-${roomId}-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` }, () => {
         fetchMembers();
       })
