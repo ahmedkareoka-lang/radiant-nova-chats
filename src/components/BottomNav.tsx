@@ -1,19 +1,17 @@
-import { Home, Search, Plus, Bell, User } from "lucide-react";
+import { Home, Search, Plus, MessageCircle, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useNotifications } from "@/hooks/useNotifications";
 
 const navItems = [
   { icon: Home, label: "الرئيسية", path: "/" },
   { icon: Search, label: "بحث", path: "/search" },
   { icon: Plus, label: "إنشاء", path: "/create-room", isCenter: true },
-  { icon: Bell, label: "الإشعارات", path: "/notifications" },
+  { icon: MessageCircle, label: "الرسائل", path: "/chat" },
   { icon: User, label: "حسابي", path: "/profile" },
 ];
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/40" style={{ background: "hsl(260 18% 10% / 0.8)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
@@ -37,11 +35,6 @@ const BottomNav = () => {
               <Icon className="w-5 h-5" />
               <span className="text-[10px] font-semibold">{item.label}</span>
               {isActive && <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary animate-pulse-glow" />}
-              {item.path === "/notifications" && unreadCount > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
-                  <span className="text-[7px] font-bold text-destructive-foreground">{unreadCount > 99 ? "99+" : unreadCount}</span>
-                </div>
-              )}
             </button>
           );
         })}

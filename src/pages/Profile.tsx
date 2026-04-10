@@ -1,4 +1,4 @@
-import { Settings, Edit, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera } from "lucide-react";
+import { Settings, Edit, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useFollows } from "@/hooks/useFollows";
+import { useNotifications } from "@/hooks/useNotifications";
 import bossFrame from "@/assets/boss-frame.png";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
@@ -26,12 +28,16 @@ const Profile = () => {
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [genderPicking, setGenderPicking] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [myId, setMyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { followersCount, followingCount } = useFollows(myId);
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/login"); return; }
+      setMyId(user.id);
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setProfile(data);
 
@@ -172,6 +178,14 @@ const Profile = () => {
                 <Shield className="w-5 h-5 text-accent" />
               </button>
             )}
+            <button onClick={() => navigate("/notifications")} className="relative w-10 h-10 rounded-full bg-background/30 backdrop-blur flex items-center justify-center">
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
+                  <span className="text-[7px] font-bold text-destructive-foreground">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                </div>
+              )}
+            </button>
             <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-background/30 backdrop-blur flex items-center justify-center">
               <Settings className="w-5 h-5" />
             </button>
@@ -221,6 +235,18 @@ const Profile = () => {
             ) : (
               <VipBadge level={profile?.vip_level || 0} size="lg" />
             )}
+          </div>
+
+          {/* Follow Stats */}
+          <div className="flex justify-center gap-6 mt-3 mb-2">
+            <div className="text-center">
+              <p className="font-bold text-sm">{followersCount}</p>
+              <p className="text-[10px] text-muted-foreground">متابعين</p>
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-sm">{followingCount}</p>
+              <p className="text-[10px] text-muted-foreground">يتابع</p>
+            </div>
           </div>
 
           {/* Balances */}

@@ -120,7 +120,28 @@ const VoiceRoom = () => {
 
   const handleAvatarClick = (member: any) => {
     if (member.profile) {
-      setSelectedProfile(member.profile as UserProfile);
+      const uid = member.user_id || member.profile?.user_id;
+      if (uid && uid !== currentUserId) {
+        navigate(`/user?id=${uid}`);
+      } else {
+        setSelectedProfile(member.profile as UserProfile);
+      }
+    }
+  };
+
+  const handleSitOnMic = async (slotIndex: number) => {
+    if (!roomId || !currentUserId) return;
+    const existing = members.find((m) => m.user_id === currentUserId);
+    if (existing?.mic_slot === slotIndex) {
+      // Leave mic
+      await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
+      setIsMuted(true);
+      toast.success("نزلت من المايك");
+    } else {
+      // Sit on mic
+      await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
+      setIsMuted(false);
+      toast.success(`جلست على المايك ${slotIndex + 1}`);
     }
   };
 
@@ -286,9 +307,13 @@ const VoiceRoom = () => {
                   {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
                 </div>
               ) : (
-                <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center">
-                  <Mic className="w-4 h-4 text-muted-foreground" />
-                </div>
+                <>
+                  <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => handleSitOnMic(i)}>
+                    <Mic className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
+                </>
               )}
             </div>
           ))}
