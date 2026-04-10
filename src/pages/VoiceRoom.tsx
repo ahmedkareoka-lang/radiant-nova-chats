@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Image } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
 import VipBadge from "@/components/VipBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface UserProfile {
   user_id: string;
@@ -18,6 +20,25 @@ interface UserProfile {
   charisma_level?: number;
   charisma_xp?: number;
 }
+
+const ENTRANCE_EFFECTS = [
+  { minLevel: 0, color: "from-muted/20 to-transparent", label: "", border: "border-border" },
+  { minLevel: 5, color: "from-blue-500/20 to-transparent", label: "⭐", border: "border-blue-500/50" },
+  { minLevel: 10, color: "from-purple-500/30 to-transparent", label: "🌟", border: "border-purple-500/50" },
+  { minLevel: 20, color: "from-accent/30 to-transparent", label: "👑", border: "border-accent/50" },
+  { minLevel: 50, color: "from-red-500/30 via-accent/20 to-transparent", label: "🔥", border: "border-red-500/50" },
+];
+
+const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
+  const totalLevel = wealthLevel + charismaLevel;
+  let effect = ENTRANCE_EFFECTS[0];
+  for (const e of ENTRANCE_EFFECTS) {
+    if (totalLevel >= e.minLevel) effect = e;
+  }
+  return effect;
+};
+
+const MIC_OPTIONS = [5, 8, 15, 20];
 
 const VoiceRoom = () => {
   const navigate = useNavigate();
@@ -32,7 +53,10 @@ const VoiceRoom = () => {
   const [chatInput, setChatInput] = useState("");
   const [showBossEntrance, setShowBossEntrance] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [entranceBanner, setEntranceBanner] = useState<{ name: string; effect: typeof ENTRANCE_EFFECTS[0] } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const seenMemberIds = useRef<Set<string>>(new Set());
 
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
@@ -49,6 +73,25 @@ const VoiceRoom = () => {
     const bossMember = members.find((m) => m.profile?.is_boss);
     if (bossMember && bossMember.user_id !== currentUserId) {
       setShowBossEntrance(true);
+    }
+  }, [members, currentUserId]);
+
+  // Entrance banner for new members
+  useEffect(() => {
+    for (const m of members) {
+      if (!seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
+        seenMemberIds.current.add(m.user_id);
+        if (m.profile) {
+          const effect = getEntranceEffect(
+            (m.profile as any).wealth_level || 1,
+            (m.profile as any).charisma_level || 1
+          );
+          if (effect.label) {
+            setEntranceBanner({ name: m.profile.display_name, effect });
+            setTimeout(() => setEntranceBanner(null), 3000);
+          }
+        }
+      }
     }
   }, [members, currentUserId]);
 
@@ -81,6 +124,13 @@ const VoiceRoom = () => {
     }
   };
 
+  const changeMicCount = async (count: number) => {
+    if (!roomId) return;
+    await supabase.from("rooms").update({ mic_count: count }).eq("id", roomId);
+    toast.success(`تم تغيير عدد المايكات إلى ${count}`);
+    setShowSettings(false);
+  };
+
   if (!roomId) {
     navigate("/");
     return null;
@@ -88,14 +138,33 @@ const VoiceRoom = () => {
 
   const host = roomData?.host_profile;
   const micCount = roomData?.mic_count || 8;
+  const isHost = currentUserId === roomData?.host_id;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
     const member = members.find((m) => m.mic_slot === i || (i === 0 && m.user_id === roomData?.host_id));
     return member || null;
   });
 
+  const gridCols = micCount <= 8 ? "grid-cols-4" : micCount <= 15 ? "grid-cols-5" : "grid-cols-5";
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Entrance Banner */}
+      <AnimatePresence>
+        {entranceBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.9 }}
+            className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl bg-gradient-to-r ${entranceBanner.effect.color} border ${entranceBanner.effect.border} backdrop-blur-xl`}
+          >
+            <p className="text-sm font-bold text-center whitespace-nowrap">
+              {entranceBanner.effect.label} <span className="glow-neon-text">{entranceBanner.name}</span> دخل الغرفة
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Profile Stats Modal */}
       {selectedProfile && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center" onClick={() => setSelectedProfile(null)}>
@@ -135,6 +204,28 @@ const VoiceRoom = () => {
         </div>
       )}
 
+      {/* Settings Modal */}
+      {showSettings && isHost && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-end justify-center" onClick={() => setShowSettings(false)}>
+          <div className="card-nova p-4 max-w-lg w-full rounded-t-3xl space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
+            <h3 className="font-bold text-sm text-center">⚙️ إعدادات الغرفة</h3>
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">عدد المايكات</p>
+              <div className="grid grid-cols-4 gap-2">
+                {MIC_OPTIONS.map((count) => (
+                  <button key={count} onClick={() => changeMicCount(count)}
+                    className={`py-3 rounded-xl font-bold text-sm transition-all ${micCount === count ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"}`}>
+                    {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={() => setShowSettings(false)} className="w-full py-2 text-xs text-muted-foreground">إغلاق</button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
@@ -149,9 +240,16 @@ const VoiceRoom = () => {
               </span>
             </div>
           </div>
-          <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
-            ● LIVE
-          </span>
+          <div className="flex items-center gap-2">
+            {isHost && (
+              <button onClick={() => setShowSettings(true)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                <Settings2 className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+            <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
+              ● LIVE
+            </span>
+          </div>
         </div>
       </header>
 
@@ -174,7 +272,7 @@ const VoiceRoom = () => {
         )}
 
         {/* Mic Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className={`grid ${gridCols} gap-3 mb-6`}>
           {micSlots.map((slot, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               {slot ? (
@@ -242,7 +340,6 @@ const VoiceRoom = () => {
             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
           <button onClick={() => {
-            // Send gift to host by default
             if (host) openGiftFor(roomData?.host_id, host.display_name);
           }} className="w-14 h-14 rounded-full gradient-gold glow-gold flex items-center justify-center animate-float">
             <Gift className="w-6 h-6 text-accent-foreground" />
