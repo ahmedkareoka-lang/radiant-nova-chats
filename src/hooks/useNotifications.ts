@@ -25,8 +25,9 @@ export const useNotifications = () => {
     };
     load();
 
+    const channelName = `notifications-realtime-${Date.now()}`;
     const channel = supabase
-      .channel("notifications-realtime")
+      .channel(channelName)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
