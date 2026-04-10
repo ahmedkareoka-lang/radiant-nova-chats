@@ -37,7 +37,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     if (!roomId) return;
     const { data } = await supabase
       .from("room_members")
-      .select("*, profile:profiles!room_members_user_id_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
+      .select("*, profile:profiles!room_members_user_id_profiles_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
       .eq("room_id", roomId);
     if (data) {
       setMembers(data.map((m) => ({
@@ -51,7 +51,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     if (!roomId) return;
     const { data } = await supabase
       .from("messages")
-      .select("*, sender:profiles!messages_sender_id_fkey(display_name, vip_level, is_boss)")
+      .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, vip_level, is_boss)")
       .eq("room_id", roomId)
       .order("created_at", { ascending: true })
       .limit(100);
@@ -73,7 +73,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       // Fetch room info
       const { data: room } = await supabase
         .from("rooms")
-      .select("*, host_profile:profiles!rooms_host_id_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
+      .select("*, host_profile:profiles!rooms_host_id_profiles_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
       .eq("id", roomId)
         .single();
       if (room) {
@@ -99,7 +99,7 @@ export const useVoiceRoom = (roomId: string | null) => {
         supabase
           .from("messages")
           .select("*, sender:profiles!messages_sender_id_fkey(display_name, vip_level, is_boss)")
-          .eq("id", (payload.new as any).id)
+          .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, vip_level, is_boss)")
           .single()
           .then(({ data }) => {
             if (data) {

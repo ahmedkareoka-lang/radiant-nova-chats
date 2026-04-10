@@ -121,7 +121,7 @@ export const useChatMessages = (conversationId: string | null) => {
     if (!conversationId) return;
     const { data } = await supabase
       .from("messages")
-      .select("*, sender:profiles!messages_sender_id_fkey(display_name, avatar_url)")
+      .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, avatar_url)")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true })
       .limit(200);
@@ -154,7 +154,7 @@ export const useChatMessages = (conversationId: string | null) => {
       }, (payload) => {
         supabase
           .from("messages")
-          .select("*, sender:profiles!messages_sender_id_fkey(display_name, avatar_url)")
+          .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, avatar_url)")
           .eq("id", (payload.new as any).id)
           .single()
           .then(({ data }) => {
