@@ -197,7 +197,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold mb-2"><Coins className="w-3.5 h-3.5 text-accent inline mr-1" /> توزيع عملات</h4>
+                    <h4 className="text-xs font-bold mb-2"><CurrencyIcon type="gold" size="xs" className="inline mr-1" /> توزيع عملات</h4>
                     <div className="flex gap-2">
                       <input type="number" placeholder="الكمية" value={coinAmount} onChange={(e) => setCoinAmount(e.target.value)}
                         className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none" />
