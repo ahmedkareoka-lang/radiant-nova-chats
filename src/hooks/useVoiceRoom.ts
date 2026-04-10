@@ -37,7 +37,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     if (!roomId) return;
     const { data } = await supabase
       .from("room_members")
-      .select("*, profile:profiles!room_members_user_id_fkey(display_name, avatar_url, vip_level, is_boss, user_id)")
+      .select("*, profile:profiles!room_members_user_id_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
       .eq("room_id", roomId);
     if (data) {
       setMembers(data.map((m) => ({
@@ -73,8 +73,8 @@ export const useVoiceRoom = (roomId: string | null) => {
       // Fetch room info
       const { data: room } = await supabase
         .from("rooms")
-        .select("*, host_profile:profiles!rooms_host_id_fkey(display_name, avatar_url, vip_level, is_boss, user_id)")
-        .eq("id", roomId)
+      .select("*, host_profile:profiles!rooms_host_id_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
+      .eq("id", roomId)
         .single();
       if (room) {
         setRoomData({
