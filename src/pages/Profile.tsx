@@ -1,4 +1,4 @@
-import { Settings, Edit, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera } from "lucide-react";
+import { Settings, Edit, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useFollows } from "@/hooks/useFollows";
+import { useNotifications } from "@/hooks/useNotifications";
 import bossFrame from "@/assets/boss-frame.png";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
@@ -26,12 +28,16 @@ const Profile = () => {
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [genderPicking, setGenderPicking] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [myId, setMyId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { followersCount, followingCount } = useFollows(myId);
+  const { unreadCount } = useNotifications();
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/login"); return; }
+      setMyId(user.id);
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setProfile(data);
 
