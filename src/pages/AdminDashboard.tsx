@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Shield, Ban, Coins, Users, Crown, Search, Zap, Building2, Globe, Settings, ArrowRightLeft } from "lucide-react";
+import { Shield, Ban, Users, Crown, Search, Zap, Building2, Globe, Settings, ArrowRightLeft } from "lucide-react";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
