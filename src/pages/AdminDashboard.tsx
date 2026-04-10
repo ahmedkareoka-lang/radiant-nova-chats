@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Shield, Ban, Coins, Users, Crown, Search, Zap, Building2, Globe, Settings, ArrowRightLeft } from "lucide-react";
+import { Shield, Ban, Users, Crown, Search, Zap, Building2, Globe, Settings, ArrowRightLeft } from "lucide-react";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -196,7 +197,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold mb-2"><Coins className="w-3.5 h-3.5 text-accent inline mr-1" /> توزيع عملات</h4>
+                    <h4 className="text-xs font-bold mb-2"><CurrencyIcon type="gold" size="xs" className="inline mr-1" /> توزيع عملات</h4>
                     <div className="flex gap-2">
                       <input type="number" placeholder="الكمية" value={coinAmount} onChange={(e) => setCoinAmount(e.target.value)}
                         className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none" />

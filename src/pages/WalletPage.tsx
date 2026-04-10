@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Coins, Diamond, ArrowRightLeft, Send } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
+import CurrencyIcon from "@/components/CurrencyIcon";
 
 const WalletPage = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [exchangeAmount, setExchangeAmount] = useState("");
-  const [exchangeRate, setExchangeRate] = useState(100); // percentage
+  const [exchangeRate, setExchangeRate] = useState(100);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,6 @@ const WalletPage = () => {
       if (!user) return;
       const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setProfile(p);
-
       const { data: setting } = await supabase.from("system_settings").select("value").eq("key", "exchange_rate").single();
       if (setting) setExchangeRate(parseInt(setting.value));
     };
@@ -34,12 +34,10 @@ const WalletPage = () => {
       toast.error("رصيد الماس غير كافٍ!");
       return;
     }
-
     setLoading(true);
     const goldReceived = Math.floor((amount * exchangeRate) / 100);
     const newDiamonds = profile.diamonds - amount;
     const newCoins = profile.coins + goldReceived;
-
     await supabase.from("profiles").update({ diamonds: newDiamonds, coins: newCoins }).eq("id", profile.id);
     setProfile({ ...profile, diamonds: newDiamonds, coins: newCoins });
     setExchangeAmount("");
@@ -48,26 +46,18 @@ const WalletPage = () => {
   };
 
   const sendReceipt = async () => {
-    // Find BOSS profile
     const { data: boss } = await supabase.from("profiles").select("id").eq("is_boss", true).single();
     if (!boss || !profile) return;
-
-    // Create or find conversation with BOSS
     const { data: existing } = await supabase
       .from("conversations")
       .select("id")
       .or(`and(user1_id.eq.${profile.id},user2_id.eq.${boss.id}),and(user1_id.eq.${boss.id},user2_id.eq.${profile.id})`)
       .single();
-
     let convId = existing?.id;
     if (!convId) {
-      const { data: newConv } = await supabase.from("conversations").insert({
-        user1_id: profile.id,
-        user2_id: boss.id,
-      }).select("id").single();
+      const { data: newConv } = await supabase.from("conversations").insert({ user1_id: profile.id, user2_id: boss.id }).select("id").single();
       convId = newConv?.id;
     }
-
     if (convId) {
       await supabase.from("messages").insert({
         conversation_id: convId,
@@ -91,21 +81,19 @@ const WalletPage = () => {
         </header>
 
         <main className="px-4 py-6 max-w-lg mx-auto space-y-6">
-          {/* Balances */}
           <div className="grid grid-cols-2 gap-3">
             <div className="card-nova p-4 text-center">
-              <Coins className="w-8 h-8 text-accent mx-auto mb-2" />
+              <CurrencyIcon type="gold" size="lg" className="mx-auto mb-2" />
               <p className="text-[10px] text-muted-foreground">الذهب</p>
               <p className="font-black text-xl text-accent">{(profile?.coins || 0).toLocaleString()}</p>
             </div>
             <div className="card-nova p-4 text-center">
-              <Diamond className="w-8 h-8 text-primary mx-auto mb-2" />
+              <CurrencyIcon type="diamond" size="lg" className="mx-auto mb-2" />
               <p className="text-[10px] text-muted-foreground">الماس</p>
               <p className="font-black text-xl text-primary">{(profile?.diamonds || 0).toLocaleString()}</p>
             </div>
           </div>
 
-          {/* Exchange */}
           <div className="card-nova p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس بالذهب
@@ -114,20 +102,10 @@ const WalletPage = () => {
               نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} ذهبة
             </p>
             <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="عدد الماسات"
-                value={exchangeAmount}
-                onChange={(e) => setExchangeAmount(e.target.value)}
-                className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button
-                onClick={handleExchange}
-                disabled={loading}
-                className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova"
-              >
-                تبديل
-              </button>
+              <input type="number" placeholder="عدد الماسات" value={exchangeAmount} onChange={(e) => setExchangeAmount(e.target.value)}
+                className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
+              <button onClick={handleExchange} disabled={loading}
+                className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تبديل</button>
             </div>
             {exchangeAmount && parseInt(exchangeAmount) > 0 && (
               <p className="text-xs text-accent text-center">
@@ -136,20 +114,14 @@ const WalletPage = () => {
             )}
           </div>
 
-          {/* Send receipt to BOSS */}
-          <button
-            onClick={sendReceipt}
-            className="w-full py-3 rounded-full border border-primary/50 text-primary font-bold text-sm btn-nova flex items-center justify-center gap-2"
-          >
+          <button onClick={sendReceipt}
+            className="w-full py-3 rounded-full border border-primary/50 text-primary font-bold text-sm btn-nova flex items-center justify-center gap-2">
             <Send className="w-4 h-4" /> إرسال إيصال التحويل إلى BOSS
           </button>
 
-          {/* Top up */}
-          <button
-            onClick={() => navigate("/top-up")}
-            className="w-full py-3 rounded-full gradient-neon text-primary-foreground font-bold btn-nova glow-neon"
-          >
-            <Coins className="w-4 h-4 inline mr-1" /> شحن رصيد
+          <button onClick={() => navigate("/top-up")}
+            className="w-full py-3 rounded-full gradient-neon text-primary-foreground font-bold btn-nova glow-neon flex items-center justify-center gap-2">
+            <CurrencyIcon type="gold" size="sm" /> شحن رصيد
           </button>
         </main>
 

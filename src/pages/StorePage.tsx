@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Coins, Diamond, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
 
@@ -45,7 +46,6 @@ const StorePage = () => {
       const { data: pr } = await supabase.from("pricing_plans").select("*").eq("country_code", countryCode).single();
       setPricing(pr || { currency: "USD", coin_price: 1, diamond_price: 2 });
 
-      // Check owned frames
       const { data: inv } = await supabase.from("inventory").select("item_name").eq("user_id", user.id).eq("item_type", "frame");
       setOwnedFrames((inv || []).map((i: any) => i.item_name));
       setLoading(false);
@@ -93,11 +93,11 @@ const StorePage = () => {
             <h1 className="font-bold text-lg">المتجر</h1>
             <div className="ml-auto flex items-center gap-2">
               <div className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1">
-                <Coins className="w-3.5 h-3.5 text-accent" />
+                <CurrencyIcon type="gold" size="xs" />
                 <span className="text-xs font-bold text-accent">{(profile?.coins || 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1">
-                <Diamond className="w-3.5 h-3.5 text-primary" />
+                <CurrencyIcon type="diamond" size="xs" />
                 <span className="text-xs font-bold text-primary">{(profile?.diamonds || 0).toLocaleString()}</span>
               </div>
             </div>
@@ -109,8 +109,8 @@ const StorePage = () => {
             <div className="card-nova p-3 text-center">
               <p className="text-[10px] text-muted-foreground">الأسعار بعملة: <span className="font-bold text-primary">{pricing.currency}</span></p>
               <div className="flex items-center justify-center gap-4 mt-1">
-                <span className="text-xs"><Coins className="w-3 h-3 inline text-accent" /> 1000 = {pricing.coin_price} {pricing.currency}</span>
-                <span className="text-xs"><Diamond className="w-3 h-3 inline text-primary" /> 1000 = {pricing.diamond_price} {pricing.currency}</span>
+                <span className="text-xs flex items-center gap-1"><CurrencyIcon type="gold" size="xs" /> 1000 = {pricing.coin_price} {pricing.currency}</span>
+                <span className="text-xs flex items-center gap-1"><CurrencyIcon type="diamond" size="xs" /> 1000 = {pricing.diamond_price} {pricing.currency}</span>
               </div>
             </div>
           )}
@@ -128,7 +128,7 @@ const StorePage = () => {
                   </div>
                   <p className="font-bold text-xs">{frame.name}</p>
                   <div className="flex items-center justify-center gap-1">
-                    <Coins className="w-3 h-3 text-accent" />
+                    <CurrencyIcon type="gold" size="xs" />
                     <span className="text-xs font-bold text-accent">{frame.price_coins.toLocaleString()}</span>
                   </div>
                   {owned ? (
@@ -150,9 +150,9 @@ const StorePage = () => {
 
           <button
             onClick={() => navigate("/top-up")}
-            className="w-full py-3 rounded-full border border-accent/50 text-accent font-bold text-sm btn-nova"
+            className="w-full py-3 rounded-full border border-accent/50 text-accent font-bold text-sm btn-nova flex items-center justify-center gap-2"
           >
-            <Coins className="w-4 h-4 inline mr-1" /> شحن رصيد
+            <CurrencyIcon type="gold" size="sm" /> شحن رصيد
           </button>
         </main>
 

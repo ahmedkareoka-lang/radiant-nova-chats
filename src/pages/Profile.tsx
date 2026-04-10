@@ -1,9 +1,10 @@
-import { Settings, Edit, Crown, Coins, Diamond, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2 } from "lucide-react";
+import { Settings, Edit, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import bossFrame from "@/assets/boss-frame.png";
@@ -24,6 +25,8 @@ const Profile = () => {
   const [ownedFrames, setOwnedFrames] = useState<any[]>([]);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [genderPicking, setGenderPicking] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -36,13 +39,10 @@ const Profile = () => {
       const { count: receivedCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
       setGiftStats({ sent: sentCount || 0, received: receivedCount || 0 });
 
-      // Load owned frames
       const { data: inv } = await supabase.from("inventory").select("*").eq("user_id", user.id).eq("item_type", "frame");
       setOwnedFrames(inv || []);
 
-      // Check if gender not set
       if (!data?.gender) setGenderPicking(true);
-
       setLoading(false);
     };
     fetchProfile();
@@ -67,6 +67,31 @@ const Profile = () => {
     toast.success("تم تحديد الجنس! ✅");
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("حجم الصورة يجب أن يكون أقل من 2MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `avatars/${profile.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
+      const avatar_url = urlData.publicUrl + "?t=" + Date.now();
+      await supabase.from("profiles").update({ avatar_url }).eq("id", profile.id);
+      setProfile({ ...profile, avatar_url });
+      toast.success("تم تحديث الصورة! 📸");
+    } catch (err: any) {
+      toast.error("فشل رفع الصورة: " + (err.message || "خطأ"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -88,6 +113,9 @@ const Profile = () => {
   return (
     <PageTransition>
       <div className="min-h-screen pb-20">
+        {/* Hidden file input */}
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+
         {/* Gender picker modal */}
         {genderPicking && (
           <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center">
@@ -166,8 +194,9 @@ const Profile = () => {
                 className="absolute bottom-1 left-1 z-30 w-8 h-8 rounded-full bg-secondary/80 backdrop-blur flex items-center justify-center border border-border">
                 <span className="text-xs">🖼️</span>
               </button>
-              <button className="absolute bottom-1 right-1 z-30 w-8 h-8 rounded-full gradient-neon flex items-center justify-center glow-neon">
-                <Edit className="w-3.5 h-3.5 text-primary-foreground" />
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                className="absolute bottom-1 right-1 z-30 w-8 h-8 rounded-full gradient-neon flex items-center justify-center glow-neon">
+                {uploading ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Camera className="w-3.5 h-3.5 text-primary-foreground" />}
               </button>
             </div>
 
@@ -177,6 +206,7 @@ const Profile = () => {
             <span className="text-xs text-muted-foreground mb-1">
               ID: <span className={isBoss ? "text-accent font-bold" : ""}>{profile?.user_id}</span>
               {profile?.gender && <span className="ml-2">{profile.gender === "male" ? "👨" : "👩"}</span>}
+              {profile?.country_code && <span className="ml-2">🌍 {profile.country_code}</span>}
             </span>
 
             {isBoss ? (
@@ -196,14 +226,14 @@ const Profile = () => {
           {/* Balances */}
           <div className="flex gap-3 mt-6">
             <div className="flex-1 card-nova p-3 flex items-center gap-2" onClick={() => navigate("/wallet")} role="button">
-              <Coins className="w-5 h-5 text-accent" />
+              <CurrencyIcon type="gold" size="md" />
               <div>
                 <p className="text-[10px] text-muted-foreground">الذهب</p>
                 <p className="font-bold text-sm text-accent">{isBoss ? "∞" : (profile?.coins || 0).toLocaleString()}</p>
               </div>
             </div>
             <div className="flex-1 card-nova p-3 flex items-center gap-2" onClick={() => navigate("/wallet")} role="button">
-              <Diamond className="w-5 h-5 text-primary" />
+              <CurrencyIcon type="diamond" size="md" />
               <div>
                 <p className="text-[10px] text-muted-foreground">الماس</p>
                 <p className="font-bold text-sm text-primary">{isBoss ? "999K+" : (profile?.diamonds || 0).toLocaleString()}</p>
@@ -267,7 +297,7 @@ const Profile = () => {
               <p className="text-[10px] font-bold">المحفظة</p>
             </button>
             <button onClick={() => navigate("/store")} className="card-nova p-3 text-center">
-              <Coins className="w-5 h-5 text-accent mx-auto mb-1" />
+              <CurrencyIcon type="gold" size="md" className="mx-auto mb-1" />
               <p className="text-[10px] font-bold">المتجر</p>
             </button>
             <button onClick={() => navigate("/agencies")} className="card-nova p-3 text-center">

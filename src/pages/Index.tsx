@@ -1,9 +1,10 @@
-import { Coins, Diamond, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import RoomCard from "@/components/RoomCard";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import AnimatedIcon from "@/components/AnimatedIcon";
@@ -33,7 +34,6 @@ const Index = () => {
     fetchProfile();
   }, []);
 
-  // Show latest notification as toast
   useEffect(() => {
     if (notifications.length > 0 && !notifications[0].is_read) {
       const n = notifications[0];
@@ -63,11 +63,11 @@ const Index = () => {
             </div>
             <div className="flex items-center gap-3">
               <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 btn-glass px-2.5 py-1">
-                <Coins className="w-3.5 h-3.5 text-accent" />
+                <CurrencyIcon type="gold" size="xs" />
                 <span className="text-xs font-bold text-accent">{(profile?.coins || 0).toLocaleString()}</span>
               </button>
               <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 btn-glass px-2.5 py-1">
-                <Diamond className="w-3.5 h-3.5 text-primary" />
+                <CurrencyIcon type="diamond" size="xs" />
                 <span className="text-xs font-bold text-primary">{(profile?.diamonds || 0).toLocaleString()}</span>
               </button>
               <div className="relative" onClick={() => navigate("/chat")} role="button">
