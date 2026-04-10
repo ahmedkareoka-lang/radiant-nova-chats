@@ -21,6 +21,7 @@ import StorePage from "./pages/StorePage";
 import WalletPage from "./pages/WalletPage";
 import InventoryPage from "./pages/InventoryPage";
 import AgenciesPage from "./pages/AgenciesPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const AnimatedRoutes = () => {
         <Route path="/wallet" element={<AuthGate><WalletPage /></AuthGate>} />
         <Route path="/inventory" element={<AuthGate><InventoryPage /></AuthGate>} />
         <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />
+        <Route path="/notifications" element={<AuthGate><NotificationsPage /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
