@@ -1,17 +1,37 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Coins, Diamond, ShoppingBag, Crown, Sparkles, Frame } from "lucide-react";
+import { ArrowLeft, Coins, Diamond, ShoppingBag, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
+import framePurpleWings from "@/assets/frame-purple-wings.png";
+import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+
+const STORE_FRAMES = [
+  {
+    id: "frame-purple-wings",
+    name: "إطار الأجنحة البنفسجية",
+    type: "frame",
+    price_coins: 25000,
+    image: framePurpleWings,
+    data: { rarity: "legendary", frame_url: "frame-purple-wings" },
+  },
+  {
+    id: "frame-royal-crown",
+    name: "إطار التاج الملكي",
+    type: "frame",
+    price_coins: 50000,
+    image: frameRoyalCrown,
+    data: { rarity: "mythic", frame_url: "frame-royal-crown" },
+  },
+];
 
 const StorePage = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
-  const [storeItems, setStoreItems] = useState<any[]>([]);
   const [pricing, setPricing] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("frames");
+  const [ownedFrames, setOwnedFrames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,71 +41,47 @@ const StorePage = () => {
       const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setProfile(p);
 
-      // Get pricing for user's country
       const countryCode = p?.country_code || "US";
       const { data: pr } = await supabase.from("pricing_plans").select("*").eq("country_code", countryCode).single();
       setPricing(pr || { currency: "USD", coin_price: 1, diamond_price: 2 });
 
-      const { data: items } = await supabase.from("store_items").select("*").eq("is_active", true);
-      setStoreItems(items || []);
+      // Check owned frames
+      const { data: inv } = await supabase.from("inventory").select("item_name").eq("user_id", user.id).eq("item_type", "frame");
+      setOwnedFrames((inv || []).map((i: any) => i.item_name));
       setLoading(false);
     };
     load();
   }, []);
 
-  const buyItem = async (item: any) => {
+  const buyFrame = async (frame: typeof STORE_FRAMES[0]) => {
     if (!profile) return;
-    const cost = item.price_coins;
-    if (profile.coins < cost) {
+    if (ownedFrames.includes(frame.name)) {
+      toast.info("لديك هذا الإطار بالفعل!");
+      return;
+    }
+    if (profile.coins < frame.price_coins) {
       toast.error("رصيدك غير كافٍ!");
       return;
     }
 
-    const newCoins = profile.coins - cost;
-    await supabase.from("profiles").update({ coins: newCoins }).eq("id", profile.id);
+    const newCoins = profile.coins - frame.price_coins;
+    await supabase.from("profiles").update({ coins: newCoins, equipped_frame: frame.data.frame_url }).eq("id", profile.id);
     await supabase.from("inventory").insert({
       user_id: profile.id,
-      item_type: item.type,
-      item_name: item.name,
-      item_data: item.data || {},
+      item_type: "frame",
+      item_name: frame.name,
+      item_data: frame.data,
     });
     await supabase.from("notifications").insert({
       user_id: profile.id,
-      title: "عملية شراء",
-      message: `تم شراء ${item.name} بنجاح!`,
+      title: "إطار جديد! 🖼️",
+      message: `تم شراء ${frame.name} وتم تفعيله تلقائياً!`,
       type: "purchase",
     });
-    setProfile({ ...profile, coins: newCoins });
-    toast.success(`تم شراء ${item.name}! 🎉`);
+    setProfile({ ...profile, coins: newCoins, equipped_frame: frame.data.frame_url });
+    setOwnedFrames([...ownedFrames, frame.name]);
+    toast.success(`تم شراء ${frame.name} وتفعيله! 🎉`);
   };
-
-  const tabs = [
-    { id: "frames", label: "إطارات", icon: "🖼️" },
-    { id: "gifts", label: "هدايا", icon: "🎁" },
-    { id: "vip", label: "VIP", icon: "👑" },
-    { id: "special", label: "مميزات", icon: "✨" },
-  ];
-
-  const defaultItems = [
-    { id: "f1", name: "إطار ذهبي", type: "frame", price_coins: 5000, image_url: "🖼️", data: { rarity: "gold" } },
-    { id: "f2", name: "إطار ماسي", type: "frame", price_coins: 15000, image_url: "💎", data: { rarity: "diamond" } },
-    { id: "f3", name: "إطار ملكي", type: "frame", price_coins: 50000, image_url: "👑", data: { rarity: "royal" } },
-    { id: "g1", name: "وردة", type: "gift", price_coins: 100, image_url: "🌹", data: {} },
-    { id: "g2", name: "سيارة فاخرة", type: "gift", price_coins: 10000, image_url: "🏎️", data: {} },
-    { id: "g3", name: "قصر", type: "gift", price_coins: 100000, image_url: "🏰", data: {} },
-    { id: "v1", name: "VIP 1 شهر", type: "vip", price_coins: 20000, image_url: "⭐", data: { vip_level: 1, duration: 30 } },
-    { id: "v2", name: "VIP 3 شهور", type: "vip", price_coins: 50000, image_url: "🌟", data: { vip_level: 3, duration: 90 } },
-    { id: "s1", name: "دخول سينمائي", type: "special", price_coins: 30000, image_url: "🎬", data: {} },
-    { id: "s2", name: "اسم متوهج", type: "special", price_coins: 8000, image_url: "✨", data: {} },
-  ];
-
-  const items = storeItems.length > 0 ? storeItems : defaultItems;
-  const filtered = items.filter((item) => {
-    if (activeTab === "frames") return item.type === "frame";
-    if (activeTab === "gifts") return item.type === "gift";
-    if (activeTab === "vip") return item.type === "vip";
-    return item.type === "special";
-  });
 
   return (
     <PageTransition>
@@ -109,7 +105,6 @@ const StorePage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
-          {/* Pricing info */}
           {pricing && (
             <div className="card-nova p-3 text-center">
               <p className="text-[10px] text-muted-foreground">الأسعار بعملة: <span className="font-bold text-primary">{pricing.currency}</span></p>
@@ -120,42 +115,39 @@ const StorePage = () => {
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="flex gap-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-2 rounded-2xl text-xs font-bold transition-all ${
-                  activeTab === tab.id ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"
-                }`}
-              >
-                {tab.icon} {tab.label}
-              </button>
-            ))}
-          </div>
+          <h2 className="font-bold text-sm">🖼️ الإطارات</h2>
 
-          {/* Items grid */}
           <div className="grid grid-cols-2 gap-3">
-            {filtered.map((item) => (
-              <div key={item.id} className="card-nova p-4 text-center space-y-2">
-                <span className="text-4xl">{item.image_url}</span>
-                <p className="font-bold text-sm">{item.name}</p>
-                <div className="flex items-center justify-center gap-1">
-                  <Coins className="w-3 h-3 text-accent" />
-                  <span className="text-xs font-bold text-accent">{item.price_coins.toLocaleString()}</span>
+            {STORE_FRAMES.map((frame) => {
+              const owned = ownedFrames.includes(frame.name);
+              const equipped = profile?.equipped_frame === frame.data.frame_url;
+              return (
+                <div key={frame.id} className={`card-nova p-4 text-center space-y-2 ${equipped ? "border border-primary/50 glow-neon" : ""}`}>
+                  <div className="relative w-24 h-24 mx-auto">
+                    <img src={frame.image} alt={frame.name} className="w-full h-full object-contain" />
+                  </div>
+                  <p className="font-bold text-xs">{frame.name}</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <Coins className="w-3 h-3 text-accent" />
+                    <span className="text-xs font-bold text-accent">{frame.price_coins.toLocaleString()}</span>
+                  </div>
+                  {owned ? (
+                    <div className="flex items-center justify-center gap-1 text-xs text-green-400">
+                      <Check className="w-3 h-3" /> مملوك {equipped && "• مفعّل"}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => buyFrame(frame)}
+                      className="w-full py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold btn-nova"
+                    >
+                      شراء
+                    </button>
+                  )}
                 </div>
-                <button
-                  onClick={() => buyItem(item)}
-                  className="w-full py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold btn-nova"
-                >
-                  شراء
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Top up link */}
           <button
             onClick={() => navigate("/top-up")}
             className="w-full py-3 rounded-full border border-accent/50 text-accent font-bold text-sm btn-nova"

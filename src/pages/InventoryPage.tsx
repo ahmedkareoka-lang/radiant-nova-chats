@@ -1,26 +1,45 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Package, Frame, Gift, Crown, Sparkles } from "lucide-react";
+import { ArrowLeft, Package, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
+import framePurpleWings from "@/assets/frame-purple-wings.png";
+import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+
+const FRAME_MAP: Record<string, string> = {
+  "frame-purple-wings": framePurpleWings,
+  "frame-royal-crown": frameRoyalCrown,
+};
 
 const InventoryPage = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setUserId(user.id);
+      const { data: prof } = await supabase.from("profiles").select("equipped_frame").eq("id", user.id).single();
+      setEquippedFrame(prof?.equipped_frame || null);
       const { data } = await supabase.from("inventory").select("*").eq("user_id", user.id).order("acquired_at", { ascending: false });
       setItems(data || []);
       setLoading(false);
     };
     load();
   }, []);
+
+  const equipFrame = async (frameUrl: string | null) => {
+    await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", userId);
+    setEquippedFrame(frameUrl);
+    toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+  };
 
   const tabs = [
     { id: "all", label: "الكل" },
@@ -31,15 +50,6 @@ const InventoryPage = () => {
   ];
 
   const filtered = activeTab === "all" ? items : items.filter((i) => i.item_type === activeTab);
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "frame": return "🖼️";
-      case "gift": return "🎁";
-      case "vip": return "👑";
-      default: return "✨";
-    }
-  };
 
   return (
     <PageTransition>
@@ -82,15 +92,36 @@ const InventoryPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {filtered.map((item) => (
-                <div key={item.id} className="card-nova p-3 text-center">
-                  <span className="text-3xl">{getIcon(item.item_type)}</span>
-                  <p className="font-bold text-[11px] mt-1">{item.item_name}</p>
-                  <p className="text-[9px] text-muted-foreground">
-                    {new Date(item.acquired_at).toLocaleDateString("ar")}
-                  </p>
-                </div>
-              ))}
+              {filtered.map((item) => {
+                const isFrame = item.item_type === "frame";
+                const frameKey = item.item_data?.frame_url;
+                const frameImg = frameKey ? FRAME_MAP[frameKey] : null;
+                const isEquipped = isFrame && equippedFrame === frameKey;
+
+                return (
+                  <div key={item.id} className={`card-nova p-3 text-center ${isEquipped ? "border border-primary/50" : ""}`}>
+                    {frameImg ? (
+                      <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
+                    ) : (
+                      <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : "✨"}</span>
+                    )}
+                    <p className="font-bold text-[11px] mt-1">{item.item_name}</p>
+                    <p className="text-[9px] text-muted-foreground">
+                      {new Date(item.acquired_at).toLocaleDateString("ar")}
+                    </p>
+                    {isFrame && frameKey && (
+                      <button
+                        onClick={() => equipFrame(isEquipped ? null : frameKey)}
+                        className={`mt-1 w-full py-1 rounded-lg text-[10px] font-bold ${
+                          isEquipped ? "bg-destructive/20 text-destructive" : "gradient-neon text-primary-foreground"
+                        }`}
+                      >
+                        {isEquipped ? "إزالة" : "ارتداء"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </main>
