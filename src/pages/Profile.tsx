@@ -178,6 +178,14 @@ const Profile = () => {
                 <Shield className="w-5 h-5 text-accent" />
               </button>
             )}
+            <button onClick={() => navigate("/notifications")} className="relative w-10 h-10 rounded-full bg-background/30 backdrop-blur flex items-center justify-center">
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
+                  <span className="text-[7px] font-bold text-destructive-foreground">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                </div>
+              )}
+            </button>
             <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-background/30 backdrop-blur flex items-center justify-center">
               <Settings className="w-5 h-5" />
             </button>
@@ -227,6 +235,18 @@ const Profile = () => {
             ) : (
               <VipBadge level={profile?.vip_level || 0} size="lg" />
             )}
+          </div>
+
+          {/* Follow Stats */}
+          <div className="flex justify-center gap-6 mt-3 mb-2">
+            <div className="text-center">
+              <p className="font-bold text-sm">{followersCount}</p>
+              <p className="text-[10px] text-muted-foreground">متابعين</p>
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-sm">{followingCount}</p>
+              <p className="text-[10px] text-muted-foreground">يتابع</p>
+            </div>
           </div>
 
           {/* Balances */}
