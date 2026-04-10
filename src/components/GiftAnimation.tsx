@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGifts } from "@/hooks/useGifts";
-import { Coins } from "lucide-react";
+import CurrencyIcon from "@/components/CurrencyIcon";
 
 const gifts = [
   { emoji: "🌹", name: "وردة", price: 10 },
@@ -76,7 +76,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName }: 
             >
               <span className="text-2xl">{gift.emoji}</span>
               <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                <Coins className="w-2.5 h-2.5 text-accent" />{gift.price}
+                <CurrencyIcon type="gold" size="xs" />{gift.price}
               </span>
             </button>
           ))}
