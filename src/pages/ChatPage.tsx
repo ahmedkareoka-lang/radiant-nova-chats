@@ -31,7 +31,17 @@ const ChatPage = () => {
     <div className="min-h-screen pb-20">
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="max-w-lg mx-auto">
-          <h1 className="font-bold text-lg mb-3">Messages</h1>
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="font-bold text-lg">الرسائل</h1>
+            <button onClick={() => navigate("/notifications")} className="relative w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
+              <Bell className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
+                  <span className="text-[7px] font-bold text-destructive-foreground">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                </div>
+              )}
+            </button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
