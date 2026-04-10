@@ -162,7 +162,12 @@ const VoiceRoom = () => {
   const isHost = currentUserId === roomData?.host_id;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
-    const member = members.find((m) => m.mic_slot === i || (i === 0 && m.user_id === roomData?.host_id));
+    // Slot 0 is always the host
+    if (i === 0) {
+      const hostMember = members.find((m) => m.user_id === roomData?.host_id);
+      return hostMember || null;
+    }
+    const member = members.find((m) => m.mic_slot === i);
     return member || null;
   });
 
