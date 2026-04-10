@@ -50,6 +50,18 @@ const LoginPage = () => {
 
         const { error } = await supabase.auth.signInWithPassword(credentials);
         if (error) throw error;
+
+        // Detect country via IP
+        try {
+          const { data: fnData } = await supabase.functions.invoke("detect-country");
+          if (fnData?.country_code) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              await supabase.from("profiles").update({ country_code: fnData.country_code }).eq("id", user.id);
+            }
+          }
+        } catch {}
+
         navigate("/");
       }
     } catch (err: any) {
