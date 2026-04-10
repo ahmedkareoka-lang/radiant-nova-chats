@@ -17,53 +17,65 @@ export type Database = {
       agencies: {
         Row: {
           broadcast_enabled: boolean
+          commission_balance: number
           created_at: string
           id: string
           is_active: boolean
           name: string
           owner_id: string
           recharge_enabled: boolean
+          status: string
         }
         Insert: {
           broadcast_enabled?: boolean
+          commission_balance?: number
           created_at?: string
           id?: string
           is_active?: boolean
           name: string
           owner_id: string
           recharge_enabled?: boolean
+          status?: string
         }
         Update: {
           broadcast_enabled?: boolean
+          commission_balance?: number
           created_at?: string
           id?: string
           is_active?: boolean
           name?: string
           owner_id?: string
           recharge_enabled?: boolean
+          status?: string
         }
         Relationships: []
       }
       agency_members: {
         Row: {
           agency_id: string
+          badge: string
           id: string
           joined_at: string
           role: string
+          total_support: number
           user_id: string
         }
         Insert: {
           agency_id: string
+          badge?: string
           id?: string
           joined_at?: string
           role?: string
+          total_support?: number
           user_id: string
         }
         Update: {
           agency_id?: string
+          badge?: string
           id?: string
           joined_at?: string
           role?: string
+          total_support?: number
           user_id?: string
         }
         Relationships: [
@@ -266,6 +278,7 @@ export type Database = {
           created_at: string
           diamonds: number
           display_name: string
+          equipped_frame: string | null
           gender: string | null
           id: string
           is_boss: boolean
@@ -285,6 +298,7 @@ export type Database = {
           created_at?: string
           diamonds?: number
           display_name?: string
+          equipped_frame?: string | null
           gender?: string | null
           id: string
           is_boss?: boolean
@@ -304,6 +318,7 @@ export type Database = {
           created_at?: string
           diamonds?: number
           display_name?: string
+          equipped_frame?: string | null
           gender?: string | null
           id?: string
           is_boss?: boolean
