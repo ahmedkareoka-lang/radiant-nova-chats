@@ -78,7 +78,8 @@ const SearchPage = () => {
             {users.map((user) => {
               const isOnline = onlineUsers.includes(user.id);
               return (
-                <div key={user.id} className="card-nova p-4 flex flex-col items-center gap-2 hover:border-primary/40 transition-all cursor-pointer relative">
+                <div key={user.id} className="card-nova p-4 flex flex-col items-center gap-2 hover:border-primary/40 transition-all cursor-pointer relative"
+                  onClick={() => navigate(`/user?id=${user.id}`)}>
                   <div className={`relative w-14 h-14 rounded-full overflow-hidden ${user.vip_level >= 5 ? "ring-2 ring-accent" : "ring-2 ring-border"}`}>
                     <img src={user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
                     {isOnline && (
