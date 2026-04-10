@@ -1,19 +1,29 @@
-import { Settings, Edit, Crown, Coins, Diamond, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart } from "lucide-react";
+import { Settings, Edit, Crown, Coins, Diamond, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import bossFrame from "@/assets/boss-frame.png";
-import lionFrame from "@/assets/lion-frame.png";
+import framePurpleWings from "@/assets/frame-purple-wings.png";
+import frameRoyalCrown from "@/assets/frame-royal-crown.png";
 import PageTransition from "@/components/PageTransition";
+
+const FRAME_MAP: Record<string, string> = {
+  "frame-purple-wings": framePurpleWings,
+  "frame-royal-crown": frameRoyalCrown,
+};
 
 const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [giftStats, setGiftStats] = useState({ sent: 0, received: 0 });
+  const [ownedFrames, setOwnedFrames] = useState<any[]>([]);
+  const [showFramePicker, setShowFramePicker] = useState(false);
+  const [genderPicking, setGenderPicking] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -22,10 +32,17 @@ const Profile = () => {
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setProfile(data);
 
-      // Get real gift stats
       const { count: sentCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("sender_id", user.id);
       const { count: receivedCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
       setGiftStats({ sent: sentCount || 0, received: receivedCount || 0 });
+
+      // Load owned frames
+      const { data: inv } = await supabase.from("inventory").select("*").eq("user_id", user.id).eq("item_type", "frame");
+      setOwnedFrames(inv || []);
+
+      // Check if gender not set
+      if (!data?.gender) setGenderPicking(true);
+
       setLoading(false);
     };
     fetchProfile();
@@ -34,6 +51,20 @@ const Profile = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login");
+  };
+
+  const equipFrame = async (frameUrl: string | null) => {
+    await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
+    setProfile({ ...profile, equipped_frame: frameUrl });
+    setShowFramePicker(false);
+    toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+  };
+
+  const setGender = async (gender: string) => {
+    await supabase.from("profiles").update({ gender }).eq("id", profile.id);
+    setProfile({ ...profile, gender });
+    setGenderPicking(false);
+    toast.success("تم تحديد الجنس! ✅");
   };
 
   if (loading) {
@@ -45,7 +76,10 @@ const Profile = () => {
   }
 
   const isBoss = profile?.is_boss;
-  const frameImage = isBoss ? bossFrame : lionFrame;
+  const equippedFrameKey = profile?.equipped_frame;
+  const frameImage = isBoss ? bossFrame : (equippedFrameKey ? FRAME_MAP[equippedFrameKey] : null);
+  const frameSize = isBoss ? "w-44 h-44" : "w-36 h-36";
+  const avatarInset = isBoss ? "inset-[18%]" : "inset-[15%]";
   const wealthLevel = profile?.wealth_level || 1;
   const charismaLevel = profile?.charisma_level || 1;
   const wealthProgress = ((profile?.wealth_xp || 0) % 10000) / 100;
@@ -54,6 +88,53 @@ const Profile = () => {
   return (
     <PageTransition>
       <div className="min-h-screen pb-20">
+        {/* Gender picker modal */}
+        {genderPicking && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center">
+            <div className="card-nova p-6 max-w-xs w-full text-center space-y-4">
+              <h3 className="font-bold text-lg">حدد جنسك</h3>
+              <p className="text-xs text-muted-foreground">يتم تحديده مرة واحدة فقط</p>
+              <div className="flex gap-3">
+                <button onClick={() => setGender("male")} className="flex-1 py-4 rounded-2xl bg-blue-500/20 border border-blue-500/30 text-center">
+                  <span className="text-3xl">👨</span>
+                  <p className="text-xs font-bold mt-1">ذكر</p>
+                </button>
+                <button onClick={() => setGender("female")} className="flex-1 py-4 rounded-2xl bg-pink-500/20 border border-pink-500/30 text-center">
+                  <span className="text-3xl">👩</span>
+                  <p className="text-xs font-bold mt-1">أنثى</p>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Frame picker modal */}
+        {showFramePicker && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-end justify-center">
+            <div className="card-nova p-4 max-w-lg w-full rounded-t-3xl space-y-3 max-h-[60vh] overflow-auto">
+              <h3 className="font-bold text-sm text-center">اختر إطارك</h3>
+              <button onClick={() => equipFrame(null)} className={`w-full p-3 rounded-xl text-xs font-bold ${!equippedFrameKey ? "gradient-neon text-primary-foreground" : "bg-secondary"}`}>
+                بدون إطار
+              </button>
+              <div className="grid grid-cols-3 gap-3">
+                {ownedFrames.map((item) => {
+                  const key = item.item_data?.frame_url;
+                  const img = FRAME_MAP[key];
+                  if (!img) return null;
+                  return (
+                    <button key={item.id} onClick={() => equipFrame(key)}
+                      className={`p-2 rounded-xl text-center ${equippedFrameKey === key ? "border-2 border-primary glow-neon" : "border border-border"}`}>
+                      <img src={img} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
+                      <p className="text-[9px] font-bold mt-1">{item.item_name}</p>
+                    </button>
+                  );
+                })}
+              </div>
+              <button onClick={() => setShowFramePicker(false)} className="w-full py-2 text-xs text-muted-foreground">إغلاق</button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="relative h-48 gradient-neon overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
@@ -73,12 +154,18 @@ const Profile = () => {
           {/* Avatar */}
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className={`relative w-36 h-36 ${isBoss ? "boss-god-frame" : ""}`}>
-                <img src={frameImage} alt="Frame" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none" />
-                <div className="absolute inset-[15%] rounded-full overflow-hidden z-10">
+              <div className={`relative ${frameSize} ${isBoss ? "boss-god-frame" : ""}`}>
+                {frameImage && (
+                  <img src={frameImage} alt="Frame" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none" />
+                )}
+                <div className={`absolute ${avatarInset} rounded-full overflow-hidden z-10`}>
                   <img src={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="Profile" className="w-full h-full object-cover" />
                 </div>
               </div>
+              <button onClick={() => setShowFramePicker(true)}
+                className="absolute bottom-1 left-1 z-30 w-8 h-8 rounded-full bg-secondary/80 backdrop-blur flex items-center justify-center border border-border">
+                <span className="text-xs">🖼️</span>
+              </button>
               <button className="absolute bottom-1 right-1 z-30 w-8 h-8 rounded-full gradient-neon flex items-center justify-center glow-neon">
                 <Edit className="w-3.5 h-3.5 text-primary-foreground" />
               </button>
@@ -170,7 +257,7 @@ const Profile = () => {
           </div>
 
           {/* Quick links */}
-          <div className="grid grid-cols-3 gap-3 mt-4">
+          <div className="grid grid-cols-4 gap-3 mt-4">
             <button onClick={() => navigate("/inventory")} className="card-nova p-3 text-center">
               <Package className="w-5 h-5 text-accent mx-auto mb-1" />
               <p className="text-[10px] font-bold">الحقيبة</p>
@@ -182,6 +269,10 @@ const Profile = () => {
             <button onClick={() => navigate("/store")} className="card-nova p-3 text-center">
               <Coins className="w-5 h-5 text-accent mx-auto mb-1" />
               <p className="text-[10px] font-bold">المتجر</p>
+            </button>
+            <button onClick={() => navigate("/agencies")} className="card-nova p-3 text-center">
+              <Building2 className="w-5 h-5 text-primary mx-auto mb-1" />
+              <p className="text-[10px] font-bold">الوكالات</p>
             </button>
           </div>
 
