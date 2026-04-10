@@ -307,11 +307,13 @@ const VoiceRoom = () => {
                   {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
                 </div>
               ) : (
-                <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
-                  onClick={() => handleSitOnMic(i)}>
-                  <Mic className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
+                <>
+                  <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => handleSitOnMic(i)}>
+                    <Mic className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
+                </>
               )}
             </div>
           ))}
