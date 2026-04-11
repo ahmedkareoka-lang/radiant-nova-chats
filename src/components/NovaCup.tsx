@@ -147,7 +147,7 @@ const NovaCup = ({ roomId }: NovaCupProps) => {
                   <p className="text-center text-xs text-muted-foreground py-4">لا توجد بيانات بعد</p>
                 ) : (
                   leaders.map((l, i) => (
-                    <div key={l.sender_id} className={`flex items-center gap-3 p-2.5 rounded-xl ${i < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20' : 'bg-secondary/50'}`}>
+                    <div key={l.sender_id} className={`flex items-center gap-3 p-2.5 rounded-xl ${i < 3 ? 'bg-gradient-to-r from-accent/10 to-transparent border border-accent/20' : 'bg-secondary/50'}`}>
                       <span className="text-sm font-bold w-6 text-center">{i < 3 ? medals[i] : i + 1}</span>
                       <img src={l.avatar_url || "https://i.pravatar.cc/100"} className="w-8 h-8 rounded-full object-cover" alt="" />
                       <span className="flex-1 text-xs font-bold truncate">{l.display_name}</span>
