@@ -180,10 +180,6 @@ const VoiceRoom = () => {
 
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
-    if (slotIndex === 0 && currentUserId !== roomData?.host_id) {
-      toast.error("هذا المقعد مخصص للمضيف");
-      return;
-    }
     const existing = members.find((m) => m.user_id === currentUserId);
 
     if (existing?.mic_slot === slotIndex) {
@@ -224,10 +220,6 @@ const VoiceRoom = () => {
   const micCount = roomData?.mic_count || 8;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
-    if (i === 0) {
-      const hostMember = members.find((m) => m.user_id === roomData?.host_id);
-      return hostMember || null;
-    }
     const member = members.find((m) => m.mic_slot === i);
     return member || null;
   });
@@ -438,30 +430,24 @@ const VoiceRoom = () => {
 
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
-        {/* Host */}
+        {/* Host Info Banner */}
         {host && (
-          <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
-            <div className="relative animate-vip-entrance">
-              {renderAvatarWithFrame(
-                host.avatar_url,
-                host.equipped_frame,
-                host.is_boss,
-                "lg",
-                (roomData?.host_id === currentUserId ? localSpeaking : speakingPeers.has(roomData?.host_id || ''))
-              )}
-              <div className="absolute -top-2 -right-2 z-20">
-                <Crown className="w-6 h-6 text-accent animate-float" />
-              </div>
+          <div className="flex items-center gap-3 mb-6 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
+            <div className="relative">
+              <img src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
+              <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
             </div>
-            <span className={`font-bold text-sm mt-2 ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
-            <VipBadge level={host.vip_level} size="md" />
+            <div>
+              <span className={`font-bold text-sm ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
+              <p className="text-[10px] text-muted-foreground">مضيف الغرفة</p>
+            </div>
+            <VipBadge level={host.vip_level} size="sm" />
           </div>
         )}
 
-        {/* Mic Grid */}
+        {/* Mic Grid - All slots dynamic */}
         <div className={`grid ${gridCols} gap-3 mb-6`}>
           {micSlots.map((slot, i) => {
-            if (i === 0) return null;
             const slotIsSpeaking = slot?.is_on_mic && (
               slot.user_id === currentUserId ? localSpeaking : speakingPeers.has(slot.user_id)
             );
