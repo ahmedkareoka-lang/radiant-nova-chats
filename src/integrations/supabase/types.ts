@@ -544,6 +544,23 @@ export type Database = {
     }
     Functions: {
       generate_user_id: { Args: never; Returns: string }
+      get_profile_safe_fields: {
+        Args: { _profile_id: string }
+        Returns: {
+          avatar_url: string
+          charisma_level: number
+          country_code: string
+          display_name: string
+          equipped_frame: string
+          gender: string
+          id: string
+          is_boss: boolean
+          level: number
+          user_id: string
+          vip_level: number
+          wealth_level: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
