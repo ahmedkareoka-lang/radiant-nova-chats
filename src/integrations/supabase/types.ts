@@ -378,8 +378,6 @@ export type Database = {
           created_at: string
           diamonds: number
           display_name: string
-          entrance_audio_url: string | null
-          entrance_video_url: string | null
           equipped_frame: string | null
           gender: string | null
           id: string
@@ -404,8 +402,6 @@ export type Database = {
           created_at?: string
           diamonds?: number
           display_name?: string
-          entrance_audio_url?: string | null
-          entrance_video_url?: string | null
           equipped_frame?: string | null
           gender?: string | null
           id: string
@@ -430,8 +426,6 @@ export type Database = {
           created_at?: string
           diamonds?: number
           display_name?: string
-          entrance_audio_url?: string | null
-          entrance_video_url?: string | null
           equipped_frame?: string | null
           gender?: string | null
           id?: string

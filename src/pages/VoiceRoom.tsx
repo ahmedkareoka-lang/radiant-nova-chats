@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield } from "lucide-react";
 import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import RoomParticles from "@/components/RoomParticles";
-import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
@@ -84,8 +83,6 @@ const VoiceRoom = () => {
     charismaLevel: number;
     effect: typeof ENTRANCE_EFFECTS[0];
   } | null>(null);
-  const [entranceQueue, setEntranceQueue] = useState<{ id: string; displayName: string; avatarUrl: string | null; videoUrl: string | null; audioUrl: string | null }[]>([]);
-  const [muteEntrance, setMuteEntrance] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
 
@@ -144,7 +141,7 @@ const VoiceRoom = () => {
     }
   }, [members, currentUserId]);
 
-  // Entrance banner + custom entrance effect queue for new members
+  // Entrance banner for new members
   useEffect(() => {
     for (const m of members) {
       if (!seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
@@ -161,26 +158,10 @@ const VoiceRoom = () => {
           });
           sendMessage(`🚪 ${m.profile.display_name} دخل الغرفة | 💰 ثروة Lv.${wealthLvl} | 💎 كاريزما Lv.${charismaLvl}`);
           setTimeout(() => setEntranceBanner(null), 4000);
-
-          // Queue custom entrance effect if user has video or audio
-          const p = m.profile as any;
-          if (p.entrance_video_url || p.entrance_audio_url) {
-            setEntranceQueue(prev => [...prev, {
-              id: m.user_id,
-              displayName: m.profile!.display_name,
-              avatarUrl: m.profile!.avatar_url,
-              videoUrl: p.entrance_video_url || null,
-              audioUrl: p.entrance_audio_url || null,
-            }]);
-          }
         }
       }
     }
   }, [members, currentUserId]);
-
-  const handleEntranceComplete = useCallback((id: string) => {
-    setEntranceQueue(prev => prev.filter(e => e.id !== id));
-  }, []);
 
   const handleSend = async () => {
     if (!chatInput.trim()) return;
@@ -602,18 +583,7 @@ const VoiceRoom = () => {
               </button>
             </div>
 
-            {/* Mute Entrance Sounds */}
-            <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
-              <div className="flex items-center gap-2">
-                <BellOff className="w-4 h-4 text-muted-foreground" />
-                <span className="text-xs font-bold">كتم أصوات الدخول</span>
-              </div>
-              <button onClick={() => setMuteEntrance(!muteEntrance)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${muteEntrance ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
-                {muteEntrance ? "🔇 مكتوم" : "🔔 مفعّل"}
-              </button>
-            </div>
-
+            {/* Mute All */}
             <button onClick={handleMuteAll}
               className="w-full flex items-center justify-center gap-2 bg-secondary/50 rounded-xl p-3 text-xs font-bold hover:bg-destructive/10 transition-all">
               <VolumeX className="w-4 h-4 text-destructive" />
@@ -676,9 +646,6 @@ const VoiceRoom = () => {
                 <Settings2 className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
-            <button onClick={() => setMuteEntrance(!muteEntrance)} className={`w-8 h-8 rounded-full flex items-center justify-center ${muteEntrance ? 'bg-destructive/20' : 'bg-secondary'}`} title={muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}>
-              <BellOff className={`w-4 h-4 ${muteEntrance ? 'text-destructive' : 'text-muted-foreground'}`} />
-            </button>
             <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
               <Minimize2 className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -904,7 +871,6 @@ const VoiceRoom = () => {
         onMultiGiftSent={handleGiftBurst}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
-      <CustomEntranceEffect queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
     </div>
   );
 };
