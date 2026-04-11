@@ -12,6 +12,10 @@ export interface RoomMember {
     vip_level: number;
     is_boss: boolean;
     user_id: string;
+    wealth_level?: number;
+    wealth_xp?: number;
+    charisma_level?: number;
+    charisma_xp?: number;
   };
 }
 
@@ -37,13 +41,25 @@ export const useVoiceRoom = (roomId: string | null) => {
     if (!roomId) return;
     const { data } = await supabase
       .from("room_members")
-      .select("*, profile:profiles!room_members_user_id_profiles_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
+      .select("*")
       .eq("room_id", roomId);
-    if (data) {
+
+    if (data && data.length > 0) {
+      const userIds = data.map((m) => m.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp")
+        .in("id", userIds);
+
+      const profileMap: Record<string, any> = {};
+      profiles?.forEach((p) => { profileMap[p.id] = p; });
+
       setMembers(data.map((m) => ({
         ...m,
-        profile: Array.isArray(m.profile) ? m.profile[0] : m.profile,
+        profile: profileMap[m.user_id] || null,
       })));
+    } else {
+      setMembers([]);
     }
   }, [roomId]);
 
@@ -51,15 +67,27 @@ export const useVoiceRoom = (roomId: string | null) => {
     if (!roomId) return;
     const { data } = await supabase
       .from("messages")
-      .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, vip_level, is_boss)")
+      .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: true })
       .limit(100);
-    if (data) {
+
+    if (data && data.length > 0) {
+      const senderIds = [...new Set(data.map((m) => m.sender_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, vip_level, is_boss")
+        .in("id", senderIds);
+
+      const profileMap: Record<string, any> = {};
+      profiles?.forEach((p) => { profileMap[p.id] = p; });
+
       setMessages(data.map((m) => ({
         ...m,
-        sender: Array.isArray(m.sender) ? m.sender[0] : m.sender,
+        sender: profileMap[m.sender_id] || null,
       })));
+    } else {
+      setMessages([]);
     }
   }, [roomId]);
 
@@ -73,13 +101,21 @@ export const useVoiceRoom = (roomId: string | null) => {
       // Fetch room info
       const { data: room } = await supabase
         .from("rooms")
-      .select("*, host_profile:profiles!rooms_host_id_profiles_fkey(display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp)")
-      .eq("id", roomId)
+        .select("*")
+        .eq("id", roomId)
         .single();
+
       if (room) {
+        // Fetch host profile separately
+        const { data: hostProfile } = await supabase
+          .from("profiles")
+          .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp")
+          .eq("id", room.host_id)
+          .single();
+
         setRoomData({
           ...room,
-          host_profile: Array.isArray(room.host_profile) ? room.host_profile[0] : room.host_profile,
+          host_profile: hostProfile || null,
         });
       }
 
@@ -94,21 +130,8 @@ export const useVoiceRoom = (roomId: string | null) => {
       .on("postgres_changes", { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` }, () => {
         fetchMembers();
       })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `room_id=eq.${roomId}` }, (payload) => {
-        // Fetch the new message with sender info
-        supabase
-          .from("messages")
-          .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, vip_level, is_boss)")
-          .eq("id", (payload.new as any).id)
-          .single()
-          .then(({ data }) => {
-            if (data) {
-              setMessages((prev) => [...prev, {
-                ...data,
-                sender: Array.isArray(data.sender) ? data.sender[0] : data.sender,
-              }]);
-            }
-          });
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `room_id=eq.${roomId}` }, () => {
+        fetchMessages();
       })
       .subscribe();
 
@@ -117,15 +140,25 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const joinRoom = async () => {
     if (!roomId || !currentUserId) return;
+    // Clear any existing mic_slot to prevent duplicates
     await supabase.from("room_members").upsert({
       room_id: roomId,
       user_id: currentUserId,
+      mic_slot: null,
+      is_on_mic: false,
     });
   };
 
   const leaveRoom = async () => {
     if (!roomId || !currentUserId) return;
     await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", currentUserId);
+
+    // If user is the host, deactivate the room
+    if (roomData?.host_id === currentUserId) {
+      await supabase.from("rooms").update({ is_active: false }).eq("id", roomId);
+      // Remove all remaining members
+      await supabase.from("room_members").delete().eq("room_id", roomId);
+    }
   };
 
   const sendMessage = async (content: string) => {
