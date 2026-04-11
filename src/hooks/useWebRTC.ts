@@ -65,7 +65,7 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "connected") {
-        setConnectedPeers((prev) => new Set([...prev, peerId]));
+        setConnectedPeers((prev) => { const n = new Set(prev); n.add(peerId); return n; });
       } else if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
         setConnectedPeers((prev) => {
           const next = new Set(prev);
