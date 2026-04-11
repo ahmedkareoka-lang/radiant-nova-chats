@@ -119,13 +119,13 @@ const VoiceRoom = () => {
   };
 
   const handleAvatarClick = (member: any) => {
-    if (member.profile) {
-      const uid = member.user_id || member.profile?.user_id;
-      if (uid && uid !== currentUserId) {
-        navigate(`/user?id=${uid}`);
-      } else {
-        setSelectedProfile(member.profile as UserProfile);
-      }
+    // Always use member.user_id as the authoritative ID (not profile.user_id)
+    const memberId = member.user_id;
+    if (!memberId) return;
+    if (memberId !== currentUserId) {
+      navigate(`/user?id=${memberId}`);
+    } else if (member.profile) {
+      setSelectedProfile({ ...member.profile, user_id: memberId } as UserProfile);
     }
   };
 
@@ -137,23 +137,31 @@ const VoiceRoom = () => {
       return;
     }
     const existing = members.find((m) => m.user_id === currentUserId);
+
+    // If user is already on this slot, leave it
     if (existing?.mic_slot === slotIndex) {
-      // Leave mic
       await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
       setIsMuted(true);
       toast.success("نزلت من المايك");
-    } else {
-      // Check if slot is taken
-      const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
-      if (slotTaken) {
-        toast.error("هذا المايك مشغول");
-        return;
-      }
-      // Sit on mic
-      await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
-      setIsMuted(false);
-      toast.success(`جلست على المايك ${slotIndex + 1}`);
+      return;
     }
+
+    // If user is already on another slot, clear it first
+    if (existing?.mic_slot !== null && existing?.mic_slot !== undefined) {
+      await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
+    }
+
+    // Check if slot is taken by another user
+    const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
+    if (slotTaken) {
+      toast.error("هذا المايك مشغول");
+      return;
+    }
+
+    // Sit on mic
+    await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
+    setIsMuted(false);
+    toast.success(`جلست على المايك ${slotIndex + 1}`);
   };
 
   const changeMicCount = async (count: number) => {
@@ -294,7 +302,7 @@ const VoiceRoom = () => {
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
         {/* Host */}
         {host && (
-          <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ profile: { ...host, user_id: roomData?.host_id } })}>
+          <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
             <div className="relative animate-vip-entrance">
               <div className={`w-20 h-20 rounded-full overflow-hidden ring-4 ${host.is_boss ? "boss-god-frame" : "ring-accent"} animate-pulse-glow`}>
                 <img src={host.avatar_url || "https://i.pravatar.cc/100?img=3"} alt={host.display_name} className="w-full h-full object-cover" />
@@ -313,7 +321,7 @@ const VoiceRoom = () => {
           {micSlots.map((slot, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               {slot ? (
-                <div className="cursor-pointer" onClick={() => handleAvatarClick(slot)}>
+                <div className="cursor-pointer" onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}>
                   <div className={`relative w-14 h-14 rounded-full overflow-hidden ${
                     slot.is_on_mic ? "ring-2 ring-destructive animate-mic-burn" : "ring-2 ring-border"
                   } ${(slot.profile?.vip_level || 0) >= 5 ? "ring-accent" : ""}`}>

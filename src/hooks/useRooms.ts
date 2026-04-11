@@ -26,17 +26,27 @@ export const useRooms = () => {
   const fetchRooms = async () => {
     const { data, error } = await supabase
       .from("rooms")
-      .select("*, host_profile:profiles!rooms_host_id_profiles_fkey(display_name, avatar_url, vip_level, is_boss)")
+      .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
+      // Get host profiles separately
+      const hostIds = [...new Set(data.map((r) => r.host_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, vip_level, is_boss")
+        .in("id", hostIds.length > 0 ? hostIds : ["00000000-0000-0000-0000-000000000000"]);
+
+      const profileMap: Record<string, any> = {};
+      profiles?.forEach((p) => { profileMap[p.id] = p; });
+
       // Get member counts
       const roomIds = data.map((r) => r.id);
       const { data: members } = await supabase
         .from("room_members")
         .select("room_id")
-        .in("room_id", roomIds);
+        .in("room_id", roomIds.length > 0 ? roomIds : ["00000000-0000-0000-0000-000000000000"]);
 
       const counts: Record<string, number> = {};
       members?.forEach((m) => {
@@ -46,7 +56,7 @@ export const useRooms = () => {
       setRooms(
         data.map((r) => ({
           ...r,
-          host_profile: Array.isArray(r.host_profile) ? r.host_profile[0] : r.host_profile,
+          host_profile: profileMap[r.host_id] || null,
           member_count: counts[r.id] || 0,
         }))
       );
@@ -73,6 +83,9 @@ export const useRooms = () => {
   const createRoom = async (name: string, type: string, isPrivate: boolean, password: string, micCount: number) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
+
+    // Close any existing active rooms owned by this user
+    await supabase.from("rooms").update({ is_active: false }).eq("host_id", user.id).eq("is_active", true);
 
     const { data, error } = await supabase.from("rooms").insert({
       name,
