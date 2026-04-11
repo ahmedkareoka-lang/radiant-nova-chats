@@ -1,14 +1,23 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Image } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
 import VipBadge from "@/components/VipBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
+import { useWebRTC } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import EmojiStickerPicker from "@/components/EmojiStickerPicker";
+import bossFrame from "@/assets/boss-frame.png";
+import framePurpleWings from "@/assets/frame-purple-wings.png";
+import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+
+const FRAME_MAP: Record<string, string> = {
+  "frame-purple-wings": framePurpleWings,
+  "frame-royal-crown": frameRoyalCrown,
+};
 
 interface UserProfile {
   user_id: string;
@@ -20,14 +29,16 @@ interface UserProfile {
   wealth_xp?: number;
   charisma_level?: number;
   charisma_xp?: number;
+  equipped_frame?: string | null;
 }
 
 const ENTRANCE_EFFECTS = [
-  { minLevel: 0, color: "from-muted/20 to-transparent", label: "", border: "border-border" },
-  { minLevel: 5, color: "from-blue-500/20 to-transparent", label: "⭐", border: "border-blue-500/50" },
-  { minLevel: 10, color: "from-purple-500/30 to-transparent", label: "🌟", border: "border-purple-500/50" },
-  { minLevel: 20, color: "from-accent/30 to-transparent", label: "👑", border: "border-accent/50" },
-  { minLevel: 50, color: "from-red-500/30 via-accent/20 to-transparent", label: "🔥", border: "border-red-500/50" },
+  { minLevel: 0, color: "from-muted/20 to-transparent", label: "", border: "border-border", icon: "" },
+  { minLevel: 3, color: "from-blue-500/20 to-transparent", label: "⭐", border: "border-blue-500/50", icon: "⭐" },
+  { minLevel: 5, color: "from-purple-500/30 to-transparent", label: "🌟", border: "border-purple-500/50", icon: "🌟" },
+  { minLevel: 10, color: "from-accent/30 to-transparent", label: "👑", border: "border-accent/50", icon: "👑" },
+  { minLevel: 20, color: "from-red-500/30 via-accent/20 to-transparent", label: "🔥", border: "border-red-500/50", icon: "🔥" },
+  { minLevel: 50, color: "from-yellow-500/40 via-red-500/30 to-transparent", label: "🐉", border: "border-yellow-500/50", icon: "🐉⚡" },
 ];
 
 const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
@@ -56,9 +67,26 @@ const VoiceRoom = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [entranceBanner, setEntranceBanner] = useState<{ name: string; effect: typeof ENTRANCE_EFFECTS[0] } | null>(null);
+  const [entranceBanner, setEntranceBanner] = useState<{
+    name: string;
+    wealthLevel: number;
+    charismaLevel: number;
+    effect: typeof ENTRANCE_EFFECTS[0];
+  } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
+
+  // Determine if current user is on a mic
+  const currentMember = members.find((m) => m.user_id === currentUserId);
+  const isOnMic = currentMember?.mic_slot !== null && currentMember?.mic_slot !== undefined;
+
+  // WebRTC
+  const { connectedPeers } = useWebRTC({
+    roomId,
+    currentUserId,
+    isOnMic,
+    isMuted,
+  });
 
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
@@ -78,20 +106,24 @@ const VoiceRoom = () => {
     }
   }, [members, currentUserId]);
 
-  // Entrance banner for new members
+  // Entrance banner for new members - shows wealth & charisma
   useEffect(() => {
     for (const m of members) {
       if (!seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
         seenMemberIds.current.add(m.user_id);
         if (m.profile) {
-          const effect = getEntranceEffect(
-            (m.profile as any).wealth_level || 1,
-            (m.profile as any).charisma_level || 1
-          );
-          if (effect.label) {
-            setEntranceBanner({ name: m.profile.display_name, effect });
-            setTimeout(() => setEntranceBanner(null), 3000);
-          }
+          const wealthLvl = m.profile.wealth_level || 1;
+          const charismaLvl = m.profile.charisma_level || 1;
+          const effect = getEntranceEffect(wealthLvl, charismaLvl);
+          setEntranceBanner({
+            name: m.profile.display_name,
+            wealthLevel: wealthLvl,
+            charismaLevel: charismaLvl,
+            effect,
+          });
+          // Also send a system chat message for the entrance
+          sendMessage(`🚪 ${m.profile.display_name} دخل الغرفة | 💰 ثروة Lv.${wealthLvl} | 💎 كاريزما Lv.${charismaLvl}`);
+          setTimeout(() => setEntranceBanner(null), 4000);
         }
       }
     }
@@ -121,26 +153,23 @@ const VoiceRoom = () => {
   };
 
   const handleAvatarClick = (member: any) => {
-    // Always use member.user_id as the authoritative ID (not profile.user_id)
     const memberId = member.user_id;
     if (!memberId) return;
-    if (memberId !== currentUserId) {
-      navigate(`/user?id=${memberId}`);
-    } else if (member.profile) {
-      setSelectedProfile({ ...member.profile, user_id: memberId } as UserProfile);
+    // Show profile card for anyone (including self for stats)
+    const profile = member.profile;
+    if (profile) {
+      setSelectedProfile({ ...profile, user_id: memberId } as UserProfile);
     }
   };
 
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
-    // Slot 0 is reserved for host
     if (slotIndex === 0 && currentUserId !== roomData?.host_id) {
       toast.error("هذا المقعد مخصص للمضيف");
       return;
     }
     const existing = members.find((m) => m.user_id === currentUserId);
 
-    // If user is already on this slot, leave it
     if (existing?.mic_slot === slotIndex) {
       await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
       setIsMuted(true);
@@ -148,19 +177,16 @@ const VoiceRoom = () => {
       return;
     }
 
-    // If user is already on another slot, clear it first
     if (existing?.mic_slot !== null && existing?.mic_slot !== undefined) {
       await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
     }
 
-    // Check if slot is taken by another user
     const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
     if (slotTaken) {
       toast.error("هذا المايك مشغول");
       return;
     }
 
-    // Sit on mic
     await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
     setIsMuted(false);
     toast.success(`جلست على المايك ${slotIndex + 1}`);
@@ -183,7 +209,6 @@ const VoiceRoom = () => {
   const isHost = currentUserId === roomData?.host_id;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
-    // Slot 0 is always the host
     if (i === 0) {
       const hostMember = members.find((m) => m.user_id === roomData?.host_id);
       return hostMember || null;
@@ -192,22 +217,70 @@ const VoiceRoom = () => {
     return member || null;
   });
 
-  const gridCols = micCount <= 8 ? "grid-cols-4" : micCount <= 15 ? "grid-cols-5" : "grid-cols-5";
+  const gridCols = micCount <= 8 ? "grid-cols-4" : "grid-cols-5";
+
+  // Helper to render avatar with frame
+  const renderAvatarWithFrame = (
+    avatarUrl: string | null,
+    equippedFrame: string | null | undefined,
+    isBoss: boolean,
+    size: "sm" | "md" | "lg" = "md"
+  ) => {
+    const sizeMap = { sm: { outer: "w-14 h-14", inner: "w-10 h-10", frame: "w-[72px] h-[72px]" }, md: { outer: "w-16 h-16", inner: "w-12 h-12", frame: "w-[82px] h-[82px]" }, lg: { outer: "w-20 h-20", inner: "w-16 h-16", frame: "w-[100px] h-[100px]" } };
+    const s = sizeMap[size];
+    const frameImg = isBoss ? bossFrame : (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : null;
+
+    if (frameImg) {
+      return (
+        <div className={`relative ${s.frame} flex items-center justify-center`}>
+          <img src={frameImg} alt="frame" className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none" />
+          <div className={`${s.inner} rounded-full overflow-hidden`}>
+            <img src={avatarUrl || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`${s.outer} rounded-full overflow-hidden ring-2 ring-border`}>
+        <img src={avatarUrl || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Entrance Banner */}
+      {/* Entrance Banner - Enhanced with wealth & charisma */}
       <AnimatePresence>
         {entranceBanner && (
           <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.8 }}
+            initial={{ opacity: 0, y: -60, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -30, scale: 0.9 }}
-            className={`fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl bg-gradient-to-r ${entranceBanner.effect.color} border ${entranceBanner.effect.border} backdrop-blur-xl`}
+            exit={{ opacity: 0, y: -40, scale: 0.9 }}
+            transition={{ type: "spring", damping: 15 }}
+            className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-gradient-to-r ${entranceBanner.effect.color} border ${entranceBanner.effect.border} backdrop-blur-xl shadow-2xl`}
           >
-            <p className="text-sm font-bold text-center whitespace-nowrap">
-              {entranceBanner.effect.label} <span className="glow-neon-text">{entranceBanner.name}</span> دخل الغرفة
-            </p>
+            <div className="flex flex-col items-center gap-1">
+              <motion.p
+                initial={{ scale: 0.5 }}
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6 }}
+                className="text-lg font-black text-center"
+              >
+                {entranceBanner.effect.icon}
+              </motion.p>
+              <p className="text-sm font-bold text-center whitespace-nowrap">
+                <span className="glow-neon-text">{entranceBanner.name}</span> دخل الغرفة
+              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-[10px] font-bold flex items-center gap-1 text-accent">
+                  <TrendingUp className="w-3 h-3" /> ثروة Lv.{entranceBanner.wealthLevel}
+                </span>
+                <span className="text-[10px] font-bold flex items-center gap-1 text-primary">
+                  <Heart className="w-3 h-3" /> كاريزما Lv.{entranceBanner.charismaLevel}
+                </span>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -215,15 +288,22 @@ const VoiceRoom = () => {
       {/* Profile Stats Modal */}
       {selectedProfile && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center" onClick={() => setSelectedProfile(null)}>
-          <div className="card-nova p-5 max-w-xs w-full space-y-4" onClick={(e) => e.stopPropagation()}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="card-nova p-5 max-w-xs w-full space-y-4" onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm">بطاقة اللاعب</h3>
               <button onClick={() => setSelectedProfile(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-primary">
-                <img src={selectedProfile.avatar_url || "https://i.pravatar.cc/100"} className="w-full h-full object-cover" />
-              </div>
+              {renderAvatarWithFrame(
+                selectedProfile.avatar_url,
+                selectedProfile.equipped_frame,
+                selectedProfile.is_boss,
+                "lg"
+              )}
               <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{selectedProfile.display_name}</span>
               <VipBadge level={selectedProfile.vip_level} size="md" />
             </div>
@@ -239,15 +319,25 @@ const VoiceRoom = () => {
                 <p className="text-[9px] text-muted-foreground">{(selectedProfile.charisma_xp || 0).toLocaleString()} XP</p>
               </div>
             </div>
-            {selectedProfile.user_id !== currentUserId && (
-              <button
-                onClick={() => { setSelectedProfile(null); openGiftFor(selectedProfile.user_id, selectedProfile.display_name); }}
-                className="w-full py-2.5 rounded-full gradient-gold text-accent-foreground font-bold text-sm btn-nova"
-              >
-                🎁 إرسال هدية
-              </button>
-            )}
-          </div>
+            <div className="flex gap-2">
+              {selectedProfile.user_id !== currentUserId && (
+                <>
+                  <button
+                    onClick={() => { setSelectedProfile(null); openGiftFor(selectedProfile.user_id, selectedProfile.display_name); }}
+                    className="flex-1 py-2.5 rounded-full gradient-gold text-accent-foreground font-bold text-sm btn-nova"
+                  >
+                    🎁 هدية
+                  </button>
+                  <button
+                    onClick={() => { setSelectedProfile(null); navigate(`/user?id=${selectedProfile.user_id}`); }}
+                    className="flex-1 py-2.5 rounded-full bg-secondary text-foreground font-bold text-sm"
+                  >
+                    👤 بروفايل
+                  </button>
+                </>
+              )}
+            </div>
+          </motion.div>
         </div>
       )}
 
@@ -284,6 +374,11 @@ const VoiceRoom = () => {
               <h1 className="font-bold text-sm">{roomData?.name || "Room"}</h1>
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Users className="w-3 h-3" /> {members.length} متصل
+                {connectedPeers.size > 0 && (
+                  <span className="text-green-500 flex items-center gap-0.5 ml-1">
+                    <Volume2 className="w-3 h-3" /> {connectedPeers.size}
+                  </span>
+                )}
               </span>
             </div>
           </div>
@@ -306,12 +401,18 @@ const VoiceRoom = () => {
         {host && (
           <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
             <div className="relative animate-vip-entrance">
-              <div className={`w-20 h-20 rounded-full overflow-hidden ring-4 ${host.is_boss ? "boss-god-frame" : "ring-accent"} animate-pulse-glow`}>
-                <img src={host.avatar_url || "https://i.pravatar.cc/100?img=3"} alt={host.display_name} className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute -top-2 -right-2">
+              {renderAvatarWithFrame(host.avatar_url, host.equipped_frame, host.is_boss, "lg")}
+              <div className="absolute -top-2 -right-2 z-20">
                 <Crown className="w-6 h-6 text-accent animate-float" />
               </div>
+              {/* Mic indicator for host */}
+              {members.find((m) => m.user_id === roomData?.host_id)?.is_on_mic && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-20">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center animate-pulse">
+                    <Mic className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+              )}
             </div>
             <span className={`font-bold text-sm mt-2 ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
             <VipBadge level={host.vip_level} size="md" />
@@ -320,29 +421,46 @@ const VoiceRoom = () => {
 
         {/* Mic Grid */}
         <div className={`grid ${gridCols} gap-3 mb-6`}>
-          {micSlots.map((slot, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              {slot ? (
-                <div className="cursor-pointer" onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}>
-                  <div className={`relative w-14 h-14 rounded-full overflow-hidden ${
-                    slot.is_on_mic ? "ring-2 ring-destructive animate-mic-burn" : "ring-2 ring-border"
-                  } ${(slot.profile?.vip_level || 0) >= 5 ? "ring-accent" : ""}`}>
-                    <img src={slot.profile?.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
+          {micSlots.map((slot, i) => {
+            // Skip slot 0 since host is shown above
+            if (i === 0) return null;
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                {slot ? (
+                  <div className="cursor-pointer relative" onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}>
+                    <div className="relative">
+                      {renderAvatarWithFrame(
+                        slot.profile?.avatar_url || null,
+                        (slot.profile as any)?.equipped_frame || null,
+                        slot.profile?.is_boss || false,
+                        "sm"
+                      )}
+                      {/* Active mic indicator */}
+                      {slot.is_on_mic && (
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-20">
+                          <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center animate-pulse">
+                            <Mic className="w-2.5 h-2.5 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
+                      {slot.profile?.display_name || "User"}
+                    </span>
+                    {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
                   </div>
-                  <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center">{slot.profile?.display_name}</span>
-                  {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
-                </div>
-              ) : (
-                <>
-                  <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
-                    onClick={() => handleSitOnMic(i)}>
-                    <Mic className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
-                </>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <>
+                    <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary hover:bg-secondary/80 transition-all"
+                      onClick={() => handleSitOnMic(i)}>
+                      <Mic className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Chat */}
@@ -351,15 +469,25 @@ const VoiceRoom = () => {
             <MessageCircle className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold">الدردشة الحية</span>
           </div>
-          <div className="space-y-2 max-h-32 overflow-auto mb-3">
-            {messages.map((msg) => (
-              <div key={msg.id} className="text-xs">
-                <span className={`font-bold ${msg.sender?.is_boss ? "boss-fire-text" : msg.sender?.vip_level && msg.sender.vip_level >= 5 ? "text-accent" : "text-primary"}`}>
-                  {msg.sender?.display_name || "User"}:{" "}
-                </span>
-                <span className="text-muted-foreground">{msg.content}</span>
-              </div>
-            ))}
+          <div className="space-y-2 max-h-40 overflow-auto mb-3">
+            {messages.map((msg) => {
+              // System entrance messages
+              const isSystemMsg = msg.content.startsWith("🚪");
+              return (
+                <div key={msg.id} className={`text-xs ${isSystemMsg ? "text-center" : ""}`}>
+                  {isSystemMsg ? (
+                    <span className="text-accent/80 font-medium italic">{msg.content}</span>
+                  ) : (
+                    <>
+                      <span className={`font-bold ${msg.sender?.is_boss ? "boss-fire-text" : msg.sender?.vip_level && msg.sender.vip_level >= 5 ? "text-accent" : "text-primary"}`}>
+                        {msg.sender?.display_name || "User"}:{" "}
+                      </span>
+                      <span className="text-foreground">{msg.content}</span>
+                    </>
+                  )}
+                </div>
+              );
+            })}
             <div ref={chatEndRef} />
           </div>
           <div className="flex gap-2 items-center">
@@ -375,7 +503,7 @@ const VoiceRoom = () => {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="اكتب رسالة..."
               maxLength={500}
-              className="flex-1 bg-secondary rounded-full px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              className="flex-1 bg-secondary rounded-full px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <button onClick={handleSend} className="w-8 h-8 rounded-full gradient-neon flex items-center justify-center">
               <Send className="w-3.5 h-3.5 text-primary-foreground" />
