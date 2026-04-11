@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
+import NovaSpinner from "@/components/NovaSpinner";
+import EmptyState from "@/components/EmptyState";
 import { FRAME_MAP } from "@/lib/frameConfig";
 
 const LeaderboardPage = () => {
@@ -67,7 +69,7 @@ const LeaderboardPage = () => {
 
         <main className="px-4 max-w-lg mx-auto">
           {loading ? (
-            <div className="flex justify-center py-12"><div className="w-10 h-10 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>
+            <NovaSpinner text="جارٍ التحميل..." />
           ) : (
             <>
               {/* Top 3 Royal Design */}
@@ -126,7 +128,7 @@ const LeaderboardPage = () => {
               </div>
 
               {leaders.length === 0 && (
-                <p className="text-center text-muted-foreground text-sm py-12">لا توجد بيانات حالياً</p>
+                <EmptyState icon="🏆" title="لا توجد بيانات حالياً" subtitle="كن أول من يتصدر القائمة!" />
               )}
             </>
           )}
