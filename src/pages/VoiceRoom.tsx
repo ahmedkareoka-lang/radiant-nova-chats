@@ -51,7 +51,7 @@ const VoiceRoom = () => {
   const roomId = searchParams.get("id");
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic } = useVoiceRoom(roomId);
 
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
   const [giftReceiverName, setGiftReceiverName] = useState("");
@@ -92,10 +92,16 @@ const VoiceRoom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Boss entrance - only trigger once when a Boss user joins
+  const bossEntranceShown = useRef(false);
   useEffect(() => {
-    const bossMember = members.find((m) => m.profile?.is_boss);
-    if (bossMember && bossMember.user_id !== currentUserId) {
-      setShowBossEntrance(true);
+    if (bossEntranceShown.current) return;
+    for (const m of members) {
+      if (m.profile?.is_boss && !seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
+        bossEntranceShown.current = true;
+        setShowBossEntrance(true);
+        break;
+      }
     }
   }, [members, currentUserId]);
 
@@ -129,9 +135,7 @@ const VoiceRoom = () => {
   };
 
   const handleToggleMic = async () => {
-    const newState = !isMuted;
-    setIsMuted(newState);
-    await toggleMic(!newState);
+    setIsMuted(prev => !prev);
   };
 
   const handleLeave = async () => {
@@ -182,7 +186,7 @@ const VoiceRoom = () => {
 
     await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
     setIsMuted(false);
-    toast.success(`جلست على المايك ${slotIndex + 1}`);
+    toast.success(`جلست على المايك ${slotIndex + 1} 🎙️`);
   };
 
   const changeMicCount = async (count: number) => {
