@@ -26,9 +26,9 @@ const RoomParticles = ({ theme }: { theme: string }) => {
   const animRef = useRef<number>(0);
 
   const config = THEME_CONFIG[theme];
-  if (!config) return null;
 
   useEffect(() => {
+    if (!config) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
