@@ -44,7 +44,7 @@ const Profile = () => {
     fetchProfile();
   }, [navigate]);
 
-  const handleLogout = async () => { await supabase.auth.signOut(); navigate("/login"); };
+  
 
   const equipFrame = async (frameUrl: string | null) => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
