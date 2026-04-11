@@ -302,7 +302,7 @@ const VoiceRoom = () => {
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
         {/* Host */}
         {host && (
-          <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ profile: { ...host, user_id: roomData?.host_id } })}>
+          <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
             <div className="relative animate-vip-entrance">
               <div className={`w-20 h-20 rounded-full overflow-hidden ring-4 ${host.is_boss ? "boss-god-frame" : "ring-accent"} animate-pulse-glow`}>
                 <img src={host.avatar_url || "https://i.pravatar.cc/100?img=3"} alt={host.display_name} className="w-full h-full object-cover" />
@@ -321,7 +321,7 @@ const VoiceRoom = () => {
           {micSlots.map((slot, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               {slot ? (
-                <div className="cursor-pointer" onClick={() => handleAvatarClick(slot)}>
+                <div className="cursor-pointer" onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}>
                   <div className={`relative w-14 h-14 rounded-full overflow-hidden ${
                     slot.is_on_mic ? "ring-2 ring-destructive animate-mic-burn" : "ring-2 ring-border"
                   } ${(slot.profile?.vip_level || 0) >= 5 ? "ring-accent" : ""}`}>
