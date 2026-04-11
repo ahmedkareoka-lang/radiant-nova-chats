@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { playGiftSound, triggerConfetti } from "@/lib/effects";
 
 export const useGifts = () => {
   const sendGift = async (
@@ -60,6 +61,8 @@ export const useGifts = () => {
       type: "gift",
     });
 
+    playGiftSound();
+    if (goldAmount >= 1000) triggerConfetti();
     toast.success(`تم إرسال ${giftName}! 🎁`);
     return true;
   };
