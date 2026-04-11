@@ -61,8 +61,10 @@ const AdminDashboard = () => {
 
   const promoteUser = async (role: "admin" | "super_admin", vipLevel: number) => {
     if (!targetUser) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
     await supabase.from("user_roles").upsert({ user_id: targetUser.id, role }, { onConflict: "user_id,role" });
-    await supabase.from("profiles").update({ vip_level: vipLevel }).eq("id", targetUser.id);
+    await supabase.rpc("admin_update_profile", { _admin_id: user.id, _target_id: targetUser.id, _vip_level: vipLevel });
     toast.success(`تمت الترقية إلى ${role === "super_admin" ? "سوبر أدمن" : "أدمن"}`);
   };
 
@@ -70,8 +72,10 @@ const AdminDashboard = () => {
     if (!targetUser || !coinAmount) return;
     const amount = parseInt(coinAmount);
     if (isNaN(amount) || amount <= 0) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
     const newCoins = (targetUser.coins || 0) + amount;
-    await supabase.from("profiles").update({ coins: newCoins }).eq("id", targetUser.id);
+    await supabase.rpc("admin_update_profile", { _admin_id: user.id, _target_id: targetUser.id, _coins: newCoins });
     toast.success(`تم إضافة ${amount.toLocaleString()} عملة`);
     setTargetUser({ ...targetUser, coins: newCoins });
     setCoinAmount("");
@@ -79,7 +83,9 @@ const AdminDashboard = () => {
 
   const banUser = async () => {
     if (!targetUser) return;
-    await supabase.from("profiles").update({ vip_level: 0, coins: 0, diamonds: 0 }).eq("id", targetUser.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.rpc("admin_update_profile", { _admin_id: user.id, _target_id: targetUser.id, _coins: 0, _diamonds: 0, _vip_level: 0 });
     toast.success("تم حظر المستخدم وتصفير رصيده");
   };
 

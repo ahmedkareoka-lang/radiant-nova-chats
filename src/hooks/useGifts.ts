@@ -17,7 +17,7 @@ export const useGifts = () => {
     const rate = setting ? parseInt(setting.value) : 50;
 
     // Check sender balance
-    const { data: sender } = await supabase.from("profiles").select("coins, wealth_xp, wealth_level").eq("id", senderId).single();
+    const { data: sender } = await supabase.from("profiles").select("coins").eq("id", senderId).single();
     if (!sender || sender.coins < goldAmount) {
       toast.error("رصيدك غير كافٍ!");
       return false;
@@ -25,22 +25,23 @@ export const useGifts = () => {
 
     const diamondAmount = Math.floor((goldAmount * rate) / 100);
 
-    // Deduct from sender
-    await supabase.from("profiles").update({
-      coins: sender.coins - goldAmount,
-      wealth_xp: (sender.wealth_xp || 0) + goldAmount,
-      wealth_level: Math.floor(((sender.wealth_xp || 0) + goldAmount) / 10000) + 1,
-    }).eq("id", senderId);
-
-    // Add to receiver
-    const { data: receiver } = await supabase.from("profiles").select("diamonds, charisma_xp, charisma_level").eq("id", receiverId).single();
-    if (receiver) {
-      await supabase.from("profiles").update({
-        diamonds: (receiver.diamonds || 0) + diamondAmount,
-        charisma_xp: (receiver.charisma_xp || 0) + diamondAmount,
-        charisma_level: Math.floor(((receiver.charisma_xp || 0) + diamondAmount) / 10000) + 1,
-      }).eq("id", receiverId);
+    // Deduct from sender via secure RPC
+    const { error: deductErr } = await supabase.rpc("deduct_coins_add_wealth", {
+      _user_id: senderId,
+      _coin_amount: goldAmount,
+      _xp_amount: goldAmount,
+    });
+    if (deductErr) {
+      toast.error("فشل في خصم الرصيد");
+      return false;
     }
+
+    // Add to receiver via secure RPC
+    await supabase.rpc("add_diamonds_add_charisma", {
+      _user_id: receiverId,
+      _diamond_amount: diamondAmount,
+      _xp_amount: diamondAmount,
+    });
 
     // Log transaction
     await supabase.from("gift_transactions").insert({

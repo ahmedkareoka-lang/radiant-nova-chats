@@ -65,7 +65,11 @@ const StorePage = () => {
     }
 
     const newCoins = profile.coins - frame.price_coins;
-    await supabase.from("profiles").update({ coins: newCoins, equipped_frame: frame.data.frame_url }).eq("id", profile.id);
+    // Deduct coins via secure RPC
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: frame.price_coins });
+    if (error) { toast.error("فشل في الشراء"); return; }
+    // Update equipped frame (safe field)
+    await supabase.from("profiles").update({ equipped_frame: frame.data.frame_url }).eq("id", profile.id);
     await supabase.from("inventory").insert({
       user_id: profile.id,
       item_type: "frame",
