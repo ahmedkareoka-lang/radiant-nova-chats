@@ -277,8 +277,16 @@ const VoiceRoom = () => {
     );
   };
 
+  const currentTheme = ROOM_THEMES.find(t => t.id === (roomData?.background_theme || 'default')) || ROOM_THEMES[0];
+
+  const changeTheme = async (themeId: string) => {
+    if (!roomId) return;
+    await supabase.from("rooms").update({ background_theme: themeId } as any).eq("id", roomId);
+    toast.success("تم تغيير خلفية الغرفة ✨");
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700`}>
       {/* Entrance Banner */}
       <AnimatePresence>
         {entranceBanner && (
