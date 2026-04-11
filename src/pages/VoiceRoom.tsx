@@ -5,7 +5,7 @@ import HostIncomeCounter from "@/components/HostIncomeCounter";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
-import VipBadge from "@/components/VipBadge";
+import VipBadge, { VipInlineBadge } from "@/components/VipBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
 import { useWebRTC } from "@/hooks/useWebRTC";
