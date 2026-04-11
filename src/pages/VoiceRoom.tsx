@@ -161,7 +161,6 @@ const VoiceRoom = () => {
 
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
-    // Host can sit on any slot; non-host cannot take slot 0
     if (slotIndex === 0 && currentUserId !== roomData?.host_id) {
       toast.error("هذا المقعد مخصص للمضيف");
       return;
@@ -207,13 +206,8 @@ const VoiceRoom = () => {
   const isHost = currentUserId === roomData?.host_id;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
-    // All slots use mic_slot value - host defaults to slot 0 if not explicitly on another slot
     if (i === 0) {
-      // Check if someone is explicitly assigned to slot 0
-      const slotMember = members.find((m) => m.mic_slot === 0);
-      if (slotMember) return slotMember;
-      // If host has no mic_slot assigned, show them on slot 0 by default
-      const hostMember = members.find((m) => m.user_id === roomData?.host_id && (m.mic_slot === null || m.mic_slot === undefined));
+      const hostMember = members.find((m) => m.user_id === roomData?.host_id);
       return hostMember || null;
     }
     const member = members.find((m) => m.mic_slot === i);
@@ -401,11 +395,33 @@ const VoiceRoom = () => {
 
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+        {/* Host */}
+        {host && (
+          <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
+            <div className="relative animate-vip-entrance">
+              {renderAvatarWithFrame(host.avatar_url, host.equipped_frame, host.is_boss, "lg")}
+              <div className="absolute -top-2 -right-2 z-20">
+                <Crown className="w-6 h-6 text-accent animate-float" />
+              </div>
+              {/* Mic indicator for host */}
+              {members.find((m) => m.user_id === roomData?.host_id)?.is_on_mic && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-20">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center animate-pulse">
+                    <Mic className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+              )}
+            </div>
+            <span className={`font-bold text-sm mt-2 ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
+            <VipBadge level={host.vip_level} size="md" />
+          </div>
+        )}
 
-        {/* Mic Grid - Host is shown in slot 0 inside the grid */}
+        {/* Mic Grid */}
         <div className={`grid ${gridCols} gap-3 mb-6`}>
           {micSlots.map((slot, i) => {
-            const isSlotHost = slot?.user_id === roomData?.host_id;
+            // Skip slot 0 since host is shown above
+            if (i === 0) return null;
             return (
               <div key={i} className="flex flex-col items-center gap-1">
                 {slot ? (
@@ -415,13 +431,7 @@ const VoiceRoom = () => {
                         slot.profile?.avatar_url || null,
                         (slot.profile as any)?.equipped_frame || null,
                         slot.profile?.is_boss || false,
-                        isSlotHost ? "lg" : "sm"
-                      )}
-                      {/* Crown for host */}
-                      {isSlotHost && (
-                        <div className="absolute -top-2 -right-2 z-20">
-                          <Crown className="w-5 h-5 text-accent animate-float" />
-                        </div>
+                        "sm"
                       )}
                       {/* Active mic indicator */}
                       {slot.is_on_mic && (
@@ -432,7 +442,7 @@ const VoiceRoom = () => {
                         </div>
                       )}
                     </div>
-                    <span className={`text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1 ${isSlotHost && slot.profile?.is_boss ? "boss-fire-text" : ""}`}>
+                    <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
                       {slot.profile?.display_name || "User"}
                     </span>
                     {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
@@ -443,7 +453,7 @@ const VoiceRoom = () => {
                       onClick={() => handleSitOnMic(i)}>
                       <Mic className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <span className="text-[9px] text-muted-foreground">{i === 0 ? "المضيف" : `مايك ${i + 1}`}</span>
+                    <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
                   </>
                 )}
               </div>
