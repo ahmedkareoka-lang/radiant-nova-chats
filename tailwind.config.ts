@@ -19,6 +19,8 @@ export default {
       colors: {
         "neon-purple": "hsl(var(--neon-purple))",
         "neon-purple-glow": "hsl(var(--neon-purple-glow))",
+        "neon-pink": "hsl(var(--neon-pink))",
+        "neon-pink-glow": "hsl(var(--neon-pink-glow))",
         gold: "hsl(var(--gold))",
         "gold-glow": "hsl(var(--gold-glow))",
         "dark-surface": "hsl(var(--dark-surface))",

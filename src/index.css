@@ -6,23 +6,23 @@
 
 @layer base {
   :root {
-    --background: 260 20% 6%;
+    --background: 260 25% 5%;
     --foreground: 0 0% 100%;
 
-    --card: 260 18% 10%;
+    --card: 260 22% 9%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 260 18% 10%;
+    --popover: 260 22% 9%;
     --popover-foreground: 0 0% 100%;
 
     --primary: 270 100% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 260 15% 18%;
+    --secondary: 260 20% 14%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 260 12% 14%;
-    --muted-foreground: 260 10% 55%;
+    --muted: 260 18% 12%;
+    --muted-foreground: 260 10% 50%;
 
     --accent: 45 100% 55%;
     --accent-foreground: 260 20% 6%;
@@ -30,8 +30,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 260 15% 20%;
-    --input: 260 15% 18%;
+    --border: 260 20% 16%;
+    --input: 260 20% 14%;
     --ring: 270 100% 65%;
 
     --radius: 1rem;
@@ -39,26 +39,31 @@
     /* Custom NOVA tokens */
     --neon-purple: 270 100% 65%;
     --neon-purple-glow: 270 100% 75%;
+    --neon-pink: 320 100% 60%;
+    --neon-pink-glow: 320 100% 70%;
     --gold: 45 100% 55%;
     --gold-glow: 45 100% 65%;
-    --dark-surface: 260 20% 8%;
-    --dark-surface-2: 260 18% 12%;
+    --dark-surface: 260 25% 7%;
+    --dark-surface-2: 260 22% 11%;
 
-    --gradient-neon: linear-gradient(135deg, hsl(270 100% 65%), hsl(290 100% 60%));
+    --gradient-neon: linear-gradient(135deg, hsl(270 100% 65%), hsl(320 100% 60%));
     --gradient-gold: linear-gradient(135deg, hsl(45 100% 55%), hsl(35 100% 45%));
     --gradient-vip: linear-gradient(135deg, hsl(45 100% 55%), hsl(270 100% 65%));
+    --gradient-royal: linear-gradient(180deg, hsl(260 30% 12%), hsl(260 25% 5%));
+    --gradient-card-blue: linear-gradient(135deg, hsl(220 60% 20%), hsl(260 40% 15%));
 
     --shadow-neon: 0 0 20px hsl(270 100% 65% / 0.4);
     --shadow-gold: 0 0 20px hsl(45 100% 55% / 0.3);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.5);
+    --shadow-pink: 0 0 20px hsl(320 100% 60% / 0.4);
 
-    --sidebar-background: 260 20% 8%;
+    --sidebar-background: 260 25% 7%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 270 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 15% 18%;
+    --sidebar-accent: 260 20% 14%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 260 15% 20%;
+    --sidebar-border: 260 20% 16%;
     --sidebar-ring: 270 100% 65%;
   }
 }
@@ -72,6 +77,8 @@
     @apply bg-background text-foreground font-cairo;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(180deg, hsl(260 30% 8%), hsl(260 25% 4%));
+    min-height: 100vh;
   }
 }
 
@@ -82,6 +89,10 @@
 
   .glow-gold {
     box-shadow: var(--shadow-gold);
+  }
+
+  .glow-pink {
+    box-shadow: var(--shadow-pink);
   }
 
   .glow-neon-text {
@@ -104,17 +115,32 @@
     background: var(--gradient-vip);
   }
 
+  .gradient-royal {
+    background: var(--gradient-royal);
+  }
+
+  .gradient-card-blue {
+    background: var(--gradient-card-blue);
+  }
+
   .card-nova {
-    @apply bg-card rounded-3xl border border-border;
+    @apply rounded-2xl border border-border/50;
+    background: hsl(260 22% 9% / 0.9);
     box-shadow: var(--shadow-card);
   }
 
   .card-glass {
-    @apply rounded-3xl border border-border/40;
-    background: hsl(var(--card) / 0.6);
+    @apply rounded-2xl border border-border/30;
+    background: hsl(260 22% 9% / 0.6);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    box-shadow: var(--shadow-card), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+    box-shadow: var(--shadow-card), inset 0 1px 0 hsl(0 0% 100% / 0.03);
+  }
+
+  .card-gradient-blue {
+    @apply rounded-2xl border border-border/30;
+    background: linear-gradient(135deg, hsl(220 50% 18% / 0.8), hsl(260 35% 12% / 0.8));
+    box-shadow: var(--shadow-card);
   }
 
   .btn-nova {
@@ -144,6 +170,55 @@
 
   .btn-glass:active {
     transform: scale(0.95);
+  }
+
+  /* Room card cover styles */
+  .room-cover-card {
+    @apply relative rounded-2xl overflow-hidden cursor-pointer;
+    aspect-ratio: 16/10;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .room-cover-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 24px hsl(270 100% 65% / 0.3);
+  }
+  .room-cover-card:active {
+    transform: scale(0.98);
+  }
+  .room-cover-vip {
+    border: 2px solid hsl(45 100% 55% / 0.6);
+    box-shadow: 0 0 16px hsl(45 100% 55% / 0.2);
+  }
+  .room-cover-normal {
+    border: 2px solid hsl(260 30% 25% / 0.6);
+  }
+
+  /* Icon grid button */
+  .icon-grid-btn {
+    @apply flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all duration-200;
+    background: hsl(260 22% 11%);
+  }
+  .icon-grid-btn:hover {
+    background: hsl(260 22% 15%);
+    transform: scale(1.05);
+  }
+  .icon-grid-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Party avatar ring */
+  .party-avatar-ring {
+    @apply relative rounded-full p-[2px];
+    background: linear-gradient(135deg, hsl(270 100% 65%), hsl(320 100% 60%), hsl(45 100% 55%));
+  }
+
+  /* Menu row style */
+  .menu-row {
+    @apply flex items-center justify-between px-4 py-3.5 border-b border-border/30;
+    background: hsl(260 22% 9% / 0.5);
+  }
+  .menu-row:hover {
+    background: hsl(260 22% 12% / 0.8);
   }
 }
 
@@ -186,6 +261,11 @@
   100% { background-position: 200% center; }
 }
 
+@keyframes glow-ring {
+  0%, 100% { box-shadow: 0 0 6px hsl(320 100% 60% / 0.4), 0 0 12px hsl(270 100% 65% / 0.2); }
+  50% { box-shadow: 0 0 14px hsl(320 100% 60% / 0.7), 0 0 28px hsl(270 100% 65% / 0.3); }
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -205,6 +285,10 @@
 .animate-shimmer {
   background-size: 200% auto;
   animation: shimmer 2s linear infinite;
+}
+
+.animate-glow-ring {
+  animation: glow-ring 2s ease-in-out infinite;
 }
 
 /* BOSS God Frame - RGB Lightning Border */
@@ -300,4 +384,16 @@
 @keyframes frame-dragon-glow {
   0%, 100% { filter: drop-shadow(0 0 8px hsl(45 100% 50% / 0.6)) brightness(1); }
   50% { filter: drop-shadow(0 0 22px hsl(45 100% 60% / 0.9)) drop-shadow(0 0 40px hsl(30 100% 45% / 0.4)) brightness(1.2); }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(260 20% 20%);
+  border-radius: 4px;
 }

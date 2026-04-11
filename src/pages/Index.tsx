@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, Search, Crown, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import RoomCard from "@/components/RoomCard";
@@ -7,14 +7,14 @@ import VipBadge from "@/components/VipBadge";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
-import AnimatedIcon from "@/components/AnimatedIcon";
 import { useRooms } from "@/hooks/useRooms";
 import { usePresence } from "@/hooks/usePresence";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const categories = ["All", "Music", "Chat", "Gaming", "VIP"];
+const categories = ["حفلة", "خاصي"];
+const countryFilters = ["Hot 🔥", "Morocco 🇲🇦", "Yemen 🇾🇪", "Syria 🇸🇾", "Iraq 🇮🇶"];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -22,7 +22,8 @@ const Index = () => {
   const { onlineUsers } = usePresence();
   const { unreadCount, notifications } = useNotifications();
   const [profile, setProfile] = useState<any>(null);
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("حفلة");
+  const [activeCountry, setActiveCountry] = useState("Hot 🔥");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -41,72 +42,104 @@ const Index = () => {
     }
   }, [notifications.length]);
 
-  const filteredRooms = activeCategory === "All" ? rooms : rooms.filter((r) => r.type === activeCategory);
+  const filteredRooms = rooms;
 
   return (
     <PageTransition>
       <div className="min-h-screen pb-20">
-        <header className="sticky top-0 z-40 border-b border-border/40" style={{ background: "hsl(260 20% 6% / 0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+        {/* Header */}
+        <header className="sticky top-0 z-40 border-b border-border/20" style={{ background: "hsl(260 28% 6% / 0.9)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
           <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
-            <div className="flex items-center gap-3" onClick={() => navigate("/profile")} role="button">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary">
-                <img src={profile?.avatar_url || "https://i.pravatar.cc/100?img=3"} alt="Profile" className="w-full h-full object-cover" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm">{profile?.display_name || "User"}</span>
-                  <VipBadge level={profile?.vip_level || 0} />
-                </div>
-                <span className="text-[10px] text-muted-foreground">ID: {profile?.user_id}</span>
-              </div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate("/search")} className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
+                <Search className="w-4 h-4 text-muted-foreground" />
+              </button>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 btn-glass px-2.5 py-1">
-                <CurrencyIcon type="gold" size="xs" />
-                <span className="text-xs font-bold text-accent">{(profile?.coins || 0).toLocaleString()}</span>
-              </button>
-              <button onClick={() => navigate("/top-up")} className="flex items-center gap-1 btn-glass px-2.5 py-1">
-                <CurrencyIcon type="diamond" size="xs" />
-                <span className="text-xs font-bold text-primary">{(profile?.diamonds || 0).toLocaleString()}</span>
-              </button>
-              <div className="relative" onClick={() => navigate("/chat")} role="button">
-                <Bell className="w-5 h-5 text-muted-foreground" />
-                {unreadCount > 0 && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
-                    <span className="text-[8px] font-bold text-destructive-foreground">{unreadCount}</span>
-                  </div>
-                )}
-                <span className="absolute -top-2 -left-2 text-[8px] text-green-400 font-bold">{onlineUsers.length}</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="px-4 py-4 max-w-lg mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-extrabold flex items-center gap-2">
-              <AnimatedIcon type="live" className="w-5 h-5" />
-              <span className="glow-neon-text">LIVE</span>{" "}
-              <span className="text-muted-foreground font-normal text-base">Rooms</span>
-            </h1>
-            <div className="flex gap-2">
               {categories.map((cat) => (
                 <button key={cat} onClick={() => setActiveCategory(cat)}
-                  className={`text-[10px] px-3 py-1 rounded-full font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
-                    activeCategory === cat ? "gradient-neon text-primary-foreground glow-neon" : "btn-glass text-muted-foreground hover:text-foreground"
-                  }`}>
+                  className={`text-sm font-bold transition-all ${activeCategory === cat ? "text-foreground" : "text-muted-foreground/50"}`}>
                   {cat}
                 </button>
               ))}
             </div>
           </div>
+        </header>
 
-          <div className="space-y-3">
+        <main className="px-4 py-3 max-w-lg mx-auto">
+          {/* Weekly Recharge Banner */}
+          <div className="relative rounded-2xl overflow-hidden mb-4 cursor-pointer" onClick={() => navigate("/top-up")}>
+            <div className="h-32 relative" style={{ background: "linear-gradient(135deg, hsl(35 80% 30%), hsl(45 90% 40%), hsl(25 70% 25%))" }}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Crown className="w-6 h-6 text-accent" />
+                    <span className="text-lg font-black glow-gold-text">الشحن الأسبوعي</span>
+                    <Crown className="w-6 h-6 text-accent" />
+                  </div>
+                  <p className="text-[10px] text-foreground/70">اشحن الآن واحصل على مكافآت حصرية</p>
+                </div>
+              </div>
+              {/* Decorative elements */}
+              <div className="absolute bottom-2 left-4 flex -space-x-2">
+                <div className="w-10 h-10 rounded-full ring-2 ring-gold overflow-hidden">
+                  <img src="https://i.pravatar.cc/60?img=5" alt="" className="w-full h-full object-cover" />
+                </div>
+                <div className="w-10 h-10 rounded-full ring-2 ring-gold overflow-hidden">
+                  <img src="https://i.pravatar.cc/60?img=8" alt="" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Country Filter Tags */}
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-none">
+            {countryFilters.map((filter) => (
+              <button key={filter} onClick={() => setActiveCountry(filter)}
+                className={`text-[11px] px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+                  activeCountry === filter ? "gradient-neon text-primary-foreground" : "bg-secondary/50 text-muted-foreground border border-border/30"
+                }`}>
+                {filter}
+              </button>
+            ))}
+          </div>
+
+          {/* Ranking cards row */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/search")}>
+              <div className="flex items-center justify-between">
+                <div className="flex -space-x-2">
+                  <div className="w-8 h-8 rounded-full ring-1 ring-primary overflow-hidden">
+                    <img src="https://i.pravatar.cc/40?img=10" alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="w-8 h-8 rounded-full ring-1 ring-primary overflow-hidden">
+                    <img src="https://i.pravatar.cc/40?img=12" alt="" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                <span className="text-sm font-bold">الجاذبية</span>
+              </div>
+            </div>
+            <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/search")}>
+              <div className="flex items-center justify-between">
+                <div className="flex -space-x-2">
+                  <div className="w-8 h-8 rounded-full ring-1 ring-accent overflow-hidden">
+                    <img src="https://i.pravatar.cc/40?img=15" alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="w-8 h-8 rounded-full ring-1 ring-accent overflow-hidden">
+                    <img src="https://i.pravatar.cc/40?img=18" alt="" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                <span className="text-sm font-bold">الغرفة</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Room Grid */}
+          <div className="grid grid-cols-2 gap-3">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => <RoomSkeleton key={i} />)
             ) : filteredRooms.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="col-span-2 text-center py-12 text-muted-foreground">
                 <p className="text-sm">لا توجد غرف حالياً</p>
                 <button onClick={() => navigate("/create-room")} className="mt-3 text-primary font-bold text-sm">+ إنشاء غرفة جديدة</button>
               </div>

@@ -1,4 +1,4 @@
-import { Search, ArrowLeft, Send, Bell } from "lucide-react";
+import { Search, ArrowLeft, Send, Bell, ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
@@ -29,33 +29,56 @@ const ChatPage = () => {
 
   return (
     <div className="min-h-screen pb-20">
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border px-4 py-3">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.9)", backdropFilter: "blur(20px)" }}>
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="font-bold text-lg">الرسائل</h1>
-            <button onClick={() => navigate("/notifications")} className="relative w-9 h-9 rounded-full bg-secondary flex items-center justify-center">
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive flex items-center justify-center">
-                  <span className="text-[7px] font-bold text-destructive-foreground">{unreadCount > 9 ? "9+" : unreadCount}</span>
-                </div>
-              )}
-            </button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search chats..."
-              className="w-full bg-secondary rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <div className="flex items-center gap-3">
+              <button className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
+                <Search className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-bold text-muted-foreground/50">جهات الاتصال</span>
+              <h1 className="font-black text-lg text-primary glow-neon-text">رسالة</h1>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto">
+        {/* Join the Party Section */}
+        {conversations.length > 0 && (
+          <div className="px-4 py-3">
+            <p className="text-sm font-bold text-right mb-3">انضم إلى الحفلة</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              {conversations.slice(0, 6).map((conv) => (
+                <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0" onClick={() => setActiveConvId(conv.id)}>
+                  <div className="party-avatar-ring">
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-background">
+                      <img src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-muted-foreground max-w-[60px] truncate text-center">{conv.other_user.display_name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notifications Row */}
+        <div onClick={() => navigate("/notifications")} className="flex items-center gap-3 px-4 py-3 border-b border-border/20 cursor-pointer hover:bg-secondary/20">
+          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+            <Bell className="w-6 h-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0 text-right">
+            <p className="font-bold text-sm">إشعارات</p>
+            <p className="text-xs text-muted-foreground truncate">اطلع على آخر التنبيهات...</p>
+          </div>
+          <span className="text-[10px] text-muted-foreground">جديد</span>
+        </div>
+
+        {/* Conversations */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin" />
@@ -70,25 +93,25 @@ const ChatPage = () => {
             <div
               key={conv.id}
               onClick={() => setActiveConvId(conv.id)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors cursor-pointer border-b border-border/50"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors cursor-pointer border-b border-border/20"
             >
-              <div className={`relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${conv.other_user.vip_level >= 5 ? "ring-2 ring-accent" : "ring-2 ring-border"}`}>
+              <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border/30">
                 <img src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
+                {/* Online indicator */}
+                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-right">
                 <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground">
+                    {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false }) : ""}
+                  </span>
                   <span className="font-bold text-sm">{conv.other_user.display_name}</span>
-                  {conv.last_message_at && (
-                    <span className="text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false })}
-                    </span>
-                  )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{conv.last_message || "بدء المحادثة..."}</p>
+                <p className="text-xs text-muted-foreground truncate text-right">{conv.last_message || "بدء المحادثة..."}</p>
               </div>
               {conv.unread_count > 0 && (
-                <div className="w-5 h-5 rounded-full gradient-neon flex items-center justify-center flex-shrink-0">
-                  <span className="text-[10px] font-bold text-primary-foreground">{conv.unread_count}</span>
+                <div className="min-w-[20px] h-5 rounded-full bg-destructive flex items-center justify-center px-1 flex-shrink-0">
+                  <span className="text-[10px] font-bold text-destructive-foreground">{conv.unread_count}</span>
                 </div>
               )}
             </div>
@@ -112,11 +135,11 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
+    <div className="min-h-screen flex flex-col">
+      <header className="border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)", backdropFilter: "blur(20px)" }}>
         <div className="flex items-center gap-3 max-w-lg mx-auto">
-          <button onClick={onBack} className="text-muted-foreground">
-            <ArrowLeft className="w-5 h-5" />
+          <button onClick={onBack} className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <h1 className="font-bold text-sm">Chat</h1>
         </div>
@@ -141,18 +164,18 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
         })}
       </div>
 
-      <div className="bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3">
+      <div className="border-t border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)" }}>
         <div className="flex gap-2 max-w-lg mx-auto">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Type a message..."
+            placeholder="اكتب رسالة..."
             maxLength={1000}
-            className="flex-1 bg-secondary rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 bg-secondary/50 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary border border-border/30"
           />
-          <button onClick={handleSend} className="w-10 h-10 rounded-full gradient-neon flex items-center justify-center">
+          <button onClick={handleSend} className="w-10 h-10 rounded-full gradient-neon flex items-center justify-center glow-neon">
             <Send className="w-4 h-4 text-primary-foreground" />
           </button>
         </div>

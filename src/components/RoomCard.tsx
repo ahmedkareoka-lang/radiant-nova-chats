@@ -1,4 +1,4 @@
-import { Users, Mic } from "lucide-react";
+import { Users, MessageCircle } from "lucide-react";
 
 interface RoomCardProps {
   name: string;
@@ -8,47 +8,65 @@ interface RoomCardProps {
   isVip?: boolean;
   category: string;
   onClick?: () => void;
+  countryCode?: string;
 }
 
-const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick }: RoomCardProps) => {
-  const categoryColors: Record<string, string> = {
-    Chat: "bg-neon-purple/20 text-neon-purple",
-    Music: "bg-pink-500/20 text-pink-400",
-    Gaming: "bg-green-500/20 text-green-400",
-    VIP: "bg-gold/20 text-gold",
-  };
+const COVER_GRADIENTS: Record<string, string> = {
+  Chat: "linear-gradient(135deg, hsl(270 60% 30%), hsl(320 50% 25%))",
+  Music: "linear-gradient(135deg, hsl(340 60% 30%), hsl(280 50% 25%))",
+  Gaming: "linear-gradient(135deg, hsl(150 50% 20%), hsl(200 50% 25%))",
+  VIP: "linear-gradient(135deg, hsl(45 80% 30%), hsl(30 70% 25%))",
+};
 
+const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick, countryCode }: RoomCardProps) => {
   return (
-    <div onClick={onClick} className={`card-glass p-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] active:scale-[0.98] ${isVip ? "border-accent/30 animate-pulse-glow" : ""}`}>
-      <div className="flex items-center gap-3">
-        <div className={`relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${isVip ? "ring-2 ring-gold" : "ring-2 ring-neon-purple/50"}`}>
-          <img src={hostImage} alt={hostName} className="w-full h-full object-cover" />
-          {isVip && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full gradient-gold flex items-center justify-center">
-              <span className="text-[8px] font-bold text-accent-foreground">V</span>
-            </div>
-          )}
+    <div
+      onClick={onClick}
+      className={`room-cover-card ${isVip ? "room-cover-vip" : "room-cover-normal"}`}
+      style={{ background: COVER_GRADIENTS[category] || COVER_GRADIENTS.Chat }}
+    >
+      {/* Background overlay pattern */}
+      <div className="absolute inset-0 opacity-20"
+        style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(270 100% 65% / 0.3), transparent 60%)" }} />
+      
+      {/* Chat badge */}
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-background/40 backdrop-blur rounded-full px-2 py-0.5">
+        <MessageCircle className="w-3 h-3 text-foreground/70" />
+        <span className="text-[10px] text-foreground/80">محادثة</span>
+      </div>
+
+      {/* Member count */}
+      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1">
+        <div className="flex items-center gap-1 bg-background/40 backdrop-blur rounded-full px-2 py-0.5">
+          <Users className="w-3 h-3 text-foreground/70" />
+          <span className="text-[10px] font-bold text-foreground/80">{viewerCount}</span>
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold truncate">{name}</h3>
-          <p className="text-xs text-muted-foreground truncate">{hostName}</p>
-        </div>
-        <div className="flex flex-col items-end gap-1">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${categoryColors[category] || categoryColors.Chat}`}>
-            {category}
-          </span>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Users className="w-3 h-3" />
-            <span className="text-[10px]">{viewerCount}</span>
+      </div>
+
+      {/* Room name and country */}
+      <div className="absolute bottom-3 right-3 z-10 text-right">
+        <p className="text-sm font-bold text-foreground drop-shadow-lg truncate max-w-[140px]">{name}</p>
+        {countryCode && (
+          <div className="flex items-center justify-end gap-1 mt-0.5">
+            <span className="text-xs">🏳️</span>
+            <span className="text-[10px] text-foreground/70">{countryCode}</span>
           </div>
+        )}
+      </div>
+
+      {/* Host avatar */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div className={`w-16 h-16 rounded-full overflow-hidden ${isVip ? "ring-2 ring-gold glow-gold" : "ring-2 ring-primary/50"}`}>
+          <img src={hostImage} alt={hostName} className="w-full h-full object-cover" />
         </div>
       </div>
-      <div className="mt-2 flex items-center gap-1">
-        {Array.from({ length: Math.min(viewerCount, 5) }).map((_, i) => (
-          <Mic key={i} className="w-3 h-3 text-neon-purple/60" />
-        ))}
-        {viewerCount > 5 && <span className="text-[10px] text-muted-foreground">+{viewerCount - 5}</span>}
-      </div>
+
+      {/* VIP crown */}
+      {isVip && (
+        <div className="absolute top-2 right-2 z-10">
+          <span className="text-lg">👑</span>
+        </div>
+      )}
     </div>
   );
 };
