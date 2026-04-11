@@ -543,6 +543,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_diamonds_add_charisma: {
+        Args: { _diamond_amount: number; _user_id: string; _xp_amount: number }
+        Returns: undefined
+      }
+      admin_update_profile: {
+        Args: {
+          _admin_id: string
+          _coins?: number
+          _diamonds?: number
+          _is_boss?: boolean
+          _target_id: string
+          _vip_level?: number
+        }
+        Returns: undefined
+      }
+      deduct_coins: {
+        Args: { _amount: number; _user_id: string }
+        Returns: undefined
+      }
+      deduct_coins_add_wealth: {
+        Args: { _coin_amount: number; _user_id: string; _xp_amount: number }
+        Returns: undefined
+      }
+      exchange_diamonds_to_coins: {
+        Args: {
+          _coin_amount: number
+          _diamond_amount: number
+          _user_id: string
+        }
+        Returns: undefined
+      }
       generate_user_id: { Args: never; Returns: string }
       get_profile_safe_fields: {
         Args: { _profile_id: string }
