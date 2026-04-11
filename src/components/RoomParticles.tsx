@@ -111,6 +111,7 @@ const RoomParticles = ({ theme }: { theme: string }) => {
 
   if (!config) return null;
 
+  return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none z-0"
