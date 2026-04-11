@@ -6,10 +6,15 @@ import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
+import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
 import lionFrame from "@/assets/lion-frame.png";
 import bossFrame from "@/assets/boss-frame.png";
+import frameFire from "@/assets/frame-fire.png";
+import frameIce from "@/assets/frame-ice.png";
+import frameRainbow from "@/assets/frame-rainbow.png";
+import frameDragon from "@/assets/frame-dragon.png";
 
 const STORE_FRAMES = [
   {
@@ -43,6 +48,42 @@ const STORE_FRAMES = [
     price_coins: 100000,
     image: bossFrame,
     data: { rarity: "legendary", frame_url: "boss-frame" },
+  },
+  {
+    id: "frame-fire",
+    name: "إطار النار 🔥",
+    type: "frame",
+    price_coins: 150000,
+    image: frameFire,
+    data: { rarity: "mythic", frame_url: "frame-fire", animated: true },
+    vipRequired: 3,
+  },
+  {
+    id: "frame-ice",
+    name: "إطار الجليد ❄️",
+    type: "frame",
+    price_coins: 150000,
+    image: frameIce,
+    data: { rarity: "mythic", frame_url: "frame-ice", animated: true },
+    vipRequired: 3,
+  },
+  {
+    id: "frame-rainbow",
+    name: "إطار قوس قزح 🌈",
+    type: "frame",
+    price_coins: 200000,
+    image: frameRainbow,
+    data: { rarity: "mythic", frame_url: "frame-rainbow", animated: true },
+    vipRequired: 5,
+  },
+  {
+    id: "frame-dragon",
+    name: "إطار التنين الذهبي 🐉",
+    type: "frame",
+    price_coins: 300000,
+    image: frameDragon,
+    data: { rarity: "mythic", frame_url: "frame-dragon", animated: true },
+    vipRequired: 7,
   },
 ];
 
