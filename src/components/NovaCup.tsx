@@ -98,10 +98,10 @@ const NovaCup = ({ roomId }: NovaCupProps) => {
       {/* Cup Button */}
       <button
         onClick={() => setShowLeaderboard(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-600/30 to-amber-500/20 border border-yellow-500/40 hover:border-yellow-400/60 transition-all"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-accent/30 to-accent/10 border border-accent/40 hover:border-accent/60 transition-all animate-nova-float"
       >
         <span className="text-lg">🏆</span>
-        <span className="text-[10px] font-bold text-yellow-300 flex items-center gap-0.5">
+        <span className="text-[10px] font-bold text-accent flex items-center gap-0.5">
           <CurrencyIcon type="gold" size="xs" />
           {totalGold.toLocaleString()}
         </span>
