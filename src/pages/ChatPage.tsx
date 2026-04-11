@@ -5,6 +5,8 @@ import BottomNav from "@/components/BottomNav";
 import { useConversations, useChatMessages } from "@/hooks/useChat";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
+import NovaSpinner from "@/components/NovaSpinner";
+import EmptyState from "@/components/EmptyState";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
@@ -80,14 +82,9 @@ const ChatPage = () => {
 
         {/* Conversations */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 rounded-full border-4 border-accent border-t-transparent animate-spin" />
-          </div>
+          <NovaSpinner text="جارٍ التحميل..." />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-sm">لا توجد محادثات بعد</p>
-            <p className="text-xs mt-1">ابحث عن مستخدمين لبدء محادثة</p>
-          </div>
+          <EmptyState icon="💬" title="لا توجد محادثات بعد" subtitle="ابحث عن مستخدمين لبدء محادثة" />
         ) : (
           filtered.map((conv) => (
             <div
