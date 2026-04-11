@@ -8,6 +8,8 @@ import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+import lionFrame from "@/assets/lion-frame.png";
+import bossFrame from "@/assets/boss-frame.png";
 
 const STORE_FRAMES = [
   {
@@ -25,6 +27,22 @@ const STORE_FRAMES = [
     price_coins: 50000,
     image: frameRoyalCrown,
     data: { rarity: "mythic", frame_url: "frame-royal-crown" },
+  },
+  {
+    id: "lion-frame",
+    name: "إطار الأسد",
+    type: "frame",
+    price_coins: 75000,
+    image: lionFrame,
+    data: { rarity: "mythic", frame_url: "lion-frame" },
+  },
+  {
+    id: "boss-frame",
+    name: "إطار البوس",
+    type: "frame",
+    price_coins: 100000,
+    image: bossFrame,
+    data: { rarity: "legendary", frame_url: "boss-frame" },
   },
 ];
 

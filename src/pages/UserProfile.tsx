@@ -11,11 +11,14 @@ import { motion } from "framer-motion";
 import bossFrame from "@/assets/boss-frame.png";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+import lionFrame from "@/assets/lion-frame.png";
 import { toast } from "sonner";
 
 const FRAME_MAP: Record<string, string> = {
   "frame-purple-wings": framePurpleWings,
   "frame-royal-crown": frameRoyalCrown,
+  "lion-frame": lionFrame,
+  "boss-frame": bossFrame,
 };
 
 const UserProfile = () => {
@@ -59,7 +62,7 @@ const UserProfile = () => {
 
   const isBoss = profile?.is_boss;
   const frameKey = profile?.equipped_frame;
-  const frameImage = isBoss ? bossFrame : (frameKey ? FRAME_MAP[frameKey] : null);
+  const frameImage = (frameKey && FRAME_MAP[frameKey]) ? FRAME_MAP[frameKey] : (isBoss ? bossFrame : null);
   const frameSize = isBoss ? "w-36 h-36" : "w-32 h-32";
   const avatarInset = isBoss ? "inset-[18%]" : "inset-[15%]";
   const isMe = currentUserId === userId;
