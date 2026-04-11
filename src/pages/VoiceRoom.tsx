@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2 } from "lucide-react";
+import NovaCup from "@/components/NovaCup";
+import HostIncomeCounter from "@/components/HostIncomeCounter";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
@@ -308,6 +310,15 @@ const VoiceRoom = () => {
     <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative`}>
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
+
+      {/* Room Name Watermark */}
+      {roomData?.name && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+          <span className="text-6xl font-black text-foreground/[0.03] select-none whitespace-nowrap rotate-[-15deg]">
+            {roomData.name}
+          </span>
+        </div>
+      )}
       
       {/* Entrance Banner */}
       <AnimatePresence>
@@ -476,6 +487,7 @@ const VoiceRoom = () => {
             <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
               <Minimize2 className="w-4 h-4 text-muted-foreground" />
             </button>
+            {roomId && <NovaCup roomId={roomId} />}
             <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
               ● LIVE
             </span>
@@ -523,6 +535,15 @@ const VoiceRoom = () => {
                       {slot.profile?.display_name || "User"}
                     </span>
                     {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
+                    {/* Host Income Counter */}
+                    {slot.user_id === roomData?.host_id && roomId && currentUserId && (
+                      <HostIncomeCounter
+                        hostId={slot.user_id}
+                        roomOwnerId={roomData?.host_id}
+                        currentUserId={currentUserId}
+                        sessionStart={roomData?.created_at || new Date().toISOString()}
+                      />
+                    )}
                   </div>
                 ) : (
                   <>
@@ -653,6 +674,11 @@ const VoiceRoom = () => {
         senderId={currentUserId}
         receiverId={giftReceiverId}
         receiverName={giftReceiverName}
+        roomMembers={members.map(m => ({
+          user_id: m.user_id,
+          display_name: m.profile?.display_name || "User",
+          avatar_url: m.profile?.avatar_url || null,
+        }))}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
     </div>
