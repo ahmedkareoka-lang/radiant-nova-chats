@@ -167,6 +167,12 @@ const VoiceRoom = () => {
 
   const handleLeave = async () => {
     await leaveRoom();
+    closeRoom();
+    navigate("/");
+  };
+
+  const handleMinimize = () => {
+    minimizeRoom();
     navigate("/");
   };
 
