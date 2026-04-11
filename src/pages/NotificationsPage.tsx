@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
+import EmptyState from "@/components/EmptyState";
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -110,10 +111,7 @@ const NotificationsPage = () => {
 
         <main className="px-4 py-2 max-w-lg mx-auto">
           {notifications.length === 0 ? (
-            <div className="text-center py-16">
-              <Bell className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">لا توجد إشعارات</p>
-            </div>
+            <EmptyState icon="🔔" title="لا توجد إشعارات" subtitle="ستظهر هنا التنبيهات الجديدة" />
           ) : (
             <div className="space-y-1">
               {notifications.map((n: any) => (

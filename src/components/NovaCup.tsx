@@ -98,10 +98,10 @@ const NovaCup = ({ roomId }: NovaCupProps) => {
       {/* Cup Button */}
       <button
         onClick={() => setShowLeaderboard(true)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-yellow-600/30 to-amber-500/20 border border-yellow-500/40 hover:border-yellow-400/60 transition-all"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-accent/30 to-accent/10 border border-accent/40 hover:border-accent/60 transition-all animate-nova-float"
       >
         <span className="text-lg">🏆</span>
-        <span className="text-[10px] font-bold text-yellow-300 flex items-center gap-0.5">
+        <span className="text-[10px] font-bold text-accent flex items-center gap-0.5">
           <CurrencyIcon type="gold" size="xs" />
           {totalGold.toLocaleString()}
         </span>
@@ -147,7 +147,7 @@ const NovaCup = ({ roomId }: NovaCupProps) => {
                   <p className="text-center text-xs text-muted-foreground py-4">لا توجد بيانات بعد</p>
                 ) : (
                   leaders.map((l, i) => (
-                    <div key={l.sender_id} className={`flex items-center gap-3 p-2.5 rounded-xl ${i < 3 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent border border-yellow-500/20' : 'bg-secondary/50'}`}>
+                    <div key={l.sender_id} className={`flex items-center gap-3 p-2.5 rounded-xl ${i < 3 ? 'bg-gradient-to-r from-accent/10 to-transparent border border-accent/20' : 'bg-secondary/50'}`}>
                       <span className="text-sm font-bold w-6 text-center">{i < 3 ? medals[i] : i + 1}</span>
                       <img src={l.avatar_url || "https://i.pravatar.cc/100"} className="w-8 h-8 rounded-full object-cover" alt="" />
                       <span className="flex-1 text-xs font-bold truncate">{l.display_name}</span>

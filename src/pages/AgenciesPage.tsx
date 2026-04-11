@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
+import NovaSpinner from "@/components/NovaSpinner";
+import EmptyState from "@/components/EmptyState";
 
 const AgenciesPage = () => {
   const navigate = useNavigate();
@@ -337,7 +339,7 @@ const AgenciesPage = () => {
               </div>
             ))}
             {agencies.length === 0 && !loading && (
-              <p className="text-center text-muted-foreground text-sm py-8">لا توجد وكالات حالياً</p>
+              <EmptyState icon="🏢" title="لا توجد وكالات حالياً" subtitle="كن أول من ينشئ وكالة!" />
             )}
           </div>
         </main>
