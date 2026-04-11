@@ -144,7 +144,7 @@ const VoiceRoom = () => {
     }
   }, [members, currentUserId]);
 
-  // Entrance banner for new members
+  // Entrance banner + custom entrance effect queue for new members
   useEffect(() => {
     for (const m of members) {
       if (!seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
@@ -161,10 +161,26 @@ const VoiceRoom = () => {
           });
           sendMessage(`🚪 ${m.profile.display_name} دخل الغرفة | 💰 ثروة Lv.${wealthLvl} | 💎 كاريزما Lv.${charismaLvl}`);
           setTimeout(() => setEntranceBanner(null), 4000);
+
+          // Queue custom entrance effect if user has video or audio
+          const p = m.profile as any;
+          if (p.entrance_video_url || p.entrance_audio_url) {
+            setEntranceQueue(prev => [...prev, {
+              id: m.user_id,
+              displayName: m.profile!.display_name,
+              avatarUrl: m.profile!.avatar_url,
+              videoUrl: p.entrance_video_url || null,
+              audioUrl: p.entrance_audio_url || null,
+            }]);
+          }
         }
       }
     }
   }, [members, currentUserId]);
+
+  const handleEntranceComplete = useCallback((id: string) => {
+    setEntranceQueue(prev => prev.filter(e => e.id !== id));
+  }, []);
 
   const handleSend = async () => {
     if (!chatInput.trim()) return;
