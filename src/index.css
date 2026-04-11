@@ -397,3 +397,18 @@
   background: hsl(260 20% 20%);
   border-radius: 4px;
 }
+
+/* Confetti animation */
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* NOVA Cup floating */
+.animate-nova-float {
+  animation: nova-float 3s ease-in-out infinite;
+}
+@keyframes nova-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.05); }
+}
