@@ -98,8 +98,8 @@ export const useVoiceRoom = (roomId: string | null) => {
         // Fetch the new message with sender info
         supabase
           .from("messages")
-          .select("*, sender:profiles!messages_sender_id_fkey(display_name, vip_level, is_boss)")
           .select("*, sender:profiles!messages_sender_id_profiles_fkey(display_name, vip_level, is_boss)")
+          .eq("id", (payload.new as any).id)
           .single()
           .then(({ data }) => {
             if (data) {
