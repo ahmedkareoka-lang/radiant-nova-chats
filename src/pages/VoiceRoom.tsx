@@ -186,7 +186,7 @@ const VoiceRoom = () => {
 
     await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
     setIsMuted(false);
-    toast.success(`جلست على المايك ${slotIndex + 1}`);
+    toast.success(`جلست على المايك ${slotIndex + 1} 🎙️`);
   };
 
   const changeMicCount = async (count: number) => {
