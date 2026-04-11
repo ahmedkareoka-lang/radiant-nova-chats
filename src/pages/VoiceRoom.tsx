@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2 } from "lucide-react";
+import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
 import VipBadge from "@/components/VipBadge";
@@ -60,6 +61,7 @@ const VoiceRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("id");
+  const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
 
   const [isMuted, setIsMuted] = useState(false);
@@ -100,10 +102,19 @@ const VoiceRoom = () => {
 
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
+  // Register room with context and join
   useEffect(() => {
-    if (roomId && currentUserId) joinRoom();
-    return () => { if (roomId && currentUserId) leaveRoom(); };
+    if (roomId && currentUserId) {
+      joinRoom();
+    }
   }, [roomId, currentUserId]);
+
+  // Register room name with context when roomData loads
+  useEffect(() => {
+    if (roomId && roomData?.name) {
+      openRoom(roomId, roomData.name);
+    }
+  }, [roomId, roomData?.name]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -156,6 +167,12 @@ const VoiceRoom = () => {
 
   const handleLeave = async () => {
     await leaveRoom();
+    closeRoom();
+    navigate("/");
+  };
+
+  const handleMinimize = () => {
+    minimizeRoom();
     navigate("/");
   };
 
@@ -456,6 +473,9 @@ const VoiceRoom = () => {
                 <Settings2 className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
+            <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
+              <Minimize2 className="w-4 h-4 text-muted-foreground" />
+            </button>
             <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
               ● LIVE
             </span>
