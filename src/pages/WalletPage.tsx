@@ -91,7 +91,7 @@ const WalletPage = () => {
           <div className="grid grid-cols-2 gap-3">
             <div className="card-nova p-4 text-center">
               <CurrencyIcon type="gold" size="lg" className="mx-auto mb-2" />
-              <p className="text-[10px] text-muted-foreground">الذهب</p>
+              <p className="text-[10px] text-muted-foreground">NOVA Coins</p>
               <p className="font-black text-xl text-accent">{(profile?.coins || 0).toLocaleString()}</p>
             </div>
             <div className="card-nova p-4 text-center">
@@ -103,10 +103,10 @@ const WalletPage = () => {
 
           <div className="card-nova p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
-              <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس بالذهب
+              <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس بـ NOVA Coins
             </h3>
             <p className="text-[10px] text-muted-foreground">
-              نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} ذهبة
+              نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} NOVA Coin
             </p>
             <div className="flex gap-2">
               <input type="number" placeholder="عدد الماسات" value={exchangeAmount} onChange={(e) => setExchangeAmount(e.target.value)}
@@ -116,7 +116,7 @@ const WalletPage = () => {
             </div>
             {exchangeAmount && parseInt(exchangeAmount) > 0 && (
               <p className="text-xs text-accent text-center">
-                ستحصل على {Math.floor((parseInt(exchangeAmount) * exchangeRate) / 100).toLocaleString()} ذهبة
+                ستحصل على {Math.floor((parseInt(exchangeAmount) * exchangeRate) / 100).toLocaleString()} NOVA Coin
               </p>
             )}
           </div>

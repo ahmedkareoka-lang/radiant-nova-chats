@@ -106,7 +106,7 @@ const Index = () => {
 
           {/* Ranking cards row */}
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/search")}>
+            <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/leaderboard")}>
               <div className="flex items-center justify-between">
                 <div className="flex -space-x-2">
                   <div className="w-8 h-8 rounded-full ring-1 ring-primary overflow-hidden">
@@ -116,10 +116,10 @@ const Index = () => {
                     <img src="https://i.pravatar.cc/40?img=12" alt="" className="w-full h-full object-cover" />
                   </div>
                 </div>
-                <span className="text-sm font-bold">الجاذبية</span>
+                <span className="text-sm font-bold">Top NOVA</span>
               </div>
             </div>
-            <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/search")}>
+            <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/leaderboard")}>
               <div className="flex items-center justify-between">
                 <div className="flex -space-x-2">
                   <div className="w-8 h-8 rounded-full ring-1 ring-accent overflow-hidden">
@@ -129,7 +129,7 @@ const Index = () => {
                     <img src="https://i.pravatar.cc/40?img=18" alt="" className="w-full h-full object-cover" />
                   </div>
                 </div>
-                <span className="text-sm font-bold">الغرفة</span>
+                <span className="text-sm font-bold">الكاريزما</span>
               </div>
             </div>
           </div>
