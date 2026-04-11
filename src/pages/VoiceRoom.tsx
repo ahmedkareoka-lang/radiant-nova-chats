@@ -178,6 +178,7 @@ const VoiceRoom = () => {
   const handleKickFromMic = async (userId: string) => {
     if (!roomId || (!isBoss && !isHost)) return;
     await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", userId);
+    fetchMembers();
     toast.success("تم إنزال المستخدم من المايك");
     setSelectedProfile(null);
   };
