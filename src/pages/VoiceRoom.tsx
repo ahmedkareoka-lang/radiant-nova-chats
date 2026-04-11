@@ -10,17 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import EmojiStickerPicker from "@/components/EmojiStickerPicker";
-import bossFrame from "@/assets/boss-frame.png";
-import framePurpleWings from "@/assets/frame-purple-wings.png";
-import frameRoyalCrown from "@/assets/frame-royal-crown.png";
-import lionFrame from "@/assets/lion-frame.png";
-
-const FRAME_MAP: Record<string, string> = {
-  "frame-purple-wings": framePurpleWings,
-  "frame-royal-crown": frameRoyalCrown,
-  "lion-frame": lionFrame,
-  "boss-frame": bossFrame,
-};
+import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
   user_id: string;
@@ -234,9 +224,10 @@ const VoiceRoom = () => {
     const frameImg = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : (isBoss ? bossFrame : null);
 
     if (frameImg) {
+      const animClass = equippedFrame ? (FRAME_ANIMATION[equippedFrame] || "") : "";
       return (
         <div className={`relative ${s.frame} flex items-center justify-center`}>
-          <img src={frameImg} alt="frame" className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none" />
+          <img src={frameImg} alt="frame" className={`absolute inset-0 w-full h-full object-contain z-10 pointer-events-none ${animClass}`} />
           <div className={`${s.inner} rounded-full overflow-hidden`}>
             <img src={avatarUrl || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
           </div>
