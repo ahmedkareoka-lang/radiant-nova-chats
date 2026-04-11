@@ -1,0 +1,1 @@
+ALTER TABLE public.room_members ADD CONSTRAINT room_members_room_user_unique UNIQUE (room_id, user_id);

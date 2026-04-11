@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface RoomMember {
@@ -16,6 +16,7 @@ export interface RoomMember {
     wealth_xp?: number;
     charisma_level?: number;
     charisma_xp?: number;
+    equipped_frame?: string | null;
   };
 }
 
@@ -31,11 +32,24 @@ export interface RoomMessage {
   };
 }
 
+const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+
 export const useVoiceRoom = (roomId: string | null) => {
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [messages, setMessages] = useState<RoomMessage[]>([]);
   const [roomData, setRoomData] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const currentUserIdRef = useRef<string | null>(null);
+  const roomIdRef = useRef<string | null>(roomId);
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Keep refs in sync
+  useEffect(() => {
+    currentUserIdRef.current = currentUserId;
+  }, [currentUserId]);
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
 
   const fetchMembers = useCallback(async () => {
     if (!roomId) return;
@@ -91,32 +105,35 @@ export const useVoiceRoom = (roomId: string | null) => {
     }
   }, [roomId]);
 
+  const fetchRoomData = useCallback(async () => {
+    if (!roomId) return;
+    const { data: room } = await supabase
+      .from("rooms")
+      .select("*")
+      .eq("id", roomId)
+      .single();
+
+    if (room) {
+      const { data: hostProfile } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame")
+        .eq("id", room.host_id)
+        .single();
+
+      setRoomData({
+        ...room,
+        host_profile: hostProfile || null,
+      });
+    }
+  }, [roomId]);
+
   useEffect(() => {
     if (!roomId) return;
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setCurrentUserId(user.id);
-
-      const { data: room } = await supabase
-        .from("rooms")
-        .select("*")
-        .eq("id", roomId)
-        .single();
-
-      if (room) {
-        const { data: hostProfile } = await supabase
-          .from("profiles")
-          .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame")
-          .eq("id", room.host_id)
-          .single();
-
-        setRoomData({
-          ...room,
-          host_profile: hostProfile || null,
-        });
-      }
-
+      await fetchRoomData();
       fetchMembers();
       fetchMessages();
     };
@@ -131,29 +148,80 @@ export const useVoiceRoom = (roomId: string | null) => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `room_id=eq.${roomId}` }, () => {
         fetchMessages();
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` }, () => {
+        fetchRoomData();
+      })
       .subscribe();
 
-    // Cleanup on page unload - remove member immediately
-    const handleUnload = () => {
-      navigator.sendBeacon && supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", currentUserId || '');
+    // Cleanup function using refs to avoid stale closures
+    const cleanupMember = async () => {
+      const uid = currentUserIdRef.current;
+      const rid = roomIdRef.current;
+      if (uid && rid) {
+        await supabase.from("room_members").delete().eq("room_id", rid).eq("user_id", uid);
+      }
     };
+
+    const handleUnload = () => {
+      const uid = currentUserIdRef.current;
+      const rid = roomIdRef.current;
+      if (uid && rid) {
+        // Use fetch with keepalive as sendBeacon alternative for DELETE
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/room_members?room_id=eq.${rid}&user_id=eq.${uid}`;
+        fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${(supabase as any).auth.session?.()?.access_token || ''}`,
+            'Content-Type': 'application/json',
+          },
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Don't remove immediately on visibility change, heartbeat will handle stale users
+      }
+    };
+
     window.addEventListener("beforeunload", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Heartbeat: update joined_at periodically to show user is still active
+    heartbeatRef.current = setInterval(async () => {
+      const uid = currentUserIdRef.current;
+      const rid = roomIdRef.current;
+      if (uid && rid) {
+        await supabase
+          .from("room_members")
+          .update({ joined_at: new Date().toISOString() })
+          .eq("room_id", rid)
+          .eq("user_id", uid);
+      }
+    }, HEARTBEAT_INTERVAL);
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       supabase.removeChannel(channel);
     };
-  }, [roomId, fetchMembers, fetchMessages]);
+  }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);
 
   const joinRoom = async () => {
     if (!roomId || !currentUserId) return;
-    // Clear any existing mic_slot to prevent duplicates
-    await supabase.from("room_members").upsert({
-      room_id: roomId,
-      user_id: currentUserId,
-      mic_slot: null,
-      is_on_mic: false,
-    });
+    // Upsert ensures one entry per user per room (unique constraint)
+    await supabase.from("room_members").upsert(
+      {
+        room_id: roomId,
+        user_id: currentUserId,
+        mic_slot: null,
+        is_on_mic: false,
+      },
+      { onConflict: "room_id,user_id" }
+    );
   };
 
   const leaveRoom = async () => {
@@ -163,7 +231,6 @@ export const useVoiceRoom = (roomId: string | null) => {
     // If user is the host, deactivate the room
     if (roomData?.host_id === currentUserId) {
       await supabase.from("rooms").update({ is_active: false }).eq("id", roomId);
-      // Remove all remaining members
       await supabase.from("room_members").delete().eq("room_id", roomId);
     }
   };
