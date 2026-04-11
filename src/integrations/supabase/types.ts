@@ -403,6 +403,7 @@ export type Database = {
       }
       rooms: {
         Row: {
+          background_theme: string
           created_at: string
           host_id: string
           id: string
@@ -414,6 +415,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          background_theme?: string
           created_at?: string
           host_id: string
           id?: string
@@ -425,6 +427,7 @@ export type Database = {
           type?: string
         }
         Update: {
+          background_theme?: string
           created_at?: string
           host_id?: string
           id?: string

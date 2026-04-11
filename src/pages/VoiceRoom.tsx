@@ -45,6 +45,16 @@ const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
 
 const MIC_OPTIONS = [5, 8, 15, 20];
 
+const ROOM_THEMES: { id: string; label: string; emoji: string; bg: string }[] = [
+  { id: "default", label: "Default", emoji: "🌑", bg: "bg-background" },
+  { id: "space", label: "Space", emoji: "🌌", bg: "bg-gradient-to-b from-[#0a0a2e] via-[#1a1040] to-[#0d0d2b]" },
+  { id: "ocean", label: "Ocean", emoji: "🌊", bg: "bg-gradient-to-b from-[#0a2540] via-[#0e3a5c] to-[#061a2e]" },
+  { id: "forest", label: "Forest", emoji: "🌲", bg: "bg-gradient-to-b from-[#0a1f0a] via-[#1a3520] to-[#0d1e0d]" },
+  { id: "neon", label: "Neon City", emoji: "🏙️", bg: "bg-gradient-to-b from-[#1a0a2e] via-[#2d1050] to-[#0f0520]" },
+  { id: "sunset", label: "Sunset", emoji: "🌅", bg: "bg-gradient-to-b from-[#2e1a0a] via-[#3d2010] to-[#1a0d05]" },
+  { id: "aurora", label: "Aurora", emoji: "🌈", bg: "bg-gradient-to-b from-[#0a2e2e] via-[#102040] to-[#0a1a2e]" },
+];
+
 const VoiceRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -267,8 +277,16 @@ const VoiceRoom = () => {
     );
   };
 
+  const currentTheme = ROOM_THEMES.find(t => t.id === (roomData?.background_theme || 'default')) || ROOM_THEMES[0];
+
+  const changeTheme = async (themeId: string) => {
+    if (!roomId) return;
+    await supabase.from("rooms").update({ background_theme: themeId } as any).eq("id", roomId);
+    toast.success("تم تغيير خلفية الغرفة ✨");
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700`}>
       {/* Entrance Banner */}
       <AnimatePresence>
         {entranceBanner && (
@@ -387,6 +405,18 @@ const VoiceRoom = () => {
                   <button key={count} onClick={() => changeMicCount(count)}
                     className={`py-3 rounded-xl font-bold text-sm transition-all ${micCount === count ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"}`}>
                     {count}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">خلفية الغرفة</p>
+              <div className="grid grid-cols-4 gap-2">
+                {ROOM_THEMES.map((theme) => (
+                  <button key={theme.id} onClick={() => changeTheme(theme.id)}
+                    className={`py-2.5 rounded-xl font-bold text-xs transition-all flex flex-col items-center gap-1 ${currentTheme.id === theme.id ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"}`}>
+                    <span className="text-lg">{theme.emoji}</span>
+                    <span>{theme.label}</span>
                   </button>
                 ))}
               </div>
