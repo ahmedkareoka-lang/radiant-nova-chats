@@ -84,9 +84,9 @@ const VoiceRoom = () => {
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
   useEffect(() => {
-    if (roomId) joinRoom();
-    return () => { if (roomId) leaveRoom(); };
-  }, [roomId]);
+    if (roomId && currentUserId) joinRoom();
+    return () => { if (roomId && currentUserId) leaveRoom(); };
+  }, [roomId, currentUserId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
