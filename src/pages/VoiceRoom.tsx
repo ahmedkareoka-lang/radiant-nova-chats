@@ -60,7 +60,7 @@ const VoiceRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("id");
-  const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic } = useVoiceRoom(roomId);
+  const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
@@ -178,6 +178,7 @@ const VoiceRoom = () => {
   const handleKickFromMic = async (userId: string) => {
     if (!roomId || (!isBoss && !isHost)) return;
     await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", userId);
+    fetchMembers();
     toast.success("تم إنزال المستخدم من المايك");
     setSelectedProfile(null);
   };
@@ -194,14 +195,14 @@ const VoiceRoom = () => {
     const existing = members.find((m) => m.user_id === currentUserId);
 
     if (existing?.mic_slot === slotIndex) {
-      await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
+      await updateMicSlot(null, false);
       setIsMuted(true);
       toast.success("نزلت من المايك");
       return;
     }
 
     if (existing?.mic_slot !== null && existing?.mic_slot !== undefined) {
-      await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
+      await updateMicSlot(null, false);
     }
 
     const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
@@ -210,7 +211,7 @@ const VoiceRoom = () => {
       return;
     }
 
-    await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
+    await updateMicSlot(slotIndex, true);
     setIsMuted(false);
     toast.success(`جلست على المايك ${slotIndex + 1} 🎙️`);
   };

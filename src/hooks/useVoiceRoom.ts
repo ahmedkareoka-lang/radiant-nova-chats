@@ -249,5 +249,22 @@ export const useVoiceRoom = (roomId: string | null) => {
     await supabase.from("room_members").update({ is_on_mic: on }).eq("room_id", roomId).eq("user_id", currentUserId);
   };
 
-  return { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic };
+  const updateMicSlot = async (slot: number | null, isOnMic: boolean) => {
+    if (!roomId || !currentUserId) return;
+    // Optimistic update
+    setMembers(prev => prev.map(m =>
+      m.user_id === currentUserId ? { ...m, mic_slot: slot, is_on_mic: isOnMic } : m
+    ));
+    const { error } = await supabase
+      .from("room_members")
+      .update({ mic_slot: slot, is_on_mic: isOnMic })
+      .eq("room_id", roomId)
+      .eq("user_id", currentUserId);
+    if (error) {
+      // Revert on error
+      fetchMembers();
+    }
+  };
+
+  return { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers };
 };
