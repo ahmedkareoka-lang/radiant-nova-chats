@@ -48,7 +48,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       const userIds = data.map((m) => m.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp")
+        .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame")
         .in("id", userIds);
 
       const profileMap: Record<string, any> = {};
@@ -109,7 +109,7 @@ export const useVoiceRoom = (roomId: string | null) => {
         // Fetch host profile separately
         const { data: hostProfile } = await supabase
           .from("profiles")
-          .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp")
+          .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame")
           .eq("id", room.host_id)
           .single();
 
