@@ -17,6 +17,8 @@ export interface RoomMember {
     charisma_level?: number;
     charisma_xp?: number;
     equipped_frame?: string | null;
+    entrance_video_url?: string | null;
+    entrance_audio_url?: string | null;
   };
 }
 
