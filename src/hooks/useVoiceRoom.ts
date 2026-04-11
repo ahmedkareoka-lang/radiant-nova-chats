@@ -98,7 +98,6 @@ export const useVoiceRoom = (roomId: string | null) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setCurrentUserId(user.id);
 
-      // Fetch room info
       const { data: room } = await supabase
         .from("rooms")
         .select("*")
@@ -106,7 +105,6 @@ export const useVoiceRoom = (roomId: string | null) => {
         .single();
 
       if (room) {
-        // Fetch host profile separately
         const { data: hostProfile } = await supabase
           .from("profiles")
           .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame")
@@ -135,7 +133,16 @@ export const useVoiceRoom = (roomId: string | null) => {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Cleanup on page unload - remove member immediately
+    const handleUnload = () => {
+      navigator.sendBeacon && supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", currentUserId || '');
+    };
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      supabase.removeChannel(channel);
+    };
   }, [roomId, fetchMembers, fetchMessages]);
 
   const joinRoom = async () => {
