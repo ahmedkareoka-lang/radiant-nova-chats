@@ -1,4 +1,4 @@
-import { Bell, Search, Crown, Flame } from "lucide-react";
+import { Bell, Search, Crown, Flame, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import RoomCard from "@/components/RoomCard";
@@ -24,6 +24,7 @@ const Index = () => {
   const [profile, setProfile] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState("حفلة");
   const [activeCountry, setActiveCountry] = useState("Hot 🔥");
+  const [topRechargers, setTopRechargers] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -33,6 +34,19 @@ const Index = () => {
       setProfile(data);
     };
     fetchProfile();
+  }, []);
+
+  // Fetch top weekly rechargers (by wealth_xp as proxy for recharge)
+  useEffect(() => {
+    const fetchTopRechargers = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, wealth_xp, vip_level")
+        .order("wealth_xp", { ascending: false })
+        .limit(5);
+      setTopRechargers(data || []);
+    };
+    fetchTopRechargers();
   }, []);
 
   useEffect(() => {
@@ -67,27 +81,31 @@ const Index = () => {
         </header>
 
         <main className="px-4 py-3 max-w-lg mx-auto">
-          {/* Weekly Recharge Banner */}
-          <div className="relative rounded-2xl overflow-hidden mb-4 cursor-pointer" onClick={() => navigate("/top-up")}>
-            <div className="h-32 relative" style={{ background: "linear-gradient(135deg, hsl(35 80% 30%), hsl(45 90% 40%), hsl(25 70% 25%))" }}>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Crown className="w-6 h-6 text-accent" />
-                    <span className="text-lg font-black glow-gold-text">الشحن الأسبوعي</span>
-                    <Crown className="w-6 h-6 text-accent" />
-                  </div>
-                  <p className="text-[10px] text-foreground/70">اشحن الآن واحصل على مكافآت حصرية</p>
+          {/* Weekly Recharge Banner with real data */}
+          <div className="relative rounded-2xl overflow-hidden mb-4 cursor-pointer" onClick={() => navigate("/leaderboard")}>
+            <div className="h-36 relative" style={{ background: "linear-gradient(135deg, hsl(35 80% 30%), hsl(45 90% 40%), hsl(25 70% 25%))" }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Crown className="w-6 h-6 text-accent" />
+                  <span className="text-lg font-black glow-gold-text">الشحن الأسبوعي</span>
+                  <Crown className="w-6 h-6 text-accent" />
                 </div>
-              </div>
-              {/* Decorative elements */}
-              <div className="absolute bottom-2 left-4 flex -space-x-2">
-                <div className="w-10 h-10 rounded-full ring-2 ring-gold overflow-hidden">
-                  <img src="https://i.pravatar.cc/60?img=5" alt="" className="w-full h-full object-cover" />
+                {/* Top rechargers avatars */}
+                <div className="flex items-center gap-1">
+                  {topRechargers.slice(0, 5).map((user, i) => (
+                    <div key={user.id} className="flex flex-col items-center">
+                      <div className={`rounded-full overflow-hidden ${i === 0 ? "w-12 h-12 ring-2 ring-accent" : "w-9 h-9 ring-1 ring-accent/50"}`}>
+                        <img src={user.avatar_url || `https://i.pravatar.cc/60?img=${i + 5}`} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      {i < 3 && (
+                        <span className="text-[8px] font-bold mt-0.5">
+                          {i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div className="w-10 h-10 rounded-full ring-2 ring-gold overflow-hidden">
-                  <img src="https://i.pravatar.cc/60?img=8" alt="" className="w-full h-full object-cover" />
-                </div>
+                <p className="text-[10px] text-foreground/70 mt-1">اشحن الآن واحصل على مكافآت حصرية</p>
               </div>
             </div>
           </div>
@@ -109,12 +127,11 @@ const Index = () => {
             <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/leaderboard")}>
               <div className="flex items-center justify-between">
                 <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full ring-1 ring-primary overflow-hidden">
-                    <img src="https://i.pravatar.cc/40?img=10" alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-8 h-8 rounded-full ring-1 ring-primary overflow-hidden">
-                    <img src="https://i.pravatar.cc/40?img=12" alt="" className="w-full h-full object-cover" />
-                  </div>
+                  {topRechargers.slice(0, 2).map((u, i) => (
+                    <div key={u.id} className="w-8 h-8 rounded-full ring-1 ring-primary overflow-hidden">
+                      <img src={u.avatar_url || `https://i.pravatar.cc/40?img=${10 + i}`} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
                 </div>
                 <span className="text-sm font-bold">Top NOVA</span>
               </div>
@@ -122,12 +139,11 @@ const Index = () => {
             <div className="card-gradient-blue p-3 cursor-pointer" onClick={() => navigate("/leaderboard")}>
               <div className="flex items-center justify-between">
                 <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full ring-1 ring-accent overflow-hidden">
-                    <img src="https://i.pravatar.cc/40?img=15" alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-8 h-8 rounded-full ring-1 ring-accent overflow-hidden">
-                    <img src="https://i.pravatar.cc/40?img=18" alt="" className="w-full h-full object-cover" />
-                  </div>
+                  {topRechargers.slice(2, 4).map((u, i) => (
+                    <div key={u.id} className="w-8 h-8 rounded-full ring-1 ring-accent overflow-hidden">
+                      <img src={u.avatar_url || `https://i.pravatar.cc/40?img=${15 + i}`} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
                 </div>
                 <span className="text-sm font-bold">الكاريزما</span>
               </div>

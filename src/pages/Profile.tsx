@@ -184,13 +184,20 @@ const Profile = () => {
             </div>
 
             <h2 className={`font-black text-lg mt-2 ${isBoss ? "boss-fire-text" : ""}`}>{profile?.display_name || "User"}</h2>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap justify-center">
               {profile?.gender && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">{profile.gender === "male" ? "♂" : "♀"}</span>}
+              {profile?.age && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{profile.age}</span>}
               {profile?.country_code && <span className="text-xs">🌍 {profile.country_code}</span>}
               {isBoss ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">🔥 BOSS</span>
               ) : (
                 <VipBadge level={profile?.vip_level || 0} />
+              )}
+              {profile?.is_agent && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">🏅 وكيل</span>
+              )}
+              {profile?.is_host && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
               )}
             </div>
             <span className="text-[10px] text-muted-foreground mt-0.5">ID: {profile?.user_id}</span>
