@@ -674,6 +674,11 @@ const VoiceRoom = () => {
         senderId={currentUserId}
         receiverId={giftReceiverId}
         receiverName={giftReceiverName}
+        roomMembers={members.map(m => ({
+          user_id: m.user_id,
+          display_name: m.profile?.display_name || "User",
+          avatar_url: m.profile?.avatar_url || null,
+        }))}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
     </div>
