@@ -5,17 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
-import framePurpleWings from "@/assets/frame-purple-wings.png";
-import frameRoyalCrown from "@/assets/frame-royal-crown.png";
-import lionFrame from "@/assets/lion-frame.png";
-import bossFrame from "@/assets/boss-frame.png";
-
-const FRAME_MAP: Record<string, string> = {
-  "frame-purple-wings": framePurpleWings,
-  "frame-royal-crown": frameRoyalCrown,
-  "lion-frame": lionFrame,
-  "boss-frame": bossFrame,
-};
+import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 
 const InventoryPage = () => {
   const navigate = useNavigate();

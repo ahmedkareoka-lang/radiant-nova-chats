@@ -9,18 +9,8 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useFollows } from "@/hooks/useFollows";
 import { useNotifications } from "@/hooks/useNotifications";
-import bossFrame from "@/assets/boss-frame.png";
-import framePurpleWings from "@/assets/frame-purple-wings.png";
-import frameRoyalCrown from "@/assets/frame-royal-crown.png";
-import lionFrame from "@/assets/lion-frame.png";
+import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
-
-const FRAME_MAP: Record<string, string> = {
-  "frame-purple-wings": framePurpleWings,
-  "frame-royal-crown": frameRoyalCrown,
-  "lion-frame": lionFrame,
-  "boss-frame": bossFrame,
-};
 
 const Profile = () => {
   const navigate = useNavigate();

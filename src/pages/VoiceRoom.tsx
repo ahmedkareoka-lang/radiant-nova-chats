@@ -10,17 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import EmojiStickerPicker from "@/components/EmojiStickerPicker";
-import bossFrame from "@/assets/boss-frame.png";
-import framePurpleWings from "@/assets/frame-purple-wings.png";
-import frameRoyalCrown from "@/assets/frame-royal-crown.png";
-import lionFrame from "@/assets/lion-frame.png";
-
-const FRAME_MAP: Record<string, string> = {
-  "frame-purple-wings": framePurpleWings,
-  "frame-royal-crown": frameRoyalCrown,
-  "lion-frame": lionFrame,
-  "boss-frame": bossFrame,
-};
+import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
   user_id: string;

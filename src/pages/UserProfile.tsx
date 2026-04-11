@@ -8,18 +8,8 @@ import VipBadge from "@/components/VipBadge";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import bossFrame from "@/assets/boss-frame.png";
-import framePurpleWings from "@/assets/frame-purple-wings.png";
-import frameRoyalCrown from "@/assets/frame-royal-crown.png";
-import lionFrame from "@/assets/lion-frame.png";
+import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import { toast } from "sonner";
-
-const FRAME_MAP: Record<string, string> = {
-  "frame-purple-wings": framePurpleWings,
-  "frame-royal-crown": frameRoyalCrown,
-  "lion-frame": lionFrame,
-  "boss-frame": bossFrame,
-};
 
 const UserProfile = () => {
   const navigate = useNavigate();
