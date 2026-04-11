@@ -70,7 +70,7 @@ const UserProfile = () => {
         <main className="px-4 max-w-lg mx-auto -mt-14 relative z-10">
           <div className="flex flex-col items-center">
             <div className={`relative ${frameSize}`}>
-              {frameImage && <img src={frameImage} alt="Frame" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none" />}
+              {frameImage && <img src={frameImage} alt="Frame" className={`absolute inset-0 w-full h-full object-contain z-20 pointer-events-none ${frameKey ? (FRAME_ANIMATION[frameKey] || "") : ""}`} />}
               <div className={`absolute ${avatarInset} rounded-full overflow-hidden z-10`}>
                 <img src={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="" className="w-full h-full object-cover" />
               </div>
