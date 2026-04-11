@@ -27,9 +27,10 @@ interface GiftAnimationProps {
   receiverId?: string | null;
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
+  onMultiGiftSent?: (emoji: string, count: number) => void;
 }
 
-const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers }: GiftAnimationProps) => {
+const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent }: GiftAnimationProps) => {
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [burst, setBurst] = useState(false);
   const [sending, setSending] = useState(false);
@@ -76,6 +77,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       }
       if (allSuccess) {
         setBurst(true);
+        onMultiGiftSent?.(gift.emoji, selectedRecipients.size);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); onClose(); }, 800);
       } else {
         setSending(false);

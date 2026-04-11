@@ -449,6 +449,30 @@ export type Database = {
           },
         ]
       }
+      room_bans: {
+        Row: {
+          banned_by: string
+          created_at: string
+          id: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          banned_by: string
+          created_at?: string
+          id?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          banned_by?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       room_members: {
         Row: {
           id: string
@@ -499,7 +523,9 @@ export type Database = {
           id: string
           is_active: boolean
           is_private: boolean
+          locked_slots: number[] | null
           mic_count: number
+          muted_users: string[] | null
           name: string
           password: string | null
           type: string
@@ -511,7 +537,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_private?: boolean
+          locked_slots?: number[] | null
           mic_count?: number
+          muted_users?: string[] | null
           name: string
           password?: string | null
           type?: string
@@ -523,7 +551,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_private?: boolean
+          locked_slots?: number[] | null
           mic_count?: number
+          muted_users?: string[] | null
           name?: string
           password?: string | null
           type?: string

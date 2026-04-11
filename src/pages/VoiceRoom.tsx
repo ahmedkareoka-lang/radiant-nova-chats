@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2 } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield } from "lucide-react";
 import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
@@ -76,6 +76,7 @@ const VoiceRoom = () => {
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
+  const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number } | null>(null);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
     wealthLevel: number;
@@ -89,10 +90,15 @@ const VoiceRoom = () => {
   const currentProfile = members.find(m => m.user_id === currentUserId)?.profile;
   const isBoss = currentProfile?.is_boss || false;
   const isHost = currentUserId === roomData?.host_id;
+  const isAdmin = isBoss || isHost;
 
   // Determine if current user is on a mic
   const currentMember = members.find((m) => m.user_id === currentUserId);
   const isOnMic = currentMember?.mic_slot !== null && currentMember?.mic_slot !== undefined;
+
+  // Room locked slots and muted users
+  const lockedSlots: number[] = (roomData as any)?.locked_slots || [];
+  const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
   // WebRTC
   const { connectedPeers, speakingPeers, localSpeaking } = useWebRTC({
@@ -193,24 +199,101 @@ const VoiceRoom = () => {
     }
   };
 
-  // Boss: Kick user from mic
+  // Admin: Kick user from mic
   const handleKickFromMic = async (userId: string) => {
-    if (!roomId || (!isBoss && !isHost)) return;
+    if (!roomId || !isAdmin) return;
     await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", userId);
     fetchMembers();
     toast.success("تم إنزال المستخدم من المايك");
     setSelectedProfile(null);
   };
 
+  // Admin: Kick user from room
+  const handleKickUser = async (userId: string) => {
+    if (!roomId || !isAdmin) return;
+    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+    fetchMembers();
+    toast.success("تم طرد المستخدم من الغرفة 🚫");
+    setSelectedProfile(null);
+  };
+
+  // Admin: Ban user from room
+  const handleBanUser = async (userId: string) => {
+    if (!roomId || !isAdmin || !currentUserId) return;
+    await supabase.from("room_bans").insert({ room_id: roomId, user_id: userId, banned_by: currentUserId } as any);
+    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+    fetchMembers();
+    toast.success("تم حظر المستخدم من الغرفة ⛔");
+    setSelectedProfile(null);
+  };
+
+  // Admin: Mute user (force mute via room muted_users array)
+  const handleMuteUser = async (userId: string) => {
+    if (!roomId || !isAdmin) return;
+    const current = mutedUsers || [];
+    const isMutedAlready = current.includes(userId);
+    const updated = isMutedAlready ? current.filter((id: string) => id !== userId) : [...current, userId];
+    await supabase.from("rooms").update({ muted_users: updated } as any).eq("id", roomId);
+    toast.success(isMutedAlready ? "تم إلغاء كتم المستخدم" : "تم كتم المستخدم 🔇");
+    setSelectedProfile(null);
+  };
+
+  // Admin: Mute all users on mic
+  const handleMuteAll = async () => {
+    if (!roomId || !isAdmin) return;
+    const onMicUsers = members.filter(m => m.is_on_mic && m.user_id !== currentUserId).map(m => m.user_id);
+    const updated = [...new Set([...(mutedUsers || []), ...onMicUsers])];
+    await supabase.from("rooms").update({ muted_users: updated } as any).eq("id", roomId);
+    toast.success("تم كتم جميع المايكات 🔇");
+  };
+
+  // Admin: Lock/unlock mic slot
+  const handleToggleLockSlot = async (slotIndex: number) => {
+    if (!roomId || !isAdmin) return;
+    const current = lockedSlots || [];
+    const isLocked = current.includes(slotIndex);
+    const updated = isLocked ? current.filter((s: number) => s !== slotIndex) : [...current, slotIndex];
+    await supabase.from("rooms").update({ locked_slots: updated } as any).eq("id", roomId);
+    toast.success(isLocked ? `تم فتح المايك ${slotIndex + 1} 🔓` : `تم قفل المايك ${slotIndex + 1} 🔒`);
+  };
+
+  // Admin: Lock room (toggle password)
+  const handleToggleLockRoom = async () => {
+    if (!roomId || !isHost) return;
+    if (roomData?.is_private) {
+      await supabase.from("rooms").update({ is_private: false, password: null }).eq("id", roomId);
+      toast.success("تم فتح الغرفة 🔓");
+    } else {
+      const pw = prompt("أدخل كلمة مرور الغرفة:");
+      if (!pw) return;
+      await supabase.from("rooms").update({ is_private: true, password: pw }).eq("id", roomId);
+      toast.success("تم قفل الغرفة 🔒");
+    }
+  };
+
+  // Admin: Delete message
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!isAdmin) return;
+    await supabase.from("messages").delete().eq("id", msgId);
+    toast.success("تم حذف الرسالة 🗑️");
+  };
+
   // Boss: Pin message
   const handlePinMessage = (content: string) => {
-    if (!isBoss && !isHost) return;
+    if (!isAdmin) return;
     setPinnedMessage(content);
     toast.success("تم تثبيت الرسالة 📌");
   };
 
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
+
+    // Check if slot is locked
+    if (lockedSlots.includes(slotIndex) && !isAdmin) {
+      toast.error("هذا المايك مقفل 🔒");
+      return;
+    }
+
     const existing = members.find((m) => m.user_id === currentUserId);
 
     if (existing?.mic_slot === slotIndex) {
@@ -240,6 +323,12 @@ const VoiceRoom = () => {
     await supabase.from("rooms").update({ mic_count: count }).eq("id", roomId);
     toast.success(`تم تغيير عدد المايكات إلى ${count}`);
     setShowSettings(false);
+  };
+
+  // Gift burst callback
+  const handleGiftBurst = (emoji: string, count: number) => {
+    setGiftBurst({ emoji, count });
+    setTimeout(() => setGiftBurst(null), 2000);
   };
 
   if (!roomId) {
@@ -319,6 +408,35 @@ const VoiceRoom = () => {
           </span>
         </div>
       )}
+
+      {/* Multi-Gift Visual Burst */}
+      <AnimatePresence>
+        {giftBurst && (
+          <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
+            {Array.from({ length: Math.min(giftBurst.count * 3, 30) }).map((_, i) => (
+              <motion.span
+                key={i}
+                className="absolute text-4xl"
+                initial={{
+                  x: Math.random() * window.innerWidth,
+                  y: window.innerHeight + 50,
+                  opacity: 1,
+                  rotate: Math.random() * 360,
+                }}
+                animate={{
+                  y: -100,
+                  x: Math.random() * window.innerWidth,
+                  opacity: 0,
+                  rotate: Math.random() * 720,
+                }}
+                transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5 }}
+              >
+                {giftBurst.emoji}
+              </motion.span>
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
       
       {/* Entrance Banner */}
       <AnimatePresence>
@@ -331,20 +449,10 @@ const VoiceRoom = () => {
             className={`fixed bottom-28 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl bg-gradient-to-r ${entranceBanner.effect.color} border ${entranceBanner.effect.border} backdrop-blur-xl shadow-2xl min-w-[260px]`}
           >
             <div className="flex flex-col items-center gap-1">
-              <motion.p
-                initial={{ scale: 0.5 }}
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 0.5 }}
-                className="text-2xl"
-              >
+              <motion.p initial={{ scale: 0.5 }} animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 0.5 }} className="text-2xl">
                 {entranceBanner.effect.icon || "🚪"}
               </motion.p>
-              <motion.p
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-sm font-bold text-center whitespace-nowrap"
-              >
+              <motion.p initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="text-sm font-bold text-center whitespace-nowrap">
                 <span className="glow-neon-text">{entranceBanner.name}</span> has arrived ✨
               </motion.p>
               <div className="flex items-center gap-3 mt-1">
@@ -360,7 +468,7 @@ const VoiceRoom = () => {
         )}
       </AnimatePresence>
 
-      {/* Profile Stats Modal */}
+      {/* Profile Stats Modal with Admin Menu */}
       {selectedProfile && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center" onClick={() => setSelectedProfile(null)}>
           <motion.div
@@ -373,12 +481,7 @@ const VoiceRoom = () => {
               <button onClick={() => setSelectedProfile(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="flex flex-col items-center gap-2">
-              {renderAvatarWithFrame(
-                selectedProfile.avatar_url,
-                selectedProfile.equipped_frame,
-                selectedProfile.is_boss,
-                "lg"
-              )}
+              {renderAvatarWithFrame(selectedProfile.avatar_url, selectedProfile.equipped_frame, selectedProfile.is_boss, "lg")}
               <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{selectedProfile.display_name}</span>
               <VipBadge level={selectedProfile.vip_level} size="md" />
             </div>
@@ -394,8 +497,10 @@ const VoiceRoom = () => {
                 <p className="text-[9px] text-muted-foreground">{(selectedProfile.charisma_xp || 0).toLocaleString()} XP</p>
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              {selectedProfile.user_id !== currentUserId && (
+
+            {/* User actions */}
+            {selectedProfile.user_id !== currentUserId && (
+              <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setSelectedProfile(null); openGiftFor(selectedProfile.user_id, selectedProfile.display_name); }}
@@ -410,17 +515,51 @@ const VoiceRoom = () => {
                     👤 بروفايل
                   </button>
                 </div>
-              )}
-              {/* Boss/Host: Kick from mic */}
-              {(isBoss || isHost) && selectedProfile.user_id !== currentUserId && members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null && (
-                <button
-                  onClick={() => handleKickFromMic(selectedProfile.user_id)}
-                  className="w-full py-2.5 rounded-full bg-destructive/20 text-destructive font-bold text-sm flex items-center justify-center gap-2"
-                >
-                  <UserMinus className="w-4 h-4" /> إنزال من المايك
-                </button>
-              )}
-            </div>
+
+                {/* Admin Menu */}
+                {isAdmin && (
+                  <div className="border-t border-border/30 pt-2 mt-1">
+                    <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1"><Shield className="w-3 h-3" /> أدوات المشرف</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* Mute */}
+                      <button
+                        onClick={() => handleMuteUser(selectedProfile.user_id)}
+                        className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-secondary/80 transition-all"
+                      >
+                        <VolumeX className="w-4 h-4 text-muted-foreground" />
+                        <span>{mutedUsers.includes(selectedProfile.user_id) ? "إلغاء الكتم" : "كتم"}</span>
+                      </button>
+                      {/* Kick */}
+                      <button
+                        onClick={() => handleKickUser(selectedProfile.user_id)}
+                        className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
+                      >
+                        <LogOut className="w-4 h-4 text-destructive" />
+                        <span className="text-destructive">طرد</span>
+                      </button>
+                      {/* Ban */}
+                      <button
+                        onClick={() => handleBanUser(selectedProfile.user_id)}
+                        className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
+                      >
+                        <Ban className="w-4 h-4 text-destructive" />
+                        <span className="text-destructive">حظر</span>
+                      </button>
+                    </div>
+                    {/* Kick from mic if on mic */}
+                    {members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
+                     members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined && (
+                      <button
+                        onClick={() => handleKickFromMic(selectedProfile.user_id)}
+                        className="w-full mt-2 py-2 rounded-xl bg-destructive/10 text-destructive font-bold text-xs flex items-center justify-center gap-2"
+                      >
+                        <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         </div>
       )}
@@ -431,6 +570,26 @@ const VoiceRoom = () => {
           <div className="card-nova p-4 max-w-lg w-full rounded-t-3xl space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
             <h3 className="font-bold text-sm text-center">⚙️ إعدادات الغرفة</h3>
+
+            {/* Lock Room */}
+            <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-bold">قفل الغرفة (كلمة مرور)</span>
+              </div>
+              <button onClick={handleToggleLockRoom}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${roomData?.is_private ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+                {roomData?.is_private ? "🔒 مقفلة" : "🔓 مفتوحة"}
+              </button>
+            </div>
+
+            {/* Mute All */}
+            <button onClick={handleMuteAll}
+              className="w-full flex items-center justify-center gap-2 bg-secondary/50 rounded-xl p-3 text-xs font-bold hover:bg-destructive/10 transition-all">
+              <VolumeX className="w-4 h-4 text-destructive" />
+              <span>كتم جميع المايكات</span>
+            </button>
+
             <div>
               <p className="text-xs text-muted-foreground mb-2">عدد المايكات</p>
               <div className="grid grid-cols-4 gap-2">
@@ -467,7 +626,10 @@ const VoiceRoom = () => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="font-bold text-sm">{roomData?.name || "Room"}</h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-bold text-sm">{roomData?.name || "Room"}</h1>
+                {roomData?.is_private && <Lock className="w-3 h-3 text-accent" />}
+              </div>
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Users className="w-3 h-3" /> {members.length} متصل
                 {connectedPeers.size > 0 && (
@@ -512,12 +674,15 @@ const VoiceRoom = () => {
           </div>
         )}
 
-        {/* Mic Grid - All slots dynamic */}
+        {/* Mic Grid */}
         <div className={`grid ${gridCols} gap-3 mb-6`}>
           {micSlots.map((slot, i) => {
+            const isSlotLocked = lockedSlots.includes(i);
             const slotIsSpeaking = slot?.is_on_mic && (
               slot.user_id === currentUserId ? localSpeaking : speakingPeers.has(slot.user_id)
             );
+            const isUserMuted = slot ? mutedUsers.includes(slot.user_id) : false;
+
             return (
               <div key={i} className="flex flex-col items-center gap-1">
                 {slot ? (
@@ -528,14 +693,18 @@ const VoiceRoom = () => {
                         (slot.profile as any)?.equipped_frame || null,
                         slot.profile?.is_boss || false,
                         "sm",
-                        !!slotIsSpeaking
+                        !!slotIsSpeaking && !isUserMuted
+                      )}
+                      {isUserMuted && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center z-20">
+                          <VolumeX className="w-3 h-3 text-destructive-foreground" />
+                        </div>
                       )}
                     </div>
                     <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
                       {slot.profile?.display_name || "User"}
                     </span>
                     {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
-                    {/* Host Income Counter */}
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
                         hostId={slot.user_id}
@@ -547,11 +716,30 @@ const VoiceRoom = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="w-14 h-14 rounded-full bg-secondary border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary hover:bg-secondary/80 transition-all"
-                      onClick={() => handleSitOnMic(i)}>
-                      <Mic className="w-4 h-4 text-muted-foreground" />
+                    <div
+                      className={`w-14 h-14 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${
+                        isSlotLocked
+                          ? "bg-destructive/10 border-destructive/40"
+                          : "bg-secondary border-border hover:border-primary hover:bg-secondary/80"
+                      }`}
+                      onClick={() => isAdmin && isSlotLocked ? handleToggleLockSlot(i) : handleSitOnMic(i)}
+                      onContextMenu={(e) => { e.preventDefault(); if (isAdmin) handleToggleLockSlot(i); }}
+                    >
+                      {isSlotLocked ? (
+                        <Lock className="w-4 h-4 text-destructive" />
+                      ) : (
+                        <Mic className="w-4 h-4 text-muted-foreground" />
+                      )}
                     </div>
-                    <span className="text-[9px] text-muted-foreground">مايك {i + 1}</span>
+                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                      {isSlotLocked ? "🔒" : ""} مايك {i + 1}
+                    </span>
+                    {/* Lock/unlock button for admin */}
+                    {isAdmin && (
+                      <button onClick={() => handleToggleLockSlot(i)} className="text-[8px] text-muted-foreground hover:text-primary">
+                        {isSlotLocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -577,7 +765,7 @@ const VoiceRoom = () => {
               >
                 <Pin className="w-3 h-3 text-accent mt-0.5 shrink-0" />
                 <p className="text-[11px] text-accent font-medium flex-1">{pinnedMessage}</p>
-                {(isBoss || isHost) && (
+                {isAdmin && (
                   <button onClick={() => setPinnedMessage(null)} className="text-muted-foreground hover:text-foreground">
                     <X className="w-3 h-3" />
                   </button>
@@ -601,21 +789,22 @@ const VoiceRoom = () => {
                       {msg.content}
                     </motion.span>
                   ) : (
-                    <div className={`${isBossMsg ? "bg-gradient-to-r from-yellow-500/10 via-amber-500/5 to-transparent rounded-lg px-2 py-1 border border-yellow-500/20" : ""}`}>
+                    <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
                       <span className={`font-bold ${isBossMsg ? "boss-fire-text" : msg.sender?.vip_level && msg.sender.vip_level >= 5 ? "text-accent" : "text-primary"}`}>
                         {isBossMsg && "👑 "}
                         {msg.sender?.display_name || "User"}:{" "}
                       </span>
-                      <span className={`${isBossMsg ? "text-yellow-200 font-semibold" : "text-foreground"}`}>{msg.content}</span>
-                      {/* Pin button for Boss/Host */}
-                      {(isBoss || isHost) && !isSystemMsg && (
-                        <button
-                          onClick={() => handlePinMessage(msg.content)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 inline-flex"
-                          title="تثبيت"
-                        >
-                          <Pin className="w-3 h-3 text-muted-foreground hover:text-accent" />
-                        </button>
+                      <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
+                      {/* Admin actions: Pin & Delete */}
+                      {isAdmin && !isSystemMsg && (
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 inline-flex gap-1">
+                          <button onClick={() => handlePinMessage(msg.content)} title="تثبيت">
+                            <Pin className="w-3 h-3 text-muted-foreground hover:text-accent" />
+                          </button>
+                          <button onClick={() => handleDeleteMessage(msg.id)} title="حذف">
+                            <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        </span>
                       )}
                     </div>
                   )}
@@ -679,6 +868,7 @@ const VoiceRoom = () => {
           display_name: m.profile?.display_name || "User",
           avatar_url: m.profile?.avatar_url || null,
         }))}
+        onMultiGiftSent={handleGiftBurst}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
     </div>
