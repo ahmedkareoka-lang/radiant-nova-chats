@@ -207,8 +207,13 @@ const VoiceRoom = () => {
   const isHost = currentUserId === roomData?.host_id;
 
   const micSlots = Array.from({ length: micCount }).map((_, i) => {
+    // All slots use mic_slot value - host defaults to slot 0 if not explicitly on another slot
     if (i === 0) {
-      const hostMember = members.find((m) => m.user_id === roomData?.host_id);
+      // Check if someone is explicitly assigned to slot 0
+      const slotMember = members.find((m) => m.mic_slot === 0);
+      if (slotMember) return slotMember;
+      // If host has no mic_slot assigned, show them on slot 0 by default
+      const hostMember = members.find((m) => m.user_id === roomData?.host_id && (m.mic_slot === null || m.mic_slot === undefined));
       return hostMember || null;
     }
     const member = members.find((m) => m.mic_slot === i);
