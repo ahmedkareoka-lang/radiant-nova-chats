@@ -26,7 +26,7 @@ export const useRooms = () => {
   const fetchRooms = async () => {
     const { data, error } = await supabase
       .from("rooms")
-      .select("*, host_profile:profiles!rooms_host_id_fkey(display_name, avatar_url, vip_level, is_boss)")
+      .select("*, host_profile:profiles!rooms_host_id_profiles_fkey(display_name, avatar_url, vip_level, is_boss)")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
