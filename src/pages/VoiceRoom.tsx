@@ -535,6 +535,15 @@ const VoiceRoom = () => {
                       {slot.profile?.display_name || "User"}
                     </span>
                     {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
+                    {/* Host Income Counter */}
+                    {slot.user_id === roomData?.host_id && roomId && currentUserId && (
+                      <HostIncomeCounter
+                        hostId={slot.user_id}
+                        roomOwnerId={roomData?.host_id}
+                        currentUserId={currentUserId}
+                        sessionStart={roomData?.created_at || new Date().toISOString()}
+                      />
+                    )}
                   </div>
                 ) : (
                   <>
