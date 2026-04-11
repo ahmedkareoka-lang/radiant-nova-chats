@@ -91,6 +91,7 @@ export type Database = {
           badge: string
           id: string
           joined_at: string
+          mic_hours: number
           role: string
           total_support: number
           user_id: string
@@ -100,6 +101,7 @@ export type Database = {
           badge?: string
           id?: string
           joined_at?: string
+          mic_hours?: number
           role?: string
           total_support?: number
           user_id: string
@@ -109,6 +111,7 @@ export type Database = {
           badge?: string
           id?: string
           joined_at?: string
+          mic_hours?: number
           role?: string
           total_support?: number
           user_id?: string

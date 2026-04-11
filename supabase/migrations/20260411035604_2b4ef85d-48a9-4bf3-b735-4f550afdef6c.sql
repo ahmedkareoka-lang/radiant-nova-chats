@@ -1,0 +1,1 @@
+ALTER TABLE public.agency_members ADD COLUMN IF NOT EXISTS mic_hours numeric NOT NULL DEFAULT 0;
