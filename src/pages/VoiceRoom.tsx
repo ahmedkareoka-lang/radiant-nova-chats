@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2 } from "lucide-react";
+import NovaCup from "@/components/NovaCup";
+import HostIncomeCounter from "@/components/HostIncomeCounter";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
