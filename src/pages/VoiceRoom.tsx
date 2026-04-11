@@ -310,6 +310,15 @@ const VoiceRoom = () => {
     <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative`}>
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
+
+      {/* Room Name Watermark */}
+      {roomData?.name && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+          <span className="text-6xl font-black text-foreground/[0.03] select-none whitespace-nowrap rotate-[-15deg]">
+            {roomData.name}
+          </span>
+        </div>
+      )}
       
       {/* Entrance Banner */}
       <AnimatePresence>
