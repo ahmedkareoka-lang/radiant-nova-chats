@@ -51,7 +51,7 @@ const VoiceRoom = () => {
   const roomId = searchParams.get("id");
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic } = useVoiceRoom(roomId);
 
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
   const [giftReceiverName, setGiftReceiverName] = useState("");
@@ -92,10 +92,16 @@ const VoiceRoom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Boss entrance - only trigger once when a Boss user joins
+  const bossEntranceShown = useRef(false);
   useEffect(() => {
-    const bossMember = members.find((m) => m.profile?.is_boss);
-    if (bossMember && bossMember.user_id !== currentUserId) {
-      setShowBossEntrance(true);
+    if (bossEntranceShown.current) return;
+    for (const m of members) {
+      if (m.profile?.is_boss && !seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
+        bossEntranceShown.current = true;
+        setShowBossEntrance(true);
+        break;
+      }
     }
   }, [members, currentUserId]);
 
