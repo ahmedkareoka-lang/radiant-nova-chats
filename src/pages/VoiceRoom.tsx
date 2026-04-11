@@ -61,6 +61,7 @@ const VoiceRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("id");
+  const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
 
   const [isMuted, setIsMuted] = useState(false);
