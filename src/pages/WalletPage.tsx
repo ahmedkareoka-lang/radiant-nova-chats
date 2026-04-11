@@ -36,10 +36,17 @@ const WalletPage = () => {
     }
     setLoading(true);
     const goldReceived = Math.floor((amount * exchangeRate) / 100);
-    const newDiamonds = profile.diamonds - amount;
-    const newCoins = profile.coins + goldReceived;
-    await supabase.from("profiles").update({ diamonds: newDiamonds, coins: newCoins }).eq("id", profile.id);
-    setProfile({ ...profile, diamonds: newDiamonds, coins: newCoins });
+    const { error } = await supabase.rpc("exchange_diamonds_to_coins", {
+      _user_id: profile.id,
+      _diamond_amount: amount,
+      _coin_amount: goldReceived,
+    });
+    if (error) {
+      toast.error("فشل في التبديل");
+      setLoading(false);
+      return;
+    }
+    setProfile({ ...profile, diamonds: profile.diamonds - amount, coins: profile.coins + goldReceived });
     setExchangeAmount("");
     toast.success(`تم تحويل ${amount} ماسة إلى ${goldReceived} ذهبة! 💰`);
     setLoading(false);
