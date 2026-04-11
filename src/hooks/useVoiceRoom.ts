@@ -190,6 +190,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Heartbeat: update joined_at periodically to show user is still active
+    // Also increment mic_hours for agency hosts who are on mic
     heartbeatRef.current = setInterval(async () => {
       const uid = currentUserIdRef.current;
       const rid = roomIdRef.current;
@@ -199,6 +200,23 @@ export const useVoiceRoom = (roomId: string | null) => {
           .update({ joined_at: new Date().toISOString() })
           .eq("room_id", rid)
           .eq("user_id", uid);
+
+        // Check if user is on mic and is an agency host, then increment mic_hours
+        const currentMember = members.find(m => m.user_id === uid);
+        if (currentMember?.is_on_mic) {
+          const hoursIncrement = HEARTBEAT_INTERVAL / 3600000; // convert ms to hours
+          const { data: membership } = await supabase
+            .from("agency_members")
+            .select("id, mic_hours")
+            .eq("user_id", uid)
+            .single();
+          if (membership) {
+            await supabase
+              .from("agency_members")
+              .update({ mic_hours: (Number(membership.mic_hours) || 0) + hoursIncrement })
+              .eq("id", membership.id);
+          }
+        }
       }
     }, HEARTBEAT_INTERVAL);
 
