@@ -25,6 +25,8 @@ import InventoryPage from "./pages/InventoryPage";
 import AgenciesPage from "./pages/AgenciesPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import UserProfile from "./pages/UserProfile";
+import EditProfile from "./pages/EditProfile";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,8 @@ const AnimatedRoutes = () => {
         <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />
         <Route path="/notifications" element={<AuthGate><NotificationsPage /></AuthGate>} />
         <Route path="/user" element={<AuthGate><UserProfile /></AuthGate>} />
+        <Route path="/edit-profile" element={<AuthGate><EditProfile /></AuthGate>} />
+        <Route path="/leaderboard" element={<AuthGate><LeaderboardPage /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

@@ -1,4 +1,4 @@
-import goldCoin3d from "@/assets/gold-coin-3d.png";
+import novaCoin3d from "@/assets/nova-coin-3d.png";
 import blueDiamond3d from "@/assets/blue-diamond-3d.png";
 
 interface CurrencyIconProps {
@@ -15,11 +15,11 @@ const sizes = {
 };
 
 const CurrencyIcon = ({ type, size = "sm", className = "" }: CurrencyIconProps) => {
-  const src = type === "gold" ? goldCoin3d : blueDiamond3d;
+  const src = type === "gold" ? novaCoin3d : blueDiamond3d;
   return (
     <img
       src={src}
-      alt={type === "gold" ? "Gold" : "Diamond"}
+      alt={type === "gold" ? "NOVA Coin" : "Diamond"}
       className={`${sizes[size]} object-contain inline-block ${className}`}
       loading="lazy"
     />

@@ -44,7 +44,7 @@ const Profile = () => {
     fetchProfile();
   }, [navigate]);
 
-  const handleLogout = async () => { await supabase.auth.signOut(); navigate("/login"); };
+  
 
   const equipFrame = async (frameUrl: string | null) => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
@@ -156,7 +156,7 @@ const Profile = () => {
                 </div>
               )}
             </button>
-            <button onClick={handleLogout} className="w-9 h-9 rounded-full bg-secondary/50 flex items-center justify-center">
+            <button onClick={() => navigate("/edit-profile")} className="w-9 h-9 rounded-full bg-secondary/50 flex items-center justify-center">
               <Settings className="w-4 h-4" />
             </button>
           </div>
@@ -225,7 +225,7 @@ const Profile = () => {
             </button>
             <button onClick={() => navigate("/wallet")} className="flex-1 card-gradient-blue p-3 flex items-center justify-center gap-2" style={{ background: "linear-gradient(135deg, hsl(40 40% 18% / 0.8), hsl(260 30% 12% / 0.8))" }}>
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Xcoins</p>
+                <p className="text-xs text-muted-foreground">NOVA Coins</p>
                 <p className="font-bold text-base text-accent">{isBoss ? "∞" : (profile?.coins || 0).toLocaleString()}</p>
               </div>
               <CurrencyIcon type="gold" size="lg" />
@@ -305,7 +305,7 @@ const Profile = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Users className="w-4 h-4 text-primary" /></div>
               </div>
             </button>
-            <button onClick={handleLogout} className="menu-row w-full border-b-0">
+            <button onClick={() => navigate("/edit-profile")} className="menu-row w-full border-b-0">
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">الإعدادات</span>

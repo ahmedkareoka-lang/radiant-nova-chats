@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Clock } from "lucide-react";
+import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
+import CurrencyIcon from "@/components/CurrencyIcon";
 
 const AgenciesPage = () => {
   const navigate = useNavigate();
@@ -16,8 +17,14 @@ const AgenciesPage = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
   const [isBoss, setIsBoss] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
+  const [isHost, setIsHost] = useState(false);
   const [pendingAgencies, setPendingAgencies] = useState<any[]>([]);
   const [agencyHosts, setAgencyHosts] = useState<any[]>([]);
+  const [searchId, setSearchId] = useState("");
+  const [searchResult, setSearchResult] = useState<any>(null);
+  const [pendingResignations, setPendingResignations] = useState<any[]>([]);
+  const [hostStats, setHostStats] = useState<any>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -25,8 +32,10 @@ const AgenciesPage = () => {
       if (!user) return;
       setUserId(user.id);
 
-      const { data: prof } = await supabase.from("profiles").select("is_boss").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setIsBoss(prof?.is_boss || false);
+      setIsAgent(prof?.is_agent || false);
+      setIsHost(prof?.is_host || false);
 
       const { data: all } = await supabase.from("agencies").select("*").eq("status", "approved").eq("is_active", true);
       setAgencies(all || []);
@@ -42,19 +51,29 @@ const AgenciesPage = () => {
         const { data: ag } = await supabase.from("agencies").select("*").eq("id", membership.agency_id).single();
         setMyAgency(ag);
 
-        // If agent, load hosts
         if (membership.badge === "agent" || ag?.owner_id === user.id) {
           const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", membership.agency_id);
-          // Fetch profiles for hosts
           if (hosts) {
             const ids = hosts.map(h => h.user_id);
             const { data: profiles } = await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids);
-            const enriched = hosts.map(h => ({
-              ...h,
-              profile: profiles?.find(p => p.id === h.user_id),
-            }));
-            setAgencyHosts(enriched);
+            setAgencyHosts(hosts.map(h => ({ ...h, profile: profiles?.find(p => p.id === h.user_id) })));
           }
+
+          // Load pending resignations
+          const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", membership.agency_id).eq("status", "pending");
+          if (resignations && resignations.length > 0) {
+            const rIds = resignations.map(r => r.host_id);
+            const { data: rProfiles } = await supabase.from("profiles").select("id, display_name, user_id").in("id", rIds);
+            setPendingResignations(resignations.map(r => ({ ...r, profile: rProfiles?.find(p => p.id === r.host_id) })));
+          }
+        }
+
+        // Host stats
+        if (membership.badge === "host") {
+          const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
+          const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
+          const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
+          setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
         }
       }
       setLoading(false);
@@ -64,79 +83,89 @@ const AgenciesPage = () => {
 
   const applyForAgency = async () => {
     if (!agencyName.trim()) return;
-    const { data, error } = await supabase.from("agencies").insert({
-      name: agencyName,
-      owner_id: userId,
-      status: "pending",
-    }).select().single();
-
-    if (error) { toast.error("خطأ في تقديم الطلب"); return; }
-
-    // Notify BOSS
+    await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending" });
     const { data: boss } = await supabase.from("profiles").select("id").eq("is_boss", true).single();
     if (boss) {
       await supabase.from("notifications").insert({
-        user_id: boss.id,
-        title: "طلب وكالة جديد 🏢",
-        message: `طلب إنشاء وكالة "${agencyName}" بانتظار الموافقة`,
-        type: "agency",
+        user_id: boss.id, title: "طلب وكالة جديد 🏢",
+        message: `طلب إنشاء وكالة "${agencyName}" بانتظار الموافقة`, type: "agency",
       });
     }
-
-    toast.success("تم إرسال طلب الوكالة للمراجعة! ⏳");
+    toast.success("تم إرسال طلب الوكالة! ⏳");
     setShowCreate(false);
     setAgencyName("");
   };
 
   const approveAgency = async (agencyId: string) => {
     await supabase.from("agencies").update({ status: "approved" }).eq("id", agencyId);
-    // Add owner as agent
     const ag = pendingAgencies.find(a => a.id === agencyId);
     if (ag) {
-      await supabase.from("agency_members").insert({
-        agency_id: agencyId,
-        user_id: ag.owner_id,
-        role: "owner",
-        badge: "agent",
-      });
+      await supabase.from("agency_members").insert({ agency_id: agencyId, user_id: ag.owner_id, role: "owner", badge: "agent" });
       await supabase.from("notifications").insert({
-        user_id: ag.owner_id,
-        title: "تمت الموافقة! ✅",
-        message: `تم قبول وكالتك "${ag.name}"! أصبحت وكيلاً الآن.`,
-        type: "agency",
+        user_id: ag.owner_id, title: "تمت الموافقة! ✅",
+        message: `تم قبول وكالتك "${ag.name}"!`, type: "agency",
       });
     }
-    setPendingAgencies(pendingAgencies.filter(a => a.id !== agencyId));
-    toast.success("تمت الموافقة على الوكالة! ✅");
+    setPendingAgencies(prev => prev.filter(a => a.id !== agencyId));
+    toast.success("تمت الموافقة! ✅");
   };
 
   const rejectAgency = async (agencyId: string) => {
     await supabase.from("agencies").update({ status: "rejected", is_active: false }).eq("id", agencyId);
-    const ag = pendingAgencies.find(a => a.id === agencyId);
-    if (ag) {
-      await supabase.from("notifications").insert({
-        user_id: ag.owner_id,
-        title: "طلب مرفوض ❌",
-        message: `تم رفض طلب وكالة "${ag.name}"`,
-        type: "agency",
-      });
-    }
-    setPendingAgencies(pendingAgencies.filter(a => a.id !== agencyId));
+    setPendingAgencies(prev => prev.filter(a => a.id !== agencyId));
     toast.info("تم رفض الوكالة");
   };
 
-  const joinAgency = async (agencyId: string) => {
-    if (myAgency) { toast.error("أنت بالفعل في وكالة!"); return; }
-    const { error } = await supabase.from("agency_members").insert({
-      agency_id: agencyId,
-      user_id: userId,
-      badge: "host",
+  const searchUser = async () => {
+    if (!searchId.trim()) return;
+    const { data } = await supabase.from("profiles").select("id, display_name, user_id, avatar_url, is_host, agency_id").eq("user_id", searchId.trim()).single();
+    setSearchResult(data || null);
+    if (!data) toast.error("لم يتم العثور على المستخدم");
+  };
+
+  const inviteAsHost = async () => {
+    if (!searchResult || !myAgency) return;
+    if (searchResult.is_host) { toast.error("هذا المستخدم مضيف بالفعل!"); return; }
+    
+    await supabase.from("agency_invites").insert({
+      agency_id: myAgency.id, agent_id: userId, target_user_id: searchResult.id,
     });
-    if (error) { toast.error("خطأ في الانضمام"); return; }
-    const ag = agencies.find((a) => a.id === agencyId);
-    setMyAgency(ag);
-    setMyMembership({ agency_id: agencyId, badge: "host" });
-    toast.success("تم الانضمام للوكالة كمضيف! 🎉");
+    await supabase.from("notifications").insert({
+      user_id: searchResult.id, title: "دعوة وكالة 🏢",
+      message: `تم دعوتك للانضمام كمضيف في وكالة "${myAgency.name}"`, type: "agency_invite",
+    });
+    toast.success("تم إرسال الدعوة! 📨");
+    setSearchResult(null);
+    setSearchId("");
+  };
+
+  const removeHost = async (hostId: string) => {
+    if (!myAgency) return;
+    const { error } = await supabase.rpc("remove_agency_host", {
+      _agent_id: userId, _host_id: hostId, _agency_id: myAgency.id,
+    });
+    if (error) { toast.error("فشل في إزالة المضيف"); return; }
+    setAgencyHosts(prev => prev.filter(h => h.user_id !== hostId));
+    toast.success("تم إزالة المضيف");
+  };
+
+  const requestResignation = async () => {
+    if (!myAgency) return;
+    await supabase.from("agency_resignations").insert({ agency_id: myAgency.id, host_id: userId });
+    await supabase.from("notifications").insert({
+      user_id: myAgency.owner_id, title: "طلب استقالة 📋",
+      message: `طلب استقالة من مضيف في وكالتك`, type: "agency",
+    });
+    toast.success("تم إرسال طلب الاستقالة! ⏳");
+  };
+
+  const approveResignation = async (resignationId: string) => {
+    const { error } = await supabase.rpc("approve_resignation", {
+      _agent_id: userId, _resignation_id: resignationId,
+    });
+    if (error) { toast.error("فشل"); return; }
+    setPendingResignations(prev => prev.filter(r => r.id !== resignationId));
+    toast.success("تمت الموافقة على الاستقالة");
   };
 
   return (
@@ -157,10 +186,7 @@ const AgenciesPage = () => {
               <h3 className="font-bold text-sm text-accent">⏳ طلبات بانتظار الموافقة</h3>
               {pendingAgencies.map((ag) => (
                 <div key={ag.id} className="card-nova p-3 flex items-center justify-between border border-accent/30">
-                  <div>
-                    <p className="font-bold text-sm">{ag.name}</p>
-                    <p className="text-[10px] text-muted-foreground">بانتظار الموافقة</p>
-                  </div>
+                  <p className="font-bold text-sm">{ag.name}</p>
                   <div className="flex gap-2">
                     <button onClick={() => approveAgency(ag.id)} className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
                       <Check className="w-4 h-4 text-green-400" />
@@ -176,8 +202,8 @@ const AgenciesPage = () => {
 
           {/* My agency */}
           {myAgency && (
-            <div className="card-nova p-4 border border-primary/30">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="card-nova p-4 border border-primary/30 space-y-3">
+              <div className="flex items-center gap-2">
                 <Crown className="w-5 h-5 text-accent" />
                 <h3 className="font-bold text-sm">وكالتي</h3>
                 <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
@@ -186,33 +212,101 @@ const AgenciesPage = () => {
               </div>
               <p className="font-bold text-lg">{myAgency.name}</p>
 
-              {/* Agent dashboard */}
-              {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && agencyHosts.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  <h4 className="text-xs font-bold text-muted-foreground">المضيفون ({agencyHosts.length})</h4>
-                  {agencyHosts.map((h) => (
-                    <div key={h.id} className="flex items-center justify-between bg-secondary/50 rounded-xl p-2">
-                      <div>
-                        <p className="text-xs font-bold">{h.profile?.display_name || "—"}</p>
-                        <p className="text-[9px] text-muted-foreground">ID: {h.profile?.user_id}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-bold text-accent">{(h.total_support || 0).toLocaleString()} 💎</p>
-                        <p className="text-[9px] text-muted-foreground">عمولة: {Math.floor((h.total_support || 0) * 0.15).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))}
+              {/* Host stats */}
+              {myMembership?.badge === "host" && hostStats && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">إجمالي الهدايا</p>
+                    <p className="font-bold text-lg text-accent">{hostStats.totalGifts}</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">إجمالي الماس</p>
+                    <p className="font-bold text-lg text-primary">{hostStats.totalDiamonds.toLocaleString()} 💎</p>
+                  </div>
                 </div>
+              )}
+
+              {/* Host resignation button */}
+              {myMembership?.badge === "host" && (
+                <button onClick={requestResignation}
+                  className="w-full py-2 rounded-xl border border-destructive/30 text-destructive text-xs font-bold flex items-center justify-center gap-2">
+                  <LogOut className="w-3 h-3" /> طلب استقالة
+                </button>
+              )}
+
+              {/* Agent: Search & Invite */}
+              {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && (
+                <>
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-muted-foreground">دعوة مضيف جديد</h4>
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="أدخل ID المستخدم" value={searchId} onChange={(e) => setSearchId(e.target.value)}
+                        className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
+                      <button onClick={searchUser} className="px-3 py-2 rounded-xl gradient-neon text-primary-foreground">
+                        <Search className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {searchResult && (
+                      <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden">
+                          <img src={searchResult.avatar_url || "https://i.pravatar.cc/60"} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold">{searchResult.display_name}</p>
+                          <p className="text-[10px] text-muted-foreground">ID: {searchResult.user_id}</p>
+                        </div>
+                        <button onClick={inviteAsHost} className="px-3 py-1.5 rounded-xl text-xs font-bold gradient-neon text-primary-foreground flex items-center gap-1">
+                          <UserPlus className="w-3 h-3" /> دعوة
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pending resignations */}
+                  {pendingResignations.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-accent">📋 طلبات استقالة</h4>
+                      {pendingResignations.map((r) => (
+                        <div key={r.id} className="bg-secondary/50 rounded-xl p-3 flex items-center justify-between">
+                          <p className="text-sm font-bold">{r.profile?.display_name || "مضيف"}</p>
+                          <button onClick={() => approveResignation(r.id)}
+                            className="px-3 py-1 rounded-xl text-xs bg-green-500/20 text-green-400 font-bold">قبول</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Hosts list */}
+                  {agencyHosts.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-muted-foreground">المضيفون ({agencyHosts.length})</h4>
+                      {agencyHosts.map((h) => (
+                        <div key={h.id} className="flex items-center justify-between bg-secondary/50 rounded-xl p-2">
+                          <div>
+                            <p className="text-xs font-bold">{h.profile?.display_name || "—"}</p>
+                            <p className="text-[9px] text-muted-foreground">ID: {h.profile?.user_id}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-bold text-accent">{(h.total_support || 0).toLocaleString()} 💎</p>
+                            {h.badge !== "agent" && (
+                              <button onClick={() => removeHost(h.user_id)} className="w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center">
+                                <X className="w-3 h-3 text-destructive" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
 
           {/* Apply for agency */}
           {!myAgency && (
-            <button
-              onClick={() => setShowCreate(!showCreate)}
-              className="w-full py-3 rounded-2xl border border-dashed border-primary/50 text-primary font-bold text-sm flex items-center justify-center gap-2"
-            >
+            <button onClick={() => setShowCreate(!showCreate)}
+              className="w-full py-3 rounded-2xl border border-dashed border-primary/50 text-primary font-bold text-sm flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> تقديم طلب وكالة جديدة
             </button>
           )}
@@ -220,16 +314,9 @@ const AgenciesPage = () => {
           {showCreate && (
             <div className="card-nova p-4 space-y-3">
               <p className="text-[10px] text-muted-foreground">سيتم مراجعة طلبك من قبل الإدارة</p>
-              <input
-                type="text"
-                placeholder="اسم الوكالة"
-                value={agencyName}
-                onChange={(e) => setAgencyName(e.target.value)}
-                className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
-              />
-              <button onClick={applyForAgency} className="w-full py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">
-                تقديم الطلب
-              </button>
+              <input type="text" placeholder="اسم الوكالة" value={agencyName} onChange={(e) => setAgencyName(e.target.value)}
+                className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none" />
+              <button onClick={applyForAgency} className="w-full py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تقديم الطلب</button>
             </div>
           )}
 
@@ -242,14 +329,6 @@ const AgenciesPage = () => {
                   <p className="font-bold text-sm">{ag.name}</p>
                   <p className="text-[10px] text-muted-foreground">🟢 نشطة</p>
                 </div>
-                {!myAgency && (
-                  <button
-                    onClick={() => joinAgency(ag.id)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold gradient-neon text-primary-foreground btn-nova"
-                  >
-                    انضمام كمضيف
-                  </button>
-                )}
               </div>
             ))}
             {agencies.length === 0 && !loading && (
