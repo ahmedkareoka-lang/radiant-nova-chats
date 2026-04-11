@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
+import FloatingRoomBubble from "@/components/FloatingRoomBubble";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
@@ -81,7 +83,10 @@ const App = () => {
           <SplashScreen onFinish={handleSplashFinish} />
         ) : (
           <BrowserRouter>
-            <AnimatedRoutes />
+            <ActiveRoomProvider>
+              <AnimatedRoutes />
+              <FloatingRoomBubble />
+            </ActiveRoomProvider>
           </BrowserRouter>
         )}
       </TooltipProvider>
