@@ -102,10 +102,19 @@ const VoiceRoom = () => {
 
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
+  // Register room with context and join
   useEffect(() => {
-    if (roomId && currentUserId) joinRoom();
-    return () => { if (roomId && currentUserId) leaveRoom(); };
+    if (roomId && currentUserId) {
+      joinRoom();
+    }
   }, [roomId, currentUserId]);
+
+  // Register room name with context when roomData loads
+  useEffect(() => {
+    if (roomId && roomData?.name) {
+      openRoom(roomId, roomData.name);
+    }
+  }, [roomId, roomData?.name]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
