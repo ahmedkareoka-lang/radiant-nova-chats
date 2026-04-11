@@ -50,6 +50,41 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_invites: {
+        Row: {
+          agency_id: string
+          agent_id: string
+          created_at: string
+          id: string
+          status: string
+          target_user_id: string
+        }
+        Insert: {
+          agency_id: string
+          agent_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          target_user_id: string
+        }
+        Update: {
+          agency_id?: string
+          agent_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_invites_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agency_members: {
         Row: {
           agency_id: string
@@ -81,6 +116,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_resignations: {
+        Row: {
+          agency_id: string
+          created_at: string
+          host_id: string
+          id: string
+          status: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          host_id: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          host_id?: string
+          id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_resignations_agency_id_fkey"
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
@@ -298,6 +365,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
+          agency_id: string | null
           avatar_url: string | null
           charisma_level: number
           charisma_xp: number
@@ -309,7 +378,9 @@ export type Database = {
           equipped_frame: string | null
           gender: string | null
           id: string
+          is_agent: boolean
           is_boss: boolean
+          is_host: boolean
           level: number
           phone: string | null
           user_id: string
@@ -318,6 +389,8 @@ export type Database = {
           wealth_xp: number
         }
         Insert: {
+          age?: number | null
+          agency_id?: string | null
           avatar_url?: string | null
           charisma_level?: number
           charisma_xp?: number
@@ -329,7 +402,9 @@ export type Database = {
           equipped_frame?: string | null
           gender?: string | null
           id: string
+          is_agent?: boolean
           is_boss?: boolean
+          is_host?: boolean
           level?: number
           phone?: string | null
           user_id: string
@@ -338,6 +413,8 @@ export type Database = {
           wealth_xp?: number
         }
         Update: {
+          age?: number | null
+          agency_id?: string | null
           avatar_url?: string | null
           charisma_level?: number
           charisma_xp?: number
@@ -349,7 +426,9 @@ export type Database = {
           equipped_frame?: string | null
           gender?: string | null
           id?: string
+          is_agent?: boolean
           is_boss?: boolean
+          is_host?: boolean
           level?: number
           phone?: string | null
           user_id?: string
@@ -357,7 +436,15 @@ export type Database = {
           wealth_level?: number
           wealth_xp?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_members: {
         Row: {
@@ -546,6 +633,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_agency_invite: {
+        Args: { _invite_id: string; _user_id: string }
+        Returns: undefined
+      }
       add_diamonds_add_charisma: {
         Args: { _diamond_amount: number; _user_id: string; _xp_amount: number }
         Returns: undefined
@@ -559,6 +650,10 @@ export type Database = {
           _target_id: string
           _vip_level?: number
         }
+        Returns: undefined
+      }
+      approve_resignation: {
+        Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
       }
       deduct_coins: {
@@ -601,6 +696,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      remove_agency_host: {
+        Args: { _agency_id: string; _agent_id: string; _host_id: string }
+        Returns: undefined
       }
     }
     Enums: {
