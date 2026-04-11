@@ -80,7 +80,7 @@ const VoiceRoom = () => {
   const isOnMic = currentMember?.mic_slot !== null && currentMember?.mic_slot !== undefined;
 
   // WebRTC
-  const { connectedPeers } = useWebRTC({
+  const { connectedPeers, speakingPeers, localSpeaking } = useWebRTC({
     roomId,
     currentUserId,
     isOnMic,
@@ -447,7 +447,7 @@ const VoiceRoom = () => {
                 host.equipped_frame,
                 host.is_boss,
                 "lg",
-                !!(members.find((m) => m.user_id === roomData?.host_id)?.is_on_mic && !isMuted && roomData?.host_id === currentUserId) || !!(members.find((m) => m.user_id === roomData?.host_id)?.is_on_mic && connectedPeers.has(roomData?.host_id || ''))
+                (roomData?.host_id === currentUserId ? localSpeaking : speakingPeers.has(roomData?.host_id || ''))
               )}
               <div className="absolute -top-2 -right-2 z-20">
                 <Crown className="w-6 h-6 text-accent animate-float" />
@@ -463,7 +463,7 @@ const VoiceRoom = () => {
           {micSlots.map((slot, i) => {
             if (i === 0) return null;
             const slotIsSpeaking = slot?.is_on_mic && (
-              (slot.user_id === currentUserId && !isMuted) || connectedPeers.has(slot.user_id)
+              slot.user_id === currentUserId ? localSpeaking : speakingPeers.has(slot.user_id)
             );
             return (
               <div key={i} className="flex flex-col items-center gap-1">
