@@ -191,7 +191,7 @@ const Profile = () => {
             <div className="relative">
               <div className={`relative ${frameSize} ${isBoss ? "boss-god-frame" : ""}`}>
                 {frameImage && (
-                  <img src={frameImage} alt="Frame" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none" />
+                  <img src={frameImage} alt="Frame" className={`absolute inset-0 w-full h-full object-contain z-20 pointer-events-none ${equippedFrameKey ? (FRAME_ANIMATION[equippedFrameKey] || "") : ""}`} />
                 )}
                 <div className={`absolute ${avatarInset} rounded-full overflow-hidden z-10`}>
                   <img src={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="Profile" className="w-full h-full object-cover" />
