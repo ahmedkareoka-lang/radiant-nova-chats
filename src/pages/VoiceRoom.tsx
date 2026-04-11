@@ -119,13 +119,13 @@ const VoiceRoom = () => {
   };
 
   const handleAvatarClick = (member: any) => {
-    if (member.profile) {
-      const uid = member.user_id || member.profile?.user_id;
-      if (uid && uid !== currentUserId) {
-        navigate(`/user?id=${uid}`);
-      } else {
-        setSelectedProfile(member.profile as UserProfile);
-      }
+    // Always use member.user_id as the authoritative ID (not profile.user_id)
+    const memberId = member.user_id;
+    if (!memberId) return;
+    if (memberId !== currentUserId) {
+      navigate(`/user?id=${memberId}`);
+    } else if (member.profile) {
+      setSelectedProfile({ ...member.profile, user_id: memberId } as UserProfile);
     }
   };
 
@@ -137,23 +137,31 @@ const VoiceRoom = () => {
       return;
     }
     const existing = members.find((m) => m.user_id === currentUserId);
+
+    // If user is already on this slot, leave it
     if (existing?.mic_slot === slotIndex) {
-      // Leave mic
       await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
       setIsMuted(true);
       toast.success("نزلت من المايك");
-    } else {
-      // Check if slot is taken
-      const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
-      if (slotTaken) {
-        toast.error("هذا المايك مشغول");
-        return;
-      }
-      // Sit on mic
-      await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
-      setIsMuted(false);
-      toast.success(`جلست على المايك ${slotIndex + 1}`);
+      return;
     }
+
+    // If user is already on another slot, clear it first
+    if (existing?.mic_slot !== null && existing?.mic_slot !== undefined) {
+      await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", currentUserId);
+    }
+
+    // Check if slot is taken by another user
+    const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
+    if (slotTaken) {
+      toast.error("هذا المايك مشغول");
+      return;
+    }
+
+    // Sit on mic
+    await supabase.from("room_members").update({ mic_slot: slotIndex, is_on_mic: true }).eq("room_id", roomId).eq("user_id", currentUserId);
+    setIsMuted(false);
+    toast.success(`جلست على المايك ${slotIndex + 1}`);
   };
 
   const changeMicCount = async (count: number) => {
