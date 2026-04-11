@@ -287,6 +287,7 @@ const AgenciesPage = () => {
                             <p className="text-[9px] text-muted-foreground">ID: {h.profile?.user_id}</p>
                           </div>
                           <div className="flex items-center gap-2">
+                            <p className="text-[9px] text-muted-foreground">{Number(h.mic_hours || 0).toFixed(1)}h 🎙️</p>
                             <p className="text-xs font-bold text-accent">{(h.total_support || 0).toLocaleString()} 💎</p>
                             {h.badge !== "agent" && (
                               <button onClick={() => removeHost(h.user_id)} className="w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center">
