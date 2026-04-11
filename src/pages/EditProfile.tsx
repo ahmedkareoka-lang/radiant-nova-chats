@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Camera, Save } from "lucide-react";
+import { ArrowLeft, Camera, Save, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
+import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 
 const COUNTRIES = [
   { code: "SA", name: "السعودية 🇸🇦" },
@@ -29,6 +30,9 @@ const EditProfile = () => {
   const [countryCode, setCountryCode] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [entranceVideoUrl, setEntranceVideoUrl] = useState("");
+  const [entranceAudioUrl, setEntranceAudioUrl] = useState("");
+  const [showTestEntrance, setShowTestEntrance] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,6 +45,8 @@ const EditProfile = () => {
         setDisplayName(data.display_name || "");
         setAge(data.age?.toString() || "");
         setCountryCode(data.country_code || "");
+        setEntranceVideoUrl((data as any).entrance_video_url || "");
+        setEntranceAudioUrl((data as any).entrance_audio_url || "");
       }
     };
     load();
@@ -70,6 +76,8 @@ const EditProfile = () => {
     const updates: any = {
       display_name: displayName.trim() || profile.display_name,
       country_code: countryCode || profile.country_code,
+      entrance_video_url: entranceVideoUrl.trim() || null,
+      entrance_audio_url: entranceAudioUrl.trim() || null,
     };
     if (age && parseInt(age) >= 13 && parseInt(age) <= 99) {
       updates.age = parseInt(age);
@@ -82,6 +90,14 @@ const EditProfile = () => {
       setProfile({ ...profile, ...updates });
     }
     setSaving(false);
+  };
+
+  const testEntrance = () => {
+    if (!entranceVideoUrl && !entranceAudioUrl) {
+      toast.error("أضف رابط فيديو أو صوت الدخول أولاً");
+      return;
+    }
+    setShowTestEntrance(true);
   };
 
   if (!profile) {
@@ -139,6 +155,27 @@ const EditProfile = () => {
                 ))}
               </select>
             </div>
+
+            {/* Custom Entrance Section */}
+            <div className="card-nova p-4 space-y-3">
+              <h3 className="font-bold text-sm flex items-center gap-2">🎬 تأثير الدخول المخصص</h3>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground">رابط فيديو الدخول (WebM)</label>
+                <input type="url" value={entranceVideoUrl} onChange={(e) => setEntranceVideoUrl(e.target.value)}
+                  placeholder="https://example.com/entrance.webm"
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2.5 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground">رابط صوت الدخول (MP3)</label>
+                <input type="url" value={entranceAudioUrl} onChange={(e) => setEntranceAudioUrl(e.target.value)}
+                  placeholder="https://example.com/entrance.mp3"
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2.5 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
+              </div>
+              <button onClick={testEntrance}
+                className="w-full py-2 rounded-xl bg-secondary text-foreground font-bold text-xs flex items-center justify-center gap-2 hover:bg-secondary/80 transition-all">
+                <Play className="w-4 h-4 text-primary" /> معاينة تأثير الدخول
+              </button>
+            </div>
           </div>
 
           <button onClick={handleSave} disabled={saving}
@@ -154,6 +191,21 @@ const EditProfile = () => {
         </main>
 
         <BottomNav />
+
+        {/* Test Entrance Effect */}
+        {showTestEntrance && (
+          <CustomEntranceEffect
+            queue={[{
+              id: "test-" + Date.now(),
+              displayName: profile.display_name || "أنت",
+              avatarUrl: profile.avatar_url,
+              videoUrl: entranceVideoUrl || null,
+              audioUrl: entranceAudioUrl || null,
+            }]}
+            onComplete={() => setShowTestEntrance(false)}
+            muteEntrance={false}
+          />
+        )}
       </div>
     </PageTransition>
   );
