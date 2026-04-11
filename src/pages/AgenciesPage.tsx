@@ -214,7 +214,7 @@ const AgenciesPage = () => {
 
               {/* Host stats */}
               {myMembership?.badge === "host" && hostStats && (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="bg-secondary/50 rounded-xl p-3 text-center">
                     <p className="text-xs text-muted-foreground">إجمالي الهدايا</p>
                     <p className="font-bold text-lg text-accent">{hostStats.totalGifts}</p>
@@ -222,6 +222,10 @@ const AgenciesPage = () => {
                   <div className="bg-secondary/50 rounded-xl p-3 text-center">
                     <p className="text-xs text-muted-foreground">إجمالي الماس</p>
                     <p className="font-bold text-lg text-primary">{hostStats.totalDiamonds.toLocaleString()} 💎</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-muted-foreground">ساعات البث</p>
+                    <p className="font-bold text-lg text-primary">{Number(myMembership?.mic_hours || 0).toFixed(1)} 🎙️</p>
                   </div>
                 </div>
               )}
