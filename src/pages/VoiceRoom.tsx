@@ -362,7 +362,12 @@ const VoiceRoom = () => {
             ))}
             <div ref={chatEndRef} />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <EmojiStickerPicker
+              isOpen={showEmojiPicker}
+              onToggle={() => setShowEmojiPicker(!showEmojiPicker)}
+              onSelect={(emoji) => setChatInput((prev) => prev + emoji)}
+            />
             <input
               type="text"
               value={chatInput}
