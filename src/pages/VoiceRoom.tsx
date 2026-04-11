@@ -84,6 +84,8 @@ const VoiceRoom = () => {
     charismaLevel: number;
     effect: typeof ENTRANCE_EFFECTS[0];
   } | null>(null);
+  const [entranceQueue, setEntranceQueue] = useState<{ id: string; displayName: string; avatarUrl: string | null; videoUrl: string | null; audioUrl: string | null }[]>([]);
+  const [muteEntrance, setMuteEntrance] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
 
