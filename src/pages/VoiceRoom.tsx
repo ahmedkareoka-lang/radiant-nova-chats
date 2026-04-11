@@ -135,9 +135,7 @@ const VoiceRoom = () => {
   };
 
   const handleToggleMic = async () => {
-    const newState = !isMuted;
-    setIsMuted(newState);
-    await toggleMic(!newState);
+    setIsMuted(prev => !prev);
   };
 
   const handleLeave = async () => {
