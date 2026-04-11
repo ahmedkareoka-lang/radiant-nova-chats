@@ -12,11 +12,14 @@ import { useNotifications } from "@/hooks/useNotifications";
 import bossFrame from "@/assets/boss-frame.png";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+import lionFrame from "@/assets/lion-frame.png";
 import PageTransition from "@/components/PageTransition";
 
 const FRAME_MAP: Record<string, string> = {
   "frame-purple-wings": framePurpleWings,
   "frame-royal-crown": frameRoyalCrown,
+  "lion-frame": lionFrame,
+  "boss-frame": bossFrame,
 };
 
 const Profile = () => {
@@ -108,7 +111,7 @@ const Profile = () => {
 
   const isBoss = profile?.is_boss;
   const equippedFrameKey = profile?.equipped_frame;
-  const frameImage = isBoss ? bossFrame : (equippedFrameKey ? FRAME_MAP[equippedFrameKey] : null);
+  const frameImage = (equippedFrameKey && FRAME_MAP[equippedFrameKey]) ? FRAME_MAP[equippedFrameKey] : (isBoss ? bossFrame : null);
   const frameSize = isBoss ? "w-44 h-44" : "w-36 h-36";
   const avatarInset = isBoss ? "inset-[18%]" : "inset-[15%]";
   const wealthLevel = profile?.wealth_level || 1;

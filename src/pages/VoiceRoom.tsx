@@ -13,10 +13,13 @@ import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import bossFrame from "@/assets/boss-frame.png";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
+import lionFrame from "@/assets/lion-frame.png";
 
 const FRAME_MAP: Record<string, string> = {
   "frame-purple-wings": framePurpleWings,
   "frame-royal-crown": frameRoyalCrown,
+  "lion-frame": lionFrame,
+  "boss-frame": bossFrame,
 };
 
 interface UserProfile {
@@ -228,7 +231,7 @@ const VoiceRoom = () => {
   ) => {
     const sizeMap = { sm: { outer: "w-14 h-14", inner: "w-10 h-10", frame: "w-[72px] h-[72px]" }, md: { outer: "w-16 h-16", inner: "w-12 h-12", frame: "w-[82px] h-[82px]" }, lg: { outer: "w-20 h-20", inner: "w-16 h-16", frame: "w-[100px] h-[100px]" } };
     const s = sizeMap[size];
-    const frameImg = isBoss ? bossFrame : (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : null;
+    const frameImg = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : (isBoss ? bossFrame : null);
 
     if (frameImg) {
       return (
