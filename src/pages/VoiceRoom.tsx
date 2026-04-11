@@ -602,7 +602,18 @@ const VoiceRoom = () => {
               </button>
             </div>
 
-            {/* Mute All */}
+            {/* Mute Entrance Sounds */}
+            <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
+              <div className="flex items-center gap-2">
+                <BellOff className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-bold">كتم أصوات الدخول</span>
+              </div>
+              <button onClick={() => setMuteEntrance(!muteEntrance)}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${muteEntrance ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+                {muteEntrance ? "🔇 مكتوم" : "🔔 مفعّل"}
+              </button>
+            </div>
+
             <button onClick={handleMuteAll}
               className="w-full flex items-center justify-center gap-2 bg-secondary/50 rounded-xl p-3 text-xs font-bold hover:bg-destructive/10 transition-all">
               <VolumeX className="w-4 h-4 text-destructive" />
