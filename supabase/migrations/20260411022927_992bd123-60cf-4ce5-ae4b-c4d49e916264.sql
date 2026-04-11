@@ -1,0 +1,1 @@
+ALTER TABLE public.rooms ADD COLUMN background_theme text NOT NULL DEFAULT 'default';
