@@ -409,6 +409,18 @@ const VoiceRoom = () => {
                 ))}
               </div>
             </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">خلفية الغرفة</p>
+              <div className="grid grid-cols-4 gap-2">
+                {ROOM_THEMES.map((theme) => (
+                  <button key={theme.id} onClick={() => changeTheme(theme.id)}
+                    className={`py-2.5 rounded-xl font-bold text-xs transition-all flex flex-col items-center gap-1 ${currentTheme.id === theme.id ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"}`}>
+                    <span className="text-lg">{theme.emoji}</span>
+                    <span>{theme.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <button onClick={() => setShowSettings(false)} className="w-full py-2 text-xs text-muted-foreground">إغلاق</button>
           </div>
         </div>
