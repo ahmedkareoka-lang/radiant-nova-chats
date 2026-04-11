@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { playGiftSound } from "@/lib/effects";
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -35,6 +36,7 @@ export const useNotifications = () => {
           if (newNotif.user_id === userId) {
             setNotifications((prev) => [newNotif, ...prev]);
             setUnreadCount((prev) => prev + 1);
+            playGiftSound();
           }
         })
         .subscribe();
