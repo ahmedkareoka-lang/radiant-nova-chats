@@ -77,6 +77,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       }
       if (allSuccess) {
         setBurst(true);
+        onMultiGiftSent?.(gift.emoji, selectedRecipients.size);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); onClose(); }, 800);
       } else {
         setSending(false);
