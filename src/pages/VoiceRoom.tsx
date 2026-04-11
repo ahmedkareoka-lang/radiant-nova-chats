@@ -5,7 +5,7 @@ import HostIncomeCounter from "@/components/HostIncomeCounter";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
-import VipBadge from "@/components/VipBadge";
+import VipBadge, { VipInlineBadge } from "@/components/VipBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -825,7 +825,9 @@ const VoiceRoom = () => {
                     <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
                       <span className={`font-bold ${isBossMsg ? "boss-fire-text" : msg.sender?.vip_level && msg.sender.vip_level >= 5 ? "text-accent" : "text-primary"}`}>
                         {isBossMsg && "👑 "}
-                        {msg.sender?.display_name || "User"}:{" "}
+                        {msg.sender?.display_name || "User"}
+                        {(msg.sender?.vip_level || 0) > 0 && <VipInlineBadge level={msg.sender!.vip_level} />}
+                        :{" "}
                       </span>
                       <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
                       {/* Admin actions: Pin & Delete */}
