@@ -161,6 +161,7 @@ const VoiceRoom = () => {
 
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
+    // Host can sit on any slot; non-host cannot take slot 0
     if (slotIndex === 0 && currentUserId !== roomData?.host_id) {
       toast.error("هذا المقعد مخصص للمضيف");
       return;
