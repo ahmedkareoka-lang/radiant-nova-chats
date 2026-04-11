@@ -901,6 +901,7 @@ const VoiceRoom = () => {
         onMultiGiftSent={handleGiftBurst}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
+      <CustomEntranceEffect queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
     </div>
   );
 };
