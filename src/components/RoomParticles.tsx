@@ -107,9 +107,10 @@ const RoomParticles = ({ theme }: { theme: string }) => {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animRef.current);
     };
-  }, [theme]);
+  }, [theme, config]);
 
-  return (
+  if (!config) return null;
+
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none z-0"

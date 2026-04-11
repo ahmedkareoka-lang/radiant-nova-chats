@@ -287,7 +287,10 @@ const VoiceRoom = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700`}>
+    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative`}>
+      {/* Animated Particles */}
+      <RoomParticles theme={currentTheme.id} />
+      
       {/* Entrance Banner */}
       <AnimatePresence>
         {entranceBanner && (
