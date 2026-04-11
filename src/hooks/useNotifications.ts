@@ -7,6 +7,7 @@ export const useNotifications = () => {
 
   useEffect(() => {
     let userId: string;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -22,26 +23,27 @@ export const useNotifications = () => {
       
       setNotifications(data || []);
       setUnreadCount((data || []).filter((n: any) => !n.is_read).length);
+
+      channel = supabase
+        .channel(`notifications-rt-${user.id}-${Date.now()}`)
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+        }, (payload) => {
+          const newNotif = payload.new as any;
+          if (newNotif.user_id === userId) {
+            setNotifications((prev) => [newNotif, ...prev]);
+            setUnreadCount((prev) => prev + 1);
+          }
+        })
+        .subscribe();
     };
     load();
 
-    const channelName = `notifications-realtime-${Date.now()}`;
-    const channel = supabase
-      .channel(channelName)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "notifications",
-      }, (payload) => {
-        const newNotif = payload.new as any;
-        if (newNotif.user_id === userId) {
-          setNotifications((prev) => [newNotif, ...prev]);
-          setUnreadCount((prev) => prev + 1);
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const markAsRead = async (id: string) => {
