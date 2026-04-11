@@ -114,6 +114,12 @@ const StorePage = () => {
 
   const buyFrame = async (frame: typeof STORE_FRAMES[0]) => {
     if (!profile) return;
+    const vipReq = (frame as any).vipRequired;
+    if (vipReq && (profile.vip_level || 0) < vipReq) {
+      toast.error(`يتطلب VIP مستوى ${vipReq} أو أعلى! 👑`);
+      return;
+    }
+    if (!profile) return;
     if (ownedFrames.includes(frame.name)) {
       toast.info("لديك هذا الإطار بالفعل!");
       return;
@@ -187,9 +193,12 @@ const StorePage = () => {
               return (
                 <div key={frame.id} className={`card-nova p-4 text-center space-y-2 ${equipped ? "border border-primary/50 glow-neon" : ""}`}>
                   <div className="relative w-24 h-24 mx-auto">
-                    <img src={frame.image} alt={frame.name} className="w-full h-full object-contain" />
+                    <img src={frame.image} alt={frame.name} className={`w-full h-full object-contain ${FRAME_ANIMATION[frame.id] || ""}`} />
                   </div>
                   <p className="font-bold text-xs">{frame.name}</p>
+                  {(frame as any).vipRequired && (
+                    <p className="text-[9px] text-amber-400 font-bold">👑 VIP {(frame as any).vipRequired}+</p>
+                  )}
                   <div className="flex items-center justify-center gap-1">
                     <CurrencyIcon type="gold" size="xs" />
                     <span className="text-xs font-bold text-accent">{frame.price_coins.toLocaleString()}</span>

@@ -224,9 +224,10 @@ const VoiceRoom = () => {
     const frameImg = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : (isBoss ? bossFrame : null);
 
     if (frameImg) {
+      const animClass = equippedFrame ? (FRAME_ANIMATION[equippedFrame] || "") : "";
       return (
         <div className={`relative ${s.frame} flex items-center justify-center`}>
-          <img src={frameImg} alt="frame" className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none" />
+          <img src={frameImg} alt="frame" className={`absolute inset-0 w-full h-full object-contain z-10 pointer-events-none ${animClass}`} />
           <div className={`${s.inner} rounded-full overflow-hidden`}>
             <img src={avatarUrl || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
           </div>
