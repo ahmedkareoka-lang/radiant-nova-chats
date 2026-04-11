@@ -45,6 +45,16 @@ const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
 
 const MIC_OPTIONS = [5, 8, 15, 20];
 
+const ROOM_THEMES: { id: string; label: string; emoji: string; bg: string }[] = [
+  { id: "default", label: "Default", emoji: "🌑", bg: "bg-background" },
+  { id: "space", label: "Space", emoji: "🌌", bg: "bg-gradient-to-b from-[#0a0a2e] via-[#1a1040] to-[#0d0d2b]" },
+  { id: "ocean", label: "Ocean", emoji: "🌊", bg: "bg-gradient-to-b from-[#0a2540] via-[#0e3a5c] to-[#061a2e]" },
+  { id: "forest", label: "Forest", emoji: "🌲", bg: "bg-gradient-to-b from-[#0a1f0a] via-[#1a3520] to-[#0d1e0d]" },
+  { id: "neon", label: "Neon City", emoji: "🏙️", bg: "bg-gradient-to-b from-[#1a0a2e] via-[#2d1050] to-[#0f0520]" },
+  { id: "sunset", label: "Sunset", emoji: "🌅", bg: "bg-gradient-to-b from-[#2e1a0a] via-[#3d2010] to-[#1a0d05]" },
+  { id: "aurora", label: "Aurora", emoji: "🌈", bg: "bg-gradient-to-b from-[#0a2e2e] via-[#102040] to-[#0a1a2e]" },
+];
+
 const VoiceRoom = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
