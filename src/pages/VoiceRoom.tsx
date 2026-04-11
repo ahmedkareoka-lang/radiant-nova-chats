@@ -53,6 +53,7 @@ const VoiceRoom = () => {
   const [giftReceiverName, setGiftReceiverName] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [showBossEntrance, setShowBossEntrance] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [entranceBanner, setEntranceBanner] = useState<{ name: string; effect: typeof ENTRANCE_EFFECTS[0] } | null>(null);
