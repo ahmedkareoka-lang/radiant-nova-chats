@@ -752,6 +752,8 @@ const VoiceRoom = () => {
                     <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
                       {slot.profile?.display_name || "User"}
                     </span>
+                    {/* Support Counter for everyone */}
+                    <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
                     {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
