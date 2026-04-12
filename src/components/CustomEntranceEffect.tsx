@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EntranceEntry {
   id: string;
@@ -10,15 +11,35 @@ interface EntranceEntry {
 }
 
 interface CustomEntranceEffectProps {
+  roomId: string | null;
+  currentUserId: string | null;
   queue: EntranceEntry[];
   onComplete: (id: string) => void;
   muteEntrance: boolean;
 }
 
-const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranceEffectProps) => {
+const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEntrance }: CustomEntranceEffectProps) => {
   const [current, setCurrent] = useState<EntranceEntry | null>(null);
+  const [remoteEntrance, setRemoteEntrance] = useState<EntranceEntry | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const channelRef = useRef<any>(null);
+
+  // Broadcast entrance effects via realtime so everyone sees them
+  useEffect(() => {
+    if (!roomId) return;
+    const channel = supabase.channel(`entrance-${roomId}-${Date.now()}`);
+    channel.on("broadcast", { event: "entrance-effect" }, ({ payload }) => {
+      if (payload && payload.id !== currentUserId) {
+        setRemoteEntrance(payload as EntranceEntry);
+        // Auto dismiss after 4s
+        setTimeout(() => setRemoteEntrance(null), 4000);
+      }
+    });
+    channel.subscribe();
+    channelRef.current = channel;
+    return () => { supabase.removeChannel(channel); };
+  }, [roomId, currentUserId]);
 
   const playNext = useCallback(() => {
     if (queue.length === 0) {
@@ -27,6 +48,13 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
     }
     const next = queue[0];
     setCurrent(next);
+
+    // Broadcast to all room members
+    channelRef.current?.send({
+      type: "broadcast",
+      event: "entrance-effect",
+      payload: next,
+    });
 
     // Play audio
     if (next.audioUrl && !muteEntrance) {
@@ -38,7 +66,6 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
       } catch {}
     }
 
-    // Auto-dismiss after 4 seconds
     timerRef.current = setTimeout(() => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -54,7 +81,6 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
     }
   }, [queue, current, playNext]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -62,25 +88,36 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
     };
   }, []);
 
+  // Play audio for remote entrances too
+  useEffect(() => {
+    if (remoteEntrance?.audioUrl && !muteEntrance) {
+      try {
+        const a = new Audio(remoteEntrance.audioUrl);
+        a.volume = 0.6;
+        a.play().catch(() => {});
+      } catch {}
+    }
+  }, [remoteEntrance, muteEntrance]);
+
+  const activeEntry = current || remoteEntrance;
+
   return (
     <AnimatePresence>
-      {current && (
+      {activeEntry && (
         <motion.div
-          key={current.id}
+          key={activeEntry.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
         >
-          {/* Dark overlay */}
           <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
 
-          {/* Video or fallback animation */}
           <div className="relative z-10 flex flex-col items-center gap-4">
-            {current.videoUrl ? (
+            {activeEntry.videoUrl ? (
               <video
-                src={current.videoUrl}
+                src={activeEntry.videoUrl}
                 autoPlay
                 muted={muteEntrance}
                 playsInline
@@ -88,14 +125,12 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
                 onEnded={() => {}}
               />
             ) : (
-              /* Fallback: animated avatar entrance */
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: [0, 1.3, 1], rotate: [0, 360] }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
                 className="relative"
               >
-                {/* Glow rings */}
                 <motion.div
                   animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -109,21 +144,20 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
                   style={{ width: 180, height: 180, margin: -30 }}
                 />
                 <img
-                  src={current.avatarUrl || "https://i.pravatar.cc/200"}
+                  src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
                   alt=""
                   className="w-28 h-28 rounded-full object-cover ring-4 ring-primary shadow-[0_0_40px_rgba(var(--primary),0.5)]"
                 />
               </motion.div>
             )}
 
-            {/* Name */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="text-center"
             >
-              <p className="text-2xl font-black glow-neon-text">{current.displayName}</p>
+              <p className="text-2xl font-black glow-neon-text">{activeEntry.displayName}</p>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -134,15 +168,12 @@ const CustomEntranceEffect = ({ queue, onComplete, muteEntrance }: CustomEntranc
               </motion.p>
             </motion.div>
 
-            {/* Sparkle particles */}
             <div className="absolute inset-0 pointer-events-none">
               {Array.from({ length: 12 }).map((_, i) => (
                 <motion.div
                   key={i}
                   className="absolute w-2 h-2 rounded-full bg-accent"
-                  initial={{
-                    x: 0, y: 0, opacity: 0,
-                  }}
+                  initial={{ x: 0, y: 0, opacity: 0 }}
                   animate={{
                     x: Math.cos((i / 12) * Math.PI * 2) * 120,
                     y: Math.sin((i / 12) * Math.PI * 2) * 120,
