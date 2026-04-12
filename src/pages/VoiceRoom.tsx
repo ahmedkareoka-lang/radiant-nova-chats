@@ -698,6 +698,15 @@ const VoiceRoom = () => {
       {/* Global Win Ticker */}
       <GlobalWinTicker />
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+      {/* Voice Room Area */}
+      <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+        {/* PK Challenge */}
+        {roomId && (
+          <div className="mb-4">
+            <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+          </div>
+        )}
+
         {/* Host Info Banner */}
         {host && (
           <div className="flex items-center gap-3 mb-6 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
