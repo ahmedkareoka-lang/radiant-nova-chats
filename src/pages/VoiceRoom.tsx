@@ -2,6 +2,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff } from "lucide-react";
 import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
+import SupportCounter from "@/components/SupportCounter";
+import PKChallenge from "@/components/PKChallenge";
+import NovaGamesMenu from "@/components/games/NovaGamesMenu";
+import GlobalWinTicker from "@/components/GlobalWinTicker";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
@@ -682,6 +686,7 @@ const VoiceRoom = () => {
             <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
               <Minimize2 className="w-4 h-4 text-muted-foreground" />
             </button>
+            {roomId && <NovaGamesMenu roomId={roomId} currentUserId={currentUserId} />}
             {roomId && <NovaCup roomId={roomId} />}
             <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
               ● LIVE
@@ -690,8 +695,18 @@ const VoiceRoom = () => {
         </div>
       </header>
 
+      {/* Global Win Ticker */}
+      <GlobalWinTicker />
+
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+        {/* PK Challenge */}
+        {roomId && (
+          <div className="mb-4">
+            <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+          </div>
+        )}
+
         {/* Host Info Banner */}
         {host && (
           <div className="flex items-center gap-3 mb-6 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
@@ -737,6 +752,8 @@ const VoiceRoom = () => {
                     <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
                       {slot.profile?.display_name || "User"}
                     </span>
+                    {/* Support Counter for everyone */}
+                    <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
                     {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
@@ -904,7 +921,7 @@ const VoiceRoom = () => {
         onMultiGiftSent={handleGiftBurst}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
-      <CustomEntranceEffect queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
+      <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
     </div>
   );
 };

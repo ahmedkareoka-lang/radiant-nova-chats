@@ -17,8 +17,8 @@ const ICE_SERVERS: RTCIceServer[] = [
 
 const RECONNECT_DELAY = 2000;
 const MAX_RECONNECT_ATTEMPTS = 5;
-const SPEAKING_THRESHOLD = 15; // audio level threshold (0-128)
-const SPEAKING_CHECK_INTERVAL = 150; // ms
+const SPEAKING_THRESHOLD = 15;
+const SPEAKING_CHECK_INTERVAL = 150;
 
 export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTCOptions) => {
   const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
@@ -32,15 +32,19 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
   const isOnMicRef = useRef(isOnMic);
   const reconnectAttemptsRef = useRef<Map<string, number>>(new Map());
   
-  // Audio analysis refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const localAnalyserRef = useRef<AnalyserNode | null>(null);
   const remoteAnalysersRef = useRef<Map<string, AnalyserNode>>(new Map());
   const speakingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => { isOnMicRef.current = isOnMic; }, [isOnMic]);
+  // Track previous isOnMic to detect seat switches vs mic off
+  const prevIsOnMicRef = useRef(isOnMic);
 
-  // Get or create AudioContext
+  useEffect(() => { 
+    prevIsOnMicRef.current = isOnMicRef.current;
+    isOnMicRef.current = isOnMic; 
+  }, [isOnMic]);
+
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current || audioContextRef.current.state === "closed") {
       audioContextRef.current = new AudioContext();
@@ -51,7 +55,6 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     return audioContextRef.current;
   }, []);
 
-  // Setup local audio analyser
   const setupLocalAnalyser = useCallback((stream: MediaStream) => {
     try {
       const ctx = getAudioContext();
@@ -66,7 +69,6 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     }
   }, [getAudioContext]);
 
-  // Setup remote audio analyser for a peer
   const setupRemoteAnalyser = useCallback((peerId: string, stream: MediaStream) => {
     try {
       const ctx = getAudioContext();
@@ -81,7 +83,7 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     }
   }, [getAudioContext]);
 
-  // Polling loop: check audio levels
+  // Speaking detection polling
   useEffect(() => {
     if (!isOnMic) {
       setLocalSpeaking(false);
@@ -96,7 +98,6 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     speakingIntervalRef.current = setInterval(() => {
       const dataArray = new Uint8Array(128);
 
-      // Check local
       if (localAnalyserRef.current && !isMuted) {
         localAnalyserRef.current.getByteFrequencyData(dataArray);
         const avg = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length;
@@ -105,7 +106,6 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
         setLocalSpeaking(false);
       }
 
-      // Check remotes
       const speaking = new Set<string>();
       remoteAnalysersRef.current.forEach((analyser, peerId) => {
         analyser.getByteFrequencyData(dataArray);
@@ -154,7 +154,6 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     localAnalyserRef.current = null;
   }, []);
 
-  // Auto-reconnect logic
   const attemptReconnect = useCallback((peerId: string) => {
     const attempts = reconnectAttemptsRef.current.get(peerId) || 0;
     if (attempts >= MAX_RECONNECT_ATTEMPTS) {
@@ -163,11 +162,9 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
       return;
     }
     reconnectAttemptsRef.current.set(peerId, attempts + 1);
-    console.log(`[WebRTC] Reconnecting to ${peerId} (attempt ${attempts + 1})`);
 
     setTimeout(() => {
       if (!isOnMicRef.current) return;
-      // Clean old connection
       const oldPc = peersRef.current.get(peerId);
       if (oldPc) { oldPc.close(); peersRef.current.delete(peerId); }
       remoteAnalysersRef.current.delete(peerId);
@@ -183,23 +180,19 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-    // Add local tracks
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => {
         pc.addTrack(track, localStreamRef.current!);
       });
-      // Set bitrate constraint for mobile efficiency
       const sender = pc.getSenders().find(s => s.track?.kind === "audio");
       if (sender) {
         const params = sender.getParameters();
         if (!params.encodings || params.encodings.length === 0) {
           params.encodings = [{}];
         }
-        params.encodings[0].maxBitrate = 32000; // 32kbps for voice
+        params.encodings[0].maxBitrate = 32000;
         sender.setParameters(params).catch(() => {});
       }
-    } else {
-      console.warn("[WebRTC] No local stream for", peerId);
     }
 
     pc.ontrack = (event) => {
@@ -234,12 +227,10 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
 
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
-      console.log("[WebRTC] Connection state with", peerId, ":", state);
       if (state === "connected") {
         setConnectedPeers(prev => { const n = new Set(prev); n.add(peerId); return n; });
         reconnectAttemptsRef.current.delete(peerId);
       } else if (state === "disconnected") {
-        // Wait briefly — may recover on its own
         setTimeout(() => {
           if (pc.connectionState === "disconnected" && isOnMicRef.current) {
             attemptReconnect(peerId);
@@ -271,7 +262,7 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     return pc;
   }, [roomId, currentUserId, setupRemoteAnalyser, attemptReconnect]);
 
-  // Mute/unmute
+  // Mute/unmute - only toggle track.enabled, never tear down connections
   useEffect(() => {
     if (localStreamRef.current) {
       localStreamRef.current.getAudioTracks().forEach(track => {
@@ -348,9 +339,10 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
     };
   }, [roomId, currentUserId, createPeerConnection, startLocalStream]);
 
-  // Handle mic on/off
+  // Handle mic on/off - KEY FIX: Don't tear down stream when switching seats
   useEffect(() => {
     if (isOnMic) {
+      // Starting or continuing mic - keep existing stream/peers if already active
       startLocalStream().then(stream => {
         if (stream) {
           setTimeout(() => {
@@ -363,14 +355,23 @@ export const useWebRTC = ({ roomId, currentUserId, isOnMic, isMuted }: UseWebRTC
         }
       });
     } else {
-      peersRef.current.forEach(pc => pc.close());
-      peersRef.current.clear();
-      remoteAudiosRef.current.forEach(audio => { audio.srcObject = null; audio.remove(); });
-      remoteAudiosRef.current.clear();
-      remoteAnalysersRef.current.clear();
-      reconnectAttemptsRef.current.clear();
-      setConnectedPeers(new Set());
-      stopLocalStream();
+      // Only fully tear down if we were previously on mic and now truly off (not seat switching)
+      // The VoiceRoom component will briefly set isOnMic=false then true when switching seats
+      // Use a small delay to allow seat switches without tearing down
+      const timeout = setTimeout(() => {
+        if (!isOnMicRef.current) {
+          // Still off after delay - truly leaving mic
+          peersRef.current.forEach(pc => pc.close());
+          peersRef.current.clear();
+          remoteAudiosRef.current.forEach(audio => { audio.srcObject = null; audio.remove(); });
+          remoteAudiosRef.current.clear();
+          remoteAnalysersRef.current.clear();
+          reconnectAttemptsRef.current.clear();
+          setConnectedPeers(new Set());
+          stopLocalStream();
+        }
+      }, 500);
+      return () => clearTimeout(timeout);
     }
   }, [isOnMic, currentUserId, startLocalStream, stopLocalStream]);
 
