@@ -697,7 +697,7 @@ const VoiceRoom = () => {
 
       {/* Global Win Ticker */}
       <GlobalWinTicker />
-      <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
         {/* PK Challenge */}
