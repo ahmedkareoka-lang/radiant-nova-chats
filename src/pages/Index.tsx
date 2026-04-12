@@ -149,6 +149,26 @@ const Index = () => {
               </div>
             </div>
           </div>
+{/* 🎮 مركز ألعاب نوفا */}
+<section className="px-4 mb-8">
+  <div className="bg-gradient-to-r from-yellow-600/20 via-purple-600/20 to-yellow-600/20 rounded-[35px] p-[2px]">
+    <div className="bg-[#0f0f0f]/90 backdrop-blur-2xl rounded-[33px] p-5 flex items-center justify-between border border-white/5">
+      <div>
+        <h2 className="text-xl font-black italic tracking-tighter text-yellow-500">
+          GAME CENTER
+        </h2>
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+          ألعاب نوفا الحصرية 🎰
+        </p>
+      </div>
+      
+      {/* استدعاء المنيو بتاعك هنا */}
+      <div className="scale-125">
+<NovaGamesMenu currentUserId={profile?.id} />}
+      </div>
+    </div>
+  </div>
+</section
 
           {/* Room Grid */}
           <div className="grid grid-cols-2 gap-3">
