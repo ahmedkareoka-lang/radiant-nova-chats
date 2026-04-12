@@ -304,6 +304,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "messages_sender_id_profiles_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       notifications: {
@@ -519,6 +526,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "room_members_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       rooms: {
@@ -570,6 +584,13 @@ export type Database = {
             columns: ["host_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_host_id_profiles_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -669,7 +690,92 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          age: number | null
+          agency_id: string | null
+          avatar_url: string | null
+          charisma_level: number | null
+          charisma_xp: number | null
+          coins: number | null
+          country_code: string | null
+          created_at: string | null
+          diamonds: number | null
+          display_name: string | null
+          entrance_audio_url: string | null
+          entrance_video_url: string | null
+          equipped_frame: string | null
+          gender: string | null
+          id: string | null
+          is_agent: boolean | null
+          is_boss: boolean | null
+          is_host: boolean | null
+          level: number | null
+          user_id: string | null
+          vip_level: number | null
+          wealth_level: number | null
+          wealth_xp: number | null
+        }
+        Insert: {
+          age?: number | null
+          agency_id?: string | null
+          avatar_url?: string | null
+          charisma_level?: number | null
+          charisma_xp?: number | null
+          coins?: number | null
+          country_code?: string | null
+          created_at?: string | null
+          diamonds?: number | null
+          display_name?: string | null
+          entrance_audio_url?: string | null
+          entrance_video_url?: string | null
+          equipped_frame?: string | null
+          gender?: string | null
+          id?: string | null
+          is_agent?: boolean | null
+          is_boss?: boolean | null
+          is_host?: boolean | null
+          level?: number | null
+          user_id?: string | null
+          vip_level?: number | null
+          wealth_level?: number | null
+          wealth_xp?: number | null
+        }
+        Update: {
+          age?: number | null
+          agency_id?: string | null
+          avatar_url?: string | null
+          charisma_level?: number | null
+          charisma_xp?: number | null
+          coins?: number | null
+          country_code?: string | null
+          created_at?: string | null
+          diamonds?: number | null
+          display_name?: string | null
+          entrance_audio_url?: string | null
+          entrance_video_url?: string | null
+          equipped_frame?: string | null
+          gender?: string | null
+          id?: string | null
+          is_agent?: boolean | null
+          is_boss?: boolean | null
+          is_host?: boolean | null
+          level?: number | null
+          user_id?: string | null
+          vip_level?: number | null
+          wealth_level?: number | null
+          wealth_xp?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_agency_invite: {
@@ -736,6 +842,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
       remove_agency_host: {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
