@@ -164,12 +164,11 @@ const Index = () => {
       
       {/* استدعاء المنيو بتاعك هنا */}
       <div className="scale-125">
-<NovaGamesMenu currentUserId={profile?.id} />}
+<NovaGamesMenu currentUserId={profile?.id} />
       </div>
     </div>
   </div>
 </section
-
           {/* Room Grid */}
           <div className="grid grid-cols-2 gap-3">
             {loading ? (
