@@ -593,6 +593,29 @@ const VoiceRoom = () => {
             <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
             <h3 className="font-bold text-sm text-center">⚙️ إعدادات الغرفة</h3>
 
+            {/* Edit Room Name */}
+            <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
+              <span className="text-xs font-bold">اسم الغرفة</span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  defaultValue={roomData?.name || ""}
+                  id="room-name-input"
+                  className="flex-1 bg-background rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="اسم الغرفة"
+                />
+                <button onClick={async () => {
+                  const input = document.getElementById("room-name-input") as HTMLInputElement;
+                  if (input?.value.trim() && roomId) {
+                    await supabase.from("rooms").update({ name: input.value.trim() }).eq("id", roomId);
+                    toast.success("تم تغيير اسم الغرفة ✅");
+                  }
+                }} className="px-3 py-2 rounded-lg gradient-neon text-primary-foreground text-xs font-bold">
+                  حفظ
+                </button>
+              </div>
+            </div>
+
             {/* Lock Room */}
             <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
               <div className="flex items-center gap-2">
