@@ -51,7 +51,7 @@ const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
   return effect;
 };
 
-const MIC_OPTIONS = [5, 8, 15, 20];
+const MIC_OPTIONS = [5, 8, 12, 15, 20];
 
 const ROOM_THEMES: { id: string; label: string; emoji: string; bg: string }[] = [
   { id: "default", label: "Default", emoji: "🌑", bg: "bg-background" },
