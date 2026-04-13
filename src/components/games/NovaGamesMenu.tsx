@@ -37,13 +37,6 @@ const NovaGamesMenu = ({ currentUserId, roomId }: NovaGamesMenuProps) => {
 
   const selectedGame = GAMES.find((g) => g.id === previewGame);
 
-  // دالة لإغلاق اللعبة والتأكد من تنظيف الحالة
-  const closeGame = () => {
-    setActiveGame(null);
-    setPreviewGame(null);
-    setIsOpen(false);
-  };
-
   return (
     <>
       <button
@@ -59,25 +52,14 @@ const NovaGamesMenu = ({ currentUserId, roomId }: NovaGamesMenuProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center"
+            className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md flex items-center justify-center"
             onClick={() => setIsOpen(false)}
           >
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-              className="w-full max-w-sm p-5 space-y-4"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="w-full max-w-sm p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between">
-                <h2
-                  className="text-xl font-black flex items-center gap-2"
-                  style={{ color: "#f5c842", textShadow: "0 0 15px rgba(245,200,66,0.4)" }}
-                >
-                  <Gamepad2 className="w-5 h-5 text-yellow-400" /> NOVA Games
-                </h2>
+                <h2 className="text-xl font-black text-yellow-400">NOVA Games</h2>
                 <button onClick={() => setIsOpen(false)}>
-                  <X className="w-5 h-5 text-muted-foreground" />
+                  <X className="w-5 h-5 text-white" />
                 </button>
               </div>
               <div className="space-y-3">
@@ -85,86 +67,91 @@ const NovaGamesMenu = ({ currentUserId, roomId }: NovaGamesMenuProps) => {
                   <button
                     key={g.id}
                     onClick={() => setPreviewGame(g.id)}
-                    className={`w-full p-4 rounded-2xl bg-gradient-to-r ${g.color} border ${g.border} flex items-center gap-4 hover:scale-[1.02] transition-all`}
+                    className={`w-full p-4 rounded-2xl bg-gradient-to-r ${g.color} border ${g.border} flex items-center gap-4`}
                   >
                     <span className="text-4xl">{g.emoji}</span>
                     <div className="text-left flex-1">
                       <p className="font-bold text-sm text-yellow-300">{g.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{g.desc}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <ChevronRight className="w-4 h-4 text-white" />
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Game Preview Screen */}
+      {/* شاشة المعاينة */}
       <AnimatePresence>
         {previewGame && selectedGame && !activeGame && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] bg-black flex items-center justify-center"
+            className="fixed inset-0 z-[1000] bg-black flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <motion.div
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 50 }}
-              className="w-full max-w-sm p-6 space-y-5 text-center relative"
-            >
-              <button onClick={() => setPreviewGame(null)} className="absolute top-0 right-0 p-2">
-                <X className="w-6 h-6 text-white" />
-              </button>
+            <div className="w-full max-w-sm p-6 text-center">
               <div className="text-7xl mb-2">{selectedGame.emoji}</div>
-              <h2 className="text-2xl font-black text-yellow-300">{selectedGame.name}</h2>
-              <p className="text-sm text-muted-foreground">{selectedGame.nameAr}</p>
-              <p className="text-xs text-white/60 leading-relaxed">{selectedGame.desc}</p>
-              <div className="pt-2 space-y-2">
-                <button
-                  onClick={() => {
-                    setActiveGame(previewGame);
-                    setPreviewGame(null);
-                  }}
-                  className="w-full py-4 rounded-2xl font-black text-lg text-black"
-                  style={{
-                    background: "linear-gradient(135deg, #f5c842, #e6a817)",
-                    boxShadow: "0 0 30px rgba(245,200,66,0.4)",
-                  }}
-                >
-                  🎮 ابدأ اللعب
-                </button>
-                <button
-                  onClick={() => setPreviewGame(null)}
-                  className="w-full py-3 rounded-2xl bg-secondary text-muted-foreground font-bold text-sm"
-                >
-                  رجوع
-                </button>
-              </div>
-            </motion.div>
+              <button
+                onClick={() => {
+                  setActiveGame(previewGame);
+                  setPreviewGame(null);
+                }}
+                className="w-full py-4 rounded-2xl font-black text-lg text-black bg-yellow-500"
+              >
+                🎮 ابدأ اللعب
+              </button>
+              <button onClick={() => setPreviewGame(null)} className="mt-4 text-white">
+                رجوع
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Game Rendering Layer with Full Screen Isolation */}
+      {/* الأمر الجديد اللي إنت عاوزه في خانة لوحده - درع الحماية الفولاذي */}
       <AnimatePresence>
         {activeGame && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10001] bg-black overflow-hidden touch-none"
-            onClick={(e) => e.stopPropagation()}
+          <div
+            className="fixed inset-0 z-[99999] bg-black flex items-center justify-center"
+            style={{ touchAction: "none", pointerEvents: "auto" }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
           >
-            {activeGame === "roulette" && <RouletteGame onClose={closeGame} currentUserId={currentUserId} />}
-            {activeGame === "liontiger" && (
-              <LionTigerGame onClose={closeGame} currentUserId={currentUserId} roomId={roomId || ""} />
-            )}
-          </motion.div>
+            <div className="relative w-full h-full flex items-center justify-center">
+              {activeGame === "roulette" && (
+                <RouletteGame
+                  onClose={() => {
+                    setActiveGame(null);
+                    setIsOpen(false);
+                  }}
+                  currentUserId={currentUserId}
+                />
+              )}
+              {activeGame === "liontiger" && (
+                <LionTigerGame
+                  onClose={() => {
+                    setActiveGame(null);
+                    setIsOpen(false);
+                  }}
+                  currentUserId={currentUserId}
+                  roomId={roomId || ""}
+                />
+              )}
+
+              {/* زرار إغلاق طوارئ عشان لو اللعبة علقت */}
+              <button
+                onClick={() => {
+                  setActiveGame(null);
+                  setIsOpen(false);
+                }}
+                className="absolute top-4 right-4 z-[100000] p-2 bg-red-500 rounded-full"
+              >
+                <X className="w-6 h-6 text-white" />
+              </button>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </>
