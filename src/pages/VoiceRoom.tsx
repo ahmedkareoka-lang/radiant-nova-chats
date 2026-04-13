@@ -4,7 +4,6 @@ import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
 import PKChallenge from "@/components/PKChallenge";
-import NovaGamesMenu from "@/components/games/NovaGamesMenu";
 import GlobalWinTicker from "@/components/GlobalWinTicker";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -52,7 +51,7 @@ const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
   return effect;
 };
 
-const MIC_OPTIONS = [5, 8, 15, 20];
+const MIC_OPTIONS = [5, 8, 12, 15, 20];
 
 const ROOM_THEMES: { id: string; label: string; emoji: string; bg: string }[] = [
   { id: "default", label: "Default", emoji: "🌑", bg: "bg-background" },
@@ -594,6 +593,29 @@ const VoiceRoom = () => {
             <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
             <h3 className="font-bold text-sm text-center">⚙️ إعدادات الغرفة</h3>
 
+            {/* Edit Room Name */}
+            <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
+              <span className="text-xs font-bold">اسم الغرفة</span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  defaultValue={roomData?.name || ""}
+                  id="room-name-input"
+                  className="flex-1 bg-background rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="اسم الغرفة"
+                />
+                <button onClick={async () => {
+                  const input = document.getElementById("room-name-input") as HTMLInputElement;
+                  if (input?.value.trim() && roomId) {
+                    await supabase.from("rooms").update({ name: input.value.trim() }).eq("id", roomId);
+                    toast.success("تم تغيير اسم الغرفة ✅");
+                  }
+                }} className="px-3 py-2 rounded-lg gradient-neon text-primary-foreground text-xs font-bold">
+                  حفظ
+                </button>
+              </div>
+            </div>
+
             {/* Lock Room */}
             <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
               <div className="flex items-center gap-2">
@@ -686,7 +708,6 @@ const VoiceRoom = () => {
             <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
               <Minimize2 className="w-4 h-4 text-muted-foreground" />
             </button>
-            {roomId && <NovaGamesMenu roomId={roomId} currentUserId={currentUserId} />}
             {roomId && <NovaCup roomId={roomId} />}
             <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
               ● LIVE

@@ -1,4 +1,5 @@
 import { Settings, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera, Bell, ChevronLeft, Gamepad2, Award, Gem } from "lucide-react";
+import NovaGamesMenu from "@/components/games/NovaGamesMenu";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
@@ -271,14 +272,14 @@ const Profile = () => {
               <div className="w-11 h-11 rounded-2xl bg-orange-500/20 flex items-center justify-center"><Crown className="w-5 h-5 text-orange-400" /></div>
               <span className="text-[10px] font-bold text-muted-foreground">مركز VIP</span>
             </button>
-            <button className="icon-grid-btn">
+            <div className="icon-grid-btn">
               <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-emerald-400" /></div>
               <span className="text-[10px] font-bold text-muted-foreground">LUDO</span>
-            </button>
-            <button className="icon-grid-btn">
-              <div className="w-11 h-11 rounded-2xl bg-blue-500/20 flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-blue-400" /></div>
+            </div>
+            <div className="icon-grid-btn relative">
+              <NovaGamesMenu currentUserId={myId} />
               <span className="text-[10px] font-bold text-muted-foreground">مركز الألعاب</span>
-            </button>
+            </div>
             <button onClick={() => navigate("/inventory")} className="icon-grid-btn relative">
               <div className="w-11 h-11 rounded-2xl bg-purple-500/20 flex items-center justify-center"><Package className="w-5 h-5 text-purple-400" /></div>
               <span className="text-[10px] font-bold text-muted-foreground">الحقيبة</span>
