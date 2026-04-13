@@ -1,4 +1,5 @@
 import { Settings, Crown, Star, Users, Shield, Zap, Package, ArrowRightLeft, TrendingUp, Heart, Building2, Camera, Bell, ChevronLeft, Gamepad2, Award, Gem } from "lucide-react";
+import NovaGamesMenu from "@/components/games/NovaGamesMenu";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import VipBadge from "@/components/VipBadge";
