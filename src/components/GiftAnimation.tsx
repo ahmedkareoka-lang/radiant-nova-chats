@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const gifts = [
   { emoji: "🌹", name: "وردة", price: 10 },
@@ -13,6 +14,8 @@ const gifts = [
   { emoji: "👑", name: "تاج", price: 1000 },
   { emoji: "🏰", name: "قصر", price: 5000 },
 ];
+
+const MULTIPLIERS = [1, 10, 50, 77, 100];
 
 interface RoomMemberInfo {
   user_id: string;
@@ -36,7 +39,19 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [sending, setSending] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
   const [showMulti, setShowMulti] = useState(false);
+  const [multiplier, setMultiplier] = useState(1);
+  const [balance, setBalance] = useState(0);
   const { sendGift } = useGifts();
+
+  // Fetch balance
+  useEffect(() => {
+    if (!senderId || !isOpen) return;
+    const fetchBalance = async () => {
+      const { data } = await supabase.from("profiles").select("coins").eq("id", senderId).single();
+      if (data) setBalance(data.coins);
+    };
+    fetchBalance();
+  }, [senderId, isOpen]);
 
   if (!isOpen) return null;
 
@@ -60,33 +75,34 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     }
   };
 
-  const totalCost = selectedGift !== null
-    ? gifts[selectedGift].price * (isMultiMode ? Math.max(selectedRecipients.size, 1) : 1)
-    : 0;
+  const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
+  const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
   const handleSend = async () => {
     if (selectedGift === null) return;
     setSending(true);
     const gift = gifts[selectedGift];
+    const giftCost = gift.price * multiplier;
 
     if (isMultiMode && selectedRecipients.size > 0) {
       let allSuccess = true;
       for (const rid of selectedRecipients) {
-        const success = await sendGift(senderId!, rid, gift.name, gift.price);
+        const success = await sendGift(senderId!, rid, gift.name, giftCost);
         if (!success) { allSuccess = false; break; }
       }
       if (allSuccess) {
         setBurst(true);
-        onMultiGiftSent?.(gift.emoji, selectedRecipients.size);
-        setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); onClose(); }, 800);
+        onMultiGiftSent?.(gift.emoji, selectedRecipients.size * multiplier);
+        setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else {
         setSending(false);
       }
     } else if (receiverId) {
-      const success = await sendGift(senderId!, receiverId, gift.name, gift.price);
+      const success = await sendGift(senderId!, receiverId, gift.name, giftCost);
       if (success) {
         setBurst(true);
-        setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); onClose(); }, 800);
+        onMultiGiftSent?.(gift.emoji, multiplier);
+        setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
       } else {
         setSending(false);
       }
@@ -158,7 +174,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           </div>
         )}
 
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-4 gap-3 mb-3">
           {gifts.map((gift, i) => (
             <button
               key={i}
@@ -177,19 +193,39 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           ))}
         </div>
 
-        {/* Total cost indicator */}
-        {selectedGift !== null && isMultiMode && selectedRecipients.size > 1 && (
-          <p className="text-center text-xs text-accent mb-2 font-bold">
-            الإجمالي: <CurrencyIcon type="gold" size="xs" /> {totalCost} ({selectedRecipients.size} × {gifts[selectedGift].price})
+        {/* Multiplier */}
+        <div className="mb-3">
+          <p className="text-[10px] text-muted-foreground mb-1.5">العدد</p>
+          <div className="flex gap-1.5">
+            {MULTIPLIERS.map(m => (
+              <button key={m} onClick={() => setMultiplier(m)}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                  multiplier === m ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground"
+                }`}>
+                x{m}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Total cost & balance */}
+        <div className="flex items-center justify-between mb-3 px-1">
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+            الرصيد: <CurrencyIcon type="gold" size="xs" /> <span className="font-bold text-foreground">{balance.toLocaleString()}</span>
           </p>
-        )}
+          {selectedGift !== null && (
+            <p className="text-xs text-accent font-bold flex items-center gap-1">
+              الإجمالي: <CurrencyIcon type="gold" size="xs" /> {totalCost.toLocaleString()}
+            </p>
+          )}
+        </div>
 
         <button
           onClick={handleSend}
-          disabled={!canSend || sending}
+          disabled={!canSend || sending || totalCost > balance}
           className="w-full py-3 rounded-full gradient-neon font-bold text-primary-foreground disabled:opacity-40 btn-nova glow-neon"
         >
-          {sending ? "جارٍ الإرسال..." : !canSend ? "اختر شخصاً وهدية" : isMultiMode ? `إرسال لـ ${selectedRecipients.size} أشخاص` : "إرسال الهدية"}
+          {sending ? "جارٍ الإرسال..." : totalCost > balance ? "رصيد غير كافٍ" : !canSend ? "اختر شخصاً وهدية" : isMultiMode ? `إرسال لـ ${selectedRecipients.size} أشخاص (x${multiplier})` : `إرسال الهدية (x${multiplier})`}
         </button>
       </div>
     </div>

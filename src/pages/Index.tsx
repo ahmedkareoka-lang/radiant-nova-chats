@@ -36,7 +36,6 @@ const Index = () => {
     fetchProfile();
   }, []);
 
-  // Fetch top weekly rechargers (by wealth_xp as proxy for recharge)
   useEffect(() => {
     const fetchTopRechargers = async () => {
       const { data } = await supabase
@@ -81,7 +80,7 @@ const Index = () => {
         </header>
 
         <main className="px-4 py-3 max-w-lg mx-auto">
-          {/* Weekly Recharge Banner with real data */}
+          {/* Weekly Recharge Banner */}
           <div className="relative rounded-2xl overflow-hidden mb-4 cursor-pointer" onClick={() => navigate("/leaderboard")}>
             <div className="h-36 relative" style={{ background: "linear-gradient(135deg, hsl(35 80% 30%), hsl(45 90% 40%), hsl(25 70% 25%))" }}>
               <div className="absolute inset-0 flex flex-col items-center justify-center px-4">
@@ -90,7 +89,6 @@ const Index = () => {
                   <span className="text-lg font-black glow-gold-text">الشحن الأسبوعي</span>
                   <Crown className="w-6 h-6 text-accent" />
                 </div>
-                {/* Top rechargers avatars */}
                 <div className="flex items-center gap-1">
                   {topRechargers.slice(0, 5).map((user, i) => (
                     <div key={user.id} className="flex flex-col items-center">
@@ -148,25 +146,7 @@ const Index = () => {
                 <span className="text-sm font-bold">الكاريزما</span>
               </div>
             </div>
-            
-      {/* 🎮 مركز ألعاب نوفا */}
-      <section className="px-4 mb-8">
-        <div className="bg-gradient-to-r from-yellow-600/20 via-purple-600/20 to-yellow-600/20 rounded-[35px] p-[2px]">
-          <div className="bg-[#0f0f0f]/90 backdrop-blur-2xl rounded-[33px] p-5 flex items-center justify-between border border-white/5">
-            <div>
-              <h2 className="text-xl font-black italic tracking-tighter text-yellow-500">
-                GAME CENTER
-              </h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                ألعاب نوفا الحصرية 🎰
-              </p>
-            </div>
-            <div className="scale-125">
-              <NovaGamesMenu currentUserId={profile?.id} />
-            </div>
           </div>
-        </div>
-      </section>
 
           {/* Room Grid */}
           <div className="grid grid-cols-2 gap-3">
