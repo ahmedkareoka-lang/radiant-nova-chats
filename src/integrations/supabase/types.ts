@@ -575,6 +575,7 @@ export type Database = {
           muted_users: string[] | null
           name: string
           password: string | null
+          room_image: string | null
           type: string
         }
         Insert: {
@@ -589,6 +590,7 @@ export type Database = {
           muted_users?: string[] | null
           name: string
           password?: string | null
+          room_image?: string | null
           type?: string
         }
         Update: {
@@ -603,6 +605,7 @@ export type Database = {
           muted_users?: string[] | null
           name?: string
           password?: string | null
+          room_image?: string | null
           type?: string
         }
         Relationships: [
