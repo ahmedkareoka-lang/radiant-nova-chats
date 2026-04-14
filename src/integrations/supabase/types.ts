@@ -230,6 +230,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gifts: {
+        Row: {
+          animation_url: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          animation_url?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+        }
+        Update: {
+          animation_url?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           acquired_at: string
