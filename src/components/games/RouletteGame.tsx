@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RotateCcw, Users, Trophy } from "lucide-react";
+import { X, RotateCcw } from "lucide-react";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,9 +21,12 @@ type BetType =
 
 const getColor = (n: number) => n === 0 ? "green" : RED_NUMBERS.includes(n) ? "red" : "black";
 
+const BET_AMOUNTS = [50, 100, 500, 1000, 5000, 25000];
+
 const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
   const [bet, setBet] = useState<BetType | null>(null);
   const [betAmount, setBetAmount] = useState(50);
+  const [customBetInput, setCustomBetInput] = useState("");
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<number | null>(null);
   const [winAmount, setWinAmount] = useState<number | null>(null);
@@ -34,7 +37,6 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
   const spinDeg = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch user balance
   useEffect(() => {
     if (!currentUserId) return;
     const fetchBalance = async () => {
@@ -44,7 +46,6 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
     fetchBalance();
   }, [currentUserId, result]);
 
-  // Auto timer for betting phase
   useEffect(() => {
     if (phase !== "betting") return;
     setTimer(30);
@@ -80,11 +81,13 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
 
   const spin = async () => {
     if (!bet || !currentUserId || spinning) return;
+    if (betAmount > balance) { toast.error("رصيدك غير كافٍ!"); return; }
     if (timerRef.current) clearInterval(timerRef.current);
     
     const { error } = await supabase.rpc("deduct_coins", { _user_id: currentUserId, _amount: betAmount });
     if (error) { toast.error("رصيدك غير كافٍ!"); return; }
 
+    setBalance(prev => prev - betAmount);
     setPhase("spinning");
     setSpinning(true);
     setResult(null);
@@ -105,6 +108,8 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
 
       if (win > 0) {
         await supabase.rpc("add_diamonds_add_charisma", { _user_id: currentUserId, _diamond_amount: win, _xp_amount: Math.floor(win / 10) });
+        setBalance(prev => prev + win);
+        toast.success(`🎉 فزت بـ ${win.toLocaleString()} عملة!`);
       }
     }, 4000);
   };
@@ -117,21 +122,33 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
     setPhase("betting");
   };
 
-  const BET_AMOUNTS = [50, 100, 500, 1000, 5000, 25000];
+  const handleCustomBet = () => {
+    const val = parseInt(customBetInput);
+    if (val && val >= 10 && val <= 1000000) {
+      setBetAmount(val);
+      setCustomBetInput("");
+    } else {
+      toast.error("أدخل مبلغ صحيح (10 - 1,000,000)");
+    }
+  };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] overflow-auto"
-      style={{ background: "linear-gradient(180deg, #1a0a2e 0%, #2d0f0f 30%, #1a0a15 70%, #0d0515 100%)" }}>
+    <div className="w-full h-full overflow-auto">
       <div className="max-w-lg mx-auto p-4 pb-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-2xl font-black italic tracking-tighter" style={{ color: "#f5c842", textShadow: "0 0 20px rgba(245,200,66,0.5)" }}>
-            Roulette
+            🎰 Roulette
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-            <X className="w-4 h-4 text-white/70" />
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+            <X className="w-5 h-5 text-red-400" />
           </button>
+        </div>
+
+        {/* Balance */}
+        <div className="flex items-center justify-center gap-2 mb-3 py-2 rounded-xl bg-black/30 border border-yellow-500/20">
+          <CurrencyIcon type="gold" size="sm" />
+          <span className="font-black text-yellow-300 text-lg">{balance.toLocaleString()}</span>
         </div>
 
         {/* Round counter */}
@@ -164,7 +181,7 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
           </div>
         </div>
 
-        {/* Timer or result */}
+        {/* Timer */}
         {phase === "betting" && (
           <div className="text-center mb-3">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-900/30 border border-yellow-600/30">
@@ -179,36 +196,38 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
         <AnimatePresence>
           {result !== null && phase === "result" && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-              className={`text-center mb-3 p-3 rounded-xl ${winAmount && winAmount > 0 ? "bg-yellow-500/20 border border-yellow-500/30" : "bg-red-500/10 border border-red-500/20"}`}>
+              className={`text-center mb-3 p-4 rounded-xl ${winAmount && winAmount > 0 ? "bg-yellow-500/20 border border-yellow-500/30" : "bg-red-500/10 border border-red-500/20"}`}>
               <p className="text-sm font-bold text-white">
-                الرقم: <span className={`text-xl ${getColor(result) === "red" ? "text-red-400" : getColor(result) === "black" ? "text-white" : "text-green-400"}`}>{result}</span>
+                الرقم: <span className={`text-2xl ${getColor(result) === "red" ? "text-red-400" : getColor(result) === "black" ? "text-white" : "text-green-400"}`}>{result}</span>
                 {" "}<span>{getColor(result) === "red" ? "🔴" : getColor(result) === "black" ? "⚫" : "🟢"}</span>
               </p>
               {winAmount !== null && winAmount > 0 && (
-                <p className="text-yellow-300 font-black text-xl mt-1">+{winAmount} 💎</p>
+                <p className="text-yellow-300 font-black text-2xl mt-1">+{winAmount.toLocaleString()} 💰</p>
               )}
-              <button onClick={playAgain} className="mt-2 px-6 py-2 rounded-full bg-gradient-to-r from-yellow-600 to-yellow-800 font-bold text-sm text-black">
+              {winAmount === 0 && <p className="text-red-400 font-bold text-sm mt-1">خسرت هذه الجولة 😔</p>}
+              <button onClick={playAgain} className="mt-3 px-8 py-3 rounded-full font-bold text-sm text-black"
+                style={{ background: "linear-gradient(135deg, #f5c842, #e6a817)" }}>
                 🔄 جولة جديدة
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Betting board - matching reference image layout */}
+        {/* Betting board */}
         {phase === "betting" && (
           <>
-            {/* Range bets row (0, 1-12, 13-24, 25-36) */}
+            {/* Range bets */}
             <div className="grid grid-cols-4 gap-1.5 mb-2">
               {([
-                { label: "0", value: "0" as const, multiplier: "x36", totalBets: 0 },
-                { label: "1-12", value: "1-12" as const, multiplier: "x3", totalBets: 0 },
-                { label: "13-24", value: "13-24" as const, multiplier: "x3", totalBets: 0 },
-                { label: "25-36", value: "25-36" as const, multiplier: "x3", totalBets: 0 },
+                { label: "0", value: "0" as const, multiplier: "x36" },
+                { label: "1-12", value: "1-12" as const, multiplier: "x3" },
+                { label: "13-24", value: "13-24" as const, multiplier: "x3" },
+                { label: "25-36", value: "25-36" as const, multiplier: "x3" },
               ]).map(item => (
                 <button key={item.value} onClick={() => setBet({ type: "range", value: item.value })}
                   className={`py-3 rounded-xl text-center transition-all border ${
                     bet?.type === "range" && bet.value === item.value
-                      ? "border-yellow-400 bg-yellow-600/30 scale-105"
+                      ? "border-yellow-400 bg-yellow-600/30 scale-105 shadow-[0_0_15px_rgba(245,200,66,0.3)]"
                       : "border-red-800/40 bg-red-900/30"
                   }`}>
                   <p className="text-lg font-black text-white">{item.label}</p>
@@ -217,7 +236,7 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
               ))}
             </div>
 
-            {/* Color & parity bets (أحمر، أسود، زوجي، فردي) */}
+            {/* Color & parity */}
             <div className="grid grid-cols-4 gap-1.5 mb-3">
               <button onClick={() => setBet({ type: "color", value: "red" })}
                 className={`py-3 rounded-xl text-center transition-all border ${
@@ -251,12 +270,9 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
           </>
         )}
 
-        {/* Bet Amount Chips - bottom bar style */}
+        {/* Bet Amount Chips */}
         {phase === "betting" && (
           <div className="mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-white/50 font-bold">الرصيد: <CurrencyIcon type="gold" size="xs" /> {balance.toLocaleString()}</span>
-            </div>
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {BET_AMOUNTS.map(a => (
                 <button key={a} onClick={() => setBetAmount(a)}
@@ -269,23 +285,39 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
                 </button>
               ))}
             </div>
+            {/* Custom bet input */}
+            <div className="flex gap-2 mt-2">
+              <input
+                type="number"
+                value={customBetInput}
+                onChange={(e) => setCustomBetInput(e.target.value)}
+                placeholder="مبلغ مخصص..."
+                className="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white text-xs placeholder:text-white/30 outline-none"
+              />
+              <button onClick={handleCustomBet} className="px-4 py-2 rounded-xl bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 text-xs font-bold">
+                تأكيد
+              </button>
+            </div>
+            <p className="text-[10px] text-white/40 mt-1 text-center">الرهان الحالي: {betAmount.toLocaleString()} 💰</p>
           </div>
         )}
 
         {/* Spin Button */}
         {phase === "betting" && (
-          <button onClick={spin} disabled={!bet || spinning}
+          <button onClick={spin} disabled={!bet || spinning || betAmount > balance}
             className="w-full py-4 rounded-2xl font-black text-lg text-black disabled:opacity-40 flex items-center justify-center gap-2"
             style={{ background: "linear-gradient(135deg, #f5c842, #e6a817, #f5c842)", boxShadow: "0 0 30px rgba(245,200,66,0.4)" }}>
             {spinning ? (
               <><RotateCcw className="w-5 h-5 animate-spin" /> جارٍ الدوران...</>
+            ) : betAmount > balance ? (
+              "رصيد غير كافٍ"
             ) : (
-              <>🎰 دوّر - {betAmount} <CurrencyIcon type="gold" size="sm" /></>
+              <>🎰 دوّر - {betAmount.toLocaleString()} <CurrencyIcon type="gold" size="sm" /></>
             )}
           </button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

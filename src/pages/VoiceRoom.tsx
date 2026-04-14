@@ -696,7 +696,7 @@ const VoiceRoom = () => {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isHost && (
               <button onClick={() => setShowSettings(true)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                 <Settings2 className="w-4 h-4 text-muted-foreground" />
@@ -708,7 +708,6 @@ const VoiceRoom = () => {
             <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
               <Minimize2 className="w-4 h-4 text-muted-foreground" />
             </button>
-            {roomId && <NovaCup roomId={roomId} />}
             <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
               ● LIVE
             </span>
@@ -721,10 +720,13 @@ const VoiceRoom = () => {
 
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
-        {/* PK Challenge */}
+        {/* PK Challenge & Trophy side by side */}
         {roomId && (
-          <div className="mb-4">
-            <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+          <div className="mb-4 flex items-start gap-2">
+            <div className="flex-1">
+              <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+            </div>
+            <NovaCup roomId={roomId} />
           </div>
         )}
 
