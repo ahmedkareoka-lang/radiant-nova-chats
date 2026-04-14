@@ -720,10 +720,13 @@ const VoiceRoom = () => {
 
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
-        {/* PK Challenge */}
+        {/* PK Challenge & Trophy side by side */}
         {roomId && (
-          <div className="mb-4">
-            <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+          <div className="mb-4 flex items-start gap-2">
+            <div className="flex-1">
+              <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+            </div>
+            <NovaCup roomId={roomId} />
           </div>
         )}
 
