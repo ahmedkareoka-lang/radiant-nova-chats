@@ -4,7 +4,8 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-const gifts = [
+// Fallback static gifts if DB is empty
+const FALLBACK_GIFTS = [
   { emoji: "🌹", name: "وردة", price: 10 },
   { emoji: "❤️", name: "قلب", price: 20 },
   { emoji: "🎁", name: "هدية", price: 50 },
@@ -21,6 +22,13 @@ interface RoomMemberInfo {
   user_id: string;
   display_name: string;
   avatar_url: string | null;
+}
+
+interface GiftItem {
+  emoji?: string;
+  name: string;
+  price: number;
+  image_url?: string | null;
 }
 
 interface GiftAnimationProps {
@@ -41,7 +49,24 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [showMulti, setShowMulti] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
   const [balance, setBalance] = useState(0);
+  const [gifts, setGifts] = useState<GiftItem[]>(FALLBACK_GIFTS);
   const { sendGift } = useGifts();
+
+  // Fetch gifts from DB
+  useEffect(() => {
+    const fetchGifts = async () => {
+      const { data } = await supabase.from("gifts").select("*").order("price", { ascending: true });
+      if (data && data.length > 0) {
+        setGifts(data.map(g => ({
+          name: g.name,
+          price: g.price,
+          image_url: g.image_url,
+          emoji: g.image_url ? undefined : "🎁",
+        })));
+      }
+    };
+    fetchGifts();
+  }, []);
 
   // Fetch balance
   useEffect(() => {
@@ -92,20 +117,16 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       }
       if (allSuccess) {
         setBurst(true);
-        onMultiGiftSent?.(gift.emoji, selectedRecipients.size * multiplier);
+        onMultiGiftSent?.(gift.emoji || "🎁", selectedRecipients.size * multiplier);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
-      } else {
-        setSending(false);
-      }
+      } else { setSending(false); }
     } else if (receiverId) {
       const success = await sendGift(senderId!, receiverId, gift.name, giftCost);
       if (success) {
         setBurst(true);
-        onMultiGiftSent?.(gift.emoji, multiplier);
+        onMultiGiftSent?.(gift.emoji || "🎁", multiplier);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
-      } else {
-        setSending(false);
-      }
+      } else { setSending(false); }
     }
   };
 
@@ -115,13 +136,10 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       {burst && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-8xl animate-gift-burst">{gifts[selectedGift!].emoji}</span>
+          <span className="text-8xl animate-gift-burst">{selectedGift !== null ? (gifts[selectedGift].emoji || "🎁") : "🎁"}</span>
         </div>
       )}
-      <div
-        className="w-full max-w-lg bg-card/95 backdrop-blur-xl rounded-t-3xl border-t border-border p-4 pb-8"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="w-full max-w-lg bg-card/95 backdrop-blur-xl rounded-t-3xl border-t border-border p-4 pb-8" onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
         <h3 className="text-center font-bold text-lg mb-1 glow-neon-text">🎁 الهدايا</h3>
 
@@ -131,10 +149,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
             {receiverName && !showMulti && (
               <p className="text-xs text-muted-foreground">إرسال إلى: <span className="text-primary font-bold">{receiverName}</span></p>
             )}
-            <button
-              onClick={() => setShowMulti(!showMulti)}
-              className={`text-[10px] px-3 py-1 rounded-full font-bold transition-all ${showMulti ? 'gradient-neon text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}
-            >
+            <button onClick={() => setShowMulti(!showMulti)}
+              className={`text-[10px] px-3 py-1 rounded-full font-bold transition-all ${showMulti ? 'gradient-neon text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
               {showMulti ? '✓ إرسال جماعي' : '👥 إرسال جماعي'}
             </button>
           </div>
@@ -152,13 +168,10 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
               {availableMembers.map(m => (
-                <button
-                  key={m.user_id}
-                  onClick={() => toggleRecipient(m.user_id)}
+                <button key={m.user_id} onClick={() => toggleRecipient(m.user_id)}
                   className={`flex flex-col items-center gap-1 p-2 rounded-xl min-w-[56px] transition-all ${
                     selectedRecipients.has(m.user_id) ? 'bg-primary/20 border border-primary' : 'bg-secondary'
-                  }`}
-                >
+                  }`}>
                   <div className="relative">
                     <img src={m.avatar_url || 'https://i.pravatar.cc/100'} className="w-8 h-8 rounded-full object-cover" alt="" />
                     {selectedRecipients.has(m.user_id) && (
@@ -174,18 +187,19 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           </div>
         )}
 
+        {/* Gift grid - dynamic from DB */}
         <div className="grid grid-cols-4 gap-3 mb-3">
           {gifts.map((gift, i) => (
-            <button
-              key={i}
-              onClick={() => setSelectedGift(i)}
+            <button key={i} onClick={() => setSelectedGift(i)}
               className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-200 ${
-                selectedGift === i
-                  ? "bg-primary/20 border border-primary glow-neon scale-105"
-                  : "bg-secondary hover:bg-secondary/80"
-              }`}
-            >
-              <span className="text-2xl">{gift.emoji}</span>
+                selectedGift === i ? "bg-primary/20 border border-primary glow-neon scale-105" : "bg-secondary hover:bg-secondary/80"
+              }`}>
+              {gift.image_url ? (
+                <img src={gift.image_url} alt={gift.name} className="w-8 h-8 object-contain" />
+              ) : (
+                <span className="text-2xl">{gift.emoji}</span>
+              )}
+              <span className="text-[9px] text-muted-foreground truncate max-w-full">{gift.name}</span>
               <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                 <CurrencyIcon type="gold" size="xs" />{gift.price}
               </span>
@@ -220,11 +234,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           )}
         </div>
 
-        <button
-          onClick={handleSend}
-          disabled={!canSend || sending || totalCost > balance}
-          className="w-full py-3 rounded-full gradient-neon font-bold text-primary-foreground disabled:opacity-40 btn-nova glow-neon"
-        >
+        <button onClick={handleSend} disabled={!canSend || sending || totalCost > balance}
+          className="w-full py-3 rounded-full gradient-neon font-bold text-primary-foreground disabled:opacity-40 btn-nova glow-neon">
           {sending ? "جارٍ الإرسال..." : totalCost > balance ? "رصيد غير كافٍ" : !canSend ? "اختر شخصاً وهدية" : isMultiMode ? `إرسال لـ ${selectedRecipients.size} أشخاص (x${multiplier})` : `إرسال الهدية (x${multiplier})`}
         </button>
       </div>
