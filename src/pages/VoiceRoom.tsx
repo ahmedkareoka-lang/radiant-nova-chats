@@ -353,6 +353,21 @@ const VoiceRoom = () => {
     setTimeout(() => setGiftBurst(null), 2000);
   };
 
+  // Listen for gift broadcasts from other users in the room
+  useEffect(() => {
+    if (!roomId) return;
+    const channelName = `room-gifts-${roomId}`;
+    const channel = supabase.channel(channelName + "-listener-" + Date.now())
+      .on("broadcast", { event: "gift-sent" }, (payload) => {
+        const { emoji, giftName, senderName, amount } = payload.payload;
+        // Show burst for everyone
+        setGiftBurst({ emoji: emoji || "🎁", count: Math.min(Math.ceil(amount / 100), 30) });
+        setTimeout(() => setGiftBurst(null), 2500);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [roomId]);
+
   if (!roomId) {
     navigate("/");
     return null;
@@ -942,6 +957,7 @@ const VoiceRoom = () => {
           avatar_url: m.profile?.avatar_url || null,
         }))}
         onMultiGiftSent={handleGiftBurst}
+        roomId={roomId || undefined}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
