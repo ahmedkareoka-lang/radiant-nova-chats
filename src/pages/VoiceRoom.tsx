@@ -942,6 +942,7 @@ const VoiceRoom = () => {
           avatar_url: m.profile?.avatar_url || null,
         }))}
         onMultiGiftSent={handleGiftBurst}
+        roomId={roomId || undefined}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
