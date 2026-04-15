@@ -4,7 +4,6 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fallback static gifts if DB is empty
 const FALLBACK_GIFTS = [
   { emoji: "🌹", name: "وردة", price: 10 },
   { emoji: "❤️", name: "قلب", price: 20 },
@@ -39,9 +38,10 @@ interface GiftAnimationProps {
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
   onMultiGiftSent?: (emoji: string, count: number) => void;
+  roomId?: string;
 }
 
-const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent }: GiftAnimationProps) => {
+const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, roomId }: GiftAnimationProps) => {
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [burst, setBurst] = useState(false);
   const [sending, setSending] = useState(false);
@@ -52,7 +52,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [gifts, setGifts] = useState<GiftItem[]>(FALLBACK_GIFTS);
   const { sendGift } = useGifts();
 
-  // Fetch gifts from DB
   useEffect(() => {
     const fetchGifts = async () => {
       const { data } = await supabase.from("gifts").select("*").order("price", { ascending: true });
@@ -68,7 +67,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     fetchGifts();
   }, []);
 
-  // Fetch balance
   useEffect(() => {
     if (!senderId || !isOpen) return;
     const fetchBalance = async () => {
@@ -103,11 +101,38 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
+  // Broadcast gift to all room members via Realtime
+  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number) => {
+    if (!roomId) return;
+    const channelName = `room-gifts-${roomId}`;
+    const channel = supabase.channel(channelName);
+    await channel.send({
+      type: "broadcast",
+      event: "gift-sent",
+      payload: {
+        emoji: giftEmoji,
+        giftName,
+        senderName,
+        amount,
+        timestamp: Date.now(),
+      },
+    });
+    supabase.removeChannel(channel);
+  };
+
   const handleSend = async () => {
     if (selectedGift === null) return;
     setSending(true);
     const gift = gifts[selectedGift];
     const giftCost = gift.price * multiplier;
+    const giftEmoji = gift.emoji || "🎁";
+
+    // Get sender name for broadcast
+    let senderName = "مستخدم";
+    if (senderId) {
+      const { data: senderProfile } = await supabase.from("profiles").select("display_name").eq("id", senderId).single();
+      if (senderProfile) senderName = senderProfile.display_name;
+    }
 
     if (isMultiMode && selectedRecipients.size > 0) {
       let allSuccess = true;
@@ -117,14 +142,16 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       }
       if (allSuccess) {
         setBurst(true);
-        onMultiGiftSent?.(gift.emoji || "🎁", selectedRecipients.size * multiplier);
+        onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier);
+        broadcastGift(giftEmoji, gift.name, senderName, giftCost * selectedRecipients.size);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     } else if (receiverId) {
       const success = await sendGift(senderId!, receiverId, gift.name, giftCost);
       if (success) {
         setBurst(true);
-        onMultiGiftSent?.(gift.emoji || "🎁", multiplier);
+        onMultiGiftSent?.(giftEmoji, multiplier);
+        broadcastGift(giftEmoji, gift.name, senderName, giftCost);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     }
@@ -143,7 +170,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
         <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
         <h3 className="text-center font-bold text-lg mb-1 glow-neon-text">🎁 الهدايا</h3>
 
-        {/* Toggle multi-send */}
         {availableMembers.length > 0 && (
           <div className="flex items-center justify-center gap-2 mb-2">
             {receiverName && !showMulti && (
@@ -156,7 +182,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           </div>
         )}
 
-        {/* Multi-select members */}
         {isMultiMode && (
           <div className="mb-3">
             <div className="flex items-center justify-between mb-2">
@@ -187,8 +212,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           </div>
         )}
 
-        {/* Gift grid - dynamic from DB */}
-        <div className="grid grid-cols-4 gap-3 mb-3">
+        {/* Gift grid */}
+        <div className="grid grid-cols-4 gap-3 mb-3 max-h-48 overflow-auto">
           {gifts.map((gift, i) => (
             <button key={i} onClick={() => setSelectedGift(i)}
               className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-200 ${
@@ -222,7 +247,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           </div>
         </div>
 
-        {/* Total cost & balance */}
+        {/* Balance & Total */}
         <div className="flex items-center justify-between mb-3 px-1">
           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
             الرصيد: <CurrencyIcon type="gold" size="xs" /> <span className="font-bold text-foreground">{balance.toLocaleString()}</span>
