@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import RoomParticles from "@/components/RoomParticles";
 import CustomEntranceEffect from "@/components/CustomEntranceEffect";
+import GiftAnnouncementBanner from "@/components/GiftAnnouncementBanner";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
@@ -732,6 +733,9 @@ const VoiceRoom = () => {
 
       {/* Global Win Ticker */}
       <GlobalWinTicker />
+
+      {/* Big Gift Announcement Banner */}
+      {roomId && <GiftAnnouncementBanner roomId={roomId} />}
 
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">

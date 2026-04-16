@@ -102,7 +102,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
   // Broadcast gift to all room members via Realtime
-  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number) => {
+  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string) => {
     if (!roomId) return;
     const channelName = `room-gifts-${roomId}`;
     const channel = supabase.channel(channelName);
@@ -117,6 +117,24 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
         timestamp: Date.now(),
       },
     });
+
+    // Big gift announcement (over 1000 coins)
+    if (amount >= 1000) {
+      const announceChannel = supabase.channel(`gift-announce-${roomId}`);
+      await announceChannel.send({
+        type: "broadcast",
+        event: "big-gift",
+        payload: {
+          senderName,
+          receiverName: recipientName || receiverName || "مستخدم",
+          giftName,
+          giftEmoji,
+          amount,
+        },
+      });
+      supabase.removeChannel(announceChannel);
+    }
+
     supabase.removeChannel(channel);
   };
 

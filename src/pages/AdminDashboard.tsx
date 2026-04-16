@@ -37,6 +37,20 @@ const AdminDashboard = () => {
   const storeFileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
 
+  // Fetch functions
+  const fetchGifts = async () => {
+    const { data } = await supabase.from("gifts").select("*").order("price");
+    setGiftsList(data || []);
+  };
+  const fetchStoreItems = async () => {
+    const { data } = await supabase.from("store_items").select("*").order("created_at", { ascending: false });
+    setStoreItems(data || []);
+  };
+  const fetchBanners = async () => {
+    const { data } = await supabase.from("banners").select("*").order("sort_order");
+    setBanners(data || []);
+  };
+
   useEffect(() => {
     const checkBoss = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -60,18 +74,35 @@ const AdminDashboard = () => {
       const { data: er } = await supabase.from("system_settings").select("value").eq("key", "exchange_rate").single();
       if (er) setExchangeRate(er.value);
 
-      // Fetch gifts, store items, banners
-      const { data: gd } = await supabase.from("gifts").select("*").order("price");
-      setGiftsList(gd || []);
-      const { data: sd } = await supabase.from("store_items").select("*").order("created_at", { ascending: false });
-      setStoreItems(sd || []);
-      const { data: bd } = await supabase.from("banners").select("*").order("sort_order");
-      setBanners(bd || []);
-
+      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners()]);
       setLoading(false);
     };
     checkBoss();
   }, [navigate]);
+
+  // Realtime subscriptions for gifts, store_items, banners
+  useEffect(() => {
+    const giftsChannel = supabase
+      .channel(`admin-gifts-${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gifts' }, () => { fetchGifts(); })
+      .subscribe();
+
+    const storeChannel = supabase
+      .channel(`admin-store-${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_items' }, () => { fetchStoreItems(); })
+      .subscribe();
+
+    const bannersChannel = supabase
+      .channel(`admin-banners-${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, () => { fetchBanners(); })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(giftsChannel);
+      supabase.removeChannel(storeChannel);
+      supabase.removeChannel(bannersChannel);
+    };
+  }, []);
 
   const searchUser = async () => {
     if (!searchId.trim()) return;
@@ -156,22 +187,23 @@ const AdminDashboard = () => {
     let imageUrl: string | null = null;
     if (file) imageUrl = await uploadFile(file, "gifts");
 
-    await supabase.from("gifts").insert({
+    const { error } = await supabase.from("gifts").insert({
       name: newGift.name,
       price: parseInt(newGift.price),
       image_url: imageUrl,
     });
+    if (error) { toast.error("فشل في إضافة الهدية"); return; }
     toast.success("تمت إضافة الهدية ✅");
     setNewGift({ name: "", price: "" });
     if (giftFileRef.current) giftFileRef.current.value = "";
-    const { data } = await supabase.from("gifts").select("*").order("price");
-    setGiftsList(data || []);
+    await fetchGifts();
   };
 
   const deleteGift = async (id: string) => {
-    await supabase.from("gifts").delete().eq("id", id);
-    setGiftsList(giftsList.filter(g => g.id !== id));
+    const { error } = await supabase.from("gifts").delete().eq("id", id);
+    if (error) { toast.error("فشل في حذف الهدية"); return; }
     toast.success("تم حذف الهدية");
+    await fetchGifts();
   };
 
   // Store item management
@@ -181,23 +213,24 @@ const AdminDashboard = () => {
     let imageUrl: string | null = null;
     if (file) imageUrl = await uploadFile(file, "store");
 
-    await supabase.from("store_items").insert({
+    const { error } = await supabase.from("store_items").insert({
       name: newStoreItem.name,
       price_coins: parseInt(newStoreItem.price_coins),
       type: newStoreItem.type,
       image_url: imageUrl,
     });
+    if (error) { toast.error("فشل في إضافة العنصر"); return; }
     toast.success("تمت إضافة العنصر ✅");
     setNewStoreItem({ name: "", price_coins: "", type: "frame" });
     if (storeFileRef.current) storeFileRef.current.value = "";
-    const { data } = await supabase.from("store_items").select("*").order("created_at", { ascending: false });
-    setStoreItems(data || []);
+    await fetchStoreItems();
   };
 
   const deleteStoreItem = async (id: string) => {
-    await supabase.from("store_items").delete().eq("id", id);
-    setStoreItems(storeItems.filter(s => s.id !== id));
+    const { error } = await supabase.from("store_items").delete().eq("id", id);
+    if (error) { toast.error("فشل في حذف العنصر"); return; }
     toast.success("تم حذف العنصر");
+    await fetchStoreItems();
   };
 
   // Banner management
@@ -207,22 +240,23 @@ const AdminDashboard = () => {
     const imageUrl = await uploadFile(file, "banners");
     if (!imageUrl) return;
 
-    await supabase.from("banners").insert({
+    const { error } = await supabase.from("banners").insert({
       title: newBanner.title || "",
       image_url: imageUrl,
       sort_order: banners.length,
     });
+    if (error) { toast.error("فشل في إضافة البانر"); return; }
     toast.success("تمت إضافة البانر ✅");
     setNewBanner({ title: "" });
     if (bannerFileRef.current) bannerFileRef.current.value = "";
-    const { data } = await supabase.from("banners").select("*").order("sort_order");
-    setBanners(data || []);
+    await fetchBanners();
   };
 
   const deleteBanner = async (id: string) => {
-    await supabase.from("banners").delete().eq("id", id);
-    setBanners(banners.filter(b => b.id !== id));
+    const { error } = await supabase.from("banners").delete().eq("id", id);
+    if (error) { toast.error("فشل في حذف البانر"); return; }
     toast.success("تم حذف البانر");
+    await fetchBanners();
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>;
