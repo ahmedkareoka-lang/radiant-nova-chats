@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import RoomParticles from "@/components/RoomParticles";
 import CustomEntranceEffect from "@/components/CustomEntranceEffect";
+import GiftAnnouncementBanner from "@/components/GiftAnnouncementBanner";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
