@@ -1,4 +1,5 @@
 import { Users, MessageCircle } from "lucide-react";
+import DualBadge from "./DualBadge";
 
 interface RoomCardProps {
   name: string;
@@ -9,6 +10,8 @@ interface RoomCardProps {
   category: string;
   onClick?: () => void;
   countryCode?: string;
+  hostNovaLevel?: number;
+  hostVipLevel?: number;
 }
 
 const COVER_GRADIENTS: Record<string, string> = {
@@ -18,7 +21,7 @@ const COVER_GRADIENTS: Record<string, string> = {
   VIP: "linear-gradient(135deg, hsl(45 80% 30%), hsl(30 70% 25%))",
 };
 
-const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick, countryCode }: RoomCardProps) => {
+const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick, countryCode, hostNovaLevel = 0, hostVipLevel = 0 }: RoomCardProps) => {
   return (
     <div
       onClick={onClick}
@@ -46,12 +49,17 @@ const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onC
       {/* Room name and country */}
       <div className="absolute bottom-3 right-3 z-10 text-right">
         <p className="text-sm font-bold text-foreground drop-shadow-lg truncate max-w-[140px]">{name}</p>
-        {countryCode && (
-          <div className="flex items-center justify-end gap-1 mt-0.5">
-            <span className="text-xs">🏳️</span>
-            <span className="text-[10px] text-foreground/70">{countryCode}</span>
-          </div>
-        )}
+        <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
+          {(hostNovaLevel > 0 || hostVipLevel > 0) && (
+            <DualBadge novaLevel={hostNovaLevel} vipLevel={hostVipLevel} />
+          )}
+          {countryCode && (
+            <>
+              <span className="text-xs">🏳️</span>
+              <span className="text-[10px] text-foreground/70">{countryCode}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Host avatar */}

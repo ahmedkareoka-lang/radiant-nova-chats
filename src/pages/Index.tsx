@@ -199,6 +199,8 @@ const Index = () => {
                     viewerCount={room.member_count || 0}
                     isVip={(room.host_profile?.vip_level || 0) >= 5}
                     category={room.type}
+                    hostNovaLevel={(room.host_profile as any)?.nova_p_level || 0}
+                    hostVipLevel={room.host_profile?.vip_level || 0}
                     onClick={() => navigate(`/voice-room?id=${room.id}`)}
                   />
                 </div>
