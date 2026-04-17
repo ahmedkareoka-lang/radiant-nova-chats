@@ -567,45 +567,14 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* STORE TAB */}
-          {activeTab === "store" && (
-            <div className="space-y-4">
-              <div className="card-nova p-4 space-y-3">
-                <h3 className="font-bold text-sm flex items-center gap-2"><Image className="w-4 h-4 text-primary" /> إضافة عنصر متجر</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <input placeholder="الاسم" value={newStoreItem.name} onChange={(e) => setNewStoreItem({ ...newStoreItem, name: e.target.value })}
-                    className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
-                  <input placeholder="السعر (عملات)" type="number" value={newStoreItem.price_coins} onChange={(e) => setNewStoreItem({ ...newStoreItem, price_coins: e.target.value })}
-                    className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
-                </div>
-                <select value={newStoreItem.type} onChange={(e) => setNewStoreItem({ ...newStoreItem, type: e.target.value })}
-                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none">
-                  <option value="frame">إطار</option>
-                  <option value="badge">شارة</option>
-                  <option value="entrance">تأثير دخول</option>
-                </select>
-                <div className="flex gap-2 items-center">
-                  <input ref={storeFileRef} type="file" accept="image/*" className="text-xs flex-1" />
-                  <button onClick={handleAddStoreItem} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
-                    {uploading ? "جارٍ الرفع..." : "إضافة"}
-                  </button>
-                </div>
-              </div>
+          {/* NOVA P ITEMS TAB */}
+          {activeTab === "nova_items" && renderTierItemForm("nova_p", "إضافة عنصر NOVA P (إطار/شارة/دخول/مركبة)", "text-purple-300")}
 
-              <div className="space-y-2">
-                {storeItems.map(s => (
-                  <div key={s.id} className="card-nova p-3 flex items-center gap-3">
-                    {s.image_url ? <img src={s.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
-                    <div className="flex-1">
-                      <p className="font-bold text-sm">{s.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.type} • {s.price_coins} عملة</p>
-                    </div>
-                    <button onClick={() => deleteStoreItem(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* VIP ITEMS TAB */}
+          {activeTab === "vip_items" && renderTierItemForm("vip", "إضافة عنصر VIP (إطار/شارة/دخول/مركبة)", "text-amber-300")}
+
+          {/* STORE TAB - generic items */}
+          {activeTab === "store" && renderTierItemForm("none", "إضافة عنصر متجر عام (إطار/شارة/دخول)", "text-primary")}
 
           {/* BANNERS TAB */}
           {activeTab === "banners" && (
