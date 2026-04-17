@@ -12,6 +12,8 @@ import { useFollows } from "@/hooks/useFollows";
 import { useNotifications } from "@/hooks/useNotifications";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
+import NovaDashboard from "@/components/NovaDashboard";
+import DualBadge from "@/components/DualBadge";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -192,7 +194,7 @@ const Profile = () => {
               {isBoss ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">🔥 BOSS</span>
               ) : (
-                <VipBadge level={profile?.vip_level || 0} />
+                <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
               )}
               {profile?.is_agent && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">🏅 وكيل</span>
@@ -239,6 +241,17 @@ const Profile = () => {
               <CurrencyIcon type="gold" size="lg" />
             </button>
           </div>
+
+          {/* NOVA P Dashboard */}
+          {!isBoss && (
+            <div className="mb-4">
+              <NovaDashboard
+                totalGold={profile?.total_spend_gold || 0}
+                level={profile?.nova_p_level || 0}
+                expiry={profile?.nova_p_expiry || null}
+              />
+            </div>
+          )}
 
           {/* Agency Center */}
           <button onClick={() => navigate("/agencies")} className="w-full card-gradient-blue p-3 flex items-center justify-between mb-4">
