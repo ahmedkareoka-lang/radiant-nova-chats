@@ -805,6 +805,8 @@ export type Database = {
           name: string
           price_coins: number
           price_diamonds: number
+          tier_required: number
+          tier_type: string
           type: string
         }
         Insert: {
@@ -816,6 +818,8 @@ export type Database = {
           name: string
           price_coins?: number
           price_diamonds?: number
+          tier_required?: number
+          tier_type?: string
           type: string
         }
         Update: {
@@ -827,6 +831,8 @@ export type Database = {
           name?: string
           price_coins?: number
           price_diamonds?: number
+          tier_required?: number
+          tier_type?: string
           type?: string
         }
         Relationships: []
