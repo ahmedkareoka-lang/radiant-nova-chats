@@ -150,9 +150,10 @@ const VoiceRoom = () => {
   }, [members, currentUserId]);
 
   // Entrance banner + entrance effect queue for ALL new members joining the room
+  // IMPORTANT: include the current user — they should see THEIR OWN entrance effect when they join
   useEffect(() => {
     for (const m of members) {
-      if (!seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
+      if (!seenMemberIds.current.has(m.user_id)) {
         seenMemberIds.current.add(m.user_id);
         if (m.profile) {
           const wealthLvl = m.profile.wealth_level || 1;
@@ -166,7 +167,7 @@ const VoiceRoom = () => {
           });
           setTimeout(() => setEntranceBanner(null), 4000);
 
-          // Always queue an entrance effect for ANY new member (not just hosts/NOVA-P)
+          // Always queue an entrance effect for ANY new member (including self)
           const p = m.profile as any;
           const novaLvl = p.nova_p_level || 0;
           setEntranceQueue(prev => [...prev, {
