@@ -25,6 +25,7 @@ const AdminDashboard = () => {
   const [exchangeRate, setExchangeRate] = useState("100");
   const [newCountry, setNewCountry] = useState({ code: "", name: "", currency: "", coin_price: "", diamond_price: "" });
   const [stats, setStats] = useState({ totalUsers: 0, onlineUsers: 0, totalRooms: 0 });
+  const [novaStats, setNovaStats] = useState<{ level: number; label: string; count: number }[]>([]);
   const [adminId, setAdminId] = useState<string | null>(null);
 
   // Gift & Store management
