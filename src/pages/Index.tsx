@@ -47,6 +47,22 @@ const Index = () => {
       setTopRechargers(data || []);
     };
     fetchTopRechargers();
+
+    const fetchBanners = async () => {
+      const { data } = await supabase
+        .from("banners")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      setBanners(data || []);
+    };
+    fetchBanners();
+
+    const channel = supabase
+      .channel("banners-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, () => fetchBanners())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
