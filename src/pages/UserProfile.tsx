@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFollows } from "@/hooks/useFollows";
 import { useConversations } from "@/hooks/useChat";
 import VipBadge from "@/components/VipBadge";
+import DualBadge from "@/components/DualBadge";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
@@ -93,11 +94,11 @@ const UserProfile = () => {
                     <span className="text-[10px] text-foreground/60">● متصل</span>
                     <span className="text-[10px] text-foreground/60">ID: {profile?.user_id}</span>
                   </div>
-                  <div className="flex items-center justify-end gap-1.5 mt-1">
+                  <div className="flex items-center justify-end gap-1.5 mt-1 flex-wrap">
                     {isBoss ? (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/30 text-destructive font-bold">🔥 BOSS</span>
                     ) : (
-                      <VipBadge level={profile?.vip_level || 0} />
+                      <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} size="md" />
                     )}
                   </div>
                 </div>
