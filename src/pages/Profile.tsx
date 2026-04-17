@@ -322,10 +322,10 @@ const Profile = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Building2 className="w-4 h-4 text-primary" /></div>
               </div>
             </button>
-            <button className="menu-row w-full">
+            <button onClick={() => navigate(`/user-profile?id=${profile?.id}`)} className="menu-row w-full">
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold">بطاقة NOVA الخاصة بي</span>
+                <span className="text-sm font-bold">عرض ملفي الشخصي للجمهور</span>
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"><Star className="w-4 h-4 text-accent" /></div>
               </div>
             </button>
