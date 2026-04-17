@@ -439,6 +439,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nova_p_monthly_history: {
+        Row: {
+          achieved_at: string
+          highest_level: number
+          id: string
+          total_gold_earned: number
+          user_id: string
+          year_month: string
+        }
+        Insert: {
+          achieved_at?: string
+          highest_level?: number
+          id?: string
+          total_gold_earned?: number
+          user_id: string
+          year_month: string
+        }
+        Update: {
+          achieved_at?: string
+          highest_level?: number
+          id?: string
+          total_gold_earned?: number
+          user_id?: string
+          year_month?: string
+        }
+        Relationships: []
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -1036,6 +1063,7 @@ export type Database = {
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
       recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
+      record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
       remove_agency_host: {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
