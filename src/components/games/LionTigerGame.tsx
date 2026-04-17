@@ -17,7 +17,6 @@ const TIMER_SECONDS = 15;
 const BET_AMOUNTS = [50, 100, 500, 1000, 5000, 25000];
 
 const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) => {
-  const [choice, setChoice] = useState<Choice | null>(null);
   const [betAmount, setBetAmount] = useState(100);
   const [customBetInput, setCustomBetInput] = useState("");
   const [timer, setTimer] = useState(TIMER_SECONDS);
@@ -26,7 +25,9 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
   const [winAmount, setWinAmount] = useState(0);
   const [roundNumber, setRoundNumber] = useState(1);
   const [balance, setBalance] = useState(0);
-  const [myBet, setMyBet] = useState(0);
+  // Allow up to 3 bets per round, on same or different choices
+  const MAX_BETS = 3;
+  const [myBets, setMyBets] = useState<{ choice: Choice; amount: number }[]>([]);
   const [totalBets, setTotalBets] = useState({ lion: 0, tie: 0, tiger: 0 });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasDeducted = useRef(false);
