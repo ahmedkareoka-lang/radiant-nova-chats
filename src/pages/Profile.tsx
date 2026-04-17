@@ -282,9 +282,11 @@ const Profile = () => {
               <div className="w-11 h-11 rounded-2xl bg-green-500/20 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-green-400" /></div>
               <span className="text-[10px] font-bold text-muted-foreground">مستوى</span>
             </button>
-            <button className="icon-grid-btn">
-              <div className="w-11 h-11 rounded-2xl bg-yellow-500/20 flex items-center justify-center"><Award className="w-5 h-5 text-yellow-400" /></div>
-              <span className="text-[10px] font-bold text-muted-foreground">شارة</span>
+            <button onClick={() => navigate("/nova-p")} className="icon-grid-btn relative">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/40 to-fuchsia-500/40 border border-purple-300/30 flex items-center justify-center shadow-[0_0_15px_hsl(280_90%_60%/0.4)]">
+                <Crown className="w-5 h-5 text-purple-200" />
+              </div>
+              <span className="text-[10px] font-black text-purple-200">NOVA P</span>
             </button>
             <button onClick={() => navigate("/store")} className="icon-grid-btn">
               <div className="w-11 h-11 rounded-2xl bg-orange-500/20 flex items-center justify-center"><Crown className="w-5 h-5 text-orange-400" /></div>
