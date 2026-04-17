@@ -1,29 +1,59 @@
-import { Crown, Sparkles, Clock } from "lucide-react";
+import { Crown, Sparkles, Clock, Wand2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { NOVA_ASSETS, getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
 import CurrencyIcon from "./CurrencyIcon";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface NovaDashboardProps {
   totalGold: number;
   level: number;
   expiry: string | null;
+  userId?: string;
+  equippedFrame?: string | null;
+  onEquipped?: (frameKey: string) => void;
 }
 
-export default function NovaDashboard({ totalGold, level, expiry }: NovaDashboardProps) {
+// Map asset frame URL back to its key for storing in `equipped_frame`
+const FRAME_KEY_BY_LEVEL: Record<number, string> = {
+  1: "frame-purple-wings",
+  2: "frame-royal-crown",
+  3: "frame-ice",
+  4: "frame-fire",
+  5: "frame-rainbow",
+  6: "frame-dragon",
+};
+
+export default function NovaDashboard({ totalGold, level, expiry, userId, equippedFrame, onEquipped }: NovaDashboardProps) {
   const progress = getNovaProgress(totalGold);
   const current = getNovaAsset(level);
   const daysLeft = expiry
     ? Math.max(0, Math.ceil((new Date(expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
 
+  const targetFrameKey = level > 0 ? FRAME_KEY_BY_LEVEL[level] : null;
+  const alreadyEquipped = targetFrameKey && equippedFrame === targetFrameKey;
+
+  const equipNovaFrame = async () => {
+    if (!userId || !targetFrameKey) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ equipped_frame: targetFrameKey })
+      .eq("id", userId);
+    if (error) {
+      toast.error("فشل تجهيز الإطار");
+      return;
+    }
+    toast.success(`✨ تم تجهيز إطار ${current?.label}`);
+    onEquipped?.(targetFrameKey);
+  };
+
   return (
     <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-card/40 backdrop-blur-xl p-5 space-y-5">
-      {/* Glow background */}
       {current && (
         <div className={`absolute inset-0 bg-gradient-to-br ${current.gradient} opacity-50 pointer-events-none`} />
       )}
 
-      {/* Header */}
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Crown className="w-5 h-5 text-accent" />
@@ -36,7 +66,6 @@ export default function NovaDashboard({ totalGold, level, expiry }: NovaDashboar
         )}
       </div>
 
-      {/* Levels grid */}
       <div className="relative grid grid-cols-6 gap-2">
         {[1, 2, 3, 4, 5, 6].map((lvl) => {
           const asset = NOVA_ASSETS.byLevel[lvl];
@@ -72,7 +101,6 @@ export default function NovaDashboard({ totalGold, level, expiry }: NovaDashboar
         })}
       </div>
 
-      {/* Progress to next */}
       {progress.nextLevel && progress.nextThreshold && (
         <div className="relative space-y-1.5">
           <div className="flex justify-between text-[10px]">
@@ -92,7 +120,6 @@ export default function NovaDashboard({ totalGold, level, expiry }: NovaDashboar
         </div>
       )}
 
-      {/* Stats grid */}
       <div className="relative grid grid-cols-2 gap-3">
         <div className="rounded-2xl p-3 bg-background/40 border border-white/10 backdrop-blur">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1">
@@ -120,6 +147,23 @@ export default function NovaDashboard({ totalGold, level, expiry }: NovaDashboar
           </div>
         </div>
       </div>
+
+      {/* Auto-equip button */}
+      {level > 0 && targetFrameKey && userId && (
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={equipNovaFrame}
+          disabled={!!alreadyEquipped}
+          className={`relative w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border transition-all ${
+            alreadyEquipped
+              ? "bg-secondary/40 border-border/30 text-muted-foreground cursor-default"
+              : `bg-gradient-to-r ${current?.gradient} border-white/30 text-white ${current?.borderGlow}`
+          }`}
+        >
+          <Wand2 className="w-4 h-4" />
+          {alreadyEquipped ? `إطار ${current?.label} مُجهّز ✓` : `تجهيز إطار ${current?.label} تلقائياً`}
+        </motion.button>
+      )}
     </div>
   );
 }
