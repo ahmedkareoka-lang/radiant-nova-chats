@@ -193,6 +193,7 @@ export const useVoiceRoom = (roomId: string | null) => {
 
     // Heartbeat: update joined_at periodically to show user is still active
     // Also increment mic_hours for agency hosts who are on mic
+    let heartbeatTickCount = 0;
     heartbeatRef.current = setInterval(async () => {
       const uid = currentUserIdRef.current;
       const rid = roomIdRef.current;
@@ -202,6 +203,16 @@ export const useVoiceRoom = (roomId: string | null) => {
           .update({ joined_at: new Date().toISOString() })
           .eq("room_id", rid)
           .eq("user_id", uid);
+
+        // Daily task: increment room_minutes every 2 ticks (= 1 minute)
+        heartbeatTickCount += 1;
+        if (heartbeatTickCount % 2 === 0) {
+          supabase.rpc("increment_daily_task", {
+            _user_id: uid,
+            _task_type: "room",
+            _amount: 1,
+          });
+        }
 
         // Check if user is on mic and is an agency host, then increment mic_hours
         const currentMember = members.find(m => m.user_id === uid);
