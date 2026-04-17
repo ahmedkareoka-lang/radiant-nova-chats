@@ -58,13 +58,19 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (data && data.length > 0) {
         setGifts(data.map(g => ({
           name: g.name,
-          price: g.price,
+          price: Number(g.price),
           image_url: g.image_url,
           emoji: g.image_url ? undefined : "🎁",
         })));
       }
     };
     fetchGifts();
+    // Realtime updates for gifts catalog
+    const channel = supabase
+      .channel("gifts-catalog-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "gifts" }, () => fetchGifts())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
