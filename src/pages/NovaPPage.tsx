@@ -1,26 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, HelpCircle, Trophy, Wand2 } from "lucide-react";
+import { ChevronLeft, HelpCircle, Trophy, Wand2, Share2, Medal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { NOVA_ASSETS, getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
-import { FRAME_MAP } from "@/lib/frameConfig";
+import perkVehicle from "@/assets/nova-perk-vehicle.png";
+import perkCard from "@/assets/nova-perk-card.png";
+import perkTray from "@/assets/nova-perk-tray.png";
+import perkEntrance from "@/assets/nova-perk-entrance.png";
+import perkThrone from "@/assets/nova-perk-throne.png";
+import perkBanner from "@/assets/nova-perk-banner.png";
+import perkBubble from "@/assets/nova-perk-bubble.png";
+import perkNickname from "@/assets/nova-perk-nickname.png";
 
-const TIERS = [1, 2, 3, 4, 5, 6] as const;
-
-const TIER_THEMES: Record<number, { from: string; to: string; ring: string; text: string; badgeBg: string }> = {
-  1: { from: "from-emerald-700/40", to: "to-emerald-900/30", ring: "ring-emerald-400/40", text: "text-emerald-300", badgeBg: "from-emerald-500 to-green-700" },
-  2: { from: "from-emerald-600/40", to: "to-teal-900/30", ring: "ring-emerald-300/50", text: "text-emerald-200", badgeBg: "from-emerald-500 to-emerald-700" },
-  3: { from: "from-cyan-600/40", to: "to-teal-900/40", ring: "ring-cyan-300/50", text: "text-cyan-200", badgeBg: "from-cyan-500 to-teal-700" },
-  4: { from: "from-blue-600/40", to: "to-indigo-900/40", ring: "ring-blue-300/60", text: "text-blue-200", badgeBg: "from-blue-500 to-indigo-700" },
-  5: { from: "from-purple-600/50", to: "to-fuchsia-900/40", ring: "ring-purple-300/60", text: "text-purple-200", badgeBg: "from-purple-500 to-fuchsia-700" },
-  6: { from: "from-amber-500/50", to: "to-red-900/50", ring: "ring-amber-300/70", text: "text-amber-200", badgeBg: "from-amber-500 to-red-700" },
+const TIER_THEMES: Record<number, { from: string; to: string; ring: string; text: string; badgeBg: string; hex: string }> = {
+  1: { from: "from-emerald-700/40", to: "to-emerald-900/30", ring: "ring-emerald-400/40", text: "text-emerald-300", badgeBg: "from-emerald-500 to-green-700", hex: "#10b981" },
+  2: { from: "from-emerald-600/40", to: "to-teal-900/30", ring: "ring-emerald-300/50", text: "text-emerald-200", badgeBg: "from-emerald-500 to-emerald-700", hex: "#14b8a6" },
+  3: { from: "from-cyan-600/40", to: "to-teal-900/40", ring: "ring-cyan-300/50", text: "text-cyan-200", badgeBg: "from-cyan-500 to-teal-700", hex: "#06b6d4" },
+  4: { from: "from-blue-600/40", to: "to-indigo-900/40", ring: "ring-blue-300/60", text: "text-blue-200", badgeBg: "from-blue-500 to-indigo-700", hex: "#6366f1" },
+  5: { from: "from-purple-600/50", to: "to-fuchsia-900/40", ring: "ring-purple-300/60", text: "text-purple-200", badgeBg: "from-purple-500 to-fuchsia-700", hex: "#a855f7" },
+  6: { from: "from-amber-500/50", to: "to-red-900/50", ring: "ring-amber-300/70", text: "text-amber-200", badgeBg: "from-amber-500 to-red-700", hex: "#f59e0b" },
 };
 
-const PERKS_BY_TIER: Record<number, { title: string; visual: "frame" | "badge" | "bubble" | "id" | "vehicle" | "card" | "throne" | "gift-tray" | "entrance" | "banner" | "nickname"; }[]> = {
+type PerkVisual = "frame" | "badge" | "bubble" | "id" | "vehicle" | "card" | "throne" | "gift-tray" | "entrance" | "banner" | "nickname";
+
+const PERKS_BY_TIER: Record<number, { title: string; visual: PerkVisual }[]> = {
   1: [
     { title: "إطار الصورة الرمزية الحصري", visual: "frame" },
     { title: "شارة حصرية", visual: "badge" },
@@ -96,6 +103,17 @@ const FRAME_KEY_BY_LEVEL: Record<number, string> = {
   6: "frame-dragon",
 };
 
+const PERK_IMAGE: Partial<Record<PerkVisual, string>> = {
+  vehicle: perkVehicle,
+  card: perkCard,
+  "gift-tray": perkTray,
+  entrance: perkEntrance,
+  throne: perkThrone,
+  banner: perkBanner,
+  bubble: perkBubble,
+  nickname: perkNickname,
+};
+
 function PerkCard({
   visual,
   title,
@@ -103,19 +121,20 @@ function PerkCard({
   asset,
   avatarUrl,
 }: {
-  visual: string;
+  visual: PerkVisual;
   title: string;
   level: number;
   asset: ReturnType<typeof getNovaAsset>;
   avatarUrl?: string | null;
 }) {
   const theme = TIER_THEMES[level];
+  const perkImg = PERK_IMAGE[visual];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-secondary/30 border border-border/30 p-4 flex flex-col items-center justify-center gap-3 aspect-square"
+      className="rounded-2xl bg-secondary/30 border border-border/30 p-3 flex flex-col items-center justify-center gap-2 aspect-square"
     >
       <div className="flex-1 flex items-center justify-center w-full">
         {visual === "frame" && asset && (
@@ -131,62 +150,38 @@ function PerkCard({
         {visual === "badge" && asset && (
           <img src={asset.frame} alt={asset.label} className="w-16 h-16 object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]" />
         )}
-        {visual === "bubble" && (
-          <div className={`px-5 py-2 rounded-2xl bg-gradient-to-br ${theme.badgeBg} border-2 border-white/40 shadow-xl`}>
-            <span className="text-white font-black text-sm">Hello</span>
-          </div>
-        )}
         {visual === "id" && (
           <div className={`px-5 py-1.5 rounded-full bg-gradient-to-r ${theme.badgeBg} border-2 border-white/30 shadow-xl flex items-center gap-2`}>
             {asset && <img src={asset.frame} alt="" className="w-5 h-5 object-contain" />}
             <span className="text-white font-black text-base">P{level}</span>
           </div>
         )}
-        {visual === "vehicle" && (
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${theme.from} ${theme.to} flex items-center justify-center text-3xl shadow-inner`}>
-            🚗
-          </div>
-        )}
-        {visual === "card" && (
-          <div className={`w-20 h-12 rounded-lg bg-gradient-to-br ${theme.from} ${theme.to} border ${theme.ring} ring-1 flex items-center justify-center`}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-white/50" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-white/20" />
-            )}
-          </div>
-        )}
-        {visual === "throne" && (
-          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${theme.from} ${theme.to} flex items-center justify-center text-2xl shadow-inner`}>
-            👑
-          </div>
-        )}
-        {visual === "gift-tray" && (
-          <div className={`w-20 h-10 rounded-full bg-gradient-to-r ${theme.badgeBg} flex items-center justify-around px-2 shadow-xl`}>
-            <div className="w-5 h-5 rounded-full bg-white/40" />
-            <div className="w-5 h-5 rounded-full bg-white/40" />
-            <span className="text-white font-black text-xs">x1</span>
-          </div>
-        )}
-        {visual === "entrance" && (
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${theme.from} ${theme.to} flex items-center justify-center text-3xl shadow-inner`}>
-            ✨
-          </div>
-        )}
-        {visual === "banner" && (
-          <div className={`w-24 h-6 rounded-full bg-gradient-to-r ${theme.badgeBg} shadow-xl flex items-center justify-center`}>
-            {avatarUrl && <img src={avatarUrl} alt="" className="w-5 h-5 rounded-full -ml-10" />}
-          </div>
-        )}
-        {visual === "nickname" && (
-          <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${theme.badgeBg} shadow-xl`}>
-            <span className="text-white font-black text-xs">Nickname</span>
-          </div>
+        {perkImg && (
+          <img
+            src={perkImg}
+            alt={title}
+            loading="lazy"
+            width={512}
+            height={512}
+            className="w-20 h-20 object-contain drop-shadow-[0_0_18px_rgba(168,85,247,0.45)]"
+          />
         )}
       </div>
-      <p className="text-[11px] text-center text-muted-foreground font-bold leading-tight">{title}</p>
+      <p className="text-[11px] text-center text-muted-foreground font-bold leading-tight line-clamp-2">{title}</p>
     </motion.div>
   );
+}
+
+const MONTH_NAMES_AR = [
+  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
+];
+
+function getLastMonthYM(): { ym: string; label: string } {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return { ym, label: `${MONTH_NAMES_AR[d.getMonth()]} ${d.getFullYear()}` };
 }
 
 export default function NovaPPage() {
@@ -195,6 +190,9 @@ export default function NovaPPage() {
   const [loading, setLoading] = useState(true);
   const [activeTier, setActiveTier] = useState<number>(1);
   const [equipping, setEquipping] = useState(false);
+  const [lastMonth, setLastMonth] = useState<{ level: number; gold: number; label: string } | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -203,6 +201,27 @@ export default function NovaPPage() {
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       setProfile(data);
       setActiveTier(Math.max(1, data?.nova_p_level || 1));
+
+      // Record this month
+      if (data?.nova_p_level && data.nova_p_level > 0) {
+        await supabase.rpc("record_nova_p_monthly", { _user_id: user.id });
+      }
+
+      // Fetch last month
+      const { ym, label } = getLastMonthYM();
+      const { data: hist } = await supabase
+        .from("nova_p_monthly_history")
+        .select("highest_level, total_gold_earned")
+        .eq("user_id", user.id)
+        .eq("year_month", ym)
+        .maybeSingle();
+
+      if (hist && hist.highest_level > 0) {
+        setLastMonth({ level: hist.highest_level, gold: hist.total_gold_earned, label });
+      } else {
+        setLastMonth({ level: 0, gold: 0, label });
+      }
+
       setLoading(false);
     };
     fetchProfile();
@@ -237,13 +256,139 @@ export default function NovaPPage() {
       .update({ equipped_frame: frameKey })
       .eq("id", profile.id);
     setEquipping(false);
-    if (error) {
-      toast.error("فشل تجهيز الإطار");
-      return;
-    }
+    if (error) { toast.error("فشل تجهيز الإطار"); return; }
     toast.success(`✨ تم تجهيز إطار ${currentAsset?.label}`);
     setProfile({ ...profile, equipped_frame: frameKey });
   };
+
+  // Generate share image via canvas
+  const generateShareImage = async (): Promise<Blob | null> => {
+    const canvas = document.createElement("canvas");
+    const W = 1080, H = 1080;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    const theme = TIER_THEMES[Math.max(1, currentLevel)];
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, "#1a0b3d");
+    bg.addColorStop(0.5, theme.hex + "40");
+    bg.addColorStop(1, "#0a0419");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Stars
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    for (let i = 0; i < 80; i++) {
+      const x = Math.random() * W, y = Math.random() * H;
+      const r = Math.random() * 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Title
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 56px sans-serif";
+    ctx.fillText("NOVA P", W / 2, 130);
+    ctx.font = "32px sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.fillText("الرتبة الشخصية", W / 2, 180);
+
+    // Frame + avatar
+    try {
+      if (currentAsset) {
+        const frameImg = new Image();
+        frameImg.crossOrigin = "anonymous";
+        await new Promise<void>((res, rej) => {
+          frameImg.onload = () => res();
+          frameImg.onerror = () => rej();
+          frameImg.src = currentAsset.frame;
+        }).catch(() => {});
+        if (frameImg.complete && frameImg.naturalWidth > 0) {
+          ctx.drawImage(frameImg, W / 2 - 220, 240, 440, 440);
+        }
+      }
+      if (profile?.avatar_url) {
+        const av = new Image();
+        av.crossOrigin = "anonymous";
+        await new Promise<void>((res) => {
+          av.onload = () => res();
+          av.onerror = () => res();
+          av.src = profile.avatar_url;
+        });
+        if (av.complete && av.naturalWidth > 0) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(W / 2, 460, 140, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(av, W / 2 - 140, 320, 280, 280);
+          ctx.restore();
+        }
+      }
+    } catch {}
+
+    // Tier label
+    ctx.fillStyle = theme.hex;
+    ctx.font = "bold 120px sans-serif";
+    ctx.fillText(currentLevel > 0 ? currentAsset?.label || "" : "بدون رتبة", W / 2, 800);
+
+    // Display name
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 48px sans-serif";
+    ctx.fillText(profile?.display_name || "", W / 2, 870);
+
+    // Gold
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.font = "36px sans-serif";
+    ctx.fillText(`💰 ${totalGold.toLocaleString()} NOVA`, W / 2, 940);
+
+    // Footer
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font = "28px sans-serif";
+    ctx.fillText("NOVA · Voice Rooms", W / 2, 1020);
+
+    return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+  };
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const blob = await generateShareImage();
+      if (!blob) { toast.error("فشل توليد الصورة"); return; }
+      const file = new File([blob], `nova-p-${currentLevel}.png`, { type: "image/png" });
+
+      // Try native share with file
+      const shareData: ShareData = {
+        title: `رتبتي في NOVA P`,
+        text: `رتبتي الحالية: ${currentAsset?.label || "بدون رتبة"} 💎`,
+        files: [file],
+      };
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast.success("تمت المشاركة");
+      } else {
+        // Download fallback
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `nova-p-${currentAsset?.label || "rank"}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("تم تنزيل الصورة");
+      }
+    } catch (e: any) {
+      if (e?.name !== "AbortError") toast.error("فشلت المشاركة");
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const lastMonthAsset = lastMonth && lastMonth.level > 0 ? getNovaAsset(lastMonth.level) : null;
+  const lastMonthTheme = lastMonth && lastMonth.level > 0 ? TIER_THEMES[lastMonth.level] : null;
 
   return (
     <PageTransition>
@@ -268,6 +413,14 @@ export default function NovaPPage() {
           </button>
           <h1 className="font-black text-base">الرتبة الشخصية</h1>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="p-1.5 rounded-full bg-gradient-to-br from-primary to-accent backdrop-blur shadow-lg disabled:opacity-50"
+              aria-label="مشاركة"
+            >
+              <Share2 className="w-4 h-4 text-white" />
+            </button>
             <button onClick={() => navigate("/leaderboard")} className="text-xl">🏆</button>
             <button className="p-1.5 rounded-full bg-secondary/40 backdrop-blur">
               <HelpCircle className="w-4 h-4" />
@@ -275,12 +428,38 @@ export default function NovaPPage() {
           </div>
         </div>
 
+        {/* Last-month medal */}
+        <div className="relative px-4 mb-3" ref={cardRef}>
+          {lastMonth && lastMonth.level > 0 && lastMonthAsset && lastMonthTheme ? (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`rounded-2xl p-3 bg-gradient-to-r ${lastMonthTheme.from} ${lastMonthTheme.to} border ${lastMonthTheme.ring} ring-1 backdrop-blur flex items-center gap-3`}
+            >
+              <div className="relative w-14 h-14 shrink-0">
+                <img src={lastMonthAsset.frame} alt={lastMonthAsset.label} className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,200,0,0.6)]" />
+                <Medal className="absolute -bottom-1 -right-1 w-5 h-5 text-amber-300 fill-amber-400" />
+              </div>
+              <div className="flex-1 text-right">
+                <p className="text-[10px] text-muted-foreground">إنجاز الشهر الماضي · {lastMonth.label}</p>
+                <p className="text-sm font-black">
+                  وصلت إلى <span className={lastMonthTheme.text}>{lastMonthAsset.label}</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1 justify-end">
+                  بإجمالي {lastMonth.gold.toLocaleString()}
+                  <CurrencyIcon type="gold" size="sm" />
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <p className="text-[10px] text-muted-foreground text-right">
+              إنجاز الشهر الماضي ({lastMonth?.label}): <span className="text-foreground">لم يتم الحصول عليه بعد</span>
+            </p>
+          )}
+        </div>
+
         {/* Top Hero Card */}
         <div className="relative px-4">
-          <p className="text-[10px] text-muted-foreground text-left mb-2">
-            الشهر الماضي: <span className="text-foreground">لم يتم الحصول عليه بعد</span>
-          </p>
-
           <div className="relative">
             {/* Avatar floating above card */}
             <div className="relative -mb-8 z-10 flex justify-center">
@@ -321,22 +500,32 @@ export default function NovaPPage() {
                 </div>
               </div>
 
-              {/* Equip button if has tier */}
               {currentLevel > 0 && (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={equipNovaFrame}
-                  disabled={equipping}
-                  className={`mt-4 w-full py-2.5 rounded-2xl font-black text-xs flex items-center justify-center gap-2 bg-gradient-to-r ${tierTheme.badgeBg} text-white shadow-xl border border-white/30`}
-                >
-                  <Wand2 className="w-3.5 h-3.5" />
-                  {equipping ? "جاري التجهيز..." : `تجهيز إطار ${currentAsset?.label} تلقائياً`}
-                </motion.button>
+                <div className="mt-4 flex gap-2">
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={equipNovaFrame}
+                    disabled={equipping}
+                    className={`flex-1 py-2.5 rounded-2xl font-black text-xs flex items-center justify-center gap-2 bg-gradient-to-r ${tierTheme.badgeBg} text-white shadow-xl border border-white/30`}
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    {equipping ? "جاري التجهيز..." : `تجهيز إطار ${currentAsset?.label}`}
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleShare}
+                    disabled={sharing}
+                    className="px-4 py-2.5 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 bg-background/40 text-foreground border border-white/20 backdrop-blur"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    {sharing ? "..." : "مشاركة"}
+                  </motion.button>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Progress section with gold instead of points */}
+          {/* Progress section */}
           <div className="mt-4 rounded-3xl bg-secondary/20 border border-border/30 backdrop-blur p-4">
             <div className="flex justify-between items-center mb-2 text-[11px]">
               <button className="text-muted-foreground">{"<"} تفاصيل العملات</button>
@@ -347,9 +536,7 @@ export default function NovaPPage() {
               </div>
             </div>
 
-            {/* Tier progress line */}
             <div className="relative pt-6 pb-2">
-              {/* Floating bubble showing current value */}
               {progress.nextThreshold && (
                 <motion.div
                   initial={{ left: "0%" }}
@@ -365,7 +552,6 @@ export default function NovaPPage() {
               )}
 
               <div className="relative h-px bg-border/50">
-                {/* Tier markers - reverse order p6 -> p1 to match RTL UI */}
                 <div className="absolute inset-0 flex justify-between">
                   {[6, 5, 4, 3, 2, 1].map((lvl) => (
                     <div key={lvl} className="flex flex-col items-center -translate-y-1/2">
@@ -392,14 +578,12 @@ export default function NovaPPage() {
         {/* Perks section */}
         <div className="relative mt-6 px-4">
           <div className="rounded-t-3xl bg-secondary/20 backdrop-blur border-x border-t border-border/30 p-4">
-            {/* Title */}
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="text-muted-foreground text-xs">◇</span>
               <h3 className="font-black text-sm">امتياز</h3>
               <span className="text-muted-foreground text-xs">◇</span>
             </div>
 
-            {/* Tier tabs - p6 to p1 (RTL) */}
             <div className="flex justify-around mb-4 border-b border-border/30 pb-3">
               {[6, 5, 4, 3, 2, 1].map((lvl) => {
                 const isActive = activeTier === lvl;
@@ -423,7 +607,6 @@ export default function NovaPPage() {
               })}
             </div>
 
-            {/* Perks grid */}
             <div className="grid grid-cols-2 gap-3">
               {PERKS_BY_TIER[activeTier].map((perk, i) => (
                 <PerkCard
