@@ -33,7 +33,7 @@ const AdminDashboard = () => {
   const [storeItems, setStoreItems] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [newGift, setNewGift] = useState({ name: "", price: "" });
-  const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame" });
+  const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
   const [newBanner, setNewBanner] = useState({ title: "" });
   const [uploading, setUploading] = useState(false);
   const giftFileRef = useRef<HTMLInputElement>(null);
@@ -234,10 +234,12 @@ const AdminDashboard = () => {
       price_coins: parseInt(newStoreItem.price_coins),
       type: newStoreItem.type,
       image_url: imageUrl,
+      tier_type: newStoreItem.tier_type,
+      tier_required: parseInt(newStoreItem.tier_required) || 0,
     });
     if (error) { toast.error("فشل في إضافة العنصر"); return; }
     toast.success("تمت إضافة العنصر ✅");
-    setNewStoreItem({ name: "", price_coins: "", type: "frame" });
+    setNewStoreItem({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
     if (storeFileRef.current) storeFileRef.current.value = "";
     await fetchStoreItems();
   };
