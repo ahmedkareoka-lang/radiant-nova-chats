@@ -98,7 +98,7 @@ const UserProfile = () => {
                     {isBoss ? (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/30 text-destructive font-bold">🔥 BOSS</span>
                     ) : (
-                      <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} size="md" />
+                      <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} size="lg" luxury />
                     )}
                   </div>
                 </div>

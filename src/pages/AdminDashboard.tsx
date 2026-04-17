@@ -33,7 +33,7 @@ const AdminDashboard = () => {
   const [storeItems, setStoreItems] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [newGift, setNewGift] = useState({ name: "", price: "" });
-  const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame" });
+  const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
   const [newBanner, setNewBanner] = useState({ title: "" });
   const [uploading, setUploading] = useState(false);
   const giftFileRef = useRef<HTMLInputElement>(null);
@@ -234,10 +234,12 @@ const AdminDashboard = () => {
       price_coins: parseInt(newStoreItem.price_coins),
       type: newStoreItem.type,
       image_url: imageUrl,
+      tier_type: newStoreItem.tier_type,
+      tier_required: parseInt(newStoreItem.tier_required) || 0,
     });
     if (error) { toast.error("فشل في إضافة العنصر"); return; }
     toast.success("تمت إضافة العنصر ✅");
-    setNewStoreItem({ name: "", price_coins: "", type: "frame" });
+    setNewStoreItem({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
     if (storeFileRef.current) storeFileRef.current.value = "";
     await fetchStoreItems();
   };
@@ -281,6 +283,8 @@ const AdminDashboard = () => {
   const tabs = [
     { id: "users", label: "المستخدمين", icon: Users },
     { id: "nova", label: "NOVA P", icon: BarChart3 },
+    { id: "nova_items", label: "عناصر NOVA P", icon: Crown },
+    { id: "vip_items", label: "عناصر VIP", icon: Crown },
     { id: "gifts", label: "الهدايا", icon: Gift },
     { id: "store", label: "المتجر", icon: Image },
     { id: "banners", label: "البانرات", icon: Image },
@@ -288,6 +292,76 @@ const AdminDashboard = () => {
     { id: "pricing", label: "الأسعار", icon: Globe },
     { id: "settings", label: "الإعدادات", icon: Settings },
   ];
+
+  // Reusable tier item form (used by NOVA P / VIP / generic store tabs)
+  const renderTierItemForm = (defaultTierType: "none" | "nova_p" | "vip", title: string, accentColor: string) => {
+    const tierMax = defaultTierType === "nova_p" ? 6 : defaultTierType === "vip" ? 7 : 0;
+    const filteredItems = storeItems.filter((s) => (s.tier_type || "none") === defaultTierType);
+    return (
+      <div className="space-y-4">
+        <div className="card-nova p-4 space-y-3">
+          <h3 className={`font-bold text-sm flex items-center gap-2 ${accentColor}`}>
+            <Crown className="w-4 h-4" /> {title}
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="اسم العنصر" value={newStoreItem.name} onChange={(e) => setNewStoreItem({ ...newStoreItem, name: e.target.value, tier_type: defaultTierType })}
+              className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
+            <input placeholder="السعر (عملات)" type="number" value={newStoreItem.price_coins} onChange={(e) => setNewStoreItem({ ...newStoreItem, price_coins: e.target.value, tier_type: defaultTierType })}
+              className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={newStoreItem.type} onChange={(e) => setNewStoreItem({ ...newStoreItem, type: e.target.value, tier_type: defaultTierType })}
+              className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none">
+              <option value="frame">إطار 🖼️</option>
+              <option value="badge">شارة 🏅</option>
+              <option value="entrance">تأثير دخول ✨</option>
+              <option value="bubble">فقاعة دردشة 💬</option>
+              <option value="name_style">ستايل اسم 🎨</option>
+              <option value="vehicle">مركبة 🏎️</option>
+            </select>
+            {tierMax > 0 ? (
+              <select value={newStoreItem.tier_required} onChange={(e) => setNewStoreItem({ ...newStoreItem, tier_required: e.target.value, tier_type: defaultTierType })}
+                className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none">
+                <option value="0">أي مستوى</option>
+                {Array.from({ length: tierMax }, (_, i) => i + 1).map((lvl) => (
+                  <option key={lvl} value={lvl}>{defaultTierType === "nova_p" ? `P${lvl}` : `VIP ${lvl}`} وما فوق</option>
+                ))}
+              </select>
+            ) : (
+              <div className="bg-secondary/30 rounded-xl px-3 py-2 text-[10px] text-muted-foreground flex items-center justify-center">عام (متاح للجميع)</div>
+            )}
+          </div>
+          <div className="flex gap-2 items-center">
+            <input ref={storeFileRef} type="file" accept="image/*" className="text-xs flex-1" />
+            <button onClick={handleAddStoreItem} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
+              {uploading ? "جارٍ الرفع..." : "إضافة"}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {filteredItems.map(s => (
+            <div key={s.id} className="card-nova p-3 flex items-center gap-3">
+              {s.image_url ? <img src={s.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
+              <div className="flex-1">
+                <p className="font-bold text-sm">{s.name}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {s.type} • {s.price_coins} عملة
+                  {s.tier_required > 0 && (
+                    <span className={`ml-2 ${accentColor} font-bold`}>
+                      • {s.tier_type === "nova_p" ? `P${s.tier_required}+` : `VIP ${s.tier_required}+`}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button onClick={() => deleteStoreItem(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
+            </div>
+          ))}
+          {filteredItems.length === 0 && <p className="text-center text-muted-foreground text-sm py-4">لا توجد عناصر بعد - أضف من الأعلى</p>}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <PageTransition>
@@ -493,45 +567,14 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* STORE TAB */}
-          {activeTab === "store" && (
-            <div className="space-y-4">
-              <div className="card-nova p-4 space-y-3">
-                <h3 className="font-bold text-sm flex items-center gap-2"><Image className="w-4 h-4 text-primary" /> إضافة عنصر متجر</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <input placeholder="الاسم" value={newStoreItem.name} onChange={(e) => setNewStoreItem({ ...newStoreItem, name: e.target.value })}
-                    className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
-                  <input placeholder="السعر (عملات)" type="number" value={newStoreItem.price_coins} onChange={(e) => setNewStoreItem({ ...newStoreItem, price_coins: e.target.value })}
-                    className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
-                </div>
-                <select value={newStoreItem.type} onChange={(e) => setNewStoreItem({ ...newStoreItem, type: e.target.value })}
-                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none">
-                  <option value="frame">إطار</option>
-                  <option value="badge">شارة</option>
-                  <option value="entrance">تأثير دخول</option>
-                </select>
-                <div className="flex gap-2 items-center">
-                  <input ref={storeFileRef} type="file" accept="image/*" className="text-xs flex-1" />
-                  <button onClick={handleAddStoreItem} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
-                    {uploading ? "جارٍ الرفع..." : "إضافة"}
-                  </button>
-                </div>
-              </div>
+          {/* NOVA P ITEMS TAB */}
+          {activeTab === "nova_items" && renderTierItemForm("nova_p", "إضافة عنصر NOVA P (إطار/شارة/دخول/مركبة)", "text-purple-300")}
 
-              <div className="space-y-2">
-                {storeItems.map(s => (
-                  <div key={s.id} className="card-nova p-3 flex items-center gap-3">
-                    {s.image_url ? <img src={s.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
-                    <div className="flex-1">
-                      <p className="font-bold text-sm">{s.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.type} • {s.price_coins} عملة</p>
-                    </div>
-                    <button onClick={() => deleteStoreItem(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* VIP ITEMS TAB */}
+          {activeTab === "vip_items" && renderTierItemForm("vip", "إضافة عنصر VIP (إطار/شارة/دخول/مركبة)", "text-amber-300")}
+
+          {/* STORE TAB - generic items */}
+          {activeTab === "store" && renderTierItemForm("none", "إضافة عنصر متجر عام (إطار/شارة/دخول)", "text-primary")}
 
           {/* BANNERS TAB */}
           {activeTab === "banners" && (

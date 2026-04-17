@@ -238,11 +238,78 @@ const StorePage = () => {
             })}
           </div>
 
-          {adminItems.length > 0 && (
+          {/* NOVA P exclusive items (grouped by tier) */}
+          {[1, 2, 3, 4, 5, 6].map((tier) => {
+            const items = adminItems.filter((it) => it.tier_type === "nova_p" && (it.tier_required || 0) === tier);
+            if (items.length === 0) return null;
+            const userTier = profile?.nova_p_level || 0;
+            return (
+              <div key={`nova-${tier}`} className="space-y-2">
+                <h2 className="font-bold text-sm flex items-center gap-2 text-purple-300">
+                  👑 عناصر NOVA P{tier}
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {items.map((item) => {
+                    const locked = userTier < tier;
+                    return (
+                      <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${locked ? "opacity-60" : "border border-purple-400/40 shadow-[0_0_20px_hsl(280_90%_60%/0.3)]"}`}>
+                        {item.image_url && (
+                          <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                        )}
+                        <p className="font-bold text-xs">{item.name}</p>
+                        <p className="text-[9px] text-purple-300 font-bold">يتطلب NOVA P{tier}+</p>
+                        <div className="flex items-center justify-center gap-1">
+                          <CurrencyIcon type="gold" size="xs" />
+                          <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                        </div>
+                        {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* VIP exclusive items (grouped by tier) */}
+          {[1, 2, 3, 4, 5, 6, 7].map((tier) => {
+            const items = adminItems.filter((it) => it.tier_type === "vip" && (it.tier_required || 0) === tier);
+            if (items.length === 0) return null;
+            const userTier = profile?.vip_level || 0;
+            return (
+              <div key={`vip-${tier}`} className="space-y-2">
+                <h2 className="font-bold text-sm flex items-center gap-2 text-amber-300">
+                  💎 عناصر VIP {tier}
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {items.map((item) => {
+                    const locked = userTier < tier;
+                    return (
+                      <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${locked ? "opacity-60" : "border border-amber-400/40 shadow-[0_0_20px_hsl(45_95%_55%/0.3)]"}`}>
+                        {item.image_url && (
+                          <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                        )}
+                        <p className="font-bold text-xs">{item.name}</p>
+                        <p className="text-[9px] text-amber-300 font-bold">يتطلب VIP {tier}+</p>
+                        <div className="flex items-center justify-center gap-1">
+                          <CurrencyIcon type="gold" size="xs" />
+                          <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                        </div>
+                        {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Generic admin store items (Entrance / Badges / etc.) */}
+          {adminItems.filter((it) => (it.tier_type || "none") === "none").length > 0 && (
             <>
-              <h2 className="font-bold text-sm pt-2">✨ عناصر إدارية</h2>
+              <h2 className="font-bold text-sm pt-2">✨ عناصر المتجر</h2>
               <div className="grid grid-cols-2 gap-3">
-                {adminItems.map((item) => (
+                {adminItems.filter((it) => (it.tier_type || "none") === "none").map((item) => (
                   <div key={item.id} className="card-nova p-4 text-center space-y-2">
                     {item.image_url && (
                       <div className="w-24 h-24 mx-auto">
