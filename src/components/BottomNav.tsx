@@ -1,12 +1,12 @@
-import { Home, MessageCircle, Plus, Gamepad2, User } from "lucide-react";
+import { Home, MessageCircle, FileText, Gamepad2, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 
 const navItems = [
   { icon: Home, label: "الغرفة", path: "/", activeColor: "text-primary" },
   { icon: MessageCircle, label: "الرسائل", path: "/chat", activeColor: "text-pink-400", hasBadge: true },
-  { icon: Plus, label: "", path: "/create-room", isCenter: true },
-  { icon: Gamepad2, label: "ألعاب", path: "/search", activeColor: "text-primary" },
+  { icon: FileText, label: "", path: "/posts", isCenter: true },
+  { icon: Gamepad2, label: "ألعاب", path: "/games", activeColor: "text-primary" },
   { icon: User, label: "أنا", path: "/profile", activeColor: "text-pink-400" },
 ];
 

@@ -209,6 +209,45 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tasks: {
+        Row: {
+          created_at: string
+          games_played: number
+          games_reward_claimed: boolean
+          gift_reward_claimed: boolean
+          gifts_sent: number
+          id: string
+          room_minutes: number
+          room_reward_claimed: boolean
+          task_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          games_played?: number
+          games_reward_claimed?: boolean
+          gift_reward_claimed?: boolean
+          gifts_sent?: number
+          id?: string
+          room_minutes?: number
+          room_reward_claimed?: boolean
+          task_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          games_played?: number
+          games_reward_claimed?: boolean
+          gift_reward_claimed?: boolean
+          gifts_sent?: number
+          id?: string
+          room_minutes?: number
+          room_reward_claimed?: boolean
+          task_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -396,6 +435,59 @@ export type Database = {
           message?: string
           title?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
           user_id?: string
         }
         Relationships: []
@@ -861,6 +953,10 @@ export type Database = {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
       }
+      claim_daily_reward: {
+        Args: { _task_type: string; _user_id: string }
+        Returns: undefined
+      }
       deduct_coins: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined
@@ -901,6 +997,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_daily_task: {
+        Args: { _amount?: number; _task_type: string; _user_id: string }
+        Returns: undefined
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
       remove_agency_host: {

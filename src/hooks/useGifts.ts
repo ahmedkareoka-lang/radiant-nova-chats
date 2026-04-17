@@ -61,6 +61,9 @@ export const useGifts = () => {
       type: "gift",
     });
 
+    // Track daily task: gift sent
+    supabase.rpc("increment_daily_task", { _user_id: senderId, _task_type: "gift", _amount: 1 });
+
     playGiftSound();
     if (goldAmount >= 1000) triggerConfetti();
     toast.success(`تم إرسال ${giftName}! 🎁`);

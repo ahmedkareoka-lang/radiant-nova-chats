@@ -27,6 +27,9 @@ import NotificationsPage from "./pages/NotificationsPage";
 import UserProfile from "./pages/UserProfile";
 import EditProfile from "./pages/EditProfile";
 import LeaderboardPage from "./pages/LeaderboardPage";
+import DailyTasksPage from "./pages/DailyTasksPage";
+import PostsFeedPage from "./pages/PostsFeedPage";
+import GamesPage from "./pages/GamesPage";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +71,9 @@ const AnimatedRoutes = () => {
         <Route path="/user" element={<AuthGate><UserProfile /></AuthGate>} />
         <Route path="/edit-profile" element={<AuthGate><EditProfile /></AuthGate>} />
         <Route path="/leaderboard" element={<AuthGate><LeaderboardPage /></AuthGate>} />
+        <Route path="/daily-tasks" element={<AuthGate><DailyTasksPage /></AuthGate>} />
+        <Route path="/posts" element={<AuthGate><PostsFeedPage /></AuthGate>} />
+        <Route path="/games" element={<AuthGate><GamesPage /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
