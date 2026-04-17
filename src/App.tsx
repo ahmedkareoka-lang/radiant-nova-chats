@@ -30,6 +30,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import DailyTasksPage from "./pages/DailyTasksPage";
 import PostsFeedPage from "./pages/PostsFeedPage";
 import GamesPage from "./pages/GamesPage";
+import NovaPPage from "./pages/NovaPPage";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,7 @@ const AnimatedRoutes = () => {
         <Route path="/daily-tasks" element={<AuthGate><DailyTasksPage /></AuthGate>} />
         <Route path="/posts" element={<AuthGate><PostsFeedPage /></AuthGate>} />
         <Route path="/games" element={<AuthGate><GamesPage /></AuthGate>} />
+        <Route path="/nova-p" element={<AuthGate><NovaPPage /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
