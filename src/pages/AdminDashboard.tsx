@@ -90,7 +90,7 @@ const AdminDashboard = () => {
       const { data: er } = await supabase.from("system_settings").select("value").eq("key", "exchange_rate").single();
       if (er) setExchangeRate(er.value);
 
-      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners()]);
+      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchNovaStats()]);
       setLoading(false);
     };
     checkBoss();
@@ -280,6 +280,7 @@ const AdminDashboard = () => {
 
   const tabs = [
     { id: "users", label: "المستخدمين", icon: Users },
+    { id: "nova", label: "NOVA P", icon: BarChart3 },
     { id: "gifts", label: "الهدايا", icon: Gift },
     { id: "store", label: "المتجر", icon: Image },
     { id: "banners", label: "البانرات", icon: Image },
