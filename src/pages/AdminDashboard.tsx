@@ -53,6 +53,19 @@ const AdminDashboard = () => {
     const { data } = await supabase.from("banners").select("*").order("sort_order");
     setBanners(data || []);
   };
+  const fetchNovaStats = async () => {
+    // Count users per NOVA P level (0-6)
+    const counts = await Promise.all(
+      [0, 1, 2, 3, 4, 5, 6].map(async (lvl) => {
+        const { count } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("nova_p_level", lvl);
+        return { level: lvl, label: lvl === 0 ? "بدون" : `P${lvl}`, count: count || 0 };
+      })
+    );
+    setNovaStats(counts);
+  };
 
   useEffect(() => {
     const checkBoss = async () => {
