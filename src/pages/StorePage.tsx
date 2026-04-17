@@ -96,6 +96,7 @@ const StorePage = () => {
   const [ownedFrames, setOwnedFrames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminItems, setAdminItems] = useState<any[]>([]);
+  const [previewItem, setPreviewItem] = useState<any>(null);
 
   const fetchAdminItems = async () => {
     const { data } = await supabase
