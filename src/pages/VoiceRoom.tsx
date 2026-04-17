@@ -82,7 +82,7 @@ const VoiceRoom = () => {
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
-  const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number } | null>(null);
+  const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
     wealthLevel: number;
@@ -349,10 +349,10 @@ const VoiceRoom = () => {
     setShowSettings(false);
   };
 
-  // Gift burst callback
-  const handleGiftBurst = (emoji: string, count: number) => {
-    setGiftBurst({ emoji, count });
-    setTimeout(() => setGiftBurst(null), 2000);
+  // Gift burst callback (local sender)
+  const handleGiftBurst = (emoji: string, count: number, imageUrl?: string | null) => {
+    setGiftBurst({ emoji, count, imageUrl });
+    setTimeout(() => setGiftBurst(null), 2500);
   };
 
   // Listen for gift broadcasts from other users in the room
@@ -361,9 +361,12 @@ const VoiceRoom = () => {
     const channelName = `room-gifts-${roomId}`;
     const channel = supabase.channel(channelName + "-listener-" + Date.now())
       .on("broadcast", { event: "gift-sent" }, (payload) => {
-        const { emoji, giftName, senderName, amount } = payload.payload;
-        // Show burst for everyone
-        setGiftBurst({ emoji: emoji || "🎁", count: Math.min(Math.ceil(amount / 100), 30) });
+        const { emoji, imageUrl, amount } = payload.payload;
+        setGiftBurst({
+          emoji: emoji || "🎁",
+          count: Math.min(Math.ceil((amount || 100) / 100), 30),
+          imageUrl: imageUrl || null,
+        });
         setTimeout(() => setGiftBurst(null), 2500);
       })
       .subscribe();
@@ -448,14 +451,30 @@ const VoiceRoom = () => {
         </div>
       )}
 
-      {/* Multi-Gift Visual Burst */}
+      {/* Multi-Gift Visual Burst (uses designed image when available) */}
       <AnimatePresence>
         {giftBurst && (
           <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
+            {/* Centerpiece showcase of the designed gift */}
+            {giftBurst.imageUrl && (
+              <motion.div
+                initial={{ scale: 0.2, opacity: 0, y: 40 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 1.4, opacity: 0 }}
+                transition={{ type: "spring", damping: 14 }}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              >
+                <img
+                  src={giftBurst.imageUrl}
+                  alt="gift"
+                  className="w-40 h-40 object-contain drop-shadow-[0_0_30px_rgba(255,200,80,0.7)]"
+                />
+              </motion.div>
+            )}
             {Array.from({ length: Math.min(giftBurst.count * 3, 30) }).map((_, i) => (
-              <motion.span
+              <motion.div
                 key={i}
-                className="absolute text-4xl"
+                className="absolute"
                 initial={{
                   x: Math.random() * window.innerWidth,
                   y: window.innerHeight + 50,
@@ -470,8 +489,12 @@ const VoiceRoom = () => {
                 }}
                 transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5 }}
               >
-                {giftBurst.emoji}
-              </motion.span>
+                {giftBurst.imageUrl ? (
+                  <img src={giftBurst.imageUrl} alt="" className="w-12 h-12 object-contain" />
+                ) : (
+                  <span className="text-4xl">{giftBurst.emoji}</span>
+                )}
+              </motion.div>
             ))}
           </div>
         )}

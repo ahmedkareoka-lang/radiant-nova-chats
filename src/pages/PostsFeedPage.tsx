@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
 
 interface Post {
   id: string;
@@ -28,6 +29,7 @@ const PostsFeedPage = () => {
   const [posting, setPosting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { upload } = useMediaUpload();
 
   const fetchPosts = async (uid: string | null) => {
     const { data: postsData } = await supabase
@@ -101,11 +103,10 @@ const PostsFeedPage = () => {
     try {
       let imageUrl: string | null = null;
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const path = `posts/${userId}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("assets").upload(path, imageFile, { upsert: false });
-        if (upErr) throw upErr;
-        imageUrl = supabase.storage.from("assets").getPublicUrl(path).data.publicUrl;
+        const isGif = imageFile.type === "image/gif" || imageFile.name.toLowerCase().endsWith(".gif");
+        const url = await upload({ file: imageFile, fileType: isGif ? "gif" : "image", folder: "posts" });
+        if (!url) { setPosting(false); return; }
+        imageUrl = url;
       }
       const { error } = await supabase.from("posts").insert({
         user_id: userId,

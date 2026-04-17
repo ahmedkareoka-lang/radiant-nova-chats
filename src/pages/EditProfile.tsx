@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
 
 const COUNTRIES = [
   { code: "SA", name: "السعودية 🇸🇦" },
@@ -27,9 +28,9 @@ const EditProfile = () => {
   const [displayName, setDisplayName] = useState("");
   const [age, setAge] = useState("");
   const [countryCode, setCountryCode] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { upload, uploading } = useMediaUpload();
 
   useEffect(() => {
     const load = async () => {
@@ -50,18 +51,13 @@ const EditProfile = () => {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
     if (file.size > 2 * 1024 * 1024) { toast.error("حجم الصورة يجب أن يكون أقل من 2MB"); return; }
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop();
-      const path = `avatars/${profile.id}.${ext}`;
-      await supabase.storage.from("assets").upload(path, file, { upsert: true });
-      const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
-      const avatar_url = urlData.publicUrl + "?t=" + Date.now();
-      await supabase.from("profiles").update({ avatar_url }).eq("id", profile.id);
-      setProfile({ ...profile, avatar_url });
-      toast.success("تم تحديث الصورة! 📸");
-    } catch (err: any) { toast.error("فشل رفع الصورة"); }
-    finally { setUploading(false); }
+    const url = await upload({ file, folder: "avatars" });
+    if (!url) return;
+    const avatar_url = url + (url.includes("?") ? "&" : "?") + "t=" + Date.now();
+    const { error } = await supabase.from("profiles").update({ avatar_url }).eq("id", profile.id);
+    if (error) { toast.error("فشل تحديث الصورة"); return; }
+    setProfile({ ...profile, avatar_url });
+    toast.success("تم تحديث الصورة! 📸");
   };
 
   const handleSave = async () => {

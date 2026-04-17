@@ -14,6 +14,7 @@ import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
 import NovaDashboard from "@/components/NovaDashboard";
 import DualBadge from "@/components/DualBadge";
+import { useMyRoom } from "@/hooks/useMyRoom";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const Profile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { followersCount, followingCount } = useFollows(myId);
   const { unreadCount } = useNotifications();
+  const { myRoomId } = useMyRoom(myId);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -308,10 +310,13 @@ const Profile = () => {
 
           {/* Menu Rows */}
           <div className="rounded-2xl overflow-hidden border border-border/30 mb-4">
-            <button onClick={() => navigate("/create-room")} className="menu-row w-full">
+            <button
+              onClick={() => navigate(myRoomId ? `/voice-room?id=${myRoomId}` : "/create-room")}
+              className="menu-row w-full"
+            >
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold">غرفتي</span>
+                <span className="text-sm font-bold">{myRoomId ? "الدخول إلى غرفتي" : "إنشاء غرفة"}</span>
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Building2 className="w-4 h-4 text-primary" /></div>
               </div>
             </button>
