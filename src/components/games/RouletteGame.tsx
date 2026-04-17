@@ -23,8 +23,11 @@ const getColor = (n: number) => n === 0 ? "green" : RED_NUMBERS.includes(n) ? "r
 
 const BET_AMOUNTS = [50, 100, 500, 1000, 5000, 25000];
 
+const MAX_BETS = 3;
+
 const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
-  const [bet, setBet] = useState<BetType | null>(null);
+  // Allow up to 3 bets per round
+  const [bets, setBets] = useState<{ bet: BetType; amount: number }[]>([]);
   const [betAmount, setBetAmount] = useState(50);
   const [customBetInput, setCustomBetInput] = useState("");
   const [spinning, setSpinning] = useState(false);
@@ -36,6 +39,27 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
   const [balance, setBalance] = useState<number>(0);
   const spinDeg = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const totalStaked = bets.reduce((s, b) => s + b.amount, 0);
+  const betsLeft = MAX_BETS - bets.length;
+
+  const addBet = (bet: BetType) => {
+    if (phase !== "betting") return;
+    if (bets.length >= MAX_BETS) {
+      toast.error(`الحد الأقصى ${MAX_BETS} رهانات`);
+      return;
+    }
+    if (totalStaked + betAmount > balance) {
+      toast.error("رصيدك غير كافٍ!");
+      return;
+    }
+    setBets((prev) => [...prev, { bet, amount: betAmount }]);
+  };
+
+  const isBetActive = (b: BetType) =>
+    bets.some((x) =>
+      x.bet.type === b.type && JSON.stringify(x.bet) === JSON.stringify(b)
+    );
 
   useEffect(() => {
     if (!currentUserId) return;
