@@ -536,15 +536,22 @@ export type Database = {
           display_name: string
           entrance_audio_url: string | null
           entrance_video_url: string | null
+          equipped_chat_bubble: string | null
+          equipped_entrance_effect: string | null
           equipped_frame: string | null
+          equipped_name_style: string | null
           gender: string | null
           id: string
           is_agent: boolean
           is_boss: boolean
           is_host: boolean
           level: number
+          nova_p_expiry: string | null
+          nova_p_level: number
           phone: string | null
+          total_spend_gold: number
           user_id: string
+          vip_expiry: string | null
           vip_level: number
           wealth_level: number
           wealth_xp: number
@@ -562,15 +569,22 @@ export type Database = {
           display_name?: string
           entrance_audio_url?: string | null
           entrance_video_url?: string | null
+          equipped_chat_bubble?: string | null
+          equipped_entrance_effect?: string | null
           equipped_frame?: string | null
+          equipped_name_style?: string | null
           gender?: string | null
           id: string
           is_agent?: boolean
           is_boss?: boolean
           is_host?: boolean
           level?: number
+          nova_p_expiry?: string | null
+          nova_p_level?: number
           phone?: string | null
+          total_spend_gold?: number
           user_id: string
+          vip_expiry?: string | null
           vip_level?: number
           wealth_level?: number
           wealth_xp?: number
@@ -588,15 +602,22 @@ export type Database = {
           display_name?: string
           entrance_audio_url?: string | null
           entrance_video_url?: string | null
+          equipped_chat_bubble?: string | null
+          equipped_entrance_effect?: string | null
           equipped_frame?: string | null
+          equipped_name_style?: string | null
           gender?: string | null
           id?: string
           is_agent?: boolean
           is_boss?: boolean
           is_host?: boolean
           level?: number
+          nova_p_expiry?: string | null
+          nova_p_level?: number
           phone?: string | null
+          total_spend_gold?: number
           user_id?: string
+          vip_expiry?: string | null
           vip_level?: number
           wealth_level?: number
           wealth_xp?: number
@@ -974,6 +995,13 @@ export type Database = {
         Returns: undefined
       }
       generate_user_id: { Args: never; Returns: string }
+      get_nova_p_tier: {
+        Args: { gold_amount: number }
+        Returns: {
+          duration_days: number
+          level: number
+        }[]
+      }
       get_profile_safe_fields: {
         Args: { _profile_id: string }
         Returns: {
@@ -1003,10 +1031,12 @@ export type Database = {
         Returns: undefined
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
+      recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
       remove_agency_host: {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
       }
+      sweep_expired_perks: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "super_admin" | "user"
