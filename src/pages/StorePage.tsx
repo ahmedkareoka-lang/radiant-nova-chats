@@ -272,6 +272,15 @@ const StorePage = () => {
                         >
                           <Eye className="w-3 h-3" /> معاينة
                         </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* VIP exclusive items (grouped by tier) */}
           {[1, 2, 3, 4, 5, 6, 7].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "vip" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
