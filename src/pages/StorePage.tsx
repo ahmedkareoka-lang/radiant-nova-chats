@@ -305,6 +305,12 @@ const StorePage = () => {
                           <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                         </div>
                         {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                        <button
+                          onClick={() => setPreviewItem({ ...item, _tierType: "vip", _tier: tier })}
+                          className="w-full py-1.5 rounded-xl border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-amber-400/10 transition"
+                        >
+                          <Eye className="w-3 h-3" /> معاينة
+                        </button>
                       </div>
                     );
                   })}
