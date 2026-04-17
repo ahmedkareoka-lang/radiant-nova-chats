@@ -106,6 +106,9 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
       setSpinning(false);
       setPhase("result");
 
+      // Track daily task: games played
+      supabase.rpc("increment_daily_task", { _user_id: currentUserId, _task_type: "games", _amount: 1 });
+
       if (win > 0) {
         await supabase.rpc("add_diamonds_add_charisma", { _user_id: currentUserId, _diamond_amount: win, _xp_amount: Math.floor(win / 10) });
         setBalance(prev => prev + win);

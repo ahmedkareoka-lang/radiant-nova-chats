@@ -96,6 +96,9 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
 
       if (!choice || !currentUserId) return;
 
+      // Track daily task: games played
+      supabase.rpc("increment_daily_task", { _user_id: currentUserId, _task_type: "games", _amount: 1 });
+
       let win = 0;
       if (choice === r) {
         if (r === "tie") win = betAmount * 30;
