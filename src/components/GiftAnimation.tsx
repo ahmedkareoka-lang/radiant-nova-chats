@@ -37,7 +37,7 @@ interface GiftAnimationProps {
   receiverId?: string | null;
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
-  onMultiGiftSent?: (emoji: string, count: number) => void;
+  onMultiGiftSent?: (emoji: string, count: number, imageUrl?: string | null) => void;
   roomId?: string;
 }
 
@@ -171,7 +171,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       }
       if (allSuccess) {
         setBurst(true);
-        onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier);
+        onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
         broadcastGift(giftEmoji, gift.name, senderName, giftCost * selectedRecipients.size, undefined, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
@@ -179,7 +179,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       const success = await sendGift(senderId!, receiverId, gift.name, giftCost);
       if (success) {
         setBurst(true);
-        onMultiGiftSent?.(giftEmoji, multiplier);
+        onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
         broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
