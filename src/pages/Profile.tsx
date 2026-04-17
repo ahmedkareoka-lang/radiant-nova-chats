@@ -249,6 +249,9 @@ const Profile = () => {
                 totalGold={profile?.total_spend_gold || 0}
                 level={profile?.nova_p_level || 0}
                 expiry={profile?.nova_p_expiry || null}
+                userId={profile?.id}
+                equippedFrame={profile?.equipped_frame}
+                onEquipped={(frameKey) => setProfile({ ...profile, equipped_frame: frameKey })}
               />
             </div>
           )}

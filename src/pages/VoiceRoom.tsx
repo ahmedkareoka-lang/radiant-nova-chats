@@ -9,6 +9,7 @@ import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
 import VipBadge from "@/components/VipBadge";
+import DualBadge from "@/components/DualBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
 import { useWebRTC } from "@/hooks/useWebRTC";
@@ -794,9 +795,12 @@ const VoiceRoom = () => {
                     <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
                       {slot.profile?.display_name || "User"}
                     </span>
+                    <div className="flex justify-center mt-0.5">
+                      <DualBadge novaLevel={(slot.profile as any)?.nova_p_level || 0} vipLevel={slot.profile?.vip_level || 0} />
+                    </div>
                     {/* Support Counter for everyone */}
                     <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
-                    {(slot.profile?.vip_level || 0) > 0 && <VipBadge level={slot.profile!.vip_level} />}
+                    {(slot.profile?.vip_level || 0) > 0 && !((slot.profile as any)?.nova_p_level) && <VipBadge level={slot.profile!.vip_level} />}
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
                         hostId={slot.user_id}
@@ -882,6 +886,9 @@ const VoiceRoom = () => {
                     </motion.span>
                   ) : (
                     <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
+                      <span className="inline-flex items-center gap-1 align-middle mr-1">
+                        <DualBadge novaLevel={(msg.sender as any)?.nova_p_level || 0} vipLevel={msg.sender?.vip_level || 0} />
+                      </span>
                       <span className={`font-bold ${isBossMsg ? "boss-fire-text" : msg.sender?.vip_level && msg.sender.vip_level >= 5 ? "text-accent" : "text-primary"}`}>
                         {isBossMsg && "👑 "}
                         {msg.sender?.display_name || "User"}:{" "}
