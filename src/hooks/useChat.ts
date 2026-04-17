@@ -10,6 +10,7 @@ export interface Conversation {
     vip_level: number;
     is_boss: boolean;
     user_id: string;
+    nova_p_level: number;
   };
   last_message?: string;
   last_message_at?: string;
@@ -50,7 +51,7 @@ export const useConversations = () => {
       const otherId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, vip_level, is_boss, user_id")
+        .select("id, display_name, avatar_url, vip_level, is_boss, user_id, nova_p_level")
         .eq("id", otherId)
         .single();
 
@@ -64,7 +65,7 @@ export const useConversations = () => {
 
       enriched.push({
         id: conv.id,
-        other_user: profile || { id: otherId, display_name: "User", avatar_url: null, vip_level: 0, is_boss: false, user_id: "" },
+        other_user: profile || { id: otherId, display_name: "User", avatar_url: null, vip_level: 0, is_boss: false, user_id: "", nova_p_level: 0 },
         last_message: lastMsg?.content,
         last_message_at: lastMsg?.created_at,
         unread_count: 0,
