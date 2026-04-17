@@ -37,7 +37,7 @@ interface GiftAnimationProps {
   receiverId?: string | null;
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
-  onMultiGiftSent?: (emoji: string, count: number) => void;
+  onMultiGiftSent?: (emoji: string, count: number, imageUrl?: string | null) => void;
   roomId?: string;
 }
 
