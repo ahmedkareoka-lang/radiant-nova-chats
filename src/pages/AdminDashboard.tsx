@@ -385,6 +385,79 @@ const AdminDashboard = () => {
             </>
           )}
 
+          {/* NOVA P STATS TAB */}
+          {activeTab === "nova" && (
+            <div className="space-y-4">
+              <div className="card-nova p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="w-4 h-4 text-accent" />
+                  <h3 className="font-bold text-sm">إحصائيات NOVA P — توزيع المستويات</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {novaStats.filter(s => s.level >= 1).map(s => {
+                    const asset = NOVA_ASSETS.byLevel[s.level];
+                    return (
+                      <div key={s.level} className={`rounded-xl p-2 text-center bg-gradient-to-br ${asset?.gradient || ''} border border-white/20`}>
+                        <p className="text-[10px] font-bold opacity-80">👑 {s.label}</p>
+                        <p className="text-lg font-black">{s.count.toLocaleString()}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={novaStats.filter(s => s.level >= 1)} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+                        labelStyle={{ color: "hsl(var(--foreground))" }}
+                      />
+                      <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                        {novaStats.filter(s => s.level >= 1).map((s) => {
+                          const colors: Record<number, string> = {
+                            1: "hsl(280 90% 60%)",
+                            2: "hsl(200 90% 60%)",
+                            3: "hsl(180 90% 60%)",
+                            4: "hsl(20 90% 55%)",
+                            5: "hsl(320 90% 60%)",
+                            6: "hsl(45 95% 55%)",
+                          };
+                          return <Cell key={s.level} fill={colors[s.level] || "hsl(var(--primary))"} />;
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="card-nova p-4">
+                <h3 className="font-bold text-sm mb-3">ملخص</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">إجمالي مستخدمي NOVA P</span>
+                    <span className="font-black text-accent">
+                      {novaStats.filter(s => s.level >= 1).reduce((sum, s) => sum + s.count, 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">مستخدمون بدون NOVA P</span>
+                    <span className="font-bold">{(novaStats.find(s => s.level === 0)?.count || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">أعلى مستوى نشط (P5+P6)</span>
+                    <span className="font-black text-amber-400">
+                      {((novaStats.find(s => s.level === 5)?.count || 0) + (novaStats.find(s => s.level === 6)?.count || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={fetchNovaStats} className="w-full mt-3 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
+                  تحديث الإحصائيات
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* GIFTS TAB */}
           {activeTab === "gifts" && (
             <div className="space-y-4">
