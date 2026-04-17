@@ -955,6 +955,10 @@ export type Database = {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
       }
+      add_coins: {
+        Args: { _amount: number; _user_id: string }
+        Returns: undefined
+      }
       add_diamonds_add_charisma: {
         Args: { _diamond_amount: number; _user_id: string; _xp_amount: number }
         Returns: undefined

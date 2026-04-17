@@ -107,18 +107,20 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
-  // Broadcast gift to all room members via Realtime
-  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string) => {
+  // Broadcast gift to all room members via Realtime (use a stable shared channel)
+  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
     if (!roomId) return;
-    const channelName = `room-gifts-${roomId}`;
-    const channel = supabase.channel(channelName);
+    const channel = supabase.channel(`room-gifts-${roomId}`);
+    await channel.subscribe();
     await channel.send({
       type: "broadcast",
       event: "gift-sent",
       payload: {
         emoji: giftEmoji,
         giftName,
+        imageUrl: imageUrl || null,
         senderName,
+        recipientName: recipientName || receiverName || "",
         amount,
         timestamp: Date.now(),
       },
@@ -127,6 +129,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     // Big gift announcement (over 1000 coins)
     if (amount >= 1000) {
       const announceChannel = supabase.channel(`gift-announce-${roomId}`);
+      await announceChannel.subscribe();
       await announceChannel.send({
         type: "broadcast",
         event: "big-gift",
@@ -135,13 +138,14 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           receiverName: recipientName || receiverName || "مستخدم",
           giftName,
           giftEmoji,
+          imageUrl: imageUrl || null,
           amount,
         },
       });
-      supabase.removeChannel(announceChannel);
+      setTimeout(() => supabase.removeChannel(announceChannel), 1000);
     }
 
-    supabase.removeChannel(channel);
+    setTimeout(() => supabase.removeChannel(channel), 1000);
   };
 
   const handleSend = async () => {
@@ -150,6 +154,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const gift = gifts[selectedGift];
     const giftCost = gift.price * multiplier;
     const giftEmoji = gift.emoji || "🎁";
+    const giftImageUrl = gift.image_url || null;
 
     // Get sender name for broadcast
     let senderName = "مستخدم";
@@ -167,7 +172,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (allSuccess) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier);
-        broadcastGift(giftEmoji, gift.name, senderName, giftCost * selectedRecipients.size);
+        broadcastGift(giftEmoji, gift.name, senderName, giftCost * selectedRecipients.size, undefined, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     } else if (receiverId) {
@@ -175,7 +180,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (success) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, multiplier);
-        broadcastGift(giftEmoji, gift.name, senderName, giftCost);
+        broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     }

@@ -10,10 +10,9 @@ interface RouletteGameProps {
   currentUserId: string | null;
 }
 
-const NUMBERS = Array.from({ length: 37 }, (_, i) => i);
 const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 
-type BetType = 
+type BetType =
   | { type: "number"; value: number }
   | { type: "color"; value: "red" | "black" }
   | { type: "parity"; value: "even" | "odd" }
@@ -22,9 +21,11 @@ type BetType =
 const getColor = (n: number) => n === 0 ? "green" : RED_NUMBERS.includes(n) ? "red" : "black";
 
 const BET_AMOUNTS = [50, 100, 500, 1000, 5000, 25000];
+const MAX_BETS = 3;
 
 const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
-  const [bet, setBet] = useState<BetType | null>(null);
+  // Allow up to 3 bets per round
+  const [bets, setBets] = useState<{ bet: BetType; amount: number }[]>([]);
   const [betAmount, setBetAmount] = useState(50);
   const [customBetInput, setCustomBetInput] = useState("");
   const [spinning, setSpinning] = useState(false);
@@ -36,6 +37,25 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
   const [balance, setBalance] = useState<number>(0);
   const spinDeg = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const totalStaked = bets.reduce((s, b) => s + b.amount, 0);
+  const betsLeft = MAX_BETS - bets.length;
+
+  const addBet = (bet: BetType) => {
+    if (phase !== "betting") return;
+    if (bets.length >= MAX_BETS) {
+      toast.error(`الحد الأقصى ${MAX_BETS} رهانات`);
+      return;
+    }
+    if (totalStaked + betAmount > balance) {
+      toast.error("رصيدك غير كافٍ!");
+      return;
+    }
+    setBets((prev) => [...prev, { bet, amount: betAmount }]);
+  };
+
+  const isBetActive = (b: BetType) =>
+    bets.some((x) => JSON.stringify(x.bet) === JSON.stringify(b));
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -53,41 +73,43 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
       setTimer(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current!);
-          if (bet) spin();
+          if (bets.length > 0) spin();
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, roundNumber]);
 
-  const calculateWin = (r: number, b: BetType): number => {
-    if (b.type === "number" && b.value === r) return betAmount * 36;
-    if (b.type === "color" && r !== 0 && b.value === getColor(r)) return betAmount * 2;
-    if (b.type === "parity") {
-      if (r === 0) return 0;
-      const isEven = r % 2 === 0;
-      if ((b.value === "even" && isEven) || (b.value === "odd" && !isEven)) return betAmount * 2;
+  const calculateWin = (r: number): number => {
+    let total = 0;
+    for (const { bet: b, amount } of bets) {
+      if (b.type === "number" && b.value === r) total += amount * 36;
+      else if (b.type === "color" && r !== 0 && b.value === getColor(r)) total += amount * 2;
+      else if (b.type === "parity" && r !== 0) {
+        const isEven = r % 2 === 0;
+        if ((b.value === "even" && isEven) || (b.value === "odd" && !isEven)) total += amount * 2;
+      } else if (b.type === "range") {
+        if (r === 0 && b.value === "0") total += amount * 36;
+        else if (r !== 0 && b.value === "1-12" && r >= 1 && r <= 12) total += amount * 3;
+        else if (r !== 0 && b.value === "13-24" && r >= 13 && r <= 24) total += amount * 3;
+        else if (r !== 0 && b.value === "25-36" && r >= 25 && r <= 36) total += amount * 3;
+      }
     }
-    if (b.type === "range") {
-      if (r === 0) { return b.value === "0" ? betAmount * 36 : 0; }
-      if (b.value === "1-12" && r >= 1 && r <= 12) return betAmount * 3;
-      if (b.value === "13-24" && r >= 13 && r <= 24) return betAmount * 3;
-      if (b.value === "25-36" && r >= 25 && r <= 36) return betAmount * 3;
-    }
-    return 0;
+    return total;
   };
 
   const spin = async () => {
-    if (!bet || !currentUserId || spinning) return;
-    if (betAmount > balance) { toast.error("رصيدك غير كافٍ!"); return; }
+    if (bets.length === 0 || !currentUserId || spinning) return;
+    if (totalStaked > balance) { toast.error("رصيدك غير كافٍ!"); return; }
     if (timerRef.current) clearInterval(timerRef.current);
-    
-    const { error } = await supabase.rpc("deduct_coins", { _user_id: currentUserId, _amount: betAmount });
+
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: currentUserId, _amount: totalStaked });
     if (error) { toast.error("رصيدك غير كافٍ!"); return; }
 
-    setBalance(prev => prev - betAmount);
+    setBalance(prev => prev - totalStaked);
     setPhase("spinning");
     setSpinning(true);
     setResult(null);
@@ -101,7 +123,7 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
 
     setTimeout(async () => {
       setResult(r);
-      const win = calculateWin(r, bet);
+      const win = calculateWin(r);
       setWinAmount(win);
       setSpinning(false);
       setPhase("result");
@@ -110,15 +132,16 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
       supabase.rpc("increment_daily_task", { _user_id: currentUserId, _task_type: "games", _amount: 1 });
 
       if (win > 0) {
-        await supabase.rpc("add_diamonds_add_charisma", { _user_id: currentUserId, _diamond_amount: win, _xp_amount: Math.floor(win / 10) });
+        // Pay winnings in NOVA Coins (gold), not diamonds
+        await supabase.rpc("add_coins", { _user_id: currentUserId, _amount: win });
         setBalance(prev => prev + win);
-        toast.success(`🎉 فزت بـ ${win.toLocaleString()} عملة!`);
+        toast.success(`🎉 فزت بـ ${win.toLocaleString()} عملة ذهبية!`);
       }
     }, 4000);
   };
 
   const playAgain = () => {
-    setBet(null);
+    setBets([]);
     setResult(null);
     setWinAmount(null);
     setRoundNumber(prev => prev + 1);
@@ -154,10 +177,13 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
           <span className="font-black text-yellow-300 text-lg">{balance.toLocaleString()}</span>
         </div>
 
-        {/* Round counter */}
-        <div className="text-center mb-3">
-          <div className="inline-block px-6 py-1.5 rounded-full border border-purple-500/40 bg-purple-900/30">
-            <span className="text-sm font-bold text-purple-300">الجولة: {roundNumber}</span>
+        {/* Round counter & bets remaining */}
+        <div className="text-center mb-3 flex items-center justify-center gap-2">
+          <div className="inline-block px-4 py-1.5 rounded-full border border-purple-500/40 bg-purple-900/30">
+            <span className="text-xs font-bold text-purple-300">الجولة: {roundNumber}</span>
+          </div>
+          <div className="inline-block px-4 py-1.5 rounded-full border border-yellow-500/40 bg-yellow-900/30">
+            <span className="text-xs font-bold text-yellow-300">رهانات: {bets.length}/{MAX_BETS}</span>
           </div>
         </div>
 
@@ -205,7 +231,7 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
                 {" "}<span>{getColor(result) === "red" ? "🔴" : getColor(result) === "black" ? "⚫" : "🟢"}</span>
               </p>
               {winAmount !== null && winAmount > 0 && (
-                <p className="text-yellow-300 font-black text-2xl mt-1">+{winAmount.toLocaleString()} 💰</p>
+                <p className="text-yellow-300 font-black text-2xl mt-1">+{winAmount.toLocaleString()} 💰 ذهب</p>
               )}
               {winAmount === 0 && <p className="text-red-400 font-bold text-sm mt-1">خسرت هذه الجولة 😔</p>}
               <button onClick={playAgain} className="mt-3 px-8 py-3 rounded-full font-bold text-sm text-black"
@@ -216,9 +242,19 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
           )}
         </AnimatePresence>
 
-        {/* Betting board */}
+        {/* My bets summary */}
+        {phase === "betting" && bets.length > 0 && (
+          <div className="mb-3 p-2 rounded-xl bg-yellow-900/20 border border-yellow-500/30">
+            <p className="text-[10px] text-yellow-300 text-center">
+              رهاناتي ({bets.length}/{MAX_BETS}): مجموع {totalStaked.toLocaleString()} 💰
+            </p>
+          </div>
+        )}
+
+        {/* Betting board - clicking adds another bet (up to 3) */}
         {phase === "betting" && (
           <>
+            <p className="text-[10px] text-white/60 mb-1 text-center">اختر مبلغ ثم اضغط على رهانك ({MAX_BETS} رهانات كحد أقصى)</p>
             {/* Range bets */}
             <div className="grid grid-cols-4 gap-1.5 mb-2">
               {([
@@ -226,49 +262,42 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
                 { label: "1-12", value: "1-12" as const, multiplier: "x3" },
                 { label: "13-24", value: "13-24" as const, multiplier: "x3" },
                 { label: "25-36", value: "25-36" as const, multiplier: "x3" },
-              ]).map(item => (
-                <button key={item.value} onClick={() => setBet({ type: "range", value: item.value })}
-                  className={`py-3 rounded-xl text-center transition-all border ${
-                    bet?.type === "range" && bet.value === item.value
-                      ? "border-yellow-400 bg-yellow-600/30 scale-105 shadow-[0_0_15px_rgba(245,200,66,0.3)]"
-                      : "border-red-800/40 bg-red-900/30"
-                  }`}>
-                  <p className="text-lg font-black text-white">{item.label}</p>
-                  <p className="text-[9px] text-yellow-400/70 font-bold">{item.multiplier}</p>
-                </button>
-              ))}
+              ]).map(item => {
+                const b: BetType = { type: "range", value: item.value };
+                const active = isBetActive(b);
+                return (
+                  <button key={item.value} onClick={() => addBet(b)} disabled={bets.length >= MAX_BETS}
+                    className={`py-3 rounded-xl text-center transition-all border disabled:opacity-50 ${
+                      active
+                        ? "border-yellow-400 bg-yellow-600/30 scale-105 shadow-[0_0_15px_rgba(245,200,66,0.3)]"
+                        : "border-red-800/40 bg-red-900/30"
+                    }`}>
+                    <p className="text-lg font-black text-white">{item.label}</p>
+                    <p className="text-[9px] text-yellow-400/70 font-bold">{item.multiplier}</p>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Color & parity */}
             <div className="grid grid-cols-4 gap-1.5 mb-3">
-              <button onClick={() => setBet({ type: "color", value: "red" })}
-                className={`py-3 rounded-xl text-center transition-all border ${
-                  bet?.type === "color" && bet.value === "red" ? "border-red-400 bg-red-600/40 scale-105" : "border-red-800/40 bg-red-900/30"
-                }`}>
-                <p className="text-sm font-black text-red-400">أحمر</p>
-                <p className="text-[9px] text-yellow-400/70 font-bold">x2</p>
-              </button>
-              <button onClick={() => setBet({ type: "color", value: "black" })}
-                className={`py-3 rounded-xl text-center transition-all border ${
-                  bet?.type === "color" && bet.value === "black" ? "border-gray-400 bg-gray-600/40 scale-105" : "border-red-800/40 bg-red-900/30"
-                }`}>
-                <p className="text-sm font-black text-white">أسود</p>
-                <p className="text-[9px] text-yellow-400/70 font-bold">x2</p>
-              </button>
-              <button onClick={() => setBet({ type: "parity", value: "even" })}
-                className={`py-3 rounded-xl text-center transition-all border ${
-                  bet?.type === "parity" && bet.value === "even" ? "border-purple-400 bg-purple-600/40 scale-105" : "border-red-800/40 bg-red-900/30"
-                }`}>
-                <p className="text-sm font-black text-purple-300">زوجي</p>
-                <p className="text-[9px] text-yellow-400/70 font-bold">x2</p>
-              </button>
-              <button onClick={() => setBet({ type: "parity", value: "odd" })}
-                className={`py-3 rounded-xl text-center transition-all border ${
-                  bet?.type === "parity" && bet.value === "odd" ? "border-purple-400 bg-purple-600/40 scale-105" : "border-red-800/40 bg-red-900/30"
-                }`}>
-                <p className="text-sm font-black text-purple-300">فردي</p>
-                <p className="text-[9px] text-yellow-400/70 font-bold">x2</p>
-              </button>
+              {([
+                { b: { type: "color" as const, value: "red" as const }, label: "أحمر", color: "text-red-400", border: "border-red-400 bg-red-600/40" },
+                { b: { type: "color" as const, value: "black" as const }, label: "أسود", color: "text-white", border: "border-gray-400 bg-gray-600/40" },
+                { b: { type: "parity" as const, value: "even" as const }, label: "زوجي", color: "text-purple-300", border: "border-purple-400 bg-purple-600/40" },
+                { b: { type: "parity" as const, value: "odd" as const }, label: "فردي", color: "text-purple-300", border: "border-purple-400 bg-purple-600/40" },
+              ]).map((item, idx) => {
+                const active = isBetActive(item.b);
+                return (
+                  <button key={idx} onClick={() => addBet(item.b)} disabled={bets.length >= MAX_BETS}
+                    className={`py-3 rounded-xl text-center transition-all border disabled:opacity-50 ${
+                      active ? `${item.border} scale-105` : "border-red-800/40 bg-red-900/30"
+                    }`}>
+                    <p className={`text-sm font-black ${item.color}`}>{item.label}</p>
+                    <p className="text-[9px] text-yellow-400/70 font-bold">x2</p>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
@@ -301,21 +330,21 @@ const RouletteGame = ({ onClose, currentUserId }: RouletteGameProps) => {
                 تأكيد
               </button>
             </div>
-            <p className="text-[10px] text-white/40 mt-1 text-center">الرهان الحالي: {betAmount.toLocaleString()} 💰</p>
+            <p className="text-[10px] text-white/40 mt-1 text-center">المبلغ الحالي للرهان: {betAmount.toLocaleString()} 💰</p>
           </div>
         )}
 
         {/* Spin Button */}
         {phase === "betting" && (
-          <button onClick={spin} disabled={!bet || spinning || betAmount > balance}
+          <button onClick={spin} disabled={bets.length === 0 || spinning}
             className="w-full py-4 rounded-2xl font-black text-lg text-black disabled:opacity-40 flex items-center justify-center gap-2"
             style={{ background: "linear-gradient(135deg, #f5c842, #e6a817, #f5c842)", boxShadow: "0 0 30px rgba(245,200,66,0.4)" }}>
             {spinning ? (
               <><RotateCcw className="w-5 h-5 animate-spin" /> جارٍ الدوران...</>
-            ) : betAmount > balance ? (
-              "رصيد غير كافٍ"
+            ) : bets.length === 0 ? (
+              "ضع رهانك أولاً"
             ) : (
-              <>🎰 دوّر - {betAmount.toLocaleString()} <CurrencyIcon type="gold" size="sm" /></>
+              <>🎰 دوّر - {totalStaked.toLocaleString()} <CurrencyIcon type="gold" size="sm" /></>
             )}
           </button>
         )}

@@ -15,9 +15,9 @@ type Choice = "lion" | "tiger" | "tie";
 
 const TIMER_SECONDS = 15;
 const BET_AMOUNTS = [50, 100, 500, 1000, 5000, 25000];
+const MAX_BETS = 3;
 
-const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) => {
-  const [choice, setChoice] = useState<Choice | null>(null);
+const LionTigerGame = ({ onClose, currentUserId }: LionTigerGameProps) => {
   const [betAmount, setBetAmount] = useState(100);
   const [customBetInput, setCustomBetInput] = useState("");
   const [timer, setTimer] = useState(TIMER_SECONDS);
@@ -26,10 +26,14 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
   const [winAmount, setWinAmount] = useState(0);
   const [roundNumber, setRoundNumber] = useState(1);
   const [balance, setBalance] = useState(0);
-  const [myBet, setMyBet] = useState(0);
+  // Allow up to 3 bets per round, on same or different choices
+  const [myBets, setMyBets] = useState<{ choice: Choice; amount: number }[]>([]);
   const [totalBets, setTotalBets] = useState({ lion: 0, tie: 0, tiger: 0 });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasDeducted = useRef(false);
+
+  const totalStaked = myBets.reduce((s, b) => s + b.amount, 0);
+  const betsLeft = MAX_BETS - myBets.length;
 
   // Fetch balance
   useEffect(() => {
@@ -57,13 +61,21 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
       });
     }, 1000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, roundNumber]);
 
-  const handleChoice = (c: Choice) => {
+  const placeBet = (c: Choice) => {
     if (phase !== "betting") return;
-    setChoice(c);
-    setMyBet(betAmount);
-    setTotalBets(prev => ({ ...prev, [c]: prev[c] + betAmount }));
+    if (myBets.length >= MAX_BETS) {
+      toast.error(`الحد الأقصى ${MAX_BETS} رهانات في الجولة`);
+      return;
+    }
+    if (totalStaked + betAmount > balance) {
+      toast.error("رصيدك غير كافٍ!");
+      return;
+    }
+    setMyBets((prev) => [...prev, { choice: c, amount: betAmount }]);
+    setTotalBets((prev) => ({ ...prev, [c]: prev[c] + betAmount }));
   };
 
   const handleReveal = async () => {
@@ -71,17 +83,17 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
     if (intervalRef.current) clearInterval(intervalRef.current);
     setPhase("reveal");
 
-    // Deduct coins first if user placed a bet
-    if (choice && currentUserId && !hasDeducted.current) {
+    // Deduct total staked coins (sum of all my bets) once
+    if (myBets.length > 0 && currentUserId && !hasDeducted.current) {
       hasDeducted.current = true;
-      const { error } = await supabase.rpc("deduct_coins", { _user_id: currentUserId, _amount: betAmount });
+      const { error } = await supabase.rpc("deduct_coins", { _user_id: currentUserId, _amount: totalStaked });
       if (error) {
         toast.error("رصيدك غير كافٍ!");
         setPhase("betting");
         hasDeducted.current = false;
         return;
       }
-      setBalance(prev => prev - betAmount);
+      setBalance((prev) => prev - totalStaked);
     }
 
     const rand = Math.random();
@@ -94,35 +106,33 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
       setResult(r);
       setPhase("result");
 
-      if (!choice || !currentUserId) return;
+      if (myBets.length === 0 || !currentUserId) return;
 
       // Track daily task: games played
       supabase.rpc("increment_daily_task", { _user_id: currentUserId, _task_type: "games", _amount: 1 });
 
-      let win = 0;
-      if (choice === r) {
-        if (r === "tie") win = betAmount * 30;
-        else win = betAmount * 2;
+      // Sum winnings across all bets
+      let totalWin = 0;
+      for (const b of myBets) {
+        if (b.choice === r) {
+          totalWin += b.choice === "tie" ? b.amount * 30 : b.amount * 2;
+        }
       }
 
-      if (win > 0) {
-        await supabase.rpc("add_diamonds_add_charisma", {
-          _user_id: currentUserId,
-          _diamond_amount: win,
-          _xp_amount: Math.floor(win / 10),
-        });
-        setBalance(prev => prev + win);
-        toast.success(`🎉 فزت بـ ${win.toLocaleString()} عملة!`);
+      if (totalWin > 0) {
+        // Pay winnings in NOVA Coins (gold), not diamonds
+        await supabase.rpc("add_coins", { _user_id: currentUserId, _amount: totalWin });
+        setBalance((prev) => prev + totalWin);
+        toast.success(`🎉 فزت بـ ${totalWin.toLocaleString()} عملة ذهبية!`);
       }
-      setWinAmount(win);
+      setWinAmount(totalWin);
     }, 2000);
   };
 
   const playAgain = () => {
-    setChoice(null);
+    setMyBets([]);
     setResult(null);
     setWinAmount(0);
-    setMyBet(0);
     setTotalBets({ lion: 0, tie: 0, tiger: 0 });
     setRoundNumber((prev) => prev + 1);
     setPhase("betting");
@@ -137,6 +147,8 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
       toast.error("أدخل مبلغ صحيح (10 - 1,000,000)");
     }
   };
+
+  const myBetOn = (c: Choice) => myBets.filter((b) => b.choice === c).reduce((s, b) => s + b.amount, 0);
 
   return (
     <div className="w-full h-full overflow-auto">
@@ -155,10 +167,13 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
           <span className="font-black text-yellow-300 text-lg">{balance.toLocaleString()}</span>
         </div>
 
-        {/* Round counter */}
-        <div className="text-center mb-3">
-          <div className="inline-block px-6 py-1.5 rounded-full border border-purple-500/40 bg-purple-900/30">
-            <span className="text-sm font-bold text-purple-300">الجولة: {roundNumber}</span>
+        {/* Round counter & bets remaining */}
+        <div className="text-center mb-3 flex items-center justify-center gap-2">
+          <div className="inline-block px-4 py-1.5 rounded-full border border-purple-500/40 bg-purple-900/30">
+            <span className="text-xs font-bold text-purple-300">الجولة: {roundNumber}</span>
+          </div>
+          <div className="inline-block px-4 py-1.5 rounded-full border border-yellow-500/40 bg-yellow-900/30">
+            <span className="text-xs font-bold text-yellow-300">رهانات متبقية: {betsLeft}/{MAX_BETS}</span>
           </div>
         </div>
 
@@ -214,9 +229,9 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
               <p className="text-xl font-black text-white">
                 {result === "lion" ? "🦁 Lion فاز!" : result === "tiger" ? "🐯 Tiger فاز!" : "🤝 تعادل! X30"}
               </p>
-              {winAmount > 0 && <p className="text-2xl font-black text-yellow-300">+{winAmount.toLocaleString()} 💰</p>}
-              {winAmount === 0 && choice && <p className="text-sm text-red-400 font-bold">خسرت هذه الجولة 😔</p>}
-              {!choice && <p className="text-sm text-white/50">لم تراهن في هذه الجولة</p>}
+              {winAmount > 0 && <p className="text-2xl font-black text-yellow-300">+{winAmount.toLocaleString()} 💰 ذهب</p>}
+              {winAmount === 0 && myBets.length > 0 && <p className="text-sm text-red-400 font-bold">خسرت هذه الجولة 😔</p>}
+              {myBets.length === 0 && <p className="text-sm text-white/50">لم تراهن في هذه الجولة</p>}
               <button onClick={playAgain} className="px-8 py-3 rounded-2xl font-bold text-black"
                 style={{ background: "linear-gradient(135deg, #f5c842, #e6a817)" }}>
                 🔄 جولة جديدة
@@ -225,59 +240,56 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
           )}
         </AnimatePresence>
 
-        {/* Betting cards */}
+        {/* Betting cards - clicking adds another bet (up to 3) */}
         {phase === "betting" && (
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <button onClick={() => handleChoice("tiger")}
-              className={`rounded-xl p-3 text-center transition-all border-2 ${
-                choice === "tiger" ? "border-blue-400 scale-105" : "border-purple-500/30"
-              }`} style={{ background: "linear-gradient(180deg, #3b1f7a, #2d1560)" }}>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <span className="text-lg font-black text-blue-300">X 2</span>
-                <span className="text-xl">🐯</span>
-              </div>
-              <div className="text-[9px] text-purple-300/70 mb-1">إجمالي الرهانات</div>
-              <div className="text-sm font-bold text-white">{totalBets.tiger.toLocaleString()}</div>
-              <div className="mt-1 py-1 rounded-lg bg-purple-800/50 text-[10px] text-purple-300">
-                أنا: <span className="text-blue-300 font-bold">{choice === "tiger" ? myBet : 0}</span>
-              </div>
-            </button>
+            {(["tiger", "tie", "lion"] as Choice[]).map((c) => {
+              const config: Record<Choice, { bg: string; border: string; mult: string; emoji: string; text: string; mine: string }> = {
+                tiger: { bg: "linear-gradient(180deg, #3b1f7a, #2d1560)", border: "border-blue-400", mult: "X 2", emoji: "🐯", text: "text-blue-300", mine: "bg-purple-800/50 text-purple-300" },
+                tie:   { bg: "linear-gradient(180deg, #5a3f1a, #3d2a10)", border: "border-yellow-400", mult: "X 30", emoji: "🤝", text: "text-yellow-300", mine: "bg-yellow-900/50 text-yellow-300" },
+                lion:  { bg: "linear-gradient(180deg, #5a1f3a, #3d1028)", border: "border-red-400", mult: "X 2", emoji: "🦁", text: "text-red-300", mine: "bg-pink-900/50 text-pink-300" },
+              };
+              const cfg = config[c];
+              const myAmount = myBetOn(c);
+              const isSelected = myAmount > 0;
+              return (
+                <button
+                  key={c}
+                  onClick={() => placeBet(c)}
+                  disabled={myBets.length >= MAX_BETS}
+                  className={`rounded-xl p-3 text-center transition-all border-2 disabled:opacity-50 ${
+                    isSelected ? `${cfg.border} scale-105` : "border-purple-500/30"
+                  }`}
+                  style={{ background: cfg.bg }}
+                >
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <span className={`text-lg font-black ${cfg.text}`}>{cfg.mult}</span>
+                    <span className="text-xl">{cfg.emoji}</span>
+                  </div>
+                  <div className="text-[9px] text-white/60 mb-1">إجمالي الرهانات</div>
+                  <div className="text-sm font-bold text-white">{totalBets[c].toLocaleString()}</div>
+                  <div className={`mt-1 py-1 rounded-lg text-[10px] ${cfg.mine}`}>
+                    أنا: <span className="font-bold">{myAmount.toLocaleString()}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-            <button onClick={() => handleChoice("tie")}
-              className={`rounded-xl p-3 text-center transition-all border-2 ${
-                choice === "tie" ? "border-yellow-400 scale-105" : "border-yellow-500/30"
-              }`} style={{ background: "linear-gradient(180deg, #5a3f1a, #3d2a10)" }}>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <span className="text-lg font-black text-yellow-300">X 30</span>
-                <span className="text-xl">🤝</span>
-              </div>
-              <div className="text-[9px] text-yellow-300/70 mb-1">إجمالي الرهانات</div>
-              <div className="text-sm font-bold text-white">{totalBets.tie.toLocaleString()}</div>
-              <div className="mt-1 py-1 rounded-lg bg-yellow-900/50 text-[10px] text-yellow-300">
-                أنا: <span className="text-yellow-300 font-bold">{choice === "tie" ? myBet : 0}</span>
-              </div>
-            </button>
-
-            <button onClick={() => handleChoice("lion")}
-              className={`rounded-xl p-3 text-center transition-all border-2 ${
-                choice === "lion" ? "border-red-400 scale-105" : "border-pink-500/30"
-              }`} style={{ background: "linear-gradient(180deg, #5a1f3a, #3d1028)" }}>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <span className="text-lg font-black text-red-300">X 2</span>
-                <span className="text-xl">🦁</span>
-              </div>
-              <div className="text-[9px] text-pink-300/70 mb-1">إجمالي الرهانات</div>
-              <div className="text-sm font-bold text-white">{totalBets.lion.toLocaleString()}</div>
-              <div className="mt-1 py-1 rounded-lg bg-pink-900/50 text-[10px] text-pink-300">
-                أنا: <span className="text-red-300 font-bold">{choice === "lion" ? myBet : 0}</span>
-              </div>
-            </button>
+        {/* My bets summary */}
+        {phase === "betting" && myBets.length > 0 && (
+          <div className="mb-3 p-2 rounded-xl bg-yellow-900/20 border border-yellow-500/30">
+            <p className="text-[10px] text-yellow-300 text-center">
+              رهاناتي ({myBets.length}/{MAX_BETS}): مجموع {totalStaked.toLocaleString()} 💰
+            </p>
           </div>
         )}
 
         {/* Bet Amount Chips */}
         {phase === "betting" && (
           <div className="mb-3">
+            <p className="text-[10px] text-white/60 mb-1 text-center">اختر مبلغ ثم اضغط على رهانك ({MAX_BETS} رهانات كحد أقصى)</p>
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {BET_AMOUNTS.map((a) => (
                 <button key={a} onClick={() => setBetAmount(a)}
@@ -298,23 +310,22 @@ const LionTigerGame = ({ onClose, currentUserId, roomId }: LionTigerGameProps) =
                 تأكيد
               </button>
             </div>
-            <p className="text-[10px] text-white/40 mt-1 text-center">الرهان الحالي: {betAmount.toLocaleString()} 💰</p>
+            <p className="text-[10px] text-white/40 mt-1 text-center">المبلغ الحالي للرهان: {betAmount.toLocaleString()} 💰</p>
           </div>
         )}
 
-        {/* Confirm Bet */}
+        {/* Confirm / Reveal */}
         {phase === "betting" && (
-          <button onClick={handleReveal} disabled={!choice || betAmount > balance}
+          <button onClick={handleReveal} disabled={myBets.length === 0}
             className="w-full py-4 rounded-2xl font-black text-lg text-black disabled:opacity-40"
             style={{ background: "linear-gradient(135deg, #f5c842, #e6a817, #f5c842)", boxShadow: "0 0 30px rgba(245,200,66,0.4)" }}>
-            {!choice ? "اختر رهانك" : betAmount > balance ? "رصيد غير كافٍ" :
-              `راهن ${betAmount.toLocaleString()} على ${choice === "lion" ? "🦁" : choice === "tiger" ? "🐯" : "🤝"}`}
+            {myBets.length === 0 ? "ضع رهانك أولاً" : `كشف النتيجة (${myBets.length} رهان • ${totalStaked.toLocaleString()} 💰)`}
           </button>
         )}
 
         {/* Odds */}
         <div className="mt-4 p-2 rounded-xl bg-white/5 border border-white/10">
-          <p className="text-[10px] text-white/40 text-center">🦁 Lion: X2 | 🐯 Tiger: X2 | 🤝 Tie: X30</p>
+          <p className="text-[10px] text-white/40 text-center">🦁 Lion: X2 | 🐯 Tiger: X2 | 🤝 Tie: X30 | الفوز بالعملات الذهبية 💰</p>
         </div>
       </div>
     </div>

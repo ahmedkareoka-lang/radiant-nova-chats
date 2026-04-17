@@ -84,8 +84,13 @@ export const useRooms = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // Close any existing active rooms owned by this user
+    // Enforce one room per host: deactivate any existing active rooms first
     await supabase.from("rooms").update({ is_active: false }).eq("host_id", user.id).eq("is_active", true);
+    // Clean leftover memberships
+    const { data: oldRooms } = await supabase.from("rooms").select("id").eq("host_id", user.id).eq("is_active", false);
+    if (oldRooms && oldRooms.length > 0) {
+      await supabase.from("room_members").delete().in("room_id", oldRooms.map(r => r.id));
+    }
 
     const { data, error } = await supabase.from("rooms").insert({
       name,
@@ -97,7 +102,6 @@ export const useRooms = () => {
     }).select().single();
 
     if (!error && data) {
-      // Host auto-joins
       await supabase.from("room_members").insert({
         room_id: data.id,
         user_id: user.id,
