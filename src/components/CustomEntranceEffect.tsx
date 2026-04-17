@@ -45,48 +45,46 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
     return () => { supabase.removeChannel(channel); };
   }, [roomId, currentUserId]);
 
-  const playNext = useCallback(() => {
-    if (queue.length === 0) {
-      setCurrent(null);
-      return;
-    }
-    const next = queue[0];
-    setCurrent(next);
+  const playNext = useCallback((entry: EntranceEntry) => {
+    setCurrent(entry);
 
     // Broadcast to all room members
     channelRef.current?.send({
       type: "broadcast",
       event: "entrance-effect",
-      payload: next,
+      payload: entry,
     });
 
     // Play tier-based NOVA P entrance sound (P4 fire, P5 rainbow, P6 dragon)
-    if (!muteEntrance && next.novaLevel && next.novaLevel >= 4) {
-      playNovaEntranceSound(next.novaLevel);
+    if (!muteEntrance && entry.novaLevel && entry.novaLevel >= 4) {
+      playNovaEntranceSound(entry.novaLevel);
     }
 
     // Play custom audio (overrides/layers with tier sound)
-    if (next.audioUrl && !muteEntrance) {
+    if (entry.audioUrl && !muteEntrance) {
       try {
-        const audio = new Audio(next.audioUrl);
+        const audio = new Audio(entry.audioUrl);
         audio.volume = 0.6;
         audio.play().catch(() => {});
         audioRef.current = audio;
       } catch {}
     }
 
+    if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
-      onComplete(next.id);
+      setCurrent(null); // clear current so next can play
+      onComplete(entry.id); // remove from queue
     }, 4000);
-  }, [queue, muteEntrance, onComplete]);
+  }, [muteEntrance, onComplete]);
 
   useEffect(() => {
+    // Only start playing if nothing is currently shown and queue has items
     if (!current && queue.length > 0) {
-      playNext();
+      playNext(queue[0]);
     }
   }, [queue, current, playNext]);
 
