@@ -149,7 +149,7 @@ const VoiceRoom = () => {
     }
   }, [members, currentUserId]);
 
-  // Entrance banner + custom entrance effect queue for new members
+  // Entrance banner + entrance effect queue for ALL new members joining the room
   useEffect(() => {
     for (const m of members) {
       if (!seenMemberIds.current.has(m.user_id) && m.user_id !== currentUserId) {
@@ -164,23 +164,20 @@ const VoiceRoom = () => {
             charismaLevel: charismaLvl,
             effect,
           });
-          sendMessage(`🚪 ${m.profile.display_name} دخل الغرفة | 💰 ثروة Lv.${wealthLvl} | 💎 كاريزما Lv.${charismaLvl}`);
           setTimeout(() => setEntranceBanner(null), 4000);
 
-          // Queue custom entrance effect for NOVA P, video, or audio users
+          // Always queue an entrance effect for ANY new member (not just hosts/NOVA-P)
           const p = m.profile as any;
           const novaLvl = p.nova_p_level || 0;
-          if (p.entrance_video_url || p.entrance_audio_url || novaLvl > 0) {
-            setEntranceQueue(prev => [...prev, {
-              id: m.user_id,
-              displayName: m.profile!.display_name,
-              avatarUrl: m.profile!.avatar_url,
-              videoUrl: p.entrance_video_url || null,
-              audioUrl: p.entrance_audio_url || null,
-              novaLevel: novaLvl,
-              vipLevel: m.profile!.vip_level || 0,
-            }]);
-          }
+          setEntranceQueue(prev => [...prev, {
+            id: m.user_id + "-" + Date.now(),
+            displayName: m.profile!.display_name,
+            avatarUrl: m.profile!.avatar_url,
+            videoUrl: p.entrance_video_url || null,
+            audioUrl: p.entrance_audio_url || null,
+            novaLevel: novaLvl,
+            vipLevel: m.profile!.vip_level || 0,
+          }]);
         }
       }
     }
