@@ -256,11 +256,11 @@ const Profile = () => {
 
           {/* Icon Grid - 2 rows × 4 columns */}
           <div className="grid grid-cols-4 gap-3 mb-4">
-            <button className="icon-grid-btn">
+            <button onClick={() => navigate("/daily-tasks")} className="icon-grid-btn">
               <div className="w-11 h-11 rounded-2xl bg-pink-500/20 flex items-center justify-center"><Heart className="w-5 h-5 text-pink-400" /></div>
-              <span className="text-[10px] font-bold text-muted-foreground">العلاقة</span>
+              <span className="text-[10px] font-bold text-muted-foreground">المهام</span>
             </button>
-            <button onClick={() => navigate("/search")} className="icon-grid-btn">
+            <button onClick={() => navigate("/games")} className="icon-grid-btn">
               <div className="w-11 h-11 rounded-2xl bg-green-500/20 flex items-center justify-center"><TrendingUp className="w-5 h-5 text-green-400" /></div>
               <span className="text-[10px] font-bold text-muted-foreground">مستوى</span>
             </button>
