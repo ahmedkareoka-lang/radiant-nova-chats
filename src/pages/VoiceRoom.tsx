@@ -350,9 +350,9 @@ const VoiceRoom = () => {
     setShowSettings(false);
   };
 
-  // Gift burst callback (local sender)
+  // Gift burst callback (local sender) — uses the designed gift image when available
   const handleGiftBurst = (emoji: string, count: number, imageUrl?: string | null) => {
-    setGiftBurst({ emoji, count, imageUrl });
+    setGiftBurst({ emoji, count, imageUrl: imageUrl || null });
     setTimeout(() => setGiftBurst(null), 2500);
   };
 
