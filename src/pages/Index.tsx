@@ -25,6 +25,7 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState("حفلة");
   const [activeCountry, setActiveCountry] = useState("Hot 🔥");
   const [topRechargers, setTopRechargers] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -46,6 +47,22 @@ const Index = () => {
       setTopRechargers(data || []);
     };
     fetchTopRechargers();
+
+    const fetchBanners = async () => {
+      const { data } = await supabase
+        .from("banners")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      setBanners(data || []);
+    };
+    fetchBanners();
+
+    const channel = supabase
+      .channel("banners-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, () => fetchBanners())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
@@ -108,7 +125,22 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Country Filter Tags */}
+          {/* Admin Banners (live) */}
+          {banners.length > 0 && (
+            <div className="flex gap-3 overflow-x-auto pb-3 mb-3 scrollbar-none">
+              {banners.map((b) => (
+                <a
+                  key={b.id}
+                  href={b.link_url || "#"}
+                  onClick={(e) => { if (!b.link_url) e.preventDefault(); }}
+                  className="flex-shrink-0 w-72 h-28 rounded-2xl overflow-hidden bg-secondary"
+                >
+                  <img src={b.image_url} alt={b.title || "banner"} className="w-full h-full object-cover" />
+                </a>
+              ))}
+            </div>
+          )}
+
           <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-none">
             {countryFilters.map((filter) => (
               <button key={filter} onClick={() => setActiveCountry(filter)}

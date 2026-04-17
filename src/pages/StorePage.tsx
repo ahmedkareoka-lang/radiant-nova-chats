@@ -93,6 +93,16 @@ const StorePage = () => {
   const [pricing, setPricing] = useState<any>(null);
   const [ownedFrames, setOwnedFrames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminItems, setAdminItems] = useState<any[]>([]);
+
+  const fetchAdminItems = async () => {
+    const { data } = await supabase
+      .from("store_items")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    setAdminItems(data || []);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -107,9 +117,17 @@ const StorePage = () => {
 
       const { data: inv } = await supabase.from("inventory").select("item_name").eq("user_id", user.id).eq("item_type", "frame");
       setOwnedFrames((inv || []).map((i: any) => i.item_name));
+      await fetchAdminItems();
       setLoading(false);
     };
     load();
+
+    // Realtime: admin add/delete reflects instantly for everyone
+    const channel = supabase
+      .channel("store-items-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_items" }, () => fetchAdminItems())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const buyFrame = async (frame: typeof STORE_FRAMES[0]) => {
@@ -219,6 +237,29 @@ const StorePage = () => {
               );
             })}
           </div>
+
+          {adminItems.length > 0 && (
+            <>
+              <h2 className="font-bold text-sm pt-2">✨ عناصر إدارية</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {adminItems.map((item) => (
+                  <div key={item.id} className="card-nova p-4 text-center space-y-2">
+                    {item.image_url && (
+                      <div className="w-24 h-24 mx-auto">
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                    <p className="font-bold text-xs">{item.name}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{item.type}</p>
+                    <div className="flex items-center justify-center gap-1">
+                      <CurrencyIcon type="gold" size="xs" />
+                      <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           <button
             onClick={() => navigate("/top-up")}
