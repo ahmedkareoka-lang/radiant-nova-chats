@@ -7,6 +7,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import NovaSpinner from "@/components/NovaSpinner";
 import EmptyState from "@/components/EmptyState";
+import DualBadge from "@/components/DualBadge";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
@@ -98,11 +99,14 @@ const ChatPage = () => {
                 <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
               </div>
               <div className="flex-1 min-w-0 text-right">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-muted-foreground flex-shrink-0">
                     {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false }) : ""}
                   </span>
-                  <span className="font-bold text-sm">{conv.other_user.display_name}</span>
+                  <div className="flex items-center gap-1.5 min-w-0 justify-end">
+                    <DualBadge novaLevel={conv.other_user.nova_p_level || 0} vipLevel={conv.other_user.vip_level || 0} />
+                    <span className="font-bold text-sm truncate">{conv.other_user.display_name}</span>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground truncate text-right">{conv.last_message || "بدء المحادثة..."}</p>
               </div>
