@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import DualBadge from "@/components/DualBadge";
 import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 import framePurpleWings from "@/assets/frame-purple-wings.png";
 import frameRoyalCrown from "@/assets/frame-royal-crown.png";
@@ -94,6 +96,7 @@ const StorePage = () => {
   const [ownedFrames, setOwnedFrames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminItems, setAdminItems] = useState<any[]>([]);
+  const [previewItem, setPreviewItem] = useState<any>(null);
 
   const fetchAdminItems = async () => {
     const { data } = await supabase
@@ -263,6 +266,12 @@ const StorePage = () => {
                           <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                         </div>
                         {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                        <button
+                          onClick={() => setPreviewItem({ ...item, _tierType: "nova_p", _tier: tier })}
+                          className="w-full py-1.5 rounded-xl border border-purple-400/50 text-purple-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-purple-400/10 transition"
+                        >
+                          <Eye className="w-3 h-3" /> معاينة
+                        </button>
                       </div>
                     );
                   })}
@@ -296,6 +305,12 @@ const StorePage = () => {
                           <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                         </div>
                         {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                        <button
+                          onClick={() => setPreviewItem({ ...item, _tierType: "vip", _tier: tier })}
+                          className="w-full py-1.5 rounded-xl border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-amber-400/10 transition"
+                        >
+                          <Eye className="w-3 h-3" /> معاينة
+                        </button>
                       </div>
                     );
                   })}
@@ -337,6 +352,62 @@ const StorePage = () => {
         </main>
 
         <BottomNav />
+
+        {/* Preview modal */}
+        <Dialog open={!!previewItem} onOpenChange={(o) => !o && setPreviewItem(null)}>
+          <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border">
+            <DialogHeader>
+              <DialogTitle className="text-center">معاينة على الملف الشخصي</DialogTitle>
+              <DialogDescription className="text-center text-xs">
+                هكذا سيظهر هذا العنصر على بروفايلك بعد الشراء
+              </DialogDescription>
+            </DialogHeader>
+            {previewItem && (
+              <div className="space-y-4 py-2">
+                {/* Mock profile card */}
+                <div className="card-nova p-5 text-center space-y-3">
+                  <div className="relative w-28 h-28 mx-auto">
+                    {/* Frame layer (if frame type) */}
+                    {previewItem.type === "frame" && previewItem.image_url && (
+                      <img
+                        src={previewItem.image_url}
+                        alt="frame"
+                        className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none"
+                      />
+                    )}
+                    <img
+                      src={profile?.avatar_url || "/placeholder.svg"}
+                      alt="avatar"
+                      className="w-full h-full rounded-full object-cover border-2 border-primary/40"
+                    />
+                  </div>
+                  <p className="font-bold text-base">{profile?.display_name || "أنت"}</p>
+                  <div className="flex justify-center">
+                    <DualBadge
+                      novaLevel={previewItem._tierType === "nova_p" ? previewItem._tier : (profile?.nova_p_level || 0)}
+                      vipLevel={previewItem._tierType === "vip" ? previewItem._tier : (profile?.vip_level || 0)}
+                      size="md"
+                      luxury
+                    />
+                  </div>
+                  {/* Badge / entrance / other type preview */}
+                  {previewItem.type !== "frame" && previewItem.image_url && (
+                    <div className="flex justify-center">
+                      <img src={previewItem.image_url} alt={previewItem.name} className="w-20 h-20 object-contain" />
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">{previewItem.name}</p>
+                </div>
+
+                <div className="text-center text-[11px] text-muted-foreground">
+                  {previewItem._tierType === "nova_p"
+                    ? `🔒 يتطلب NOVA P${previewItem._tier}+ لفتح هذا العنصر`
+                    : `🔒 يتطلب VIP ${previewItem._tier}+ لفتح هذا العنصر`}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </PageTransition>
   );
