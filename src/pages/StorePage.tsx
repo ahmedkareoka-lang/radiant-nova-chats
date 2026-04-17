@@ -93,6 +93,16 @@ const StorePage = () => {
   const [pricing, setPricing] = useState<any>(null);
   const [ownedFrames, setOwnedFrames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminItems, setAdminItems] = useState<any[]>([]);
+
+  const fetchAdminItems = async () => {
+    const { data } = await supabase
+      .from("store_items")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    setAdminItems(data || []);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -107,9 +117,17 @@ const StorePage = () => {
 
       const { data: inv } = await supabase.from("inventory").select("item_name").eq("user_id", user.id).eq("item_type", "frame");
       setOwnedFrames((inv || []).map((i: any) => i.item_name));
+      await fetchAdminItems();
       setLoading(false);
     };
     load();
+
+    // Realtime: admin add/delete reflects instantly for everyone
+    const channel = supabase
+      .channel("store-items-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_items" }, () => fetchAdminItems())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const buyFrame = async (frame: typeof STORE_FRAMES[0]) => {
