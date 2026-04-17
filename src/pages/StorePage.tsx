@@ -352,6 +352,62 @@ const StorePage = () => {
         </main>
 
         <BottomNav />
+
+        {/* Preview modal */}
+        <Dialog open={!!previewItem} onOpenChange={(o) => !o && setPreviewItem(null)}>
+          <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border">
+            <DialogHeader>
+              <DialogTitle className="text-center">معاينة على الملف الشخصي</DialogTitle>
+              <DialogDescription className="text-center text-xs">
+                هكذا سيظهر هذا العنصر على بروفايلك بعد الشراء
+              </DialogDescription>
+            </DialogHeader>
+            {previewItem && (
+              <div className="space-y-4 py-2">
+                {/* Mock profile card */}
+                <div className="card-nova p-5 text-center space-y-3">
+                  <div className="relative w-28 h-28 mx-auto">
+                    {/* Frame layer (if frame type) */}
+                    {previewItem.type === "frame" && previewItem.image_url && (
+                      <img
+                        src={previewItem.image_url}
+                        alt="frame"
+                        className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none"
+                      />
+                    )}
+                    <img
+                      src={profile?.avatar_url || "/placeholder.svg"}
+                      alt="avatar"
+                      className="w-full h-full rounded-full object-cover border-2 border-primary/40"
+                    />
+                  </div>
+                  <p className="font-bold text-base">{profile?.display_name || "أنت"}</p>
+                  <div className="flex justify-center">
+                    <DualBadge
+                      novaLevel={previewItem._tierType === "nova_p" ? previewItem._tier : (profile?.nova_p_level || 0)}
+                      vipLevel={previewItem._tierType === "vip" ? previewItem._tier : (profile?.vip_level || 0)}
+                      size="md"
+                      luxury
+                    />
+                  </div>
+                  {/* Badge / entrance / other type preview */}
+                  {previewItem.type !== "frame" && previewItem.image_url && (
+                    <div className="flex justify-center">
+                      <img src={previewItem.image_url} alt={previewItem.name} className="w-20 h-20 object-contain" />
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">{previewItem.name}</p>
+                </div>
+
+                <div className="text-center text-[11px] text-muted-foreground">
+                  {previewItem._tierType === "nova_p"
+                    ? `🔒 يتطلب NOVA P${previewItem._tier}+ لفتح هذا العنصر`
+                    : `🔒 يتطلب VIP ${previewItem._tier}+ لفتح هذا العنصر`}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </PageTransition>
   );
