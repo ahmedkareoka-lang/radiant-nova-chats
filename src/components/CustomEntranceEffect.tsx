@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { getNovaAsset } from "@/lib/novaAssets";
 
 interface EntranceEntry {
   id: string;
@@ -8,6 +9,8 @@ interface EntranceEntry {
   avatarUrl: string | null;
   videoUrl: string | null;
   audioUrl: string | null;
+  novaLevel?: number;
+  vipLevel?: number;
 }
 
 interface CustomEntranceEffectProps {
@@ -100,6 +103,7 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
   }, [remoteEntrance, muteEntrance]);
 
   const activeEntry = current || remoteEntrance;
+  const novaAsset = activeEntry?.novaLevel ? getNovaAsset(activeEntry.novaLevel) : null;
 
   return (
     <AnimatePresence>
@@ -112,7 +116,7 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
         >
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className={`absolute inset-0 backdrop-blur-sm ${novaAsset ? `bg-gradient-to-br ${novaAsset.gradient}` : 'bg-background/60'}`} />
 
           <div className="relative z-10 flex flex-col items-center gap-4">
             {activeEntry.videoUrl ? (
@@ -134,19 +138,27 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
                 <motion.div
                   animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 rounded-full bg-primary/30 blur-xl"
+                  className={`absolute inset-0 rounded-full ${novaAsset ? 'bg-accent/40' : 'bg-primary/30'} blur-xl`}
                   style={{ width: 160, height: 160, margin: -20 }}
                 />
                 <motion.div
                   animate={{ scale: [1, 2.2, 1], opacity: [0.4, 0, 0.4] }}
                   transition={{ duration: 2.5, repeat: Infinity, delay: 0.3 }}
-                  className="absolute inset-0 rounded-full bg-accent/20 blur-2xl"
+                  className={`absolute inset-0 rounded-full ${novaAsset ? 'bg-primary/30' : 'bg-accent/20'} blur-2xl`}
                   style={{ width: 180, height: 180, margin: -30 }}
                 />
+                {/* NOVA P frame around avatar */}
+                {novaAsset && (
+                  <img
+                    src={novaAsset.frame}
+                    alt="nova-frame"
+                    className="absolute -inset-6 w-[calc(100%+48px)] h-[calc(100%+48px)] object-contain z-10 pointer-events-none"
+                  />
+                )}
                 <img
                   src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
                   alt=""
-                  className="w-28 h-28 rounded-full object-cover ring-4 ring-primary shadow-[0_0_40px_rgba(var(--primary),0.5)]"
+                  className={`w-28 h-28 rounded-full object-cover ring-4 ${novaAsset ? 'ring-accent shadow-[0_0_60px_hsl(var(--accent)/0.6)]' : 'ring-primary shadow-[0_0_40px_rgba(var(--primary),0.5)]'}`}
                 />
               </motion.div>
             )}
@@ -157,6 +169,16 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
               transition={{ delay: 0.5 }}
               className="text-center"
             >
+              {novaAsset && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className={`inline-block px-4 py-1 mb-2 rounded-full bg-gradient-to-r ${novaAsset.gradient} border border-white/30 ${novaAsset.borderGlow} text-xs font-black`}
+                >
+                  👑 NOVA {novaAsset.label}
+                </motion.div>
+              )}
               <p className="text-2xl font-black glow-neon-text">{activeEntry.displayName}</p>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -172,7 +194,7 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
               {Array.from({ length: 12 }).map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-2 h-2 rounded-full bg-accent"
+                  className={`absolute w-2 h-2 rounded-full ${novaAsset ? 'bg-accent' : 'bg-accent'}`}
                   initial={{ x: 0, y: 0, opacity: 0 }}
                   animate={{
                     x: Math.cos((i / 12) * Math.PI * 2) * 120,

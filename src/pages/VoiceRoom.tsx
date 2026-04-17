@@ -89,7 +89,7 @@ const VoiceRoom = () => {
     charismaLevel: number;
     effect: typeof ENTRANCE_EFFECTS[0];
   } | null>(null);
-  const [entranceQueue, setEntranceQueue] = useState<{ id: string; displayName: string; avatarUrl: string | null; videoUrl: string | null; audioUrl: string | null }[]>([]);
+  const [entranceQueue, setEntranceQueue] = useState<{ id: string; displayName: string; avatarUrl: string | null; videoUrl: string | null; audioUrl: string | null; novaLevel?: number; vipLevel?: number }[]>([]);
   const [muteEntrance, setMuteEntrance] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
@@ -167,15 +167,18 @@ const VoiceRoom = () => {
           sendMessage(`🚪 ${m.profile.display_name} دخل الغرفة | 💰 ثروة Lv.${wealthLvl} | 💎 كاريزما Lv.${charismaLvl}`);
           setTimeout(() => setEntranceBanner(null), 4000);
 
-          // Queue custom entrance effect if user has video or audio
+          // Queue custom entrance effect for NOVA P, video, or audio users
           const p = m.profile as any;
-          if (p.entrance_video_url || p.entrance_audio_url) {
+          const novaLvl = p.nova_p_level || 0;
+          if (p.entrance_video_url || p.entrance_audio_url || novaLvl > 0) {
             setEntranceQueue(prev => [...prev, {
               id: m.user_id,
               displayName: m.profile!.display_name,
               avatarUrl: m.profile!.avatar_url,
               videoUrl: p.entrance_video_url || null,
               audioUrl: p.entrance_audio_url || null,
+              novaLevel: novaLvl,
+              vipLevel: m.profile!.vip_level || 0,
             }]);
           }
         }
