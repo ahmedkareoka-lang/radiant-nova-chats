@@ -238,6 +238,29 @@ const StorePage = () => {
             })}
           </div>
 
+          {adminItems.length > 0 && (
+            <>
+              <h2 className="font-bold text-sm pt-2">✨ عناصر إدارية</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {adminItems.map((item) => (
+                  <div key={item.id} className="card-nova p-4 text-center space-y-2">
+                    {item.image_url && (
+                      <div className="w-24 h-24 mx-auto">
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                    <p className="font-bold text-xs">{item.name}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{item.type}</p>
+                    <div className="flex items-center justify-center gap-1">
+                      <CurrencyIcon type="gold" size="xs" />
+                      <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           <button
             onClick={() => navigate("/top-up")}
             className="w-full py-3 rounded-full border border-accent/50 text-accent font-bold text-sm btn-nova flex items-center justify-center gap-2"
