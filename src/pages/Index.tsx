@@ -25,6 +25,7 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState("حفلة");
   const [activeCountry, setActiveCountry] = useState("Hot 🔥");
   const [topRechargers, setTopRechargers] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
