@@ -60,7 +60,12 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       payload: next,
     });
 
-    // Play audio
+    // Play tier-based NOVA P entrance sound (P4 fire, P5 rainbow, P6 dragon)
+    if (!muteEntrance && next.novaLevel && next.novaLevel >= 4) {
+      playNovaEntranceSound(next.novaLevel);
+    }
+
+    // Play custom audio (overrides/layers with tier sound)
     if (next.audioUrl && !muteEntrance) {
       try {
         const audio = new Audio(next.audioUrl);
@@ -94,7 +99,11 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
 
   // Play audio for remote entrances too
   useEffect(() => {
-    if (remoteEntrance?.audioUrl && !muteEntrance) {
+    if (!remoteEntrance || muteEntrance) return;
+    if (remoteEntrance.novaLevel && remoteEntrance.novaLevel >= 4) {
+      playNovaEntranceSound(remoteEntrance.novaLevel);
+    }
+    if (remoteEntrance.audioUrl) {
       try {
         const a = new Audio(remoteEntrance.audioUrl);
         a.volume = 0.6;
