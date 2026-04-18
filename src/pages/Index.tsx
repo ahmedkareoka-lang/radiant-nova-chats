@@ -8,6 +8,7 @@ import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import BannerCarousel from "@/components/BannerCarousel";
 import { useRooms } from "@/hooks/useRooms";
+import { useMyRoom } from "@/hooks/useMyRoom";
 import { usePresence } from "@/hooks/usePresence";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,20 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState("hot");
   const [topRechargers, setTopRechargers] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const { myRoomId, loading: myRoomLoading } = useMyRoom(profile?.id ?? null);
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "private") {
+      if (myRoomLoading) return;
+      if (myRoomId) {
+        navigate(`/voice-room?id=${myRoomId}`);
+      } else {
+        navigate("/create-room");
+      }
+      return;
+    }
+    setActiveTab(tabId);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -151,7 +166,7 @@ const Index = () => {
               {TOP_TABS.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`relative text-sm font-black transition-all ${activeTab === tab.id ? "text-foreground" : "text-muted-foreground/60"}`}
                 >
                   {tab.label}
