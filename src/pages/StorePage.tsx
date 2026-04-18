@@ -348,7 +348,7 @@ const StorePage = () => {
             );
           })}
 
-          {/* Generic admin store items (Entrance / Badges / etc.) */}
+          {/* Generic admin store items (Entrance / Badges / etc.) — anyone can buy */}
           {adminItems.filter((it) => (it.tier_type || "none") === "none").length > 0 && (
             <>
               <h2 className="font-bold text-sm pt-2">✨ عناصر المتجر</h2>
@@ -366,6 +366,12 @@ const StorePage = () => {
                       <CurrencyIcon type="gold" size="xs" />
                       <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                     </div>
+                    <button
+                      onClick={() => buyAdminItem(item)}
+                      className="w-full py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold btn-nova"
+                    >
+                      شراء
+                    </button>
                   </div>
                 ))}
               </div>
