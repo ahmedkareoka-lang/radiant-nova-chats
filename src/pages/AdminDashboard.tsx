@@ -416,16 +416,12 @@ const AdminDashboard = () => {
             <Upload className="w-3.5 h-3.5" /> استيراد جماعي (JSON)
           </h3>
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            الصق مصفوفة من العناصر. مثال:
-            <code className="block mt-1 bg-secondary/50 rounded p-1.5 text-[9px] font-mono whitespace-pre overflow-x-auto" dir="ltr">{`[
-  {"name":"Gold Frame","type":"frame","price_coins":5000,"image_url":"https://...","tier_required":${defaultTierType === "none" ? 0 : 3}},
-  {"name":"VIP Badge","type":"badge","price_coins":2000,"image_url":"https://..."}
-]`}</code>
+            الصق مصفوفة من العناصر. الحقول: name, type (frame/badge/entrance/bubble/name_style/vehicle), price_coins, image_url, tier_required.
           </p>
           <textarea
             value={bulkJson}
             onChange={(e) => setBulkJson(e.target.value)}
-            placeholder='[{"name":"...","type":"frame","price_coins":1000,"image_url":"https://..."}]'
+            placeholder='[{"name":"Gold Frame","type":"frame","price_coins":5000,"image_url":"https://...","tier_required":3}]'
             rows={5}
             className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-[10px] font-mono border border-border focus:outline-none"
             dir="ltr"
@@ -435,10 +431,12 @@ const AdminDashboard = () => {
             disabled={bulkImporting}
             className="w-full py-2 rounded-xl gradient-gold text-accent-foreground font-bold text-xs"
           >
-            {bulkImporting ? "جارٍ الاستيراد..." : `استيراد إلى ${title.split(" ")[2] || "المتجر"}`}
+            {bulkImporting ? "جارٍ الاستيراد..." : "استيراد جماعي"}
           </button>
         </div>
 
+        <div className="space-y-2">
+          {filteredItems.map(s => (
             <div key={s.id} className="card-nova p-3 flex items-center gap-3">
               {s.image_url ? <img src={s.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
               <div className="flex-1">
