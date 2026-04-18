@@ -166,7 +166,7 @@ const Index = () => {
               {TOP_TABS.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`relative text-sm font-black transition-all ${activeTab === tab.id ? "text-foreground" : "text-muted-foreground/60"}`}
                 >
                   {tab.label}
