@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, Phone, MessageCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const packages = [
   { price: 50, coins: 7000, diamonds: 5000, bonus: 0 },
