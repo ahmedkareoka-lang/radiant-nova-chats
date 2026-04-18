@@ -13,6 +13,7 @@ const InventoryPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
+  const [equippedBadge, setEquippedBadge] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
 
   useEffect(() => {
@@ -20,8 +21,9 @@ const InventoryPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const { data: prof } = await supabase.from("profiles").select("equipped_frame").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("equipped_frame, equipped_badge").eq("id", user.id).single();
       setEquippedFrame(prof?.equipped_frame || null);
+      setEquippedBadge((prof as any)?.equipped_badge || null);
       const { data } = await supabase.from("inventory").select("*").eq("user_id", user.id).order("acquired_at", { ascending: false });
       setItems(data || []);
       setLoading(false);
@@ -33,6 +35,12 @@ const InventoryPage = () => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", userId);
     setEquippedFrame(frameUrl);
     toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+  };
+
+  const equipBadge = async (badgeName: string | null) => {
+    await supabase.from("profiles").update({ equipped_badge: badgeName } as any).eq("id", userId);
+    setEquippedBadge(badgeName);
+    toast.success(badgeName ? "تم تفعيل الشارة! 🏅" : "تم إزالة الشارة");
   };
 
   const tabs = [
