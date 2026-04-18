@@ -306,11 +306,10 @@ const StorePage = () => {
             );
           })}
 
-          {/* VIP exclusive items (grouped by tier) */}
+          {/* VIP items (grouped by tier) — anyone can buy */}
           {[1, 2, 3, 4, 5, 6, 7].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "vip" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
-            const userTier = profile?.vip_level || 0;
             return (
               <div key={`vip-${tier}`} className="space-y-2">
                 <h2 className="font-bold text-sm flex items-center gap-2 text-amber-300">
