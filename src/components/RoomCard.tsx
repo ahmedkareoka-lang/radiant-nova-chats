@@ -1,5 +1,10 @@
-import { Users, MessageCircle } from "lucide-react";
+import { Users, Flame } from "lucide-react";
 import DualBadge from "./DualBadge";
+
+interface MicPreview {
+  user_id: string;
+  profiles?: { avatar_url: string | null; display_name: string } | null;
+}
 
 interface RoomCardProps {
   name: string;
@@ -12,6 +17,9 @@ interface RoomCardProps {
   countryCode?: string;
   hostNovaLevel?: number;
   hostVipLevel?: number;
+  micPreviews?: MicPreview[];
+  isHot?: boolean;
+  roomImage?: string | null;
 }
 
 const COVER_GRADIENTS: Record<string, string> = {
@@ -21,60 +29,97 @@ const COVER_GRADIENTS: Record<string, string> = {
   VIP: "linear-gradient(135deg, hsl(45 80% 30%), hsl(30 70% 25%))",
 };
 
-const RoomCard = ({ name, hostName, hostImage, viewerCount, isVip, category, onClick, countryCode, hostNovaLevel = 0, hostVipLevel = 0 }: RoomCardProps) => {
+const RoomCard = ({
+  name,
+  hostName,
+  hostImage,
+  viewerCount,
+  isVip,
+  category,
+  onClick,
+  countryCode,
+  hostNovaLevel = 0,
+  hostVipLevel = 0,
+  micPreviews = [],
+  isHot = false,
+  roomImage,
+}: RoomCardProps) => {
   return (
     <div
       onClick={onClick}
-      className={`room-cover-card ${isVip ? "room-cover-vip" : "room-cover-normal"}`}
-      style={{ background: COVER_GRADIENTS[category] || COVER_GRADIENTS.Chat }}
+      className={`room-cover-card ${isVip ? "room-cover-vip" : "room-cover-normal"} ${isHot ? "ring-2 ring-accent/70 shadow-[0_0_20px_hsl(45_100%_55%/0.4)]" : ""}`}
+      style={
+        roomImage
+          ? { backgroundImage: `url(${roomImage})`, backgroundSize: "cover", backgroundPosition: "center" }
+          : { background: COVER_GRADIENTS[category] || COVER_GRADIENTS.Chat }
+      }
     >
-      {/* Background overlay pattern */}
-      <div className="absolute inset-0 opacity-20"
-        style={{ backgroundImage: "radial-gradient(circle at 30% 50%, hsl(270 100% 65% / 0.3), transparent 60%)" }} />
-      
-      {/* Chat badge */}
-      <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-background/40 backdrop-blur rounded-full px-2 py-0.5">
-        <MessageCircle className="w-3 h-3 text-foreground/70" />
-        <span className="text-[10px] text-foreground/80">محادثة</span>
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent" />
+
+      {/* Soft accent glow */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{ backgroundImage: "radial-gradient(circle at 30% 30%, hsl(270 100% 65% / 0.4), transparent 60%)" }}
+      />
+
+      {/* LIVE badge top-left with pulse */}
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-destructive/90 backdrop-blur rounded-full px-1.5 py-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+        <span className="text-[9px] font-black text-white tracking-wide">LIVE</span>
       </div>
 
-      {/* Member count */}
-      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1">
-        <div className="flex items-center gap-1 bg-background/40 backdrop-blur rounded-full px-2 py-0.5">
-          <Users className="w-3 h-3 text-foreground/70" />
-          <span className="text-[10px] font-bold text-foreground/80">{viewerCount}</span>
-        </div>
-      </div>
-
-      {/* Room name and country */}
-      <div className="absolute bottom-3 right-3 z-10 text-right">
-        <p className="text-sm font-bold text-foreground drop-shadow-lg truncate max-w-[140px]">{name}</p>
-        <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
-          {(hostNovaLevel > 0 || hostVipLevel > 0) && (
-            <DualBadge novaLevel={hostNovaLevel} vipLevel={hostVipLevel} />
-          )}
-          {countryCode && (
-            <>
-              <span className="text-xs">🏳️</span>
-              <span className="text-[10px] text-foreground/70">{countryCode}</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Host avatar */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <div className={`w-16 h-16 rounded-full overflow-hidden ${isVip ? "ring-2 ring-gold glow-gold" : "ring-2 ring-primary/50"}`}>
-          <img src={hostImage} alt={hostName} className="w-full h-full object-cover" />
-        </div>
-      </div>
-
-      {/* VIP crown */}
-      {isVip && (
-        <div className="absolute top-2 right-2 z-10">
-          <span className="text-lg">👑</span>
+      {/* HOT badge top-right */}
+      {isHot && (
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-accent/90 backdrop-blur rounded-full px-1.5 py-0.5 animate-pulse">
+          <Flame className="w-2.5 h-2.5 text-accent-foreground" />
+          <span className="text-[9px] font-black text-accent-foreground">HOT</span>
         </div>
       )}
+
+      {/* Host avatar centered */}
+      <div className="absolute top-[34%] left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <div className={`w-14 h-14 rounded-full overflow-hidden ${isVip ? "ring-2 ring-accent glow-gold" : "ring-2 ring-primary/60"}`}>
+          <img src={hostImage} alt={hostName} className="w-full h-full object-cover" />
+        </div>
+        {isVip && <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-base">👑</div>}
+      </div>
+
+      {/* Mic preview avatars row (Soulmatch style) */}
+      {micPreviews.length > 0 && (
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex -space-x-1.5">
+          {micPreviews.slice(0, 3).map((m, i) => (
+            <div
+              key={m.user_id}
+              className="w-5 h-5 rounded-full ring-1 ring-background overflow-hidden bg-secondary"
+              style={{ zIndex: 3 - i }}
+            >
+              {m.profiles?.avatar_url ? (
+                <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/40 to-accent/40" />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Bottom info bar */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-2.5 py-2">
+        <p className="text-xs font-black text-foreground drop-shadow-lg truncate text-right mb-1">{name}</p>
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1 bg-background/50 backdrop-blur rounded-full px-1.5 py-0.5">
+            <Users className="w-2.5 h-2.5 text-foreground/80" />
+            <span className="text-[9px] font-bold text-foreground/90">{viewerCount}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {(hostNovaLevel > 0 || hostVipLevel > 0) && (
+              <DualBadge novaLevel={hostNovaLevel} vipLevel={hostVipLevel} />
+            )}
+            {countryCode && <span className="text-[10px]">🏳️</span>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
