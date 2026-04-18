@@ -292,6 +292,35 @@ const AdminDashboard = () => {
     await fetchStoreItems();
   };
 
+  // Bulk import store items from JSON
+  const handleBulkImport = async (defaultTierType: "none" | "nova_p" | "vip") => {
+    if (!bulkJson.trim()) { toast.error("الصق قائمة JSON أولاً"); return; }
+    let parsed: any;
+    try { parsed = JSON.parse(bulkJson); }
+    catch { toast.error("صيغة JSON غير صحيحة"); return; }
+    const items = Array.isArray(parsed) ? parsed : [parsed];
+    if (items.length === 0) { toast.error("القائمة فارغة"); return; }
+
+    setBulkImporting(true);
+    const rows = items.map((it: any) => ({
+      name: String(it.name || "بدون اسم"),
+      type: String(it.type || "frame"),
+      price_coins: parseInt(it.price_coins ?? it.price ?? 0) || 0,
+      price_diamonds: parseInt(it.price_diamonds ?? 0) || 0,
+      image_url: it.image_url || it.image || null,
+      tier_type: it.tier_type || defaultTierType,
+      tier_required: parseInt(it.tier_required ?? it.tier ?? 0) || 0,
+      data: it.data || {},
+    }));
+
+    const { error } = await supabase.from("store_items").insert(rows);
+    setBulkImporting(false);
+    if (error) { toast.error("فشل الاستيراد: " + error.message); return; }
+    toast.success(`تم استيراد ${rows.length} عنصر ✅`);
+    setBulkJson("");
+    await fetchStoreItems();
+  };
+
   // Banner management
   const handleAddBanner = async () => {
     const file = bannerFileRef.current?.files?.[0];
