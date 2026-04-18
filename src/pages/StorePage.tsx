@@ -94,6 +94,7 @@ const StorePage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [pricing, setPricing] = useState<any>(null);
   const [ownedFrames, setOwnedFrames] = useState<string[]>([]);
+  const [ownedItemNames, setOwnedItemNames] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [adminItems, setAdminItems] = useState<any[]>([]);
   const [previewItem, setPreviewItem] = useState<any>(null);
@@ -107,6 +108,15 @@ const StorePage = () => {
     setAdminItems(data || []);
   };
 
+  const refreshInventory = async (uid: string) => {
+    const { data: inv } = await supabase
+      .from("inventory")
+      .select("item_name,item_type")
+      .eq("user_id", uid);
+    setOwnedFrames((inv || []).filter((i: any) => i.item_type === "frame").map((i: any) => i.item_name));
+    setOwnedItemNames(new Set((inv || []).map((i: any) => i.item_name)));
+  };
+
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -118,8 +128,7 @@ const StorePage = () => {
       const { data: pr } = await supabase.from("pricing_plans").select("*").eq("country_code", countryCode).single();
       setPricing(pr || { currency: "USD", coin_price: 1, diamond_price: 2 });
 
-      const { data: inv } = await supabase.from("inventory").select("item_name").eq("user_id", user.id).eq("item_type", "frame");
-      setOwnedFrames((inv || []).map((i: any) => i.item_name));
+      await refreshInventory(user.id);
       await fetchAdminItems();
       setLoading(false);
     };
