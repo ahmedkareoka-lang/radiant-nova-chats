@@ -16,7 +16,6 @@ import { toast } from "sonner";
 
 const TOP_TABS = [
   { id: "party", label: "حفلة", emoji: "🎉" },
-  { id: "private", label: "خاصي", emoji: "💎" },
 ];
 
 const CATEGORIES = [
