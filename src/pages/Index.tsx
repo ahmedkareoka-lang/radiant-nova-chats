@@ -313,11 +313,12 @@ const Index = () => {
           </div>
         </main>
 
-        {/* Floating create button (Soulmatch style) */}
+        {/* Floating mic button — opens user's room or create flow */}
         <button
-          onClick={() => navigate("/create-room")}
-          className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full gradient-gold flex items-center justify-center shadow-[0_0_24px_hsl(45_100%_55%/0.6)] hover:scale-110 active:scale-95 transition-transform animate-pulse-glow"
-          aria-label="إنشاء غرفة"
+          onClick={handleMicButtonClick}
+          disabled={myRoomLoading}
+          className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full gradient-gold flex items-center justify-center shadow-[0_0_24px_hsl(45_100%_55%/0.6)] hover:scale-110 active:scale-95 transition-transform animate-pulse-glow disabled:opacity-60"
+          aria-label={myRoomId ? "غرفتي" : "إنشاء غرفة"}
         >
           <span className="text-2xl">🎤</span>
         </button>
