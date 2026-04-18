@@ -16,7 +16,6 @@ import { toast } from "sonner";
 
 const TOP_TABS = [
   { id: "party", label: "حفلة", emoji: "🎉" },
-  { id: "private", label: "خاصي", emoji: "💎" },
 ];
 
 const CATEGORIES = [
@@ -41,16 +40,16 @@ const Index = () => {
   const { myRoomId, loading: myRoomLoading } = useMyRoom(profile?.id ?? null);
 
   const handleTabClick = (tabId: string) => {
-    if (tabId === "private") {
-      if (myRoomLoading) return;
-      if (myRoomId) {
-        navigate(`/voice-room?id=${myRoomId}`);
-      } else {
-        navigate("/create-room");
-      }
-      return;
-    }
     setActiveTab(tabId);
+  };
+
+  const handleMicButtonClick = () => {
+    if (myRoomLoading) return;
+    if (myRoomId) {
+      navigate(`/voice-room?id=${myRoomId}`);
+    } else {
+      navigate("/create-room");
+    }
   };
 
   useEffect(() => {
@@ -98,14 +97,9 @@ const Index = () => {
     }
   }, [notifications.length]);
 
-  // Filter & sort rooms based on active tab + category
+  // Filter & sort rooms based on active category (only public rooms shown on home)
   const filteredRooms = useMemo(() => {
-    let list = [...rooms];
-    if (activeTab === "private") {
-      list = list.filter((r: any) => r.is_private);
-    } else {
-      list = list.filter((r: any) => !r.is_private);
-    }
+    let list = [...rooms].filter((r: any) => !r.is_private);
     const cat = CATEGORIES.find((c) => c.id === activeCategory);
     if (cat?.type) {
       list = list.filter((r: any) => r.type === cat.type);
@@ -115,7 +109,7 @@ const Index = () => {
       list = list.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
     return list;
-  }, [rooms, activeTab, activeCategory]);
+  }, [rooms, activeCategory]);
 
   // Determine which rooms are "hot" (top 3 by hot_score)
   const hotRoomIds = useMemo(() => {
@@ -319,11 +313,12 @@ const Index = () => {
           </div>
         </main>
 
-        {/* Floating create button (Soulmatch style) */}
+        {/* Floating mic button — opens user's room or create flow */}
         <button
-          onClick={() => navigate("/create-room")}
-          className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full gradient-gold flex items-center justify-center shadow-[0_0_24px_hsl(45_100%_55%/0.6)] hover:scale-110 active:scale-95 transition-transform animate-pulse-glow"
-          aria-label="إنشاء غرفة"
+          onClick={handleMicButtonClick}
+          disabled={myRoomLoading}
+          className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full gradient-gold flex items-center justify-center shadow-[0_0_24px_hsl(45_100%_55%/0.6)] hover:scale-110 active:scale-95 transition-transform animate-pulse-glow disabled:opacity-60"
+          aria-label={myRoomId ? "غرفتي" : "إنشاء غرفة"}
         >
           <span className="text-2xl">🎤</span>
         </button>
