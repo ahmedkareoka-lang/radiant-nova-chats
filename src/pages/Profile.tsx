@@ -1,4 +1,4 @@
-import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus } from "lucide-react";
+import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
@@ -11,6 +11,27 @@ import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
+import TierBadge from "@/components/TierBadge";
+import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+
+// Wealth XP thresholds per level (matches DB function deduct_coins_add_wealth)
+const wealthThreshold = (lvl: number) => {
+  if (lvl < 10) return 25_000;
+  if (lvl < 20) return 40_000;
+  if (lvl < 30) return 65_000;
+  if (lvl < 40) return 100_000;
+  if (lvl < 50) return 150_000;
+  return 300_000;
+};
+// Charm XP thresholds (matches add_diamonds_add_charisma)
+const charmThreshold = (lvl: number) => {
+  if (lvl < 10) return 15_000;
+  if (lvl < 20) return 25_000;
+  if (lvl < 30) return 40_000;
+  if (lvl < 40) return 70_000;
+  if (lvl < 50) return 110_000;
+  return 200_000;
+};
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -285,6 +306,12 @@ const Profile = () => {
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
             </div>
 
+            {/* Wealth & Charm visual tier badges */}
+            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+              <TierBadge level={profile?.wealth_level || 1} type="wealth" size="md" />
+              <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
+            </div>
+
             <span className="text-[11px] text-muted-foreground mt-1.5">ID: {profile?.user_id}</span>
           </div>
 
@@ -309,6 +336,106 @@ const Profile = () => {
               </div>
             </div>
           </div>
+
+          {/* === NOVA P CARD === */}
+          {(() => {
+            const novaLvl = profile?.nova_p_level || 0;
+            const totalGold = profile?.total_spend_gold || 0;
+            const novaProgress = getNovaProgress(totalGold);
+            const novaAsset = novaLvl > 0 ? getNovaAsset(novaLvl) : null;
+            return (
+              <button
+                onClick={() => navigate("/nova-p")}
+                className="mt-4 w-full text-right rounded-3xl border border-accent/30 p-4 relative overflow-hidden group"
+                style={{
+                  background:
+                    "linear-gradient(135deg, hsl(280 60% 18% / 0.85), hsl(260 50% 14% / 0.85) 50%, hsl(45 70% 22% / 0.7))",
+                }}
+              >
+                <div className="absolute inset-0 opacity-30 pointer-events-none"
+                  style={{ background: "radial-gradient(circle at 80% 20%, hsl(45 90% 55% / 0.4), transparent 60%)" }} />
+                <div className="relative flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                      style={{ background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(280 80% 50%))" }}>
+                      <Crown className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-black text-sm text-foreground flex items-center gap-1.5">
+                        NOVA P
+                        {novaAsset && (
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-accent/30 text-accent font-black">
+                            {novaAsset.label}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {novaLvl > 0
+                          ? `إجمالي الذهب: ${totalGold.toLocaleString()}`
+                          : "لم تصل لأي مستوى بعد - أرسل هدايا لتفعيله"}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180 shrink-0" />
+                </div>
+                {/* Progress bar */}
+                {novaProgress.nextThreshold && (
+                  <div className="relative mt-3">
+                    <div className="h-2 rounded-full bg-background/40 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${novaProgress.pct}%`,
+                          background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(280 80% 60%))",
+                        }}
+                      />
+                    </div>
+                    <p className="text-[9px] text-muted-foreground mt-1">
+                      التقدّم نحو P{novaProgress.nextLevel}: {Math.round(novaProgress.pct)}%
+                    </p>
+                  </div>
+                )}
+              </button>
+            );
+          })()}
+
+          {/* === Wealth & Charm progress bars === */}
+          {(() => {
+            const wXp = profile?.wealth_xp || 0;
+            const wLvl = profile?.wealth_level || 1;
+            const wNext = wealthThreshold(wLvl);
+            const wPct = Math.min(100, (wXp / wNext) * 100);
+            const cXp = profile?.charisma_xp || 0;
+            const cLvl = profile?.charisma_level || 1;
+            const cNext = charmThreshold(cLvl);
+            const cPct = Math.min(100, (cXp / cNext) * 100);
+            return (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl p-3 border border-border/30 bg-secondary/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-muted-foreground">الثروة</span>
+                    <TierBadge level={wLvl} type="wealth" size="sm" />
+                  </div>
+                  <div className="h-1.5 rounded-full bg-background/50 overflow-hidden">
+                    <div className="h-full rounded-full"
+                      style={{ width: `${wPct}%`, background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(20 90% 55%))" }} />
+                  </div>
+                  <p className="text-[9px] text-muted-foreground mt-1.5">{wXp.toLocaleString()} / {wNext.toLocaleString()}</p>
+                </div>
+                <div className="rounded-2xl p-3 border border-border/30 bg-secondary/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-muted-foreground">السحر</span>
+                    <TierBadge level={cLvl} type="charm" size="sm" />
+                  </div>
+                  <div className="h-1.5 rounded-full bg-background/50 overflow-hidden">
+                    <div className="h-full rounded-full"
+                      style={{ width: `${cPct}%`, background: "linear-gradient(90deg, hsl(280 90% 60%), hsl(320 90% 60%))" }} />
+                  </div>
+                  <p className="text-[9px] text-muted-foreground mt-1.5">{cXp.toLocaleString()} / {cNext.toLocaleString()}</p>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* === DUAL CURRENCY (display only, no navigation) === */}
           <div className="flex gap-3 mt-4">
