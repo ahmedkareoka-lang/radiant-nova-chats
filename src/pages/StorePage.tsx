@@ -177,6 +177,10 @@ const StorePage = () => {
   // Generic purchase for admin-added items (NOVA P / VIP / generic). Anyone can buy — no tier restriction.
   const buyAdminItem = async (item: any) => {
     if (!profile) return;
+    if (ownedItemNames.has(item.name)) {
+      toast.info("لديك هذا العنصر بالفعل في الحقيبة!");
+      return;
+    }
     const price = Number(item.price_coins) || 0;
     if (profile.coins < price) {
       toast.error("رصيدك غير كافٍ!");
@@ -196,13 +200,15 @@ const StorePage = () => {
     } else {
       setProfile({ ...profile, coins: profile.coins - price });
     }
+    setOwnedItemNames(new Set([...ownedItemNames, item.name]));
+    if (item.type === "frame") setOwnedFrames([...ownedFrames, item.name]);
     await supabase.from("notifications").insert({
       user_id: profile.id,
       title: "عنصر جديد ✨",
-      message: `تم شراء ${item.name}!`,
+      message: `تم شراء ${item.name} وأضيف إلى الحقيبة!`,
       type: "purchase",
     });
-    toast.success(`تم شراء ${item.name} 🎉`);
+    toast.success(`تم شراء ${item.name} 🎉 — تجده في الحقيبة`);
   };
 
   return (
