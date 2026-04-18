@@ -199,8 +199,8 @@ const Index = () => {
             </div>
           )}
 
-          {/* Quick action tiles row (Yalla-style) */}
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          {/* Quick action tiles row (Yalla-style) — 6 tiles in 2 rows */}
+          <div className="grid grid-cols-4 gap-2 mb-2">
             <button onClick={() => navigate("/leaderboard")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
               <div className="w-9 h-9 rounded-xl gradient-gold flex items-center justify-center">
                 <Trophy className="w-5 h-5 text-accent-foreground" />
@@ -220,6 +220,26 @@ const Index = () => {
             <button onClick={() => navigate("/agencies")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-base">🏰</div>
               <span className="text-[9px] font-bold text-muted-foreground">الوكالات</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            <button onClick={() => navigate("/vip")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center">
+                <Crown className="w-5 h-5 text-foreground" />
+              </div>
+              <span className="text-[9px] font-bold text-muted-foreground">VIP</span>
+            </button>
+            <button onClick={() => navigate("/nova-pass")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-base">✨</div>
+              <span className="text-[9px] font-bold text-muted-foreground">NOVA Pass</span>
+            </button>
+            <button onClick={() => navigate("/daily-tasks")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-base">🎯</div>
+              <span className="text-[9px] font-bold text-muted-foreground">المهام</span>
+            </button>
+            <button onClick={() => navigate("/posts")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-base">📸</div>
+              <span className="text-[9px] font-bold text-muted-foreground">المنشورات</span>
             </button>
           </div>
 
