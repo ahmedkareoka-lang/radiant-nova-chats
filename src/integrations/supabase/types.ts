@@ -558,6 +558,7 @@ export type Database = {
           charisma_xp: number
           coins: number
           country_code: string | null
+          cover_url: string | null
           created_at: string
           diamonds: number
           display_name: string
@@ -592,6 +593,7 @@ export type Database = {
           charisma_xp?: number
           coins?: number
           country_code?: string | null
+          cover_url?: string | null
           created_at?: string
           diamonds?: number
           display_name?: string
@@ -626,6 +628,7 @@ export type Database = {
           charisma_xp?: number
           coins?: number
           country_code?: string | null
+          cover_url?: string | null
           created_at?: string
           diamonds?: number
           display_name?: string
