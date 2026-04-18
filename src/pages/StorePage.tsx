@@ -434,11 +434,13 @@ const StorePage = () => {
                   <p className="text-xs text-muted-foreground">{previewItem.name}</p>
                 </div>
 
-                <div className="text-center text-[11px] text-muted-foreground">
-                  {previewItem._tierType === "nova_p"
-                    ? `🔒 يتطلب NOVA P${previewItem._tier}+ لفتح هذا العنصر`
-                    : `🔒 يتطلب VIP ${previewItem._tier}+ لفتح هذا العنصر`}
-                </div>
+                <button
+                  onClick={() => { buyAdminItem(previewItem); setPreviewItem(null); }}
+                  className="w-full py-2.5 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova flex items-center justify-center gap-2"
+                >
+                  <CurrencyIcon type="gold" size="xs" />
+                  شراء الآن — {Number(previewItem.price_coins).toLocaleString()}
+                </button>
               </div>
             )}
           </DialogContent>
