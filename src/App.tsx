@@ -100,6 +100,8 @@ const App = () => {
             <ActiveRoomProvider>
               <AnimatedRoutes />
               <FloatingRoomBubble />
+              <GlobalGiftTicker />
+              <LegendaryGiftExplosion />
             </ActiveRoomProvider>
           </BrowserRouter>
         )}
