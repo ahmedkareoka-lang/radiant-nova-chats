@@ -22,6 +22,8 @@ import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 import GiftAnnouncementBanner from "@/components/GiftAnnouncementBanner";
 import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
 import Top3RoomSenders from "@/components/Top3RoomSenders";
+import GiftComboBar from "@/components/GiftComboBar";
+import LuckyWheelButton from "@/components/LuckyWheelButton";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
@@ -352,10 +354,16 @@ const VoiceRoom = () => {
     setShowSettings(false);
   };
 
-  // Gift burst callback (local sender) — uses the designed gift image when available
+  // Gift burst callback (local sender) — uses the designed gift image when available.
+  // Also drives a Yalla-style combo bar that grows on rapid successive sends.
+  const comboTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [comboCount, setComboCount] = useState(0);
   const handleGiftBurst = (emoji: string, count: number, imageUrl?: string | null) => {
     setGiftBurst({ emoji, count, imageUrl: imageUrl || null });
     setTimeout(() => setGiftBurst(null), 2500);
+    setComboCount((c) => c + count);
+    if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+    comboTimerRef.current = setTimeout(() => setComboCount(0), 3000);
   };
 
   // Listen for gift broadcasts from other users in the room
@@ -1008,6 +1016,8 @@ const VoiceRoom = () => {
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
+      <GiftComboBar count={comboCount} visible={comboCount >= 2} />
+      <LuckyWheelButton />
     </div>
   );
 };
