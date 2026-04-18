@@ -6,6 +6,7 @@ import { useFollows } from "@/hooks/useFollows";
 import { useConversations } from "@/hooks/useChat";
 import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
+import EquippedBadge from "@/components/EquippedBadge";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
