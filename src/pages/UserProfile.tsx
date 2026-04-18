@@ -101,6 +101,7 @@ const UserProfile = () => {
                     ) : (
                       <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} size="lg" luxury />
                     )}
+                    {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} size="md" />}
                   </div>
                 </div>
               </div>
