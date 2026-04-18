@@ -135,12 +135,6 @@ const StorePage = () => {
 
   const buyFrame = async (frame: typeof STORE_FRAMES[0]) => {
     if (!profile) return;
-    const vipReq = (frame as any).vipRequired;
-    if (vipReq && (profile.vip_level || 0) < vipReq) {
-      toast.error(`يتطلب VIP مستوى ${vipReq} أو أعلى! 👑`);
-      return;
-    }
-    if (!profile) return;
     if (ownedFrames.includes(frame.name)) {
       toast.info("لديك هذا الإطار بالفعل!");
       return;
@@ -151,10 +145,8 @@ const StorePage = () => {
     }
 
     const newCoins = profile.coins - frame.price_coins;
-    // Deduct coins via secure RPC
     const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: frame.price_coins });
     if (error) { toast.error("فشل في الشراء"); return; }
-    // Update equipped frame (safe field)
     await supabase.from("profiles").update({ equipped_frame: frame.data.frame_url }).eq("id", profile.id);
     await supabase.from("inventory").insert({
       user_id: profile.id,
@@ -171,6 +163,37 @@ const StorePage = () => {
     setProfile({ ...profile, coins: newCoins, equipped_frame: frame.data.frame_url });
     setOwnedFrames([...ownedFrames, frame.name]);
     toast.success(`تم شراء ${frame.name} وتفعيله! 🎉`);
+  };
+
+  // Generic purchase for admin-added items (NOVA P / VIP / generic). Anyone can buy — no tier restriction.
+  const buyAdminItem = async (item: any) => {
+    if (!profile) return;
+    const price = Number(item.price_coins) || 0;
+    if (profile.coins < price) {
+      toast.error("رصيدك غير كافٍ!");
+      return;
+    }
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
+    if (error) { toast.error("فشل في الشراء"); return; }
+    await supabase.from("inventory").insert({
+      user_id: profile.id,
+      item_type: item.type,
+      item_name: item.name,
+      item_data: { ...(item.data || {}), image_url: item.image_url, source_id: item.id },
+    });
+    if (item.type === "frame" && item.image_url) {
+      await supabase.from("profiles").update({ equipped_frame: item.image_url }).eq("id", profile.id);
+      setProfile({ ...profile, coins: profile.coins - price, equipped_frame: item.image_url });
+    } else {
+      setProfile({ ...profile, coins: profile.coins - price });
+    }
+    await supabase.from("notifications").insert({
+      user_id: profile.id,
+      title: "عنصر جديد ✨",
+      message: `تم شراء ${item.name}!`,
+      type: "purchase",
+    });
+    toast.success(`تم شراء ${item.name} 🎉`);
   };
 
   return (
