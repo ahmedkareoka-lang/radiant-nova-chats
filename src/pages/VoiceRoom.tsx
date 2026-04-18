@@ -20,6 +20,8 @@ import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import RoomParticles from "@/components/RoomParticles";
 import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 import GiftAnnouncementBanner from "@/components/GiftAnnouncementBanner";
+import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
+import Top3RoomSenders from "@/components/Top3RoomSenders";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
@@ -439,7 +441,9 @@ const VoiceRoom = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative`}>
+    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
+      {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
+      <VoiceRoomBackdrop />
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
 
@@ -774,18 +778,26 @@ const VoiceRoom = () => {
           </div>
         )}
 
-        {/* Host Info Banner */}
+        {/* Host Info Banner with Top 3 Senders strip */}
         {host && (
-          <div className="flex items-center gap-3 mb-6 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
-            <div className="relative">
-              <img src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
-              <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
+          <div className="mb-6">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
+              <div className="relative">
+                <img src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
+                <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className={`font-bold text-sm ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
+                <p className="text-[10px] text-muted-foreground">مضيف الغرفة</p>
+              </div>
+              <VipBadge level={host.vip_level} size="sm" />
             </div>
-            <div>
-              <span className={`font-bold text-sm ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
-              <p className="text-[10px] text-muted-foreground">مضيف الغرفة</p>
-            </div>
-            <VipBadge level={host.vip_level} size="sm" />
+            {/* Top 3 senders chip */}
+            {roomData?.host_id && roomId && (
+              <div className="flex justify-center mt-2">
+                <Top3RoomSenders roomId={roomId} hostId={roomData.host_id} />
+              </div>
+            )}
           </div>
         )}
 
