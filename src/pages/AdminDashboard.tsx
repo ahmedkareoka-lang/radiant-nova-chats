@@ -40,6 +40,8 @@ const AdminDashboard = () => {
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
   const [newBanner, setNewBanner] = useState({ title: "" });
   const [uploading, setUploading] = useState(false);
+  const [bulkJson, setBulkJson] = useState("");
+  const [bulkImporting, setBulkImporting] = useState(false);
   const giftFileRef = useRef<HTMLInputElement>(null);
   const storeFileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
