@@ -40,6 +40,8 @@ const AdminDashboard = () => {
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
   const [newBanner, setNewBanner] = useState({ title: "" });
   const [uploading, setUploading] = useState(false);
+  const [bulkJson, setBulkJson] = useState("");
+  const [bulkImporting, setBulkImporting] = useState(false);
   const giftFileRef = useRef<HTMLInputElement>(null);
   const storeFileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
@@ -290,6 +292,35 @@ const AdminDashboard = () => {
     await fetchStoreItems();
   };
 
+  // Bulk import store items from JSON
+  const handleBulkImport = async (defaultTierType: "none" | "nova_p" | "vip") => {
+    if (!bulkJson.trim()) { toast.error("الصق قائمة JSON أولاً"); return; }
+    let parsed: any;
+    try { parsed = JSON.parse(bulkJson); }
+    catch { toast.error("صيغة JSON غير صحيحة"); return; }
+    const items = Array.isArray(parsed) ? parsed : [parsed];
+    if (items.length === 0) { toast.error("القائمة فارغة"); return; }
+
+    setBulkImporting(true);
+    const rows = items.map((it: any) => ({
+      name: String(it.name || "بدون اسم"),
+      type: String(it.type || "frame"),
+      price_coins: parseInt(it.price_coins ?? it.price ?? 0) || 0,
+      price_diamonds: parseInt(it.price_diamonds ?? 0) || 0,
+      image_url: it.image_url || it.image || null,
+      tier_type: it.tier_type || defaultTierType,
+      tier_required: parseInt(it.tier_required ?? it.tier ?? 0) || 0,
+      data: it.data || {},
+    }));
+
+    const { error } = await supabase.from("store_items").insert(rows);
+    setBulkImporting(false);
+    if (error) { toast.error("فشل الاستيراد: " + error.message); return; }
+    toast.success(`تم استيراد ${rows.length} عنصر ✅`);
+    setBulkJson("");
+    await fetchStoreItems();
+  };
+
   // Banner management
   const handleAddBanner = async () => {
     const file = bannerFileRef.current?.files?.[0];
@@ -377,6 +408,31 @@ const AdminDashboard = () => {
               {uploading ? "جارٍ الرفع..." : "إضافة"}
             </button>
           </div>
+        </div>
+
+        {/* Bulk JSON Import */}
+        <div className="card-nova p-4 space-y-2 border border-accent/30">
+          <h3 className="font-bold text-xs flex items-center gap-2 text-accent">
+            <Upload className="w-3.5 h-3.5" /> استيراد جماعي (JSON)
+          </h3>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            الصق مصفوفة من العناصر. الحقول: name, type (frame/badge/entrance/bubble/name_style/vehicle), price_coins, image_url, tier_required.
+          </p>
+          <textarea
+            value={bulkJson}
+            onChange={(e) => setBulkJson(e.target.value)}
+            placeholder='[{"name":"Gold Frame","type":"frame","price_coins":5000,"image_url":"https://...","tier_required":3}]'
+            rows={5}
+            className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-[10px] font-mono border border-border focus:outline-none"
+            dir="ltr"
+          />
+          <button
+            onClick={() => handleBulkImport(defaultTierType)}
+            disabled={bulkImporting}
+            className="w-full py-2 rounded-xl gradient-gold text-accent-foreground font-bold text-xs"
+          >
+            {bulkImporting ? "جارٍ الاستيراد..." : "استيراد جماعي"}
+          </button>
         </div>
 
         <div className="space-y-2">
