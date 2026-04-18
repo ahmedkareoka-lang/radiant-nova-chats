@@ -15,7 +15,7 @@ const FALLBACK_GIFTS = [
   { emoji: "🏰", name: "قصر", price: 5000 },
 ];
 
-const MULTIPLIERS = [1, 10, 50, 77, 100];
+const MULTIPLIERS = [1, 10, 66, 188, 520, 1314];
 
 interface RoomMemberInfo {
   user_id: string;
@@ -166,7 +166,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     if (isMultiMode && selectedRecipients.size > 0) {
       let allSuccess = true;
       for (const rid of selectedRecipients) {
-        const success = await sendGift(senderId!, rid, gift.name, giftCost);
+        const success = await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
         if (!success) { allSuccess = false; break; }
       }
       if (allSuccess) {
@@ -176,7 +176,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     } else if (receiverId) {
-      const success = await sendGift(senderId!, receiverId, gift.name, giftCost);
+      const success = await sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
       if (success) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);

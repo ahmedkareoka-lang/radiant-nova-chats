@@ -8,6 +8,8 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
 import FloatingRoomBubble from "@/components/FloatingRoomBubble";
+import GlobalGiftTicker from "@/components/GlobalGiftTicker";
+import LegendaryGiftExplosion from "@/components/LegendaryGiftExplosion";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
@@ -98,6 +100,8 @@ const App = () => {
             <ActiveRoomProvider>
               <AnimatedRoutes />
               <FloatingRoomBubble />
+              <GlobalGiftTicker />
+              <LegendaryGiftExplosion />
             </ActiveRoomProvider>
           </BrowserRouter>
         )}

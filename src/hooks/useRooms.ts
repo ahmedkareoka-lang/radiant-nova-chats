@@ -17,6 +17,10 @@ export interface Room {
     is_boss: boolean;
   };
   member_count?: number;
+  mic_previews?: Array<{ user_id: string; profiles?: { avatar_url: string | null; display_name: string } | null }>;
+  hot_score?: number;
+  background_theme?: string;
+  room_image?: string | null;
 }
 
 export const useRooms = () => {
@@ -53,11 +57,38 @@ export const useRooms = () => {
         counts[m.room_id] = (counts[m.room_id] || 0) + 1;
       });
 
+      // Fetch up to 3 mic members per room for preview avatars (Soulmatch-style)
+      const { data: micMembers } = await supabase
+        .from("room_members")
+        .select("room_id, user_id, mic_slot, profiles:user_id(avatar_url, display_name)")
+        .in("room_id", roomIds.length > 0 ? roomIds : ["00000000-0000-0000-0000-000000000000"])
+        .eq("is_on_mic", true)
+        .order("mic_slot", { ascending: true });
+
+      const micMap: Record<string, any[]> = {};
+      micMembers?.forEach((m: any) => {
+        if (!micMap[m.room_id]) micMap[m.room_id] = [];
+        if (micMap[m.room_id].length < 3) micMap[m.room_id].push(m);
+      });
+
+      // Fetch hot rooms based on last hour gifts received by host
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: hotGifts } = await supabase
+        .from("gift_transactions")
+        .select("receiver_id, gold_amount")
+        .gte("created_at", oneHourAgo);
+      const hotMap: Record<string, number> = {};
+      hotGifts?.forEach((g: any) => {
+        hotMap[g.receiver_id] = (hotMap[g.receiver_id] || 0) + Number(g.gold_amount || 0);
+      });
+
       setRooms(
         data.map((r) => ({
           ...r,
           host_profile: profileMap[r.host_id] || null,
           member_count: counts[r.id] || 0,
+          mic_previews: micMap[r.id] || [],
+          hot_score: hotMap[r.host_id] || 0,
         }))
       );
     }
