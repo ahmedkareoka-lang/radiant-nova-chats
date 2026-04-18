@@ -14,6 +14,7 @@ import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
 import NovaDashboard from "@/components/NovaDashboard";
 import DualBadge from "@/components/DualBadge";
+import EquippedBadge from "@/components/EquippedBadge";
 import { useMyRoom } from "@/hooks/useMyRoom";
 
 const Profile = () => {
@@ -204,6 +205,7 @@ const Profile = () => {
               {profile?.is_host && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
               )}
+              {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
             </div>
             <span className="text-[10px] text-muted-foreground mt-0.5">ID: {profile?.user_id}</span>
           </div>

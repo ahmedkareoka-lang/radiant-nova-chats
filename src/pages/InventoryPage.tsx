@@ -13,6 +13,7 @@ const InventoryPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
   const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
+  const [equippedBadge, setEquippedBadge] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
 
   useEffect(() => {
@@ -20,8 +21,9 @@ const InventoryPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const { data: prof } = await supabase.from("profiles").select("equipped_frame").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("equipped_frame, equipped_badge").eq("id", user.id).single();
       setEquippedFrame(prof?.equipped_frame || null);
+      setEquippedBadge((prof as any)?.equipped_badge || null);
       const { data } = await supabase.from("inventory").select("*").eq("user_id", user.id).order("acquired_at", { ascending: false });
       setItems(data || []);
       setLoading(false);
@@ -33,6 +35,12 @@ const InventoryPage = () => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", userId);
     setEquippedFrame(frameUrl);
     toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+  };
+
+  const equipBadge = async (badgeName: string | null) => {
+    await supabase.from("profiles").update({ equipped_badge: badgeName } as any).eq("id", userId);
+    setEquippedBadge(badgeName);
+    toast.success(badgeName ? "تم تفعيل الشارة! 🏅" : "تم إزالة الشارة");
   };
 
   const tabs = [
@@ -89,19 +97,21 @@ const InventoryPage = () => {
             <div className="grid grid-cols-3 gap-3">
               {filtered.map((item) => {
                 const isFrame = item.item_type === "frame";
-                // Admin-added frames store image_url in item_data; predefined frames use frame_url
+                const isBadge = item.item_type === "badge";
                 const frameKey = item.item_data?.frame_url || item.item_data?.image_url || null;
                 const frameImg = item.item_data?.frame_url
                   ? FRAME_MAP[item.item_data.frame_url]
                   : item.item_data?.image_url || null;
-                const isEquipped = isFrame && equippedFrame === frameKey;
+                const isFrameEquipped = isFrame && equippedFrame === frameKey;
+                const isBadgeEquipped = isBadge && equippedBadge === item.item_name;
+                const highlighted = isFrameEquipped || isBadgeEquipped;
 
                 return (
-                  <div key={item.id} className={`card-nova p-3 text-center ${isEquipped ? "border border-primary/50" : ""}`}>
+                  <div key={item.id} className={`card-nova p-3 text-center ${highlighted ? "border border-primary/50" : ""}`}>
                     {frameImg ? (
                       <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
                     ) : (
-                      <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : item.item_type === "badge" ? "🏅" : "✨"}</span>
+                      <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : isBadge ? "🏅" : "✨"}</span>
                     )}
                     <p className="font-bold text-[11px] mt-1 line-clamp-1">{item.item_name}</p>
                     <p className="text-[9px] text-muted-foreground">
@@ -109,12 +119,22 @@ const InventoryPage = () => {
                     </p>
                     {isFrame && frameKey && (
                       <button
-                        onClick={() => equipFrame(isEquipped ? null : frameKey)}
+                        onClick={() => equipFrame(isFrameEquipped ? null : frameKey)}
                         className={`mt-1 w-full py-1 rounded-lg text-[10px] font-bold ${
-                          isEquipped ? "bg-destructive/20 text-destructive" : "gradient-neon text-primary-foreground"
+                          isFrameEquipped ? "bg-destructive/20 text-destructive" : "gradient-neon text-primary-foreground"
                         }`}
                       >
-                        {isEquipped ? "إزالة" : "ارتداء"}
+                        {isFrameEquipped ? "إزالة" : "ارتداء"}
+                      </button>
+                    )}
+                    {isBadge && (
+                      <button
+                        onClick={() => equipBadge(isBadgeEquipped ? null : item.item_name)}
+                        className={`mt-1 w-full py-1 rounded-lg text-[10px] font-bold ${
+                          isBadgeEquipped ? "bg-destructive/20 text-destructive" : "gradient-gold text-accent-foreground"
+                        }`}
+                      >
+                        {isBadgeEquipped ? "إزالة" : "ارتداء"}
                       </button>
                     )}
                   </div>

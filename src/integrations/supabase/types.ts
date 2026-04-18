@@ -563,6 +563,7 @@ export type Database = {
           display_name: string
           entrance_audio_url: string | null
           entrance_video_url: string | null
+          equipped_badge: string | null
           equipped_chat_bubble: string | null
           equipped_entrance_effect: string | null
           equipped_frame: string | null
@@ -596,6 +597,7 @@ export type Database = {
           display_name?: string
           entrance_audio_url?: string | null
           entrance_video_url?: string | null
+          equipped_badge?: string | null
           equipped_chat_bubble?: string | null
           equipped_entrance_effect?: string | null
           equipped_frame?: string | null
@@ -629,6 +631,7 @@ export type Database = {
           display_name?: string
           entrance_audio_url?: string | null
           entrance_video_url?: string | null
+          equipped_badge?: string | null
           equipped_chat_bubble?: string | null
           equipped_entrance_effect?: string | null
           equipped_frame?: string | null
