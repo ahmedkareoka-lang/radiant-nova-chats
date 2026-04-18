@@ -38,6 +38,20 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState("hot");
   const [topRechargers, setTopRechargers] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const { myRoomId, loading: myRoomLoading } = useMyRoom(profile?.id ?? null);
+
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "private") {
+      if (myRoomLoading) return;
+      if (myRoomId) {
+        navigate(`/voice-room?id=${myRoomId}`);
+      } else {
+        navigate("/create-room");
+      }
+      return;
+    }
+    setActiveTab(tabId);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
