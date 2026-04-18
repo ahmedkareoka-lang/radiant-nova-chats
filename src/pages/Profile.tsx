@@ -14,6 +14,7 @@ import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
 import NovaDashboard from "@/components/NovaDashboard";
 import DualBadge from "@/components/DualBadge";
+import EquippedBadge from "@/components/EquippedBadge";
 import { useMyRoom } from "@/hooks/useMyRoom";
 
 const Profile = () => {
