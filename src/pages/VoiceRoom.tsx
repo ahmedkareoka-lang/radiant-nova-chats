@@ -20,6 +20,8 @@ import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import RoomParticles from "@/components/RoomParticles";
 import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 import GiftAnnouncementBanner from "@/components/GiftAnnouncementBanner";
+import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
+import Top3RoomSenders from "@/components/Top3RoomSenders";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
@@ -439,7 +441,9 @@ const VoiceRoom = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative`}>
+    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
+      {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
+      <VoiceRoomBackdrop />
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
 
