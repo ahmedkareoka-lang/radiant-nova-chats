@@ -212,13 +212,13 @@ const Index = () => {
               <span className="text-[9px] font-bold text-muted-foreground">الألعاب</span>
             </button>
             <button onClick={() => navigate("/store")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl gradient-vip flex items-center justify-center">
                 <Gift className="w-5 h-5 text-foreground" />
               </div>
               <span className="text-[9px] font-bold text-muted-foreground">المتجر</span>
             </button>
             <button onClick={() => navigate("/agencies")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-base">🏰</div>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-base">🏰</div>
               <span className="text-[9px] font-bold text-muted-foreground">الوكالات</span>
             </button>
           </div>
