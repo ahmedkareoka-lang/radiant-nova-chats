@@ -135,12 +135,6 @@ const StorePage = () => {
 
   const buyFrame = async (frame: typeof STORE_FRAMES[0]) => {
     if (!profile) return;
-    const vipReq = (frame as any).vipRequired;
-    if (vipReq && (profile.vip_level || 0) < vipReq) {
-      toast.error(`يتطلب VIP مستوى ${vipReq} أو أعلى! 👑`);
-      return;
-    }
-    if (!profile) return;
     if (ownedFrames.includes(frame.name)) {
       toast.info("لديك هذا الإطار بالفعل!");
       return;
@@ -151,10 +145,8 @@ const StorePage = () => {
     }
 
     const newCoins = profile.coins - frame.price_coins;
-    // Deduct coins via secure RPC
     const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: frame.price_coins });
     if (error) { toast.error("فشل في الشراء"); return; }
-    // Update equipped frame (safe field)
     await supabase.from("profiles").update({ equipped_frame: frame.data.frame_url }).eq("id", profile.id);
     await supabase.from("inventory").insert({
       user_id: profile.id,
@@ -171,6 +163,37 @@ const StorePage = () => {
     setProfile({ ...profile, coins: newCoins, equipped_frame: frame.data.frame_url });
     setOwnedFrames([...ownedFrames, frame.name]);
     toast.success(`تم شراء ${frame.name} وتفعيله! 🎉`);
+  };
+
+  // Generic purchase for admin-added items (NOVA P / VIP / generic). Anyone can buy — no tier restriction.
+  const buyAdminItem = async (item: any) => {
+    if (!profile) return;
+    const price = Number(item.price_coins) || 0;
+    if (profile.coins < price) {
+      toast.error("رصيدك غير كافٍ!");
+      return;
+    }
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
+    if (error) { toast.error("فشل في الشراء"); return; }
+    await supabase.from("inventory").insert({
+      user_id: profile.id,
+      item_type: item.type,
+      item_name: item.name,
+      item_data: { ...(item.data || {}), image_url: item.image_url, source_id: item.id },
+    });
+    if (item.type === "frame" && item.image_url) {
+      await supabase.from("profiles").update({ equipped_frame: item.image_url }).eq("id", profile.id);
+      setProfile({ ...profile, coins: profile.coins - price, equipped_frame: item.image_url });
+    } else {
+      setProfile({ ...profile, coins: profile.coins - price });
+    }
+    await supabase.from("notifications").insert({
+      user_id: profile.id,
+      title: "عنصر جديد ✨",
+      message: `تم شراء ${item.name}!`,
+      type: "purchase",
+    });
+    toast.success(`تم شراء ${item.name} 🎉`);
   };
 
   return (
@@ -241,85 +264,91 @@ const StorePage = () => {
             })}
           </div>
 
-          {/* NOVA P exclusive items (grouped by tier) */}
+          {/* NOVA P items (grouped by tier) — anyone can buy */}
           {[1, 2, 3, 4, 5, 6].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "nova_p" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
-            const userTier = profile?.nova_p_level || 0;
             return (
               <div key={`nova-${tier}`} className="space-y-2">
                 <h2 className="font-bold text-sm flex items-center gap-2 text-purple-300">
                   👑 عناصر NOVA P{tier}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {items.map((item) => {
-                    const locked = userTier < tier;
-                    return (
-                      <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${locked ? "opacity-60" : "border border-purple-400/40 shadow-[0_0_20px_hsl(280_90%_60%/0.3)]"}`}>
-                        {item.image_url && (
-                          <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
-                        )}
-                        <p className="font-bold text-xs">{item.name}</p>
-                        <p className="text-[9px] text-purple-300 font-bold">يتطلب NOVA P{tier}+</p>
-                        <div className="flex items-center justify-center gap-1">
-                          <CurrencyIcon type="gold" size="xs" />
-                          <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
-                        </div>
-                        {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                  {items.map((item) => (
+                    <div key={item.id} className="card-nova p-4 text-center space-y-2 border border-purple-400/40 shadow-[0_0_20px_hsl(280_90%_60%/0.3)]">
+                      {item.image_url && (
+                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                      )}
+                      <p className="font-bold text-xs">{item.name}</p>
+                      <p className="text-[9px] text-purple-300 font-bold">عنصر NOVA P{tier} ✨</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <CurrencyIcon type="gold" size="xs" />
+                        <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
                         <button
                           onClick={() => setPreviewItem({ ...item, _tierType: "nova_p", _tier: tier })}
-                          className="w-full py-1.5 rounded-xl border border-purple-400/50 text-purple-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-purple-400/10 transition"
+                          className="py-1.5 rounded-xl border border-purple-400/50 text-purple-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-purple-400/10 transition"
                         >
                           <Eye className="w-3 h-3" /> معاينة
                         </button>
+                        <button
+                          onClick={() => buyAdminItem(item)}
+                          className="py-1.5 rounded-xl gradient-neon text-primary-foreground text-[10px] font-bold btn-nova"
+                        >
+                          شراء
+                        </button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
           })}
 
-          {/* VIP exclusive items (grouped by tier) */}
+          {/* VIP items (grouped by tier) — anyone can buy */}
           {[1, 2, 3, 4, 5, 6, 7].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "vip" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
-            const userTier = profile?.vip_level || 0;
             return (
               <div key={`vip-${tier}`} className="space-y-2">
                 <h2 className="font-bold text-sm flex items-center gap-2 text-amber-300">
                   💎 عناصر VIP {tier}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {items.map((item) => {
-                    const locked = userTier < tier;
-                    return (
-                      <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${locked ? "opacity-60" : "border border-amber-400/40 shadow-[0_0_20px_hsl(45_95%_55%/0.3)]"}`}>
-                        {item.image_url && (
-                          <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
-                        )}
-                        <p className="font-bold text-xs">{item.name}</p>
-                        <p className="text-[9px] text-amber-300 font-bold">يتطلب VIP {tier}+</p>
-                        <div className="flex items-center justify-center gap-1">
-                          <CurrencyIcon type="gold" size="xs" />
-                          <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
-                        </div>
-                        {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                  {items.map((item) => (
+                    <div key={item.id} className="card-nova p-4 text-center space-y-2 border border-amber-400/40 shadow-[0_0_20px_hsl(45_95%_55%/0.3)]">
+                      {item.image_url && (
+                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                      )}
+                      <p className="font-bold text-xs">{item.name}</p>
+                      <p className="text-[9px] text-amber-300 font-bold">عنصر VIP {tier} 💎</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <CurrencyIcon type="gold" size="xs" />
+                        <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
                         <button
                           onClick={() => setPreviewItem({ ...item, _tierType: "vip", _tier: tier })}
-                          className="w-full py-1.5 rounded-xl border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-amber-400/10 transition"
+                          className="py-1.5 rounded-xl border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-amber-400/10 transition"
                         >
                           <Eye className="w-3 h-3" /> معاينة
                         </button>
+                        <button
+                          onClick={() => buyAdminItem(item)}
+                          className="py-1.5 rounded-xl gradient-gold text-accent-foreground text-[10px] font-bold btn-nova"
+                        >
+                          شراء
+                        </button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
           })}
 
-          {/* Generic admin store items (Entrance / Badges / etc.) */}
+          {/* Generic admin store items (Entrance / Badges / etc.) — anyone can buy */}
           {adminItems.filter((it) => (it.tier_type || "none") === "none").length > 0 && (
             <>
               <h2 className="font-bold text-sm pt-2">✨ عناصر المتجر</h2>
@@ -337,6 +366,12 @@ const StorePage = () => {
                       <CurrencyIcon type="gold" size="xs" />
                       <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                     </div>
+                    <button
+                      onClick={() => buyAdminItem(item)}
+                      className="w-full py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold btn-nova"
+                    >
+                      شراء
+                    </button>
                   </div>
                 ))}
               </div>
@@ -399,11 +434,13 @@ const StorePage = () => {
                   <p className="text-xs text-muted-foreground">{previewItem.name}</p>
                 </div>
 
-                <div className="text-center text-[11px] text-muted-foreground">
-                  {previewItem._tierType === "nova_p"
-                    ? `🔒 يتطلب NOVA P${previewItem._tier}+ لفتح هذا العنصر`
-                    : `🔒 يتطلب VIP ${previewItem._tier}+ لفتح هذا العنصر`}
-                </div>
+                <button
+                  onClick={() => { buyAdminItem(previewItem); setPreviewItem(null); }}
+                  className="w-full py-2.5 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova flex items-center justify-center gap-2"
+                >
+                  <CurrencyIcon type="gold" size="xs" />
+                  شراء الآن — {Number(previewItem.price_coins).toLocaleString()}
+                </button>
               </div>
             )}
           </DialogContent>
