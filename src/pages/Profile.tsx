@@ -1,4 +1,4 @@
-import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus } from "lucide-react";
+import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
@@ -11,6 +11,27 @@ import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
+import TierBadge from "@/components/TierBadge";
+import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+
+// Wealth XP thresholds per level (matches DB function deduct_coins_add_wealth)
+const wealthThreshold = (lvl: number) => {
+  if (lvl < 10) return 25_000;
+  if (lvl < 20) return 40_000;
+  if (lvl < 30) return 65_000;
+  if (lvl < 40) return 100_000;
+  if (lvl < 50) return 150_000;
+  return 300_000;
+};
+// Charm XP thresholds (matches add_diamonds_add_charisma)
+const charmThreshold = (lvl: number) => {
+  if (lvl < 10) return 15_000;
+  if (lvl < 20) return 25_000;
+  if (lvl < 30) return 40_000;
+  if (lvl < 40) return 70_000;
+  if (lvl < 50) return 110_000;
+  return 200_000;
+};
 
 const Profile = () => {
   const navigate = useNavigate();
