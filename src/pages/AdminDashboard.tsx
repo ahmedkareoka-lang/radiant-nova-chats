@@ -57,6 +57,41 @@ const AdminDashboard = () => {
     const { data } = await supabase.from("banners").select("*").order("sort_order");
     setBanners(data || []);
   };
+  const fetchRechargeAgents = async () => {
+    const { data } = await supabase.from("recharge_agents" as any).select("*").order("created_at", { ascending: false });
+    setRechargeAgents((data as any) || []);
+  };
+  const addRechargeAgent = async () => {
+    if (!newAgentId.trim() || !newAgentName.trim() || !newAgentWhatsapp.trim()) {
+      toast.error("املأ جميع الحقول");
+      return;
+    }
+    // Find user by user_id (display ID, not uuid)
+    const { data: prof } = await supabase.from("profiles").select("id, display_name, avatar_url").eq("user_id", newAgentId.trim()).maybeSingle();
+    if (!prof) { toast.error("المستخدم غير موجود"); return; }
+    const wa = newAgentWhatsapp.trim().replace(/[^0-9+]/g, "");
+    const { error } = await supabase.from("recharge_agents" as any).insert({
+      user_id: prof.id,
+      agent_name: newAgentName.trim(),
+      whatsapp_number: wa,
+      avatar_url: prof.avatar_url,
+    });
+    if (error) { toast.error("فشل: " + error.message); return; }
+    toast.success("تم إضافة وكيل الشحن ✅");
+    setNewAgentId(""); setNewAgentName(""); setNewAgentWhatsapp("");
+    fetchRechargeAgents();
+  };
+  const deleteRechargeAgent = async (id: string) => {
+    const { error } = await supabase.from("recharge_agents" as any).delete().eq("id", id);
+    if (error) { toast.error("فشل الحذف"); return; }
+    toast.success("تم الحذف");
+    fetchRechargeAgents();
+  };
+  const toggleRechargeAgent = async (id: string, current: boolean) => {
+    await supabase.from("recharge_agents" as any).update({ is_active: !current }).eq("id", id);
+    fetchRechargeAgents();
+  };
+
   const fetchNovaStats = async () => {
     // Count users per NOVA P level (0-6)
     const counts = await Promise.all(
