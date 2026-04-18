@@ -38,6 +38,7 @@ const InventoryPage = () => {
   const tabs = [
     { id: "all", label: "الكل" },
     { id: "frame", label: "إطارات" },
+    { id: "badge", label: "شارات" },
     { id: "gift", label: "هدايا" },
     { id: "vip", label: "VIP" },
     { id: "special", label: "مميزات" },
