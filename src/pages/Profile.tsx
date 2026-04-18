@@ -14,23 +14,32 @@ import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
 
-// Wealth XP thresholds per level (matches DB function deduct_coins_add_wealth)
+// Wealth XP thresholds per level — EXTREME difficulty curve (Lv 1 → 100)
+// Designed so reaching Lv 100 requires multi-million long-term spending.
 const wealthThreshold = (lvl: number) => {
-  if (lvl < 10) return 25_000;
-  if (lvl < 20) return 40_000;
-  if (lvl < 30) return 65_000;
-  if (lvl < 40) return 100_000;
-  if (lvl < 50) return 150_000;
-  return 300_000;
+  if (lvl < 10) return 100_000;        // 1-9    : 100K each   (≈ 0.9M)
+  if (lvl < 20) return 250_000;        // 10-19  : 250K each   (+2.5M)
+  if (lvl < 30) return 600_000;        // 20-29  : 600K each   (+6M)
+  if (lvl < 40) return 1_500_000;      // 30-39  : 1.5M each   (+15M)
+  if (lvl < 50) return 3_500_000;      // 40-49  : 3.5M each   (+35M)
+  if (lvl < 60) return 7_000_000;      // 50-59  : 7M each
+  if (lvl < 70) return 14_000_000;     // 60-69  : 14M each
+  if (lvl < 80) return 28_000_000;     // 70-79  : 28M each
+  if (lvl < 90) return 55_000_000;     // 80-89  : 55M each
+  return 120_000_000;                  // 90-100 : 120M each (legendary)
 };
-// Charm XP thresholds (matches add_diamonds_add_charisma)
+// Charm XP thresholds — EXTREME difficulty (receiving gifts)
 const charmThreshold = (lvl: number) => {
-  if (lvl < 10) return 15_000;
-  if (lvl < 20) return 25_000;
-  if (lvl < 30) return 40_000;
-  if (lvl < 40) return 70_000;
-  if (lvl < 50) return 110_000;
-  return 200_000;
+  if (lvl < 10) return 60_000;
+  if (lvl < 20) return 160_000;
+  if (lvl < 30) return 400_000;
+  if (lvl < 40) return 1_000_000;
+  if (lvl < 50) return 2_500_000;
+  if (lvl < 60) return 5_000_000;
+  if (lvl < 70) return 10_000_000;
+  if (lvl < 80) return 20_000_000;
+  if (lvl < 90) return 40_000_000;
+  return 90_000_000;
 };
 
 const Profile = () => {
