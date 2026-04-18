@@ -317,29 +317,33 @@ const StorePage = () => {
                   💎 عناصر VIP {tier}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {items.map((item) => {
-                    const locked = userTier < tier;
-                    return (
-                      <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${locked ? "opacity-60" : "border border-amber-400/40 shadow-[0_0_20px_hsl(45_95%_55%/0.3)]"}`}>
-                        {item.image_url && (
-                          <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
-                        )}
-                        <p className="font-bold text-xs">{item.name}</p>
-                        <p className="text-[9px] text-amber-300 font-bold">يتطلب VIP {tier}+</p>
-                        <div className="flex items-center justify-center gap-1">
-                          <CurrencyIcon type="gold" size="xs" />
-                          <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
-                        </div>
-                        {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                  {items.map((item) => (
+                    <div key={item.id} className="card-nova p-4 text-center space-y-2 border border-amber-400/40 shadow-[0_0_20px_hsl(45_95%_55%/0.3)]">
+                      {item.image_url && (
+                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                      )}
+                      <p className="font-bold text-xs">{item.name}</p>
+                      <p className="text-[9px] text-amber-300 font-bold">عنصر VIP {tier} 💎</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <CurrencyIcon type="gold" size="xs" />
+                        <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
                         <button
                           onClick={() => setPreviewItem({ ...item, _tierType: "vip", _tier: tier })}
-                          className="w-full py-1.5 rounded-xl border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-amber-400/10 transition"
+                          className="py-1.5 rounded-xl border border-amber-400/50 text-amber-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-amber-400/10 transition"
                         >
                           <Eye className="w-3 h-3" /> معاينة
                         </button>
+                        <button
+                          onClick={() => buyAdminItem(item)}
+                          className="py-1.5 rounded-xl gradient-gold text-accent-foreground text-[10px] font-bold btn-nova"
+                        >
+                          شراء
+                        </button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
