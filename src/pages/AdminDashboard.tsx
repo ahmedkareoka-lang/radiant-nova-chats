@@ -94,7 +94,7 @@ const AdminDashboard = () => {
       const { data: er } = await supabase.from("system_settings").select("value").eq("key", "exchange_rate").single();
       if (er) setExchangeRate(er.value);
 
-      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchNovaStats()]);
+      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchNovaStats(), fetchRechargeAgents()]);
       setLoading(false);
     };
     checkBoss();
