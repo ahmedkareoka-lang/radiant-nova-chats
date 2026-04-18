@@ -672,7 +672,71 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* PRICING TAB */}
+          {/* RECHARGE AGENTS TAB */}
+          {activeTab === "recharge_agents" && (
+            <div className="space-y-4">
+              <div className="card-nova p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-primary">
+                  <Phone className="w-4 h-4" /> إضافة وكيل شحن
+                </h3>
+                <input
+                  value={newAgentId}
+                  onChange={(e) => setNewAgentId(e.target.value)}
+                  placeholder="ID المستخدم (مثل 123456)"
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
+                />
+                <input
+                  value={newAgentName}
+                  onChange={(e) => setNewAgentName(e.target.value)}
+                  placeholder="اسم الوكيل المعروض"
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
+                />
+                <input
+                  value={newAgentWhatsapp}
+                  onChange={(e) => setNewAgentWhatsapp(e.target.value)}
+                  placeholder="رقم الواتساب (بصيغة دولية مثل 201xxxxxxxxx)"
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
+                  dir="ltr"
+                />
+                <button
+                  onClick={addRechargeAgent}
+                  className="w-full py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova"
+                >
+                  ➕ إضافة وكيل
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-bold text-xs text-muted-foreground">الوكلاء الحاليون ({rechargeAgents.length})</h4>
+                {rechargeAgents.map((a) => (
+                  <div key={a.id} className="card-nova p-3 flex items-center gap-3">
+                    {a.avatar_url ? (
+                      <img src={a.avatar_url} alt={a.agent_name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"><Phone className="w-4 h-4 text-muted-foreground" /></div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{a.agent_name}</p>
+                      <p className="text-[10px] text-muted-foreground" dir="ltr">{a.whatsapp_number}</p>
+                    </div>
+                    <button
+                      onClick={() => toggleRechargeAgent(a.id, a.is_active)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold ${a.is_active ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}
+                    >
+                      {a.is_active ? "نشط" : "موقوف"}
+                    </button>
+                    <button onClick={() => deleteRechargeAgent(a.id)} className="text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {rechargeAgents.length === 0 && (
+                  <p className="text-center text-muted-foreground text-sm py-8">لا يوجد وكلاء بعد</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === "pricing" && (
             <div className="space-y-4">
               <div className="card-nova p-4 space-y-3">
