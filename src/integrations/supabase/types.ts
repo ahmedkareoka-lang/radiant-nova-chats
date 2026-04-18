@@ -659,6 +659,36 @@ export type Database = {
           },
         ]
       }
+      recharge_agents: {
+        Row: {
+          agent_name: string
+          avatar_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          user_id: string
+          whatsapp_number: string
+        }
+        Insert: {
+          agent_name: string
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+          whatsapp_number: string
+        }
+        Update: {
+          agent_name?: string
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       room_bans: {
         Row: {
           banned_by: string
