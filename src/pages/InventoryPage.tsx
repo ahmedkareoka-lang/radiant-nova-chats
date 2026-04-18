@@ -88,8 +88,11 @@ const InventoryPage = () => {
             <div className="grid grid-cols-3 gap-3">
               {filtered.map((item) => {
                 const isFrame = item.item_type === "frame";
-                const frameKey = item.item_data?.frame_url;
-                const frameImg = frameKey ? FRAME_MAP[frameKey] : null;
+                // Admin-added frames store image_url in item_data; predefined frames use frame_url
+                const frameKey = item.item_data?.frame_url || item.item_data?.image_url || null;
+                const frameImg = item.item_data?.frame_url
+                  ? FRAME_MAP[item.item_data.frame_url]
+                  : item.item_data?.image_url || null;
                 const isEquipped = isFrame && equippedFrame === frameKey;
 
                 return (
@@ -97,9 +100,9 @@ const InventoryPage = () => {
                     {frameImg ? (
                       <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
                     ) : (
-                      <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : "✨"}</span>
+                      <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : item.item_type === "badge" ? "🏅" : "✨"}</span>
                     )}
-                    <p className="font-bold text-[11px] mt-1">{item.item_name}</p>
+                    <p className="font-bold text-[11px] mt-1 line-clamp-1">{item.item_name}</p>
                     <p className="text-[9px] text-muted-foreground">
                       {new Date(item.acquired_at).toLocaleDateString("ar")}
                     </p>
