@@ -264,40 +264,43 @@ const StorePage = () => {
             })}
           </div>
 
-          {/* NOVA P exclusive items (grouped by tier) */}
+          {/* NOVA P items (grouped by tier) — anyone can buy */}
           {[1, 2, 3, 4, 5, 6].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "nova_p" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
-            const userTier = profile?.nova_p_level || 0;
             return (
               <div key={`nova-${tier}`} className="space-y-2">
                 <h2 className="font-bold text-sm flex items-center gap-2 text-purple-300">
                   👑 عناصر NOVA P{tier}
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                  {items.map((item) => {
-                    const locked = userTier < tier;
-                    return (
-                      <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${locked ? "opacity-60" : "border border-purple-400/40 shadow-[0_0_20px_hsl(280_90%_60%/0.3)]"}`}>
-                        {item.image_url && (
-                          <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
-                        )}
-                        <p className="font-bold text-xs">{item.name}</p>
-                        <p className="text-[9px] text-purple-300 font-bold">يتطلب NOVA P{tier}+</p>
-                        <div className="flex items-center justify-center gap-1">
-                          <CurrencyIcon type="gold" size="xs" />
-                          <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
-                        </div>
-                        {locked && <p className="text-[9px] text-destructive">🔒 مقفل</p>}
+                  {items.map((item) => (
+                    <div key={item.id} className="card-nova p-4 text-center space-y-2 border border-purple-400/40 shadow-[0_0_20px_hsl(280_90%_60%/0.3)]">
+                      {item.image_url && (
+                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                      )}
+                      <p className="font-bold text-xs">{item.name}</p>
+                      <p className="text-[9px] text-purple-300 font-bold">عنصر NOVA P{tier} ✨</p>
+                      <div className="flex items-center justify-center gap-1">
+                        <CurrencyIcon type="gold" size="xs" />
+                        <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
                         <button
                           onClick={() => setPreviewItem({ ...item, _tierType: "nova_p", _tier: tier })}
-                          className="w-full py-1.5 rounded-xl border border-purple-400/50 text-purple-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-purple-400/10 transition"
+                          className="py-1.5 rounded-xl border border-purple-400/50 text-purple-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-purple-400/10 transition"
                         >
                           <Eye className="w-3 h-3" /> معاينة
                         </button>
+                        <button
+                          onClick={() => buyAdminItem(item)}
+                          className="py-1.5 rounded-xl gradient-neon text-primary-foreground text-[10px] font-bold btn-nova"
+                        >
+                          شراء
+                        </button>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
