@@ -388,8 +388,11 @@ const StorePage = () => {
             <>
               <h2 className="font-bold text-sm pt-2">✨ عناصر المتجر</h2>
               <div className="grid grid-cols-2 gap-3">
-                {adminItems.filter((it) => (it.tier_type || "none") === "none").map((item) => (
-                  <div key={item.id} className="card-nova p-4 text-center space-y-2">
+                {adminItems.filter((it) => (it.tier_type || "none") === "none").map((item) => {
+                  const owned = ownedItemNames.has(item.name);
+                  const equipped = item.type === "frame" && profile?.equipped_frame === item.image_url;
+                  return (
+                  <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${equipped ? "border border-primary/50 glow-neon" : ""}`}>
                     {item.image_url && (
                       <div className="w-24 h-24 mx-auto">
                         <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
@@ -401,14 +404,21 @@ const StorePage = () => {
                       <CurrencyIcon type="gold" size="xs" />
                       <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                     </div>
-                    <button
-                      onClick={() => buyAdminItem(item)}
-                      className="w-full py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold btn-nova"
-                    >
-                      شراء
-                    </button>
+                    {owned ? (
+                      <div className="flex items-center justify-center gap-1 text-xs text-green-400 font-bold py-1">
+                        <Check className="w-3 h-3" /> مملوك {equipped && "• مفعّل"}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => buyAdminItem(item)}
+                        className="w-full py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold btn-nova"
+                      >
+                        شراء
+                      </button>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
