@@ -32,6 +32,16 @@ const TopUpPage = () => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [agentsOpen, setAgentsOpen] = useState(false);
+
+  useEffect(() => {
+    const loadAgents = async () => {
+      const { data } = await supabase.from("recharge_agents" as any).select("*").eq("is_active", true).order("created_at", { ascending: false });
+      setAgents((data as any) || []);
+    };
+    loadAgents();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
