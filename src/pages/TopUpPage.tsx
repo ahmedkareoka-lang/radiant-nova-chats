@@ -206,6 +206,14 @@ const TopUpPage = () => {
               : "اختر باقة"}
           </button>
 
+          {/* Recharge from Agent */}
+          <button
+            onClick={() => setAgentsOpen(true)}
+            className="w-full py-3 rounded-full border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-500/20 transition"
+          >
+            <Phone className="w-4 h-4" /> شحن من وكيل شحن ({agents.length})
+          </button>
+
           {/* Withdrawal Info */}
           <div className="card-nova p-4 text-center space-y-1">
             <p className="text-xs font-bold text-accent">💎 سحب الماسات</p>
@@ -213,6 +221,60 @@ const TopUpPage = () => {
             <p className="text-[11px] text-muted-foreground">السحب يتم عبر الوكالة فقط</p>
           </div>
         </main>
+
+        {/* Agents Modal */}
+        <Dialog open={agentsOpen} onOpenChange={setAgentsOpen}>
+          <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-center flex items-center justify-center gap-2">
+                <Phone className="w-5 h-5 text-emerald-400" /> وكلاء الشحن
+              </DialogTitle>
+              <DialogDescription className="text-center text-xs">
+                اختر وكيل واتواصل معه عبر واتساب أو الرسائل المباشرة
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 mt-2">
+              {agents.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground text-sm">لا يوجد وكلاء شحن متاحون حالياً</div>
+              )}
+              {agents.map((a) => (
+                <div key={a.id} className="card-nova p-3 space-y-3">
+                  <div className="flex items-center gap-3">
+                    {a.avatar_url ? (
+                      <img src={a.avatar_url} alt={a.agent_name} className="w-12 h-12 rounded-full object-cover ring-2 ring-emerald-400/40" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center ring-2 ring-emerald-400/40">
+                        <Phone className="w-5 h-5 text-emerald-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{a.agent_name}</p>
+                      <p className="text-[10px] text-muted-foreground" dir="ltr">📱 {a.whatsapp_number}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`tel:${a.whatsapp_number}`}
+                      className="py-2 rounded-xl bg-secondary border border-border text-foreground text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-secondary/80 transition"
+                    >
+                      <Phone className="w-3.5 h-3.5" /> اتصال
+                    </a>
+                    <a
+                      href={`https://wa.me/${a.whatsapp_number.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("مرحباً، أريد شحن رصيد NOVA")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-600 transition"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> واتساب
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <BottomNav />
       </div>
