@@ -33,6 +33,8 @@ import DailyTasksPage from "./pages/DailyTasksPage";
 import PostsFeedPage from "./pages/PostsFeedPage";
 import GamesPage from "./pages/GamesPage";
 import NovaPPage from "./pages/NovaPPage";
+import VipPrivilegePage from "./pages/VipPrivilegePage";
+import NovaPassPage from "./pages/NovaPassPage";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +80,8 @@ const AnimatedRoutes = () => {
         <Route path="/posts" element={<AuthGate><PostsFeedPage /></AuthGate>} />
         <Route path="/games" element={<AuthGate><GamesPage /></AuthGate>} />
         <Route path="/nova-p" element={<AuthGate><NovaPPage /></AuthGate>} />
+        <Route path="/vip" element={<AuthGate><VipPrivilegePage /></AuthGate>} />
+        <Route path="/nova-pass" element={<AuthGate><NovaPassPage /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
