@@ -27,6 +27,10 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalUsers: 0, onlineUsers: 0, totalRooms: 0 });
   const [novaStats, setNovaStats] = useState<{ level: number; label: string; count: number }[]>([]);
   const [adminId, setAdminId] = useState<string | null>(null);
+  const [rechargeAgents, setRechargeAgents] = useState<any[]>([]);
+  const [newAgentId, setNewAgentId] = useState("");
+  const [newAgentName, setNewAgentName] = useState("");
+  const [newAgentWhatsapp, setNewAgentWhatsapp] = useState("");
 
   // Gift & Store management
   const [giftsList, setGiftsList] = useState<any[]>([]);
@@ -289,6 +293,7 @@ const AdminDashboard = () => {
     { id: "store", label: "المتجر", icon: Image },
     { id: "banners", label: "البانرات", icon: Image },
     { id: "agencies", label: "الوكالات", icon: Building2 },
+    { id: "recharge_agents", label: "وكلاء الشحن", icon: Phone },
     { id: "pricing", label: "الأسعار", icon: Globe },
     { id: "settings", label: "الإعدادات", icon: Settings },
   ];
