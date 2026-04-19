@@ -18,7 +18,7 @@ export function useLevelUpDetector() {
   const lastCharm = useRef<number | null>(null);
   const userIdRef = useRef<string | null>(null);
   const displayNameRef = useRef<string>("");
-  const { activeRoomId } = useActiveRoom();
+  const { roomId: activeRoomId } = useActiveRoom();
   const activeRoomRef = useRef<string | null>(null);
 
   useEffect(() => {
