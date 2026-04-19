@@ -103,6 +103,7 @@ const LevelUpRoot = () => {
 };
 
 
+const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
