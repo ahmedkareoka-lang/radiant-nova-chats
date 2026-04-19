@@ -1,4 +1,4 @@
-import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight } from "lucide-react";
+import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
@@ -12,7 +12,7 @@ import PageTransition from "@/components/PageTransition";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
-import LevelTable from "@/components/LevelTable";
+// LevelTable hidden per design — kept import removed
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
 
 // Wealth XP thresholds per level — EXTREME difficulty curve (Lv 1 → 100)
@@ -411,46 +411,67 @@ const Profile = () => {
             );
           })()}
 
-          {/* === Wealth & Charm progress bars === */}
+          {/* === Wealth & Charm progress bars (show remaining XP to next level) === */}
           {(() => {
             const wXp = profile?.wealth_xp || 0;
             const wLvl = profile?.wealth_level || 1;
             const wNext = wealthThreshold(wLvl);
+            const wRemaining = Math.max(0, wNext - wXp);
             const wPct = Math.min(100, (wXp / wNext) * 100);
             const cXp = profile?.charisma_xp || 0;
             const cLvl = profile?.charisma_level || 1;
             const cNext = charmThreshold(cLvl);
+            const cRemaining = Math.max(0, cNext - cXp);
             const cPct = Math.min(100, (cXp / cNext) * 100);
             return (
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-2xl p-3 border border-border/30 bg-secondary/30">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold text-muted-foreground">الثروة</span>
-                    <TierBadge level={wLvl} type="wealth" size="sm" />
+                    <div className="flex items-center gap-1.5">
+                      <TierBadge level={wLvl} type="wealth" size="sm" />
+                      <span className="text-[11px] font-black text-foreground">Lv.{wLvl}</span>
+                    </div>
                   </div>
                   <div className="h-1.5 rounded-full bg-background/50 overflow-hidden">
                     <div className="h-full rounded-full"
                       style={{ width: `${wPct}%`, background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(20 90% 55%))" }} />
                   </div>
-                  <p className="text-[9px] text-muted-foreground mt-1.5">{wXp.toLocaleString()} / {wNext.toLocaleString()}</p>
+                  <p className="text-[9px] text-muted-foreground mt-1.5">باقي {wRemaining.toLocaleString()} للمستوى {wLvl + 1}</p>
                 </div>
                 <div className="rounded-2xl p-3 border border-border/30 bg-secondary/30">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold text-muted-foreground">السحر</span>
-                    <TierBadge level={cLvl} type="charm" size="sm" />
+                    <div className="flex items-center gap-1.5">
+                      <TierBadge level={cLvl} type="charm" size="sm" />
+                      <span className="text-[11px] font-black text-foreground">Lv.{cLvl}</span>
+                    </div>
                   </div>
                   <div className="h-1.5 rounded-full bg-background/50 overflow-hidden">
                     <div className="h-full rounded-full"
                       style={{ width: `${cPct}%`, background: "linear-gradient(90deg, hsl(280 90% 60%), hsl(320 90% 60%))" }} />
                   </div>
-                  <p className="text-[9px] text-muted-foreground mt-1.5">{cXp.toLocaleString()} / {cNext.toLocaleString()}</p>
+                  <p className="text-[9px] text-muted-foreground mt-1.5">باقي {cRemaining.toLocaleString()} للمستوى {cLvl + 1}</p>
                 </div>
               </div>
             );
           })()}
 
-          {/* === Interactive 1-100 levels table === */}
-          <LevelTable currentWealth={profile?.wealth_level || 1} currentCharm={profile?.charisma_level || 1} />
+          {/* Backpack quick-access (all owned items: gifts, frames, badges, VIP, perks) */}
+          <button
+            onClick={() => navigate("/inventory")}
+            className="mt-4 w-full rounded-2xl border border-accent/30 p-3 flex items-center gap-3 hover:bg-secondary/40 transition-colors"
+            style={{ background: "linear-gradient(135deg, hsl(280 50% 18% / 0.6), hsl(45 60% 18% / 0.4))" }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 80% 55%))" }}>
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 text-right min-w-0">
+              <p className="font-black text-sm text-foreground">الحقيبة</p>
+              <p className="text-[10px] text-muted-foreground">جميع الإطارات، الشارات، الهدايا، VIP والمميزات</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180 shrink-0" />
+          </button>
+
 
           {/* === DUAL CURRENCY (display only, no navigation) === */}
           <div className="flex gap-3 mt-4">

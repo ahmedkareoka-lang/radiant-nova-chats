@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Camera, Save } from "lucide-react";
+import { ArrowLeft, Camera, Save, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
+import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 
 const COUNTRIES = [
   { code: "SA", name: "السعودية 🇸🇦" },
@@ -31,6 +32,20 @@ const EditProfile = () => {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, uploading } = useMediaUpload();
+  const [previewQueue, setPreviewQueue] = useState<any[]>([]);
+
+  const replayEntrance = () => {
+    if (!profile) return;
+    setPreviewQueue([{
+      id: `preview-${Date.now()}`,
+      displayName: profile.display_name || "أنا",
+      avatarUrl: profile.avatar_url,
+      videoUrl: profile.entrance_video_url || null,
+      audioUrl: profile.entrance_audio_url || null,
+      novaLevel: profile.nova_p_level || 0,
+      vipLevel: profile.vip_level || 0,
+    }]);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -143,11 +158,25 @@ const EditProfile = () => {
             حفظ التغييرات
           </button>
 
+          <button onClick={replayEntrance}
+            className="w-full py-3 rounded-full border border-accent/50 text-accent font-bold text-sm flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            إعادة تشغيل تأثير الدخول
+          </button>
+
           <button onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}
             className="w-full py-3 rounded-full border border-destructive/50 text-destructive font-bold text-sm">
             تسجيل الخروج
           </button>
         </main>
+
+        <CustomEntranceEffect
+          roomId={null}
+          currentUserId={profile?.id || null}
+          queue={previewQueue}
+          onComplete={(id) => setPreviewQueue((q) => q.filter((e) => e.id !== id))}
+          muteEntrance={false}
+        />
 
         <BottomNav />
       </div>
