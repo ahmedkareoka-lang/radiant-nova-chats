@@ -10,6 +10,8 @@ import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
 import FloatingRoomBubble from "@/components/FloatingRoomBubble";
 import GlobalGiftTicker from "@/components/GlobalGiftTicker";
 import LegendaryGiftExplosion from "@/components/LegendaryGiftExplosion";
+import LevelUpEvent from "@/components/LevelUpEvent";
+import { useLevelUpDetector } from "@/hooks/useLevelUpDetector";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
@@ -106,6 +108,7 @@ const App = () => {
               <FloatingRoomBubble />
               <GlobalGiftTicker />
               <LegendaryGiftExplosion />
+              <LevelUpRoot />
             </ActiveRoomProvider>
           </BrowserRouter>
         )}
