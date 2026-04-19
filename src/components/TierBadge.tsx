@@ -157,9 +157,6 @@ export default function TierBadge({ level, type, size = "md" }: TierBadgeProps) 
         ))}
 
       <Icon className={`${dim.icon} relative z-10`} />
-      <span className="relative z-10">
-        {TypeLabel} {level}
-      </span>
     </motion.span>
   );
 }
