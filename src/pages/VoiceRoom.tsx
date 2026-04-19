@@ -20,6 +20,7 @@ import EmojiStickerPicker from "@/components/EmojiStickerPicker";
 import RoomParticles from "@/components/RoomParticles";
 import CustomEntranceEffect from "@/components/CustomEntranceEffect";
 import GiftAnnouncementBanner from "@/components/GiftAnnouncementBanner";
+import TreasureBox from "@/components/TreasureBox";
 import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
 import Top3RoomSenders from "@/components/Top3RoomSenders";
 import GiftComboBar from "@/components/GiftComboBar";
@@ -774,6 +775,9 @@ const VoiceRoom = () => {
 
       {/* Big Gift Announcement Banner */}
       {roomId && <GiftAnnouncementBanner roomId={roomId} />}
+
+      {/* Treasure Box (auto-trigger at 300K daily room support) */}
+      {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
       {/* Voice Room Area */}
       <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
