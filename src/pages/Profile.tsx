@@ -449,6 +449,9 @@ const Profile = () => {
             );
           })()}
 
+          {/* === Interactive 1-100 levels table === */}
+          <LevelTable currentWealth={profile?.wealth_level || 1} currentCharm={profile?.charisma_level || 1} />
+
           {/* === DUAL CURRENCY (display only, no navigation) === */}
           <div className="flex gap-3 mt-4">
             <div className="flex-1 rounded-2xl p-3 flex items-center justify-center gap-2 border border-border/30" style={{ background: "linear-gradient(135deg, hsl(220 50% 18% / 0.6), hsl(260 30% 12% / 0.6))" }}>
