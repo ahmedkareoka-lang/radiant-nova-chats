@@ -12,6 +12,7 @@ import PageTransition from "@/components/PageTransition";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
+import LevelTable from "@/components/LevelTable";
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
 
 // Wealth XP thresholds per level — EXTREME difficulty curve (Lv 1 → 100)
@@ -169,11 +170,13 @@ const Profile = () => {
               <div className="grid grid-cols-3 gap-3">
                 {ownedFrames.map((item) => {
                   const key = item.item_data?.frame_url;
-                  const img = FRAME_MAP[key];
+                  // For admin-store frames, the image is in item_data.image_url and key may be a URL.
+                  const img = (key && FRAME_MAP[key]) || item.item_data?.image_url;
                   if (!img) return null;
+                  const isEquipped = equippedFrameKey === key || equippedFrameKey === item.item_data?.image_url;
                   return (
                     <button key={item.id} onClick={() => equipFrame(key)}
-                      className={`p-2 rounded-xl text-center ${equippedFrameKey === key ? "border-2 border-primary glow-neon" : "border border-border"}`}>
+                      className={`p-2 rounded-xl text-center ${isEquipped ? "border-2 border-primary glow-neon" : "border border-border"}`}>
                       <img src={img} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
                       <p className="text-[9px] font-bold mt-1">{item.item_name}</p>
                     </button>
@@ -445,6 +448,9 @@ const Profile = () => {
               </div>
             );
           })()}
+
+          {/* === Interactive 1-100 levels table === */}
+          <LevelTable currentWealth={profile?.wealth_level || 1} currentCharm={profile?.charisma_level || 1} />
 
           {/* === DUAL CURRENCY (display only, no navigation) === */}
           <div className="flex gap-3 mt-4">

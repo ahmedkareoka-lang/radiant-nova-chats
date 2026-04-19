@@ -24,43 +24,21 @@ interface CustomEntranceEffectProps {
 
 const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEntrance }: CustomEntranceEffectProps) => {
   const [current, setCurrent] = useState<EntranceEntry | null>(null);
-  const [remoteEntrance, setRemoteEntrance] = useState<EntranceEntry | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const channelRef = useRef<any>(null);
 
-  // Broadcast entrance effects via realtime so everyone sees them
-  useEffect(() => {
-    if (!roomId) return;
-    const channel = supabase.channel(`entrance-${roomId}-${Date.now()}`);
-    channel.on("broadcast", { event: "entrance-effect" }, ({ payload }) => {
-      if (payload && payload.id !== currentUserId) {
-        setRemoteEntrance(payload as EntranceEntry);
-        // Auto dismiss after 4s
-        setTimeout(() => setRemoteEntrance(null), 4000);
-      }
-    });
-    channel.subscribe();
-    channelRef.current = channel;
-    return () => { supabase.removeChannel(channel); };
-  }, [roomId, currentUserId]);
+  // SELF-ONLY entrance: only show the user's OWN entrance to themselves.
+  // No broadcasting, no remote display — each user sees only their own join effect.
 
   const playNext = useCallback((entry: EntranceEntry) => {
     setCurrent(entry);
-
-    // Broadcast to all room members
-    channelRef.current?.send({
-      type: "broadcast",
-      event: "entrance-effect",
-      payload: entry,
-    });
 
     // Play tier-based NOVA P entrance sound (P4 fire, P5 rainbow, P6 dragon)
     if (!muteEntrance && entry.novaLevel && entry.novaLevel >= 4) {
       playNovaEntranceSound(entry.novaLevel);
     }
 
-    // Play custom audio (overrides/layers with tier sound)
+    // Play custom audio
     if (entry.audioUrl && !muteEntrance) {
       try {
         const audio = new Audio(entry.audioUrl);
@@ -76,13 +54,12 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
         audioRef.current.pause();
         audioRef.current = null;
       }
-      setCurrent(null); // clear current so next can play
-      onComplete(entry.id); // remove from queue
+      setCurrent(null);
+      onComplete(entry.id);
     }, 4000);
   }, [muteEntrance, onComplete]);
 
   useEffect(() => {
-    // Only start playing if nothing is currently shown and queue has items
     if (!current && queue.length > 0) {
       playNext(queue[0]);
     }
@@ -95,22 +72,7 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
     };
   }, []);
 
-  // Play audio for remote entrances too
-  useEffect(() => {
-    if (!remoteEntrance || muteEntrance) return;
-    if (remoteEntrance.novaLevel && remoteEntrance.novaLevel >= 4) {
-      playNovaEntranceSound(remoteEntrance.novaLevel);
-    }
-    if (remoteEntrance.audioUrl) {
-      try {
-        const a = new Audio(remoteEntrance.audioUrl);
-        a.volume = 0.6;
-        a.play().catch(() => {});
-      } catch {}
-    }
-  }, [remoteEntrance, muteEntrance]);
-
-  const activeEntry = current || remoteEntrance;
+  const activeEntry = current;
   const novaAsset = activeEntry?.novaLevel ? getNovaAsset(activeEntry.novaLevel) : null;
 
   return (

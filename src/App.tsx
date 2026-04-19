@@ -10,6 +10,8 @@ import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
 import FloatingRoomBubble from "@/components/FloatingRoomBubble";
 import GlobalGiftTicker from "@/components/GlobalGiftTicker";
 import LegendaryGiftExplosion from "@/components/LegendaryGiftExplosion";
+import LevelUpEvent from "@/components/LevelUpEvent";
+import { useLevelUpDetector } from "@/hooks/useLevelUpDetector";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
@@ -88,6 +90,19 @@ const AnimatedRoutes = () => {
   );
 };
 
+const LevelUpRoot = () => {
+  const { event, clear } = useLevelUpDetector();
+  return (
+    <LevelUpEvent
+      show={!!event}
+      type={event?.type || "wealth"}
+      newLevel={event?.newLevel || 1}
+      onClose={clear}
+    />
+  );
+};
+
+
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
@@ -106,6 +121,7 @@ const App = () => {
               <FloatingRoomBubble />
               <GlobalGiftTicker />
               <LegendaryGiftExplosion />
+              <LevelUpRoot />
             </ActiveRoomProvider>
           </BrowserRouter>
         )}
