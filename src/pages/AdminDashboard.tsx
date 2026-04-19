@@ -37,6 +37,7 @@ const AdminDashboard = () => {
   const [storeItems, setStoreItems] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [newGift, setNewGift] = useState({ name: "", price: "" });
+  const [giftPreviewUrl, setGiftPreviewUrl] = useState<string | null>(null);
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
   const [newBanner, setNewBanner] = useState({ title: "" });
   const [uploading, setUploading] = useState(false);
@@ -252,6 +253,7 @@ const AdminDashboard = () => {
     if (error) { toast.error("فشل في إضافة الهدية"); return; }
     toast.success("تمت إضافة الهدية ✅");
     setNewGift({ name: "", price: "" });
+    setGiftPreviewUrl(null);
     if (giftFileRef.current) giftFileRef.current.value = "";
     await fetchGifts();
   };
@@ -640,11 +642,39 @@ const AdminDashboard = () => {
                     className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
                 </div>
                 <div className="flex gap-2 items-center">
-                  <input ref={giftFileRef} type="file" accept="image/*,video/*" className="text-xs flex-1" />
+                  <input
+                    ref={giftFileRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    className="text-xs flex-1"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) setGiftPreviewUrl(URL.createObjectURL(f));
+                      else setGiftPreviewUrl(null);
+                    }}
+                  />
                   <button onClick={handleAddGift} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
                     {uploading ? "جارٍ الرفع..." : "إضافة"}
                   </button>
                 </div>
+                {giftPreviewUrl && (
+                  <div className="flex items-center gap-3 p-2 rounded-xl bg-background/40 border border-border/30">
+                    <img src={giftPreviewUrl} alt="معاينة الهدية" className="w-16 h-16 rounded-lg object-contain bg-secondary/40" />
+                    <div className="flex-1">
+                      <p className="text-[10px] text-muted-foreground">معاينة الصورة</p>
+                      <p className="text-xs font-bold">{newGift.name || "بدون اسم"}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setGiftPreviewUrl(null);
+                        if (giftFileRef.current) giftFileRef.current.value = "";
+                      }}
+                      className="text-destructive text-xs"
+                    >
+                      إزالة
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
