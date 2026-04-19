@@ -188,15 +188,18 @@ const StorePage = () => {
     }
     const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
     if (error) { toast.error("فشل في الشراء"); return; }
+    // For frame items, store key in item_data.frame_url so the profile picker can find them.
+    // Admin items only have a direct image_url so we use that as the key.
+    const frameKey = item.type === "frame" ? (item.image_url || item.id) : null;
     await supabase.from("inventory").insert({
       user_id: profile.id,
       item_type: item.type,
       item_name: item.name,
-      item_data: { ...(item.data || {}), image_url: item.image_url, source_id: item.id },
+      item_data: { ...(item.data || {}), image_url: item.image_url, source_id: item.id, frame_url: frameKey },
     });
-    if (item.type === "frame" && item.image_url) {
-      await supabase.from("profiles").update({ equipped_frame: item.image_url }).eq("id", profile.id);
-      setProfile({ ...profile, coins: profile.coins - price, equipped_frame: item.image_url });
+    if (item.type === "frame" && frameKey) {
+      await supabase.from("profiles").update({ equipped_frame: frameKey }).eq("id", profile.id);
+      setProfile({ ...profile, coins: profile.coins - price, equipped_frame: frameKey });
     } else {
       setProfile({ ...profile, coins: profile.coins - price });
     }
