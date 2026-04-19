@@ -90,7 +90,19 @@ const AnimatedRoutes = () => {
   );
 };
 
-const App = () => {
+const LevelUpRoot = () => {
+  const { event, clear } = useLevelUpDetector();
+  return (
+    <LevelUpEvent
+      show={!!event}
+      type={event?.type || "wealth"}
+      newLevel={event?.newLevel || 1}
+      onClose={clear}
+    />
+  );
+};
+
+
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
