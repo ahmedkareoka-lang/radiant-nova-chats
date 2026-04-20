@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package } from "lucide-react";
 import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
@@ -998,6 +998,13 @@ const VoiceRoom = () => {
             if (host) openGiftFor(roomData?.host_id, host.display_name);
           }} className="w-14 h-14 rounded-full gradient-gold glow-gold flex items-center justify-center animate-float">
             <Gift className="w-6 h-6 text-accent-foreground" />
+          </button>
+          <button
+            onClick={() => navigate("/inventory")}
+            className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
+            aria-label="الحقيبة"
+          >
+            <Package className="w-5 h-5 text-foreground" />
           </button>
           <button onClick={handleLeave} className="w-12 h-12 rounded-full bg-destructive/20 text-destructive flex items-center justify-center">
             <LogOut className="w-5 h-5" />
