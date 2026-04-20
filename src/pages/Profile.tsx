@@ -49,6 +49,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [giftStats, setGiftStats] = useState({ sent: 0, received: 0 });
   const [ownedFrames, setOwnedFrames] = useState<any[]>([]);
+  const [newItemsCount, setNewItemsCount] = useState(0);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [genderPicking, setGenderPicking] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -71,11 +72,29 @@ const Profile = () => {
       setGiftStats({ sent: sentCount || 0, received: receivedCount || 0 });
       const { data: inv } = await supabase.from("inventory").select("*").eq("user_id", user.id).eq("item_type", "frame");
       setOwnedFrames(inv || []);
+
+      // Count new (unseen) inventory items since the last time the user opened the backpack
+      const lastSeenKey = `inventory_last_seen_${user.id}`;
+      const lastSeen = localStorage.getItem(lastSeenKey);
+      const lastSeenDate = lastSeen ? new Date(lastSeen) : new Date(0);
+      const { count: newCount } = await supabase
+        .from("inventory")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gt("acquired_at", lastSeenDate.toISOString());
+      setNewItemsCount(newCount || 0);
+
       if (!data?.gender) setGenderPicking(true);
       setLoading(false);
     };
     fetchProfile();
   }, [navigate]);
+
+  const openInventory = () => {
+    if (myId) localStorage.setItem(`inventory_last_seen_${myId}`, new Date().toISOString());
+    setNewItemsCount(0);
+    navigate("/inventory");
+  };
 
   const equipFrame = async (frameUrl: string | null) => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
@@ -457,16 +476,30 @@ const Profile = () => {
 
           {/* Backpack quick-access (all owned items: gifts, frames, badges, VIP, perks) */}
           <button
-            onClick={() => navigate("/inventory")}
+            onClick={openInventory}
             className="mt-4 w-full rounded-2xl border border-accent/30 p-3 flex items-center gap-3 hover:bg-secondary/40 transition-colors"
             style={{ background: "linear-gradient(135deg, hsl(280 50% 18% / 0.6), hsl(45 60% 18% / 0.4))" }}
           >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 80% 55%))" }}>
               <Package className="w-5 h-5 text-white" />
+              {newItemsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-destructive flex items-center justify-center border-2 border-background animate-pulse">
+                  <span className="text-[10px] font-black text-destructive-foreground leading-none">
+                    {newItemsCount > 99 ? "99+" : newItemsCount}
+                  </span>
+                </span>
+              )}
             </div>
             <div className="flex-1 text-right min-w-0">
-              <p className="font-black text-sm text-foreground">الحقيبة</p>
+              <p className="font-black text-sm text-foreground flex items-center gap-2">
+                الحقيبة
+                {newItemsCount > 0 && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-destructive/20 text-destructive font-bold">
+                    {newItemsCount} جديد
+                  </span>
+                )}
+              </p>
               <p className="text-[10px] text-muted-foreground">جميع الإطارات، الشارات، الهدايا، VIP والمميزات</p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180 shrink-0" />
