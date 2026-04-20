@@ -1,0 +1,1160 @@
+{
+  "frames": [
+    {
+      "id": "frames_phoenix_inferno",
+      "name": "Phoenix Inferno",
+      "image": "/store/frames/phoenix_inferno.png",
+      "price": 25000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_lightning_god",
+      "name": "Lightning God",
+      "image": "/store/frames/lightning_god.png",
+      "price": 35000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_dragon_king",
+      "name": "Dragon King",
+      "image": "/store/frames/dragon_king.png",
+      "price": 80000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_diamond_crown",
+      "name": "Diamond Crown",
+      "image": "/store/frames/diamond_crown.png",
+      "price": 120000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "frames_galaxy_nebula",
+      "name": "Galaxy Nebula",
+      "image": "/store/frames/galaxy_nebula.png",
+      "price": 95000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_ice_phoenix",
+      "name": "Ice Phoenix",
+      "image": "/store/frames/ice_phoenix.png",
+      "price": 70000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_demon_lord",
+      "name": "Demon Lord",
+      "image": "/store/frames/demon_lord.png",
+      "price": 60000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_angel_wings",
+      "name": "Angel Wings",
+      "image": "/store/frames/angel_wings.png",
+      "price": 55000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_cyber_punk",
+      "name": "Cyber Punk",
+      "image": "/store/frames/cyber_punk.png",
+      "price": 18000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_sakura_bloom",
+      "name": "Sakura Bloom",
+      "image": "/store/frames/sakura_bloom.png",
+      "price": 8000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_volcano_lava",
+      "name": "Volcano Lava",
+      "image": "/store/frames/volcano_lava.png",
+      "price": 45000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_ocean_tide",
+      "name": "Ocean Tide",
+      "image": "/store/frames/ocean_tide.png",
+      "price": 12000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_forest_spirit",
+      "name": "Forest Spirit",
+      "image": "/store/frames/forest_spirit.png",
+      "price": 7000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_royal_lion",
+      "name": "Royal Lion",
+      "image": "/store/frames/royal_lion.png",
+      "price": 65000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_wolf_howl",
+      "name": "Wolf Howl",
+      "image": "/store/frames/wolf_howl.png",
+      "price": 22000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_eagle_soar",
+      "name": "Eagle Soar",
+      "image": "/store/frames/eagle_soar.png",
+      "price": 28000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_snake_coil",
+      "name": "Snake Coil",
+      "image": "/store/frames/snake_coil.png",
+      "price": 16000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_pegasus_wings",
+      "name": "Pegasus Wings",
+      "image": "/store/frames/pegasus_wings.png",
+      "price": 75000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_unicorn_magic",
+      "name": "Unicorn Magic",
+      "image": "/store/frames/unicorn_magic.png",
+      "price": 50000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_skull_king",
+      "name": "Skull King",
+      "image": "/store/frames/skull_king.png",
+      "price": 40000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_vampire_bat",
+      "name": "Vampire Bat",
+      "image": "/store/frames/vampire_bat.png",
+      "price": 33000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_mermaid_pearl",
+      "name": "Mermaid Pearl",
+      "image": "/store/frames/mermaid_pearl.png",
+      "price": 14000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_aztec_sun",
+      "name": "Aztec Sun",
+      "image": "/store/frames/aztec_sun.png",
+      "price": 38000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_egyptian_pharaoh",
+      "name": "Egyptian Pharaoh",
+      "image": "/store/frames/egyptian_pharaoh.png",
+      "price": 90000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_norse_viking",
+      "name": "Norse Viking",
+      "image": "/store/frames/norse_viking.png",
+      "price": 42000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_samurai_honor",
+      "name": "Samurai Honor",
+      "image": "/store/frames/samurai_honor.png",
+      "price": 48000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_ninja_shadow",
+      "name": "Ninja Shadow",
+      "image": "/store/frames/ninja_shadow.png",
+      "price": 20000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_wizard_stars",
+      "name": "Wizard Stars",
+      "image": "/store/frames/wizard_stars.png",
+      "price": 26000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_knight_armor",
+      "name": "Knight Armor",
+      "image": "/store/frames/knight_armor.png",
+      "price": 32000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_pirate_skull",
+      "name": "Pirate Skull",
+      "image": "/store/frames/pirate_skull.png",
+      "price": 24000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_diamond_heart",
+      "name": "Diamond Heart",
+      "image": "/store/frames/diamond_heart.png",
+      "price": 18000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_crown_jewels",
+      "name": "Crown Jewels",
+      "image": "/store/frames/crown_jewels.png",
+      "price": 110000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "frames_lava_demon",
+      "name": "Lava Demon",
+      "image": "/store/frames/lava_demon.png",
+      "price": 58000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_frozen_king",
+      "name": "Frozen King",
+      "image": "/store/frames/frozen_king.png",
+      "price": 52000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_storm_cloud",
+      "name": "Storm Cloud",
+      "image": "/store/frames/storm_cloud.png",
+      "price": 23000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_rainbow_star",
+      "name": "Rainbow Star",
+      "image": "/store/frames/rainbow_star.png",
+      "price": 9000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_black_hole",
+      "name": "Black Hole",
+      "image": "/store/frames/black_hole.png",
+      "price": 100000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "frames_aurora_borealis",
+      "name": "Aurora Borealis",
+      "image": "/store/frames/aurora_borealis.png",
+      "price": 36000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_phoenix_rebirth",
+      "name": "Phoenix Rebirth",
+      "image": "/store/frames/phoenix_rebirth.png",
+      "price": 85000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_yin_yang",
+      "name": "Yin Yang",
+      "image": "/store/frames/yin_yang.png",
+      "price": 44000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "frames_tribal_mask",
+      "name": "Tribal Mask",
+      "image": "/store/frames/tribal_mask.png",
+      "price": 17000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_steampunk_gear",
+      "name": "Steampunk Gear",
+      "image": "/store/frames/steampunk_gear.png",
+      "price": 19000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_robot_cyborg",
+      "name": "Robot Cyborg",
+      "image": "/store/frames/robot_cyborg.png",
+      "price": 21000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_treasure_chest",
+      "name": "Treasure Chest",
+      "image": "/store/frames/treasure_chest.png",
+      "price": 15000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_magic_book",
+      "name": "Magic Book",
+      "image": "/store/frames/magic_book.png",
+      "price": 13000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "frames_hellfire_throne",
+      "name": "Hellfire Throne",
+      "image": "/store/frames/hellfire_throne.png",
+      "price": 130000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "frames_celestial_god",
+      "name": "Celestial God",
+      "image": "/store/frames/celestial_god.png",
+      "price": 150000,
+      "rarity": "legendary",
+      "duration": 20
+    }
+  ],
+  "gifts": [
+    {
+      "id": "gifts_lamborghini",
+      "name": "Lamborghini",
+      "image": "/store/gifts/lamborghini.png",
+      "price": 50000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_ferrari",
+      "name": "Ferrari",
+      "image": "/store/gifts/ferrari.png",
+      "price": 45000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_bugatti",
+      "name": "Bugatti",
+      "image": "/store/gifts/bugatti.png",
+      "price": 80000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_rolls_royce",
+      "name": "Rolls Royce",
+      "image": "/store/gifts/rolls_royce.png",
+      "price": 70000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_tesla_roadster",
+      "name": "Tesla Roadster",
+      "image": "/store/gifts/tesla_roadster.png",
+      "price": 35000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_mercedes_g_wagon",
+      "name": "Mercedes G-Wagon",
+      "image": "/store/gifts/mercedes_g_wagon.png",
+      "price": 30000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_porsche",
+      "name": "Porsche",
+      "image": "/store/gifts/porsche.png",
+      "price": 28000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_mclaren",
+      "name": "McLaren",
+      "image": "/store/gifts/mclaren.png",
+      "price": 40000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_aston_martin",
+      "name": "Aston Martin",
+      "image": "/store/gifts/aston_martin.png",
+      "price": 38000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_lexus_lfa",
+      "name": "Lexus LFA",
+      "image": "/store/gifts/lexus_lfa.png",
+      "price": 25000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_tiger_cub",
+      "name": "Tiger Cub",
+      "image": "/store/gifts/tiger_cub.png",
+      "price": 8000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_panda",
+      "name": "Panda",
+      "image": "/store/gifts/panda.png",
+      "price": 5000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_unicorn",
+      "name": "Unicorn",
+      "image": "/store/gifts/unicorn.png",
+      "price": 18000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_dragon_hatchling",
+      "name": "Dragon Hatchling",
+      "image": "/store/gifts/dragon_hatchling.png",
+      "price": 27000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_phoenix_bird",
+      "name": "Phoenix Bird",
+      "image": "/store/gifts/phoenix_bird.png",
+      "price": 32000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_white_tiger",
+      "name": "White Tiger",
+      "image": "/store/gifts/white_tiger.png",
+      "price": 35000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_black_panther",
+      "name": "Black Panther",
+      "image": "/store/gifts/black_panther.png",
+      "price": 24000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_pegasus",
+      "name": "Pegasus",
+      "image": "/store/gifts/pegasus.png",
+      "price": 42000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_wolf_pup",
+      "name": "Wolf Pup",
+      "image": "/store/gifts/wolf_pup.png",
+      "price": 6000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_eagle",
+      "name": "Eagle",
+      "image": "/store/gifts/eagle.png",
+      "price": 12000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_owl",
+      "name": "Owl",
+      "image": "/store/gifts/owl.png",
+      "price": 4000,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_cat",
+      "name": "Cat",
+      "image": "/store/gifts/cat.png",
+      "price": 1500,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_puppy",
+      "name": "Puppy",
+      "image": "/store/gifts/puppy.png",
+      "price": 1500,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_bunny",
+      "name": "Bunny",
+      "image": "/store/gifts/bunny.png",
+      "price": 1000,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_crystal_heart",
+      "name": "Crystal Heart",
+      "image": "/store/gifts/crystal_heart.png",
+      "price": 3000,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_diamond_ring",
+      "name": "Diamond Ring",
+      "image": "/store/gifts/diamond_ring.png",
+      "price": 60000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_rose_bouquet",
+      "name": "Rose Bouquet",
+      "image": "/store/gifts/rose_bouquet.png",
+      "price": 2000,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_love_letter",
+      "name": "Love Letter",
+      "image": "/store/gifts/love_letter.png",
+      "price": 800,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_wedding_cake",
+      "name": "Wedding Cake",
+      "image": "/store/gifts/wedding_cake.png",
+      "price": 15000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_gold_bar",
+      "name": "Gold Bar",
+      "image": "/store/gifts/gold_bar.png",
+      "price": 10000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_money_stack",
+      "name": "Money Stack",
+      "image": "/store/gifts/money_stack.png",
+      "price": 5500,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_diamond_necklace",
+      "name": "Diamond Necklace",
+      "image": "/store/gifts/diamond_necklace.png",
+      "price": 48000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_crown",
+      "name": "Crown",
+      "image": "/store/gifts/crown.png",
+      "price": 55000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_champagne_bottle",
+      "name": "Champagne Bottle",
+      "image": "/store/gifts/champagne_bottle.png",
+      "price": 7000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_mansion",
+      "name": "Mansion",
+      "image": "/store/gifts/mansion.png",
+      "price": 90000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_yacht",
+      "name": "Yacht",
+      "image": "/store/gifts/yacht.png",
+      "price": 85000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_private_jet",
+      "name": "Private Jet",
+      "image": "/store/gifts/private_jet.png",
+      "price": 100000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "gifts_castle",
+      "name": "Castle",
+      "image": "/store/gifts/castle.png",
+      "price": 75000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_burj_khalifa",
+      "name": "Burj Khalifa",
+      "image": "/store/gifts/burj_khalifa.png",
+      "price": 65000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_magic_wand",
+      "name": "Magic Wand",
+      "image": "/store/gifts/magic_wand.png",
+      "price": 3500,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_spell_book",
+      "name": "Spell Book",
+      "image": "/store/gifts/spell_book.png",
+      "price": 4500,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_crystal_ball",
+      "name": "Crystal Ball",
+      "image": "/store/gifts/crystal_ball.png",
+      "price": 9000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_magic_lamp",
+      "name": "Magic Lamp",
+      "image": "/store/gifts/magic_lamp.png",
+      "price": 11000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_excalibur_sword",
+      "name": "Excalibur Sword",
+      "image": "/store/gifts/excalibur_sword.png",
+      "price": 36000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "gifts_birthday_cake",
+      "name": "Birthday Cake",
+      "image": "/store/gifts/birthday_cake.png",
+      "price": 2500,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_teddy_bear",
+      "name": "Teddy Bear",
+      "image": "/store/gifts/teddy_bear.png",
+      "price": 1200,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_rainbow",
+      "name": "Rainbow",
+      "image": "/store/gifts/rainbow.png",
+      "price": 4000,
+      "rarity": "common",
+      "duration": 6
+    },
+    {
+      "id": "gifts_star_burst",
+      "name": "Star Burst",
+      "image": "/store/gifts/star_burst.png",
+      "price": 6500,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "gifts_galaxy_sphere",
+      "name": "Galaxy Sphere",
+      "image": "/store/gifts/galaxy_sphere.png",
+      "price": 130000,
+      "rarity": "legendary",
+      "duration": 20
+    }
+  ],
+  "entrances": [
+    {
+      "id": "entrances_fire_dragon_entrance",
+      "name": "Fire Dragon Entrance",
+      "image": "/store/entrances/fire_dragon_entrance.png",
+      "price": 90000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_lightning_strike_entrance",
+      "name": "Lightning Strike Entrance",
+      "image": "/store/entrances/lightning_strike_entrance.png",
+      "price": 70000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_phoenix_rising_entrance",
+      "name": "Phoenix Rising Entrance",
+      "image": "/store/entrances/phoenix_rising_entrance.png",
+      "price": 80000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_lamborghini_drive_by",
+      "name": "Lamborghini Drive-By",
+      "image": "/store/entrances/lamborghini_drive_by.png",
+      "price": 45000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_royal_carriage",
+      "name": "Royal Carriage",
+      "image": "/store/entrances/royal_carriage.png",
+      "price": 60000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_tornado_storm",
+      "name": "Tornado Storm",
+      "image": "/store/entrances/tornado_storm.png",
+      "price": 35000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_galaxy_portal",
+      "name": "Galaxy Portal",
+      "image": "/store/entrances/galaxy_portal.png",
+      "price": 100000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "entrances_angel_descent",
+      "name": "Angel Descent",
+      "image": "/store/entrances/angel_descent.png",
+      "price": 65000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_ice_storm",
+      "name": "Ice Storm",
+      "image": "/store/entrances/ice_storm.png",
+      "price": 28000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_volcanic_eruption",
+      "name": "Volcanic Eruption",
+      "image": "/store/entrances/volcanic_eruption.png",
+      "price": 50000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_ocean_wave",
+      "name": "Ocean Wave",
+      "image": "/store/entrances/ocean_wave.png",
+      "price": 22000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_sakura_petals",
+      "name": "Sakura Petals",
+      "image": "/store/entrances/sakura_petals.png",
+      "price": 12000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_lion_roar",
+      "name": "Lion Roar",
+      "image": "/store/entrances/lion_roar.png",
+      "price": 38000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_wolf_pack",
+      "name": "Wolf Pack",
+      "image": "/store/entrances/wolf_pack.png",
+      "price": 25000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_tiger_pounce",
+      "name": "Tiger Pounce",
+      "image": "/store/entrances/tiger_pounce.png",
+      "price": 30000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_eagle_dive",
+      "name": "Eagle Dive",
+      "image": "/store/entrances/eagle_dive.png",
+      "price": 18000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_pegasus_flight",
+      "name": "Pegasus Flight",
+      "image": "/store/entrances/pegasus_flight.png",
+      "price": 75000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_unicorn_charge",
+      "name": "Unicorn Charge",
+      "image": "/store/entrances/unicorn_charge.png",
+      "price": 48000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_skeleton_army",
+      "name": "Skeleton Army",
+      "image": "/store/entrances/skeleton_army.png",
+      "price": 32000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_vampire_bats",
+      "name": "Vampire Bats",
+      "image": "/store/entrances/vampire_bats.png",
+      "price": 26000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_mermaid_splash",
+      "name": "Mermaid Splash",
+      "image": "/store/entrances/mermaid_splash.png",
+      "price": 16000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_aztec_god",
+      "name": "Aztec God",
+      "image": "/store/entrances/aztec_god.png",
+      "price": 42000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_pharaoh_march",
+      "name": "Pharaoh March",
+      "image": "/store/entrances/pharaoh_march.png",
+      "price": 95000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_viking_raid",
+      "name": "Viking Raid",
+      "image": "/store/entrances/viking_raid.png",
+      "price": 36000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_samurai_slash",
+      "name": "Samurai Slash",
+      "image": "/store/entrances/samurai_slash.png",
+      "price": 44000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_ninja_smoke",
+      "name": "Ninja Smoke",
+      "image": "/store/entrances/ninja_smoke.png",
+      "price": 20000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_wizard_magic",
+      "name": "Wizard Magic",
+      "image": "/store/entrances/wizard_magic.png",
+      "price": 24000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_knight_charge",
+      "name": "Knight Charge",
+      "image": "/store/entrances/knight_charge.png",
+      "price": 28000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_pirate_ship",
+      "name": "Pirate Ship",
+      "image": "/store/entrances/pirate_ship.png",
+      "price": 33000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_diamond_rain",
+      "name": "Diamond Rain",
+      "image": "/store/entrances/diamond_rain.png",
+      "price": 52000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_crown_coronation",
+      "name": "Crown Coronation",
+      "image": "/store/entrances/crown_coronation.png",
+      "price": 110000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "entrances_lava_flow",
+      "name": "Lava Flow",
+      "image": "/store/entrances/lava_flow.png",
+      "price": 40000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_frozen_king",
+      "name": "Frozen King",
+      "image": "/store/entrances/frozen_king.png",
+      "price": 46000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_thunder_god",
+      "name": "Thunder God",
+      "image": "/store/entrances/thunder_god.png",
+      "price": 88000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_rainbow_burst",
+      "name": "Rainbow Burst",
+      "image": "/store/entrances/rainbow_burst.png",
+      "price": 8000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_black_hole",
+      "name": "Black Hole",
+      "image": "/store/entrances/black_hole.png",
+      "price": 105000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "entrances_aurora_sky",
+      "name": "Aurora Sky",
+      "image": "/store/entrances/aurora_sky.png",
+      "price": 30000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_phoenix_flame_trail",
+      "name": "Phoenix Flame Trail",
+      "image": "/store/entrances/phoenix_flame_trail.png",
+      "price": 78000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_yin_yang_spin",
+      "name": "Yin Yang Spin",
+      "image": "/store/entrances/yin_yang_spin.png",
+      "price": 38000,
+      "rarity": "epic",
+      "duration": 15
+    },
+    {
+      "id": "entrances_lotus_bloom",
+      "name": "Lotus Bloom",
+      "image": "/store/entrances/lotus_bloom.png",
+      "price": 10000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_tribal_drums",
+      "name": "Tribal Drums",
+      "image": "/store/entrances/tribal_drums.png",
+      "price": 15000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_steampunk_train",
+      "name": "Steampunk Train",
+      "image": "/store/entrances/steampunk_train.png",
+      "price": 19000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_crystal_shatter",
+      "name": "Crystal Shatter",
+      "image": "/store/entrances/crystal_shatter.png",
+      "price": 26000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_robot_mech",
+      "name": "Robot Mech",
+      "image": "/store/entrances/robot_mech.png",
+      "price": 23000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_treasure_explosion",
+      "name": "Treasure Explosion",
+      "image": "/store/entrances/treasure_explosion.png",
+      "price": 14000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_spell_casting",
+      "name": "Spell Casting",
+      "image": "/store/entrances/spell_casting.png",
+      "price": 13000,
+      "rarity": "rare",
+      "duration": 10
+    },
+    {
+      "id": "entrances_heavenly_gates",
+      "name": "Heavenly Gates",
+      "image": "/store/entrances/heavenly_gates.png",
+      "price": 120000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "entrances_cosmic_god",
+      "name": "Cosmic God",
+      "image": "/store/entrances/cosmic_god.png",
+      "price": 145000,
+      "rarity": "legendary",
+      "duration": 20
+    }
+  ]
+}

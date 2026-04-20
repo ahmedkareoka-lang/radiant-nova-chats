@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import storeCatalog from "@/lib/storeCatalog.json";
 import { ArrowLeft, ShoppingBag, Check, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,6 +175,96 @@ const StorePage = () => {
     toast.success(`تم شراء ${frame.name} وتفعيله! 🎉`);
   };
 
+  const RARITY_STYLES: Record<string, { border: string; glow: string; label: string; color: string }> = {
+    common:    { border: "border-slate-400/40",   glow: "",                                          label: "عادي",     color: "text-slate-300" },
+    rare:      { border: "border-blue-400/60",    glow: "shadow-[0_0_15px_hsl(220_90%_60%/0.4)]",   label: "نادر",     color: "text-blue-300" },
+    epic:      { border: "border-purple-400/70",  glow: "shadow-[0_0_20px_hsl(280_90%_60%/0.5)]",   label: "ملحمي",    color: "text-purple-300" },
+    legendary: { border: "border-amber-400/90",   glow: "shadow-[0_0_28px_hsl(45_95%_55%/0.7)] animate-pulse", label: "أسطوري", color: "text-amber-300" },
+  };
+
+  // Buy a catalog item (frame / gift / entrance) — anyone can buy, saved to inventory
+  const buyCatalogItem = async (cat: "frame" | "gift" | "entrance", item: any) => {
+    if (!profile) return;
+    if (ownedItemNames.has(item.name)) { toast.info("لديك هذا العنصر بالفعل!"); return; }
+    if (profile.coins < item.price) { toast.error("رصيدك غير كافٍ!"); return; }
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: item.price });
+    if (error) { toast.error("فشل في الشراء"); return; }
+    const itemData: any = {
+      image_url: item.image,
+      frame_url: cat === "frame" ? item.image : undefined,
+      duration_seconds: item.duration,
+      rarity: item.rarity,
+    };
+    await supabase.from("inventory").insert({
+      user_id: profile.id,
+      item_type: cat,
+      item_name: item.name,
+      item_data: itemData,
+    });
+    if (cat === "frame") {
+      await supabase.from("profiles").update({ equipped_frame: item.image }).eq("id", profile.id);
+      setProfile({ ...profile, coins: profile.coins - item.price, equipped_frame: item.image });
+      setOwnedFrames([...ownedFrames, item.name]);
+    } else {
+      setProfile({ ...profile, coins: profile.coins - item.price });
+    }
+    setOwnedItemNames(new Set([...ownedItemNames, item.name]));
+    await supabase.from("notifications").insert({
+      user_id: profile.id,
+      title: `${cat === "frame" ? "إطار" : cat === "gift" ? "هدية" : "دخولية"} جديدة! ✨`,
+      message: `تم شراء ${item.name} وإضافته إلى الحقيبة (${item.duration}s).`,
+      type: "purchase",
+    });
+    toast.success(`تم شراء ${item.name} 🎉`);
+  };
+
+  const renderCatalogSection = (
+    title: string,
+    emoji: string,
+    cat: "frame" | "gift" | "entrance",
+    items: any[],
+  ) => (
+    <div className="space-y-2">
+      <h2 className="font-bold text-sm flex items-center gap-2">
+        <span>{emoji}</span> {title} <span className="text-muted-foreground text-[10px]">({items.length})</span>
+      </h2>
+      <div className="grid grid-cols-2 gap-3">
+        {items.map((item) => {
+          const owned = ownedItemNames.has(item.name);
+          const rs = RARITY_STYLES[item.rarity] || RARITY_STYLES.common;
+          return (
+            <div key={item.id} className={`card-nova p-3 text-center space-y-2 border ${rs.border} ${rs.glow}`}>
+              <div className="relative w-24 h-24 mx-auto">
+                <img src={item.image} alt={item.name} className="w-full h-full object-contain" loading="lazy" />
+                <span className={`absolute top-0 right-0 px-1.5 py-0.5 rounded-md bg-background/80 text-[8px] font-black ${rs.color}`}>
+                  {rs.label}
+                </span>
+              </div>
+              <p className="font-bold text-xs line-clamp-1">{item.name}</p>
+              <p className="text-[9px] text-muted-foreground">⏱ {item.duration}s</p>
+              <div className="flex items-center justify-center gap-1">
+                <CurrencyIcon type="gold" size="xs" />
+                <span className="text-xs font-bold text-accent">{item.price.toLocaleString()}</span>
+              </div>
+              {owned ? (
+                <div className="flex items-center justify-center gap-1 text-[10px] text-green-400 font-bold">
+                  <Check className="w-3 h-3" /> مملوك
+                </div>
+              ) : (
+                <button
+                  onClick={() => buyCatalogItem(cat, item)}
+                  className="w-full py-1.5 rounded-xl gradient-neon text-primary-foreground text-[10px] font-bold btn-nova"
+                >
+                  شراء
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   // Generic purchase for admin-added items (NOVA P / VIP / generic). Anyone can buy — no tier restriction.
   const buyAdminItem = async (item: any) => {
     if (!profile) return;
@@ -282,7 +373,10 @@ const StorePage = () => {
             })}
           </div>
 
-          {/* NOVA P items (grouped by tier) — anyone can buy */}
+          {/* === NEW PREMIUM CATALOG (50+50+50) === */}
+          {renderCatalogSection("إطارات أسطورية", "🖼️", "frame", storeCatalog.frames)}
+          {renderCatalogSection("هدايا فاخرة", "🎁", "gift", storeCatalog.gifts)}
+          {renderCatalogSection("دخوليات أسطورية", "🚪", "entrance", storeCatalog.entrances)}
           {[1, 2, 3, 4, 5, 6].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "nova_p" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
