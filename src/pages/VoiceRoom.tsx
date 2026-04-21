@@ -419,7 +419,9 @@ const VoiceRoom = () => {
   ) => {
     const sizeMap = { sm: { outer: "w-14 h-14", inner: "w-10 h-10", frame: "w-[72px] h-[72px]" }, md: { outer: "w-16 h-16", inner: "w-12 h-12", frame: "w-[82px] h-[82px]" }, lg: { outer: "w-20 h-20", inner: "w-16 h-16", frame: "w-[100px] h-[100px]" } };
     const s = sizeMap[size];
-    const frameImg = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : (isBossUser ? bossFrame : null);
+    const mappedFrame = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : null;
+    const directFrame = (!mappedFrame && equippedFrame && (equippedFrame.startsWith("http") || equippedFrame.startsWith("/"))) ? equippedFrame : null;
+    const frameImg = mappedFrame || directFrame || (isBossUser ? bossFrame : null);
 
     if (frameImg) {
       const animClass = equippedFrame ? (FRAME_ANIMATION[equippedFrame] || "") : "";

@@ -155,6 +155,8 @@ const Profile = () => {
   const isBoss = profile?.is_boss;
   const equippedFrameKey = profile?.equipped_frame;
   const frameImage = (equippedFrameKey && FRAME_MAP[equippedFrameKey]) ? FRAME_MAP[equippedFrameKey] : (isBoss ? bossFrame : null);
+  const directFrameImage = (!frameImage && equippedFrameKey && (equippedFrameKey.startsWith("http") || equippedFrameKey.startsWith("/"))) ? equippedFrameKey : null;
+  const finalFrameImage = frameImage || directFrameImage;
 
   return (
     <PageTransition>
@@ -275,9 +277,9 @@ const Profile = () => {
                   </div>
                 </div>
                 {/* Equipped frame overlay */}
-                {frameImage && (
+                {finalFrameImage && (
                   <img
-                    src={frameImage}
+                    src={finalFrameImage}
                     alt="Frame"
                     className={`absolute -inset-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] object-contain z-20 pointer-events-none ${equippedFrameKey ? (FRAME_ANIMATION[equippedFrameKey] || "") : ""}`}
                   />
