@@ -375,6 +375,22 @@
       "price": 150000,
       "rarity": "legendary",
       "duration": 20
+    },
+    {
+      "id": "frames_tiger_stripe",
+      "name": "Tiger Stripe",
+      "image": "/store/frames/tiger_stripe.png",
+      "price": 125000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "frames_crystal_cave",
+      "name": "Crystal Cave",
+      "image": "/store/frames/crystal_cave.png",
+      "price": 98000,
+      "rarity": "epic",
+      "duration": 15
     }
   ],
   "gifts": [
@@ -769,6 +785,14 @@
       "price": 130000,
       "rarity": "legendary",
       "duration": 20
+    },
+    {
+      "id": "gifts_lion_king",
+      "name": "Lion King",
+      "image": "/store/gifts/lion_king.png",
+      "price": 135000,
+      "rarity": "legendary",
+      "duration": 20
     }
   ],
   "entrances": [
@@ -1153,6 +1177,22 @@
       "name": "Cosmic God",
       "image": "/store/entrances/cosmic_god.png",
       "price": 145000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "entrances_demon_summon",
+      "name": "Demon Summon",
+      "image": "/store/entrances/demon_summon.png",
+      "price": 140000,
+      "rarity": "legendary",
+      "duration": 20
+    },
+    {
+      "id": "entrances_hellfire_gates",
+      "name": "Hellfire Gates",
+      "image": "/store/entrances/hellfire_gates.png",
+      "price": 150000,
       "rarity": "legendary",
       "duration": 20
     }
