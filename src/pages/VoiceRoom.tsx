@@ -176,11 +176,12 @@ const VoiceRoom = () => {
 
           const p = m.profile as any;
           const novaLvl = p.nova_p_level || 0;
+          const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
           setEntranceQueue(prev => [...prev, {
             id: m.user_id + "-" + Date.now(),
             displayName: m.profile!.display_name,
             avatarUrl: m.profile!.avatar_url,
-            videoUrl: p.entrance_video_url || null,
+            videoUrl: entranceMedia,
             audioUrl: p.entrance_audio_url || null,
             novaLevel: novaLvl,
             vipLevel: m.profile!.vip_level || 0,

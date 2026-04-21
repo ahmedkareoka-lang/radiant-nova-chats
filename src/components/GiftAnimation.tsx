@@ -3,6 +3,7 @@ import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import storeCatalog from "@/lib/storeCatalog.json";
 
 const FALLBACK_GIFTS = [
   { emoji: "🌹", name: "وردة", price: 10 },
@@ -55,14 +56,22 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   useEffect(() => {
     const fetchGifts = async () => {
       const { data } = await supabase.from("gifts").select("*").order("price", { ascending: true });
-      if (data && data.length > 0) {
-        setGifts(data.map(g => ({
+      const dbGifts = data?.map(g => ({
           name: g.name,
           price: Number(g.price),
           image_url: g.image_url,
           emoji: g.image_url ? undefined : "🎁",
-        })));
-      }
+        })) || [];
+      const catalogGifts = storeCatalog.gifts.map((g) => ({
+        name: g.name,
+        price: Number(g.price),
+        image_url: g.image,
+        emoji: undefined,
+      }));
+      const merged = [...dbGifts, ...catalogGifts].filter(
+        (gift, index, arr) => arr.findIndex((item) => item.name === gift.name) === index,
+      );
+      setGifts(merged.length > 0 ? merged : FALLBACK_GIFTS);
     };
     fetchGifts();
     // Realtime updates for gifts catalog

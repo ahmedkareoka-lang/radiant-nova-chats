@@ -74,6 +74,8 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
 
   const activeEntry = current;
   const novaAsset = activeEntry?.novaLevel ? getNovaAsset(activeEntry.novaLevel) : null;
+  const mediaUrl = activeEntry?.videoUrl || null;
+  const isImageMedia = !!mediaUrl && /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(mediaUrl);
 
   return (
     <AnimatePresence>
@@ -89,15 +91,23 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
           <div className={`absolute inset-0 backdrop-blur-sm ${novaAsset ? `bg-gradient-to-br ${novaAsset.gradient}` : 'bg-background/60'}`} />
 
           <div className="relative z-10 flex flex-col items-center gap-4">
-            {activeEntry.videoUrl ? (
+            {mediaUrl ? (
+              isImageMedia ? (
+                <img
+                  src={mediaUrl}
+                  alt="entrance-effect"
+                  className="w-80 h-80 object-contain rounded-2xl"
+                />
+              ) : (
               <video
-                src={activeEntry.videoUrl}
+                src={mediaUrl}
                 autoPlay
                 muted={muteEntrance}
                 playsInline
                 className="w-80 h-80 object-contain rounded-2xl"
                 onEnded={() => {}}
               />
+              )
             ) : (
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
