@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import storeCatalog from "@/lib/storeCatalog.json";
-import { ArrowLeft, ShoppingBag, Check, Eye } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Eye, Shirt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,6 +117,39 @@ const StorePage = () => {
       .eq("user_id", uid);
     setOwnedFrames((inv || []).filter((i: any) => i.item_type === "frame").map((i: any) => i.item_name));
     setOwnedItemNames(new Set((inv || []).map((i: any) => i.item_name)));
+  };
+
+  const isEquippedItem = (type: string, item: any) => {
+    if (!profile) return false;
+    if (type === "frame") {
+      const frameKey = item?.data?.frame_url || item?.item_data?.frame_url || item?.image_url || item?.image || null;
+      return profile.equipped_frame === frameKey;
+    }
+    if (type === "entrance") {
+      const entranceKey = item?.item_data?.image_url || item?.image_url || item?.image || null;
+      return profile.equipped_entrance_effect === entranceKey;
+    }
+    if (type === "badge") {
+      return profile.equipped_badge === item.name;
+    }
+    return false;
+  };
+
+  const toggleEquipItem = async (type: string, item: any) => {
+    if (!profile) return;
+    const equipped = isEquippedItem(type, item);
+    const updates: Record<string, string | null> = {};
+    if (type === "frame") updates.equipped_frame = equipped ? null : item?.data?.frame_url || item?.item_data?.frame_url || item?.image_url || item?.image || null;
+    if (type === "entrance") updates.equipped_entrance_effect = equipped ? null : item?.item_data?.image_url || item?.image_url || item?.image || null;
+    if (type === "badge") updates.equipped_badge = equipped ? null : item.name;
+    if (!Object.keys(updates).length) return;
+    const { error } = await supabase.from("profiles").update(updates as any).eq("id", profile.id);
+    if (error) {
+      toast.error("تعذر تحديث التجهيز");
+      return;
+    }
+    setProfile((prev: any) => ({ ...prev, ...updates }));
+    toast.success(equipped ? "تم خلع العنصر" : "تم تجهيز العنصر فورًا");
   };
 
   const applyInstantEquip = async (type: string, item: any, itemData: any) => {
@@ -257,9 +290,13 @@ const StorePage = () => {
                 <span className="text-xs font-bold text-accent">{item.price.toLocaleString()}</span>
               </div>
               {owned ? (
-                <div className="flex items-center justify-center gap-1 text-[10px] text-green-400 font-bold">
-                  <Check className="w-3 h-3" /> مملوك
-                </div>
+                <button
+                  onClick={() => toggleEquipItem(cat, item)}
+                  className={`w-full py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 ${isEquippedItem(cat, item) ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground border border-border"}`}
+                >
+                  {isEquippedItem(cat, item) ? <Check className="w-3 h-3" /> : <Shirt className="w-3 h-3" />}
+                  {isEquippedItem(cat, item) ? "خلع" : "تجهيز"}
+                </button>
               ) : (
                 <button
                   onClick={() => buyCatalogItem(cat, item)}
@@ -386,9 +423,13 @@ const StorePage = () => {
                     <span className="text-xs font-bold text-accent">{frame.price_coins.toLocaleString()}</span>
                   </div>
                   {owned ? (
-                    <div className="flex items-center justify-center gap-1 text-xs text-green-400">
-                      <Check className="w-3 h-3" /> مملوك {equipped && "• مفعّل"}
-                    </div>
+                    <button
+                      onClick={() => toggleEquipItem("frame", frame)}
+                      className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${equipped ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground border border-border"}`}
+                    >
+                      {equipped ? <Check className="w-3 h-3" /> : <Shirt className="w-3 h-3" />}
+                      {equipped ? "خلع" : "تجهيز"}
+                    </button>
                   ) : (
                     <button
                       onClick={() => buyFrame(frame)}
@@ -429,9 +470,13 @@ const StorePage = () => {
                         <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                       </div>
                       {owned ? (
-                        <div className="flex items-center justify-center gap-1 text-[10px] text-green-400 font-bold py-1">
-                          <Check className="w-3 h-3" /> مملوك {equipped && "• مفعّل"}
-                        </div>
+                        <button
+                          onClick={() => toggleEquipItem(item.type, item)}
+                          className={`w-full py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 ${isEquippedItem(item.type, item) ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground border border-border"}`}
+                        >
+                          {isEquippedItem(item.type, item) ? <Check className="w-3 h-3" /> : <Shirt className="w-3 h-3" />}
+                          {isEquippedItem(item.type, item) ? "خلع" : "تجهيز"}
+                        </button>
                       ) : (
                         <div className="grid grid-cols-2 gap-1.5">
                           <button
@@ -481,9 +526,13 @@ const StorePage = () => {
                         <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                       </div>
                       {owned ? (
-                        <div className="flex items-center justify-center gap-1 text-[10px] text-green-400 font-bold py-1">
-                          <Check className="w-3 h-3" /> مملوك {equipped && "• مفعّل"}
-                        </div>
+                        <button
+                          onClick={() => toggleEquipItem(item.type, item)}
+                          className={`w-full py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 ${isEquippedItem(item.type, item) ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground border border-border"}`}
+                        >
+                          {isEquippedItem(item.type, item) ? <Check className="w-3 h-3" /> : <Shirt className="w-3 h-3" />}
+                          {isEquippedItem(item.type, item) ? "خلع" : "تجهيز"}
+                        </button>
                       ) : (
                         <div className="grid grid-cols-2 gap-1.5">
                           <button
@@ -530,9 +579,13 @@ const StorePage = () => {
                       <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
                     </div>
                     {owned ? (
-                      <div className="flex items-center justify-center gap-1 text-xs text-green-400 font-bold py-1">
-                        <Check className="w-3 h-3" /> مملوك {equipped && "• مفعّل"}
-                      </div>
+                      <button
+                        onClick={() => toggleEquipItem(item.type, item)}
+                        className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 ${isEquippedItem(item.type, item) ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground border border-border"}`}
+                      >
+                        {isEquippedItem(item.type, item) ? <Check className="w-3 h-3" /> : <Shirt className="w-3 h-3" />}
+                        {isEquippedItem(item.type, item) ? "خلع" : "تجهيز"}
+                      </button>
                     ) : (
                       <button
                         onClick={() => buyAdminItem(item)}
