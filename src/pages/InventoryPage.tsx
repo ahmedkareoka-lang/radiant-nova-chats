@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Package, Check } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
+import EquippedBadge from "@/components/EquippedBadge";
 
 const InventoryPage = () => {
   const navigate = useNavigate();
@@ -15,15 +16,17 @@ const InventoryPage = () => {
   const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
   const [equippedBadge, setEquippedBadge] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
+  const [profilePreview, setProfilePreview] = useState<{ displayName: string; avatarUrl: string | null }>({ displayName: "أنت", avatarUrl: null });
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const { data: prof } = await supabase.from("profiles").select("equipped_frame, equipped_badge").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("display_name, avatar_url, equipped_frame, equipped_badge").eq("id", user.id).single();
       setEquippedFrame(prof?.equipped_frame || null);
       setEquippedBadge((prof as any)?.equipped_badge || null);
+      setProfilePreview({ displayName: prof?.display_name || "أنت", avatarUrl: prof?.avatar_url || null });
       const { data } = await supabase.from("inventory").select("*").eq("user_id", user.id).order("acquired_at", { ascending: false });
       setItems(data || []);
       setLoading(false);
@@ -53,6 +56,7 @@ const InventoryPage = () => {
   ];
 
   const filtered = activeTab === "all" ? items : items.filter((i) => i.item_type === activeTab);
+  const badgeItems = useMemo(() => items.filter((i) => i.item_type === "badge"), [items]);
 
   return (
     <PageTransition>
@@ -67,6 +71,35 @@ const InventoryPage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
+          {(activeTab === "all" || activeTab === "badge") && badgeItems.length > 0 && (
+            <section className="card-nova p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-bold text-sm">معاينة الشارة على البروفايل</h2>
+                  <p className="text-[10px] text-muted-foreground">اختَر أي شارة من الأسفل لتظهر فورًا هنا قبل التجهيز</p>
+                </div>
+                <div className="text-[10px] text-muted-foreground">الشارات: {badgeItems.length}</div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={profilePreview.avatarUrl || "/placeholder.svg"}
+                    alt={profilePreview.displayName}
+                    className="w-14 h-14 rounded-full object-cover border border-border"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-sm truncate">{profilePreview.displayName}</p>
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <EquippedBadge badgeName={equippedBadge} size="md" />
+                      {!equippedBadge && <span className="text-[10px] text-muted-foreground">لا توجد شارة مجهزة</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           <div className="flex gap-2 overflow-x-auto pb-1">
             {tabs.map((tab) => (
               <button
@@ -100,7 +133,7 @@ const InventoryPage = () => {
                 const isBadge = item.item_type === "badge";
                 const frameKey = item.item_data?.frame_url || item.item_data?.image_url || null;
                 const frameImg = item.item_data?.frame_url
-                  ? FRAME_MAP[item.item_data.frame_url]
+                  ? FRAME_MAP[item.item_data.frame_url] || item.item_data?.image_url || item.item_data?.frame_url
                   : item.item_data?.image_url || null;
                 const isFrameEquipped = isFrame && equippedFrame === frameKey;
                 const isBadgeEquipped = isBadge && equippedBadge === item.item_name;
@@ -108,8 +141,10 @@ const InventoryPage = () => {
 
                 return (
                   <div key={item.id} className={`card-nova p-3 text-center ${highlighted ? "border border-primary/50" : ""}`}>
-                    {frameImg ? (
+                     {frameImg ? (
                       <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
+                     ) : isBadge && item.item_data?.image_url ? (
+                       <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
                     ) : (
                       <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : isBadge ? "🏅" : "✨"}</span>
                     )}
