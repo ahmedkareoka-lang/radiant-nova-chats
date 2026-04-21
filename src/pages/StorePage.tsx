@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import storeCatalog from "@/lib/storeCatalog.json";
 import { ArrowLeft, ShoppingBag, Check, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -99,6 +99,7 @@ const StorePage = () => {
   const [loading, setLoading] = useState(true);
   const [adminItems, setAdminItems] = useState<any[]>([]);
   const [previewItem, setPreviewItem] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<"frame" | "gift" | "entrance" | "badge" | "all">("all");
 
   const fetchAdminItems = async () => {
     const { data } = await supabase
@@ -112,10 +113,24 @@ const StorePage = () => {
   const refreshInventory = async (uid: string) => {
     const { data: inv } = await supabase
       .from("inventory")
-      .select("item_name,item_type")
+      .select("item_name,item_type,item_data")
       .eq("user_id", uid);
     setOwnedFrames((inv || []).filter((i: any) => i.item_type === "frame").map((i: any) => i.item_name));
     setOwnedItemNames(new Set((inv || []).map((i: any) => i.item_name)));
+  };
+
+  const applyInstantEquip = async (type: string, item: any, itemData: any) => {
+    if (!profile) return;
+    const updates: Record<string, string | null> = {};
+    if (type === "frame") updates.equipped_frame = itemData.frame_url || item.image_url || item.image || null;
+    if (type === "entrance") updates.equipped_entrance_effect = itemData.image_url || item.image_url || item.image || null;
+    if (type === "badge") updates.equipped_badge = item.name;
+    if (Object.keys(updates).length > 0) {
+      await supabase.from("profiles").update(updates as any).eq("id", profile.id);
+      setProfile((prev: any) => ({ ...prev, ...updates, coins: (prev?.coins || 0) - (Number(item.price_coins) || item.price || 0) }));
+    } else {
+      setProfile((prev: any) => ({ ...prev, coins: (prev?.coins || 0) - (Number(item.price_coins) || item.price || 0) }));
+    }
   };
 
   useEffect(() => {
@@ -201,21 +216,16 @@ const StorePage = () => {
       item_name: item.name,
       item_data: itemData,
     });
-    if (cat === "frame") {
-      await supabase.from("profiles").update({ equipped_frame: item.image }).eq("id", profile.id);
-      setProfile({ ...profile, coins: profile.coins - item.price, equipped_frame: item.image });
-      setOwnedFrames([...ownedFrames, item.name]);
-    } else {
-      setProfile({ ...profile, coins: profile.coins - item.price });
-    }
+    await applyInstantEquip(cat, item, itemData);
+    if (cat === "frame") setOwnedFrames([...ownedFrames, item.name]);
     setOwnedItemNames(new Set([...ownedItemNames, item.name]));
     await supabase.from("notifications").insert({
       user_id: profile.id,
       title: `${cat === "frame" ? "إطار" : cat === "gift" ? "هدية" : "دخولية"} جديدة! ✨`,
-      message: `تم شراء ${item.name} وإضافته إلى الحقيبة (${item.duration}s).`,
+      message: `تم شراء ${item.name} وتفعيله مباشرة (${item.duration}s).`,
       type: "purchase",
     });
-    toast.success(`تم شراء ${item.name} 🎉`);
+    toast.success(`تم شراء ${item.name} وتفعيله فورًا 🎉`);
   };
 
   const renderCatalogSection = (
@@ -288,12 +298,7 @@ const StorePage = () => {
       item_name: item.name,
       item_data: { ...(item.data || {}), image_url: item.image_url, source_id: item.id, frame_url: frameKey },
     });
-    if (item.type === "frame" && frameKey) {
-      await supabase.from("profiles").update({ equipped_frame: frameKey }).eq("id", profile.id);
-      setProfile({ ...profile, coins: profile.coins - price, equipped_frame: frameKey });
-    } else {
-      setProfile({ ...profile, coins: profile.coins - price });
-    }
+    await applyInstantEquip(item.type, { ...item, price }, { ...(item.data || {}), image_url: item.image_url, frame_url: frameKey });
     setOwnedItemNames(new Set([...ownedItemNames, item.name]));
     if (item.type === "frame") setOwnedFrames([...ownedFrames, item.name]);
     await supabase.from("notifications").insert({
@@ -302,8 +307,14 @@ const StorePage = () => {
       message: `تم شراء ${item.name} وأضيف إلى الحقيبة!`,
       type: "purchase",
     });
-    toast.success(`تم شراء ${item.name} 🎉 — تجده في الحقيبة`);
+    toast.success(`تم شراء ${item.name} وتفعيله فورًا 🎉`);
   };
+
+  const adminNoneItems = useMemo(() => adminItems.filter((it) => (it.tier_type || "none") === "none"), [adminItems]);
+  const filteredCatalogFrames = useMemo(() => activeTab === "all" || activeTab === "frame" ? storeCatalog.frames : [], [activeTab]);
+  const filteredCatalogGifts = useMemo(() => activeTab === "all" || activeTab === "gift" ? storeCatalog.gifts : [], [activeTab]);
+  const filteredCatalogEntrances = useMemo(() => activeTab === "all" || activeTab === "entrance" ? storeCatalog.entrances : [], [activeTab]);
+  const filteredAdminNoneItems = useMemo(() => activeTab === "all" ? adminNoneItems : adminNoneItems.filter((it) => it.type === activeTab), [activeTab, adminNoneItems]);
 
   return (
     <PageTransition>
@@ -337,9 +348,27 @@ const StorePage = () => {
             </div>
           )}
 
-          <h2 className="font-bold text-sm">🖼️ الإطارات</h2>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[
+              { id: "all", label: "الكل" },
+              { id: "frame", label: "الإطارات" },
+              { id: "gift", label: "الهدايا" },
+              { id: "entrance", label: "الدخوليات" },
+              { id: "badge", label: "الشارات" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab.id ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {(activeTab === "all" || activeTab === "frame") && <h2 className="font-bold text-sm">🖼️ الإطارات</h2>}
+
+          {(activeTab === "all" || activeTab === "frame") && <div className="grid grid-cols-2 gap-3">
             {STORE_FRAMES.map((frame) => {
               const owned = ownedFrames.includes(frame.name);
               const equipped = profile?.equipped_frame === frame.data.frame_url;
@@ -371,12 +400,11 @@ const StorePage = () => {
                 </div>
               );
             })}
-          </div>
+          </div>}
 
-          {/* === NEW PREMIUM CATALOG (50+50+50) === */}
-          {renderCatalogSection("إطارات أسطورية", "🖼️", "frame", storeCatalog.frames)}
-          {renderCatalogSection("هدايا فاخرة", "🎁", "gift", storeCatalog.gifts)}
-          {renderCatalogSection("دخوليات أسطورية", "🚪", "entrance", storeCatalog.entrances)}
+          {filteredCatalogFrames.length > 0 && renderCatalogSection("إطارات أسطورية", "🖼️", "frame", filteredCatalogFrames)}
+          {filteredCatalogGifts.length > 0 && renderCatalogSection("هدايا فاخرة", "🎁", "gift", filteredCatalogGifts)}
+          {filteredCatalogEntrances.length > 0 && renderCatalogSection("دخوليات أسطورية", "🚪", "entrance", filteredCatalogEntrances)}
           {[1, 2, 3, 4, 5, 6].map((tier) => {
             const items = adminItems.filter((it) => it.tier_type === "nova_p" && (it.tier_required || 0) === tier);
             if (items.length === 0) return null;
@@ -481,11 +509,11 @@ const StorePage = () => {
           })}
 
           {/* Generic admin store items (Entrance / Badges / etc.) — anyone can buy */}
-          {adminItems.filter((it) => (it.tier_type || "none") === "none").length > 0 && (
+          {filteredAdminNoneItems.length > 0 && (
             <>
               <h2 className="font-bold text-sm pt-2">✨ عناصر المتجر</h2>
               <div className="grid grid-cols-2 gap-3">
-                {adminItems.filter((it) => (it.tier_type || "none") === "none").map((item) => {
+                {filteredAdminNoneItems.map((item) => {
                   const owned = ownedItemNames.has(item.name);
                   const equipped = item.type === "frame" && profile?.equipped_frame === item.image_url;
                   return (

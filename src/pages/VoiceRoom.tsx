@@ -176,11 +176,12 @@ const VoiceRoom = () => {
 
           const p = m.profile as any;
           const novaLvl = p.nova_p_level || 0;
+          const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
           setEntranceQueue(prev => [...prev, {
             id: m.user_id + "-" + Date.now(),
             displayName: m.profile!.display_name,
             avatarUrl: m.profile!.avatar_url,
-            videoUrl: p.entrance_video_url || null,
+            videoUrl: entranceMedia,
             audioUrl: p.entrance_audio_url || null,
             novaLevel: novaLvl,
             vipLevel: m.profile!.vip_level || 0,
@@ -419,7 +420,9 @@ const VoiceRoom = () => {
   ) => {
     const sizeMap = { sm: { outer: "w-14 h-14", inner: "w-10 h-10", frame: "w-[72px] h-[72px]" }, md: { outer: "w-16 h-16", inner: "w-12 h-12", frame: "w-[82px] h-[82px]" }, lg: { outer: "w-20 h-20", inner: "w-16 h-16", frame: "w-[100px] h-[100px]" } };
     const s = sizeMap[size];
-    const frameImg = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : (isBossUser ? bossFrame : null);
+    const mappedFrame = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : null;
+    const directFrame = (!mappedFrame && equippedFrame && (equippedFrame.startsWith("http") || equippedFrame.startsWith("/"))) ? equippedFrame : null;
+    const frameImg = mappedFrame || directFrame || (isBossUser ? bossFrame : null);
 
     if (frameImg) {
       const animClass = equippedFrame ? (FRAME_ANIMATION[equippedFrame] || "") : "";
