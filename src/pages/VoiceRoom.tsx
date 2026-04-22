@@ -377,13 +377,18 @@ const VoiceRoom = () => {
     const channelName = `room-gifts-${roomId}`;
     const channel = supabase.channel(channelName + "-listener-" + Date.now())
       .on("broadcast", { event: "gift-sent" }, (payload) => {
-        const { emoji, imageUrl, amount } = payload.payload;
-        setGiftBurst({
+        const { emoji, imageUrl, amount, giftName, senderName, recipientName } = payload.payload;
+        // Fullscreen gift effect for all gifts
+        setFullscreenGift({
+          id: Date.now().toString(),
           emoji: emoji || "🎁",
-          count: Math.min(Math.ceil((amount || 100) / 100), 30),
+          giftName: giftName || "هدية",
           imageUrl: imageUrl || null,
+          senderName: senderName || "مستخدم",
+          recipientName: recipientName || "مستخدم",
+          amount: amount || 100,
+          timestamp: Date.now(),
         });
-        setTimeout(() => setGiftBurst(null), 2500);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
