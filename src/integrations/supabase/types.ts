@@ -1111,6 +1111,10 @@ export type Database = {
         Returns: undefined
       }
       sweep_expired_perks: { Args: never; Returns: undefined }
+      validate_mic_access: {
+        Args: { _room_id: string; _slot: number; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "super_admin" | "user"
