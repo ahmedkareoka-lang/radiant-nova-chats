@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Navigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 import FloatingRoomBubble from "@/components/FloatingRoomBubble";
 import GlobalGiftTicker from "@/components/GlobalGiftTicker";
 import LegendaryGiftExplosion from "@/components/LegendaryGiftExplosion";
@@ -40,8 +41,12 @@ import NovaPassPage from "./pages/NovaPassPage";
 
 const queryClient = new QueryClient();
 
+/** Save the current URL so we can redirect back after login */
+const REDIRECT_KEY = "nova-redirect-after-login";
+
 const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<any>(undefined);
+  const location = useLocation();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -52,8 +57,35 @@ const AuthGate = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   if (session === undefined) return null;
-  if (!session) return <Navigate to="/login" replace />;
+  if (!session) {
+    // Save deep link destination before redirecting to login
+    const fullPath = location.pathname + location.search;
+    if (fullPath !== "/" && fullPath !== "/login") {
+      sessionStorage.setItem(REDIRECT_KEY, fullPath);
+    }
+    return <Navigate to="/login" replace />;
+  }
   return <>{children}</>;
+};
+
+/** Deep link handler: after login, navigate to saved destination */
+const DeepLinkRedirector = () => {
+  const location = useLocation();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (checked) return;
+    const saved = sessionStorage.getItem(REDIRECT_KEY);
+    if (saved && location.pathname === "/") {
+      sessionStorage.removeItem(REDIRECT_KEY);
+      // Use replaceState to avoid adding to history
+      window.history.replaceState(null, "", saved);
+      window.location.reload();
+    }
+    setChecked(true);
+  }, [location, checked]);
+
+  return null;
 };
 
 const AnimatedRoutes = () => {
@@ -62,7 +94,7 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<AuthGate><Index /></AuthGate>} />
+        <Route path="/" element={<AuthGate><DeepLinkRedirector /><Index /></AuthGate>} />
         <Route path="/create-room" element={<AuthGate><CreateRoom /></AuthGate>} />
         <Route path="/voice-room" element={<AuthGate><VoiceRoom /></AuthGate>} />
         <Route path="/profile" element={<AuthGate><Profile /></AuthGate>} />
@@ -84,10 +116,29 @@ const AnimatedRoutes = () => {
         <Route path="/nova-p" element={<AuthGate><NovaPPage /></AuthGate>} />
         <Route path="/vip" element={<AuthGate><VipPrivilegePage /></AuthGate>} />
         <Route path="/nova-pass" element={<AuthGate><NovaPassPage /></AuthGate>} />
+        {/* Deep link routes */}
+        <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
+        <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
   );
+};
+
+/** /room?id=XYZ → redirect to /voice-room?id=XYZ */
+const RoomRedirect = () => {
+  const [params] = useSearchParams();
+  const id = params.get("id");
+  if (id) return <Navigate to={`/voice-room?id=${id}`} replace />;
+  return <Navigate to="/" replace />;
+};
+
+/** /invite?id=XYZ → redirect to /agencies with invite param */
+const InviteRedirect = () => {
+  const [params] = useSearchParams();
+  const id = params.get("id");
+  if (id) return <Navigate to={`/agencies?invite=${id}`} replace />;
+  return <Navigate to="/" replace />;
 };
 
 const LevelUpRoot = () => {
@@ -102,30 +153,31 @@ const LevelUpRoot = () => {
   );
 };
 
-
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        {showSplash ? (
-          <SplashScreen onFinish={handleSplashFinish} />
-        ) : (
-          <BrowserRouter>
-            <ActiveRoomProvider>
-              <AnimatedRoutes />
-              <FloatingRoomBubble />
-              <GlobalGiftTicker />
-              <LegendaryGiftExplosion />
-              <LevelUpRoot />
-            </ActiveRoomProvider>
-          </BrowserRouter>
-        )}
-      </TooltipProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {showSplash ? (
+            <SplashScreen onFinish={handleSplashFinish} />
+          ) : (
+            <BrowserRouter>
+              <ActiveRoomProvider>
+                <AnimatedRoutes />
+                <FloatingRoomBubble />
+                <GlobalGiftTicker />
+                <LegendaryGiftExplosion />
+                <LevelUpRoot />
+              </ActiveRoomProvider>
+            </BrowserRouter>
+          )}
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };

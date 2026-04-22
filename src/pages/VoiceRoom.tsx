@@ -322,14 +322,9 @@ const VoiceRoom = () => {
   const handleSitOnMic = async (slotIndex: number) => {
     if (!roomId || !currentUserId) return;
 
-    // Check if slot is locked
-    if (lockedSlots.includes(slotIndex) && !isAdmin) {
-      toast.error("هذا المايك مقفل 🔒");
-      return;
-    }
-
     const existing = members.find((m) => m.user_id === currentUserId);
 
+    // Leaving current slot
     if (existing?.mic_slot === slotIndex) {
       await updateMicSlot(null, false);
       setIsMuted(true);
@@ -337,14 +332,20 @@ const VoiceRoom = () => {
       return;
     }
 
-    if (existing?.mic_slot !== null && existing?.mic_slot !== undefined) {
-      await updateMicSlot(null, false);
+    // Server-side validation
+    const { data: canAccess } = await supabase.rpc("validate_mic_access", {
+      _user_id: currentUserId,
+      _room_id: roomId,
+      _slot: slotIndex,
+    });
+
+    if (!canAccess) {
+      toast.error("لا يمكنك الجلوس على هذا المايك");
+      return;
     }
 
-    const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
-    if (slotTaken) {
-      toast.error("هذا المايك مشغول");
-      return;
+    if (existing?.mic_slot !== null && existing?.mic_slot !== undefined) {
+      await updateMicSlot(null, false);
     }
 
     await updateMicSlot(slotIndex, true);
