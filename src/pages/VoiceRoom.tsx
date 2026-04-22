@@ -476,11 +476,16 @@ const VoiceRoom = () => {
         </div>
       )}
 
+      {/* Fullscreen Gift Effect */}
+      <FullscreenGiftEffect
+        gift={fullscreenGift}
+        onComplete={() => setFullscreenGift(null)}
+      />
+
       {/* Multi-Gift Visual Burst (uses designed image when available) */}
       <AnimatePresence>
         {giftBurst && (
           <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
-            {/* Centerpiece showcase of the designed gift */}
             {giftBurst.imageUrl && (
               <motion.div
                 initial={{ scale: 0.2, opacity: 0, y: 40 }}
@@ -492,7 +497,8 @@ const VoiceRoom = () => {
                 <img
                   src={giftBurst.imageUrl}
                   alt="gift"
-                  className="w-40 h-40 object-contain drop-shadow-[0_0_30px_rgba(255,200,80,0.7)]"
+                  className="w-52 h-52 object-contain drop-shadow-[0_0_40px_rgba(255,200,80,0.8)]"
+                  style={{ background: "transparent" }}
                 />
               </motion.div>
             )}
@@ -515,9 +521,9 @@ const VoiceRoom = () => {
                 transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5 }}
               >
                 {giftBurst.imageUrl ? (
-                  <img src={giftBurst.imageUrl} alt="" className="w-12 h-12 object-contain" />
+                  <img src={giftBurst.imageUrl} alt="" className="w-16 h-16 object-contain" style={{ background: "transparent" }} />
                 ) : (
-                  <span className="text-4xl">{giftBurst.emoji}</span>
+                  <span className="text-5xl">{giftBurst.emoji}</span>
                 )}
               </motion.div>
             ))}
