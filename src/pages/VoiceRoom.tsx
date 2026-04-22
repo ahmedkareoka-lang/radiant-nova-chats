@@ -25,6 +25,7 @@ import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
 import Top3RoomSenders from "@/components/Top3RoomSenders";
 import GiftComboBar from "@/components/GiftComboBar";
 import LuckyWheelButton from "@/components/LuckyWheelButton";
+import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
@@ -88,6 +89,7 @@ const VoiceRoom = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
   const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
+  const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; senderName: string; recipientName: string; amount: number; timestamp: number } | null>(null);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
     wealthLevel: number;
@@ -375,13 +377,18 @@ const VoiceRoom = () => {
     const channelName = `room-gifts-${roomId}`;
     const channel = supabase.channel(channelName + "-listener-" + Date.now())
       .on("broadcast", { event: "gift-sent" }, (payload) => {
-        const { emoji, imageUrl, amount } = payload.payload;
-        setGiftBurst({
+        const { emoji, imageUrl, amount, giftName, senderName, recipientName } = payload.payload;
+        // Fullscreen gift effect for all gifts
+        setFullscreenGift({
+          id: Date.now().toString(),
           emoji: emoji || "🎁",
-          count: Math.min(Math.ceil((amount || 100) / 100), 30),
+          giftName: giftName || "هدية",
           imageUrl: imageUrl || null,
+          senderName: senderName || "مستخدم",
+          recipientName: recipientName || "مستخدم",
+          amount: amount || 100,
+          timestamp: Date.now(),
         });
-        setTimeout(() => setGiftBurst(null), 2500);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -469,11 +476,16 @@ const VoiceRoom = () => {
         </div>
       )}
 
+      {/* Fullscreen Gift Effect */}
+      <FullscreenGiftEffect
+        gift={fullscreenGift}
+        onComplete={() => setFullscreenGift(null)}
+      />
+
       {/* Multi-Gift Visual Burst (uses designed image when available) */}
       <AnimatePresence>
         {giftBurst && (
           <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
-            {/* Centerpiece showcase of the designed gift */}
             {giftBurst.imageUrl && (
               <motion.div
                 initial={{ scale: 0.2, opacity: 0, y: 40 }}
@@ -485,7 +497,8 @@ const VoiceRoom = () => {
                 <img
                   src={giftBurst.imageUrl}
                   alt="gift"
-                  className="w-40 h-40 object-contain drop-shadow-[0_0_30px_rgba(255,200,80,0.7)]"
+                  className="w-52 h-52 object-contain drop-shadow-[0_0_40px_rgba(255,200,80,0.8)]"
+                  style={{ background: "transparent" }}
                 />
               </motion.div>
             )}
@@ -508,9 +521,9 @@ const VoiceRoom = () => {
                 transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5 }}
               >
                 {giftBurst.imageUrl ? (
-                  <img src={giftBurst.imageUrl} alt="" className="w-12 h-12 object-contain" />
+                  <img src={giftBurst.imageUrl} alt="" className="w-16 h-16 object-contain" style={{ background: "transparent" }} />
                 ) : (
-                  <span className="text-4xl">{giftBurst.emoji}</span>
+                  <span className="text-5xl">{giftBurst.emoji}</span>
                 )}
               </motion.div>
             ))}
