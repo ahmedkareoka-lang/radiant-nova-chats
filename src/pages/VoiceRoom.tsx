@@ -89,6 +89,7 @@ const VoiceRoom = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
   const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
+  const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; senderName: string; recipientName: string; amount: number; timestamp: number } | null>(null);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
     wealthLevel: number;
