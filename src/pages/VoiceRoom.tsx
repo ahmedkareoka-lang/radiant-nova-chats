@@ -25,6 +25,7 @@ import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
 import Top3RoomSenders from "@/components/Top3RoomSenders";
 import GiftComboBar from "@/components/GiftComboBar";
 import LuckyWheelButton from "@/components/LuckyWheelButton";
+import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
 interface UserProfile {
