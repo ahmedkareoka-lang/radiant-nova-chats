@@ -150,18 +150,36 @@ serve(async (req) => {
         });
       }
 
-      // If 402/429, fall through to Gemini direct
+      // If not 402/429, return the error
       const errText = await response.text();
-      console.warn(`Gateway returned ${response.status}, falling back to Gemini direct. Body: ${errText}`);
+      console.warn(`Gateway returned ${response.status}. Body: ${errText}`);
+      if (response.status !== 402 && response.status !== 429) {
+        return new Response(
+          JSON.stringify({ error: "AI service error" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // Fall through to Gemini direct
     }
 
     // Fallback: call Gemini API directly with user's key
     console.log("Using Gemini API directly (fallback)");
-    const stream = await callGeminiDirect(messages.slice(-20));
-
-    return new Response(stream, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
+    try {
+      const stream = await callGeminiDirect(messages.slice(-20));
+      return new Response(stream, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    } catch (geminiErr) {
+      console.error("Gemini fallback also failed:", geminiErr);
+      // Both failed - return a friendly non-streaming response
+      const fallbackReply = {
+        choices: [{ delta: { content: getFallbackReply(messages[messages.length - 1]?.content || "") } }],
+      };
+      const body = `data: ${JSON.stringify(fallbackReply)}\n\ndata: [DONE]\n\n`;
+      return new Response(body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
   } catch (e) {
     console.error("ai-chat error:", e);
     return new Response(
@@ -170,3 +188,27 @@ serve(async (req) => {
     );
   }
 });
+
+function getFallbackReply(userMessage: string): string {
+  const lower = userMessage.toLowerCase();
+  const isArabic = /[\u0600-\u06FF]/.test(userMessage);
+
+  if (lower.includes("vip") || lower.includes("في اي بي"))
+    return isArabic
+      ? "نظام VIP في نوفا يمنحك مزايا حصرية مثل الإطارات المميزة والشارات الفريدة وتأثيرات الدخول الخاصة! كلما ارتفع مستواك، زادت المزايا 💎✨"
+      : "NOVA's VIP system gives you exclusive perks like premium frames, unique badges, and special entrance effects! The higher your level, the more perks you unlock 💎✨";
+
+  if (lower.includes("gift") || lower.includes("هدي"))
+    return isArabic
+      ? "يمكنك إرسال الهدايا في غرف الصوت باستخدام عملات NOVA! المستقبل يحصل على ماسات زرقاء. الهدايا الأسطورية تظهر بتأثيرات شاشة كاملة مذهلة 🎁💎"
+      : "Send gifts in voice rooms using NOVA Coins! The receiver gets Blue Diamonds. Legendary gifts show stunning fullscreen effects 🎁💎";
+
+  if (lower.includes("room") || lower.includes("غرف"))
+    return isArabic
+      ? "غرف الصوت هي قلب نوفا! انضم للغرف للدردشة والغناء ولعب الألعاب مع الأصدقاء. يمكنك إنشاء غرفتك الخاصة أيضًا 🎤🎉"
+      : "Voice rooms are the heart of NOVA! Join rooms to chat, sing, and play games with friends. You can create your own room too 🎤🎉";
+
+  return isArabic
+    ? "مرحبًا! أنا مساعد NOVA الذكي ✨ حاليًا أواجه ضغطًا عاليًا، لكن يمكنني الإجابة على أسئلتك الأساسية عن التطبيق. جرب السؤال عن VIP أو الهدايا أو الغرف! 🙏"
+    : "Hi! I'm NOVA AI ✨ Currently experiencing high demand, but I can answer basic questions about the app. Try asking about VIP, gifts, or rooms! 🙏";
+}
