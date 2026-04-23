@@ -44,9 +44,10 @@ const SYSTEM_PROMPT = `أنت NOVA AI ✨ — المساعد الذكي الاج
 - للدعم: Star ⭐، Diamond Ring 💎
 - للأسطوري: Castle 🏰، Yacht 🛥️، Private Jet ✈️`;
 
+// ── Primary: Direct Gemini API (streaming) ──
 async function streamGemini(messages: Array<{role: string; content: string}>) {
   const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
+  if (!apiKey) throw new Error("NO_GEMINI_KEY");
 
   const contents = [
     { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
@@ -64,11 +65,7 @@ async function streamGemini(messages: Array<{role: string; content: string}>) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents,
-        generationConfig: {
-          temperature: 0.8,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
+        generationConfig: { temperature: 0.8, topP: 0.95, maxOutputTokens: 1024 },
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
           { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
@@ -82,10 +79,42 @@ async function streamGemini(messages: Array<{role: string; content: string}>) {
   if (!resp.ok) {
     const t = await resp.text();
     console.error("Gemini error:", resp.status, t);
-    throw new Error(`Gemini ${resp.status}`);
+    throw new Error(`GEMINI_${resp.status}`);
   }
 
-  // Transform Gemini SSE → OpenAI-compatible SSE
+  return geminiSseToOpenAi(resp);
+}
+
+// ── Fallback: Lovable AI Gateway (streaming, OpenAI-compatible) ──
+async function streamLovableGateway(messages: Array<{role: string; content: string}>) {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) throw new Error("NO_LOVABLE_KEY");
+
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+      stream: true,
+    }),
+  });
+
+  if (!resp.ok) {
+    const t = await resp.text();
+    console.error("Lovable gateway error:", resp.status, t);
+    throw new Error(`LOVABLE_${resp.status}`);
+  }
+
+  // Already OpenAI-compatible SSE — pass through directly
+  return resp.body!;
+}
+
+// ── Transform Gemini SSE → OpenAI-compatible SSE ──
+function geminiSseToOpenAi(resp: Response): ReadableStream {
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
@@ -112,18 +141,33 @@ async function streamGemini(messages: Array<{role: string; content: string}>) {
                 `data: ${JSON.stringify({ choices: [{ delta: { content: text }, index: 0 }] })}\n\n`
               ));
             }
-          } catch { /* partial JSON, skip */ }
+          } catch { /* partial JSON */ }
         }
       }
       await writer.write(encoder.encode("data: [DONE]\n\n"));
     } catch (e) {
-      console.error("Stream error:", e);
+      console.error("Stream transform error:", e);
     } finally {
       writer.close();
     }
   })();
 
   return readable;
+}
+
+// ── Stream with automatic fallback ──
+async function streamWithFallback(messages: Array<{role: string; content: string}>): Promise<ReadableStream> {
+  try {
+    return await streamGemini(messages);
+  } catch (err) {
+    console.warn("Gemini failed, falling back to Lovable AI Gateway:", (err as Error).message);
+    try {
+      return await streamLovableGateway(messages);
+    } catch (err2) {
+      console.error("Both providers failed:", (err2 as Error).message);
+      throw err2;
+    }
+  }
 }
 
 serve(async (req) => {
@@ -141,37 +185,28 @@ serve(async (req) => {
       );
     }
 
-    // Gift suggestion mode
+    let finalMessages: Array<{role: string; content: string}>;
+
     if (mode === "suggest-gift") {
-      const giftPrompt = [
+      finalMessages = [
         ...messages.slice(-5),
         { role: "user", content: "بناءً على المحادثة السابقة، اقترح 3 هدايا مناسبة من هدايا NOVA مع السبب. رد بشكل مختصر." }
       ];
-      const stream = await streamGemini(giftPrompt);
-      return new Response(stream, {
-        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-      });
-    }
-
-    // Welcome message mode
-    if (mode === "welcome") {
+    } else if (mode === "welcome") {
       const userName = messages[0]?.content || "صديق";
-      const welcomeMessages = [
+      finalMessages = [
         { role: "user", content: `رحب بالمستخدم "${userName}" اللي لسه دخل غرفة صوتية في NOVA. اكتب رسالة ترحيب قصيرة ومرحة (جملة أو اثنتين بالعربي) تشجعه يتفاعل.` }
       ];
-      const stream = await streamGemini(welcomeMessages);
-      return new Response(stream, {
-        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-      });
+    } else {
+      finalMessages = messages.slice(-20);
     }
 
-    const stream = await streamGemini(messages.slice(-20));
+    const stream = await streamWithFallback(finalMessages);
     return new Response(stream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
     console.error("ai-chat error:", e);
-    // Friendly retry response instead of hardcoded messages
     const friendlyReply = {
       choices: [{ delta: { content: "عذرًا، واجهت مشكلة بسيطة 😅 جرب تاني كمان شوية وهرد عليك فورًا! ✨" } }],
     };
