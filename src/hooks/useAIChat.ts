@@ -13,7 +13,7 @@ export const useAIChat = () => {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, mode?: "suggest-gift" | "welcome") => {
     if (!content.trim() || isLoading) return;
 
     const userMsg: AIMessage = {
@@ -23,7 +23,9 @@ export const useAIChat = () => {
       created_at: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    if (mode !== "welcome") {
+      setMessages((prev) => [...prev, userMsg]);
+    }
     setIsLoading(true);
 
     let assistantSoFar = "";
@@ -57,12 +59,11 @@ export const useAIChat = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMsgs }),
+        body: JSON.stringify({ messages: allMsgs, mode }),
       });
 
       if (!resp.ok || !resp.body) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error || "AI request failed");
+        throw new Error("AI request failed");
       }
 
       const reader = resp.body.getReader();
@@ -113,9 +114,8 @@ export const useAIChat = () => {
         }
       }
 
-      // If no content came through, add fallback
       if (!assistantSoFar) {
-        upsert("عذرًا، لم أتمكن من الرد حاليًا. حاول مرة أخرى! 🙏");
+        upsert("جاري المحاولة مرة تانية... جرب تاني كمان لحظة! ✨");
       }
     } catch (err) {
       console.error("AI chat error:", err);
@@ -124,7 +124,7 @@ export const useAIChat = () => {
         {
           id: assistantId,
           role: "assistant",
-          content: "⚠️ حدث خطأ في الاتصال. حاول مرة أخرى لاحقًا.",
+          content: "واجهت مشكلة بسيطة 😅 جرب تاني كمان شوية!",
           created_at: new Date().toISOString(),
         },
       ]);
