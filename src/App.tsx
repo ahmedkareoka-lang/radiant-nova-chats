@@ -14,6 +14,7 @@ import LegendaryGiftExplosion from "@/components/LegendaryGiftExplosion";
 import LevelUpEvent from "@/components/LevelUpEvent";
 import { useLevelUpDetector } from "@/hooks/useLevelUpDetector";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
@@ -165,6 +166,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <SpeedInsights />
+          <Analytics />
           {showSplash ? (
             <SplashScreen onFinish={handleSplashFinish} />
           ) : (
