@@ -24,27 +24,33 @@ try {
   AgoraRTC.setLogLevel(2);
 } catch { /* noop */ }
 
-logAgora("info", "env", "Token-based auth enabled (App ID + Certificate)");
+logAgora("info", "env", "Token auth enabled (certificate-backed RTC token)");
 
 // Fetch a fresh RTC token from our edge function
 async function fetchAgoraToken(
   channelName: string,
   role: "host" | "audience",
-): Promise<{ token: string; appId: string; uid: string } | null> {
+): Promise<{ token: string; appId: string; uid: number; channel: string } | null> {
   try {
+    const normalizedChannel = channelName.trim();
     const { data, error } = await supabase.functions.invoke("agora-token", {
-      body: { channelName, role, expireSeconds: TOKEN_TTL_SECONDS },
+      body: { channelName: normalizedChannel, role, expireSeconds: TOKEN_TTL_SECONDS },
     });
     if (error) {
       logAgora("error", "token", `Edge function error: ${error.message}`);
       return null;
     }
-    if (!data?.token || !data?.appId) {
+    if (!data?.token || !data?.appId || typeof data?.uid !== "number") {
       logAgora("error", "token", "Invalid token response");
       return null;
     }
-    logAgora("success", "token", `Got ${role} token for "${channelName}"`);
-    return { token: data.token, appId: data.appId, uid: String(data.uid) };
+    logAgora("success", "token", `Got ${role} token for "${normalizedChannel}" (uid=${data.uid})`);
+    return {
+      token: data.token,
+      appId: data.appId,
+      uid: data.uid,
+      channel: String(data.channel || normalizedChannel),
+    };
   } catch (e: any) {
     logAgora("error", "token", `Fetch failed: ${e?.message || e}`);
     return null;
@@ -64,16 +70,16 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const localTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
   const joinedRef = useRef(false);
+  const localPublishedRef = useRef(false);
   const currentRoleRef = useRef<ClientRole>("audience");
   const remoteUsersRef = useRef<Map<string, IAgoraRTCRemoteUser>>(new Map());
-  const currentUserIdRef = useRef<string | null>(currentUserId);
+  const isOnMicRef = useRef(isOnMic);
   const channelRef = useRef<string | null>(null);
-  const renewTimerRef = useRef<number | null>(null);
   const agoraUidRef = useRef<string | null>(null);
 
   useEffect(() => {
-    currentUserIdRef.current = currentUserId;
-  }, [currentUserId]);
+    isOnMicRef.current = isOnMic;
+  }, [isOnMic]);
 
   // Try to play all remote audio tracks (used for unlock-after-gesture on iOS)
   const playAllRemote = useCallback(() => {
@@ -224,7 +230,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       client.on("volume-indicator", (volumes) => {
         const speakingNow = new Set<string>();
         let mySpeaking = false;
-        const localUid = currentUserIdRef.current;
+        const localUid = agoraUidRef.current;
         for (const v of volumes) {
           if (v.level >= SPEAKING_THRESHOLD) {
             const uid = String(v.uid);
