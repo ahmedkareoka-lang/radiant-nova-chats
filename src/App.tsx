@@ -50,15 +50,22 @@ const LoversPage = lazy(() => import("./pages/LoversPage"));
 const LoveHistoryPage = lazy(() => import("./pages/LoveHistoryPage"));
 const FramePreviewPage = lazy(() => import("./pages/FramePreviewPage"));
 
-// 🚀 Optimized cache: prevents redundant re-fetches & retries on focus
+// 🚀 World-class cache: aggressive freshness, no wasteful refetches
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60_000,           // data stays fresh for 1 min → no auto refetch
-      gcTime: 5 * 60_000,          // keep cache 5 min after unmount
-      refetchOnWindowFocus: false, // stop the constant refetch storm on tab switch
-      refetchOnReconnect: false,
+      staleTime: 2 * 60_000,        // 2 min fresh — fewer round trips
+      gcTime: 10 * 60_000,          // keep 10 min in memory for instant back-nav
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: "always", // re-sync once after reconnect (lightweight)
+      refetchOnMount: false,        // trust the cache; manual invalidate when needed
       retry: 1,
+      retryDelay: (i) => Math.min(1000 * 2 ** i, 8000),
+      networkMode: "online",
+    },
+    mutations: {
+      retry: 0,
+      networkMode: "online",
     },
   },
 });
@@ -100,22 +107,22 @@ const AuthGate = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-/** Deep link handler: after login, navigate to saved destination */
+/** Deep link handler: after login, navigate to saved destination (no full reload) */
 const DeepLinkRedirector = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     if (checked) return;
+    setChecked(true);
     const saved = sessionStorage.getItem(REDIRECT_KEY);
     if (saved && location.pathname === "/") {
       sessionStorage.removeItem(REDIRECT_KEY);
-      // Use replaceState to avoid adding to history
-      window.history.replaceState(null, "", saved);
-      window.location.reload();
+      // 🚀 Soft navigation — instant, no full page reload
+      navigate(saved, { replace: true });
     }
-    setChecked(true);
-  }, [location, checked]);
+  }, [location.pathname, checked, navigate]);
 
   return null;
 };
