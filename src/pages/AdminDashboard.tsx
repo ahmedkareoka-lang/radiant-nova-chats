@@ -896,6 +896,18 @@ const AdminDashboard = () => {
                   <input placeholder="مدة العرض (ms)" type="number" value={newGift.duration_ms} onChange={(e) => setNewGift({ ...newGift, duration_ms: e.target.value })}
                     className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
                 </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-muted-foreground">📂 خانة العرض في الروم</label>
+                  <select value={newGift.category} onChange={(e) => setNewGift({ ...newGift, category: e.target.value })}
+                    className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none">
+                    <option value="general">عام</option>
+                    <option value="latest">أحدث</option>
+                    <option value="gallery">هدايا المعرض</option>
+                    <option value="lucky">محظوظ</option>
+                    <option value="lover">حبيبي</option>
+                    <option value="locked">مقفولة</option>
+                  </select>
+                </div>
                 <div className="flex gap-1">
                   {(["image", "lottie", "video"] as const).map((t) => (
                     <button key={t} onClick={() => setGiftMediaType(t)}
