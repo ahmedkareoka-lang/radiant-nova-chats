@@ -50,6 +50,17 @@ export const useVoiceRoom = (roomId: string | null) => {
   const roomIdRef = useRef<string | null>(roomId);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 🚀 Performance: micro-cache + in-flight dedup + abort for fetchMembers
+  const membersCacheRef = useRef<{ ts: number; data: RoomMember[] } | null>(null);
+  const membersInflightRef = useRef<Promise<void> | null>(null);
+  const membersAbortRef = useRef<AbortController | null>(null);
+  const MEMBERS_CACHE_TTL = 1500; // 1.5s — shorter than sweep, longer than burst clicks
+
+  // 🚀 Heartbeat queue: coalesce rapid triggers (visibility, focus, manual)
+  const heartbeatInflightRef = useRef<Promise<void> | null>(null);
+  const heartbeatLastAtRef = useRef<number>(0);
+  const HEARTBEAT_MIN_GAP = 2000; // ignore extra calls within 2s of last beat
+
   // Keep refs in sync
   useEffect(() => {
     currentUserIdRef.current = currentUserId;
@@ -58,49 +69,89 @@ export const useVoiceRoom = (roomId: string | null) => {
     roomIdRef.current = roomId;
   }, [roomId]);
 
-  const fetchMembers = useCallback(async () => {
+  const fetchMembers = useCallback(async (force = false) => {
     if (!roomId) return;
-    const { data } = await supabase
-      .from("room_members")
-      .select("*")
-      .eq("room_id", roomId);
 
-    if (data && data.length > 0) {
-      // Client-side filter: hide stale users immediately (don't wait for cron)
-      const now = Date.now();
-      const fresh = data.filter((m) => {
-        const age = now - new Date(m.joined_at).getTime();
-        return age < STALE_MEMBER_MS;
-      }).map((m) => {
-        const age = now - new Date(m.joined_at).getTime();
-        // Force-drop from mic if heartbeat is stale, even before cron runs
-        if (m.is_on_mic && age >= STALE_MIC_MS) {
-          return { ...m, is_on_mic: false, mic_slot: null };
-        }
-        return m;
-      });
-
-      const userIds = fresh.map((m) => m.user_id);
-      if (userIds.length === 0) {
-        setMembers([]);
-        return;
-      }
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
-        .in("id", userIds);
-
-      const profileMap: Record<string, any> = {};
-      profiles?.forEach((p) => { profileMap[p.id] = p; });
-
-      setMembers(fresh.map((m) => ({
-        ...m,
-        profile: profileMap[m.user_id] || null,
-      })));
-    } else {
-      setMembers([]);
+    // 🚀 Serve from micro-cache when fresh enough (and not forced)
+    const cached = membersCacheRef.current;
+    if (!force && cached && Date.now() - cached.ts < MEMBERS_CACHE_TTL) {
+      setMembers(cached.data);
+      return;
     }
+
+    // 🚀 Dedupe concurrent calls — return the in-flight promise instead of stacking
+    if (membersInflightRef.current) {
+      return membersInflightRef.current;
+    }
+
+    // 🚀 Abort any prior pending request before starting a new one
+    membersAbortRef.current?.abort();
+    const ac = new AbortController();
+    membersAbortRef.current = ac;
+
+    const run = (async () => {
+      try {
+        const { data } = await supabase
+          .from("room_members")
+          .select("*")
+          .eq("room_id", roomId)
+          .abortSignal(ac.signal);
+
+        if (ac.signal.aborted) return;
+
+        if (data && data.length > 0) {
+          // Client-side filter: hide stale users immediately (don't wait for cron)
+          const now = Date.now();
+          const fresh = data.filter((m) => {
+            const age = now - new Date(m.joined_at).getTime();
+            return age < STALE_MEMBER_MS;
+          }).map((m) => {
+            const age = now - new Date(m.joined_at).getTime();
+            // Force-drop from mic if heartbeat is stale, even before cron runs
+            if (m.is_on_mic && age >= STALE_MIC_MS) {
+              return { ...m, is_on_mic: false, mic_slot: null };
+            }
+            return m;
+          });
+
+          const userIds = fresh.map((m) => m.user_id);
+          if (userIds.length === 0) {
+            membersCacheRef.current = { ts: Date.now(), data: [] };
+            setMembers([]);
+            return;
+          }
+
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
+            .in("id", userIds)
+            .abortSignal(ac.signal);
+
+          if (ac.signal.aborted) return;
+
+          const profileMap: Record<string, any> = {};
+          profiles?.forEach((p) => { profileMap[p.id] = p; });
+
+          const next = fresh.map((m) => ({
+            ...m,
+            profile: profileMap[m.user_id] || null,
+          }));
+          membersCacheRef.current = { ts: Date.now(), data: next };
+          setMembers(next);
+        } else {
+          membersCacheRef.current = { ts: Date.now(), data: [] };
+          setMembers([]);
+        }
+      } catch (err: any) {
+        // Swallow abort errors silently
+        if (err?.name === 'AbortError') return;
+      } finally {
+        membersInflightRef.current = null;
+      }
+    })();
+
+    membersInflightRef.current = run;
+    return run;
   }, [roomId]);
 
   const fetchMessages = useCallback(async () => {
@@ -212,28 +263,52 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     };
 
-    // 🚀 Smart visibility handling: when the tab becomes visible again,
-    // immediately push a heartbeat + refetch so the user reappears instantly.
-    const sendHeartbeat = async () => {
+    // 🚀 Queued heartbeat: coalesces rapid triggers (visibility/focus/interval)
+    // into a single in-flight request, with a minimum gap between successful beats.
+    const sendHeartbeat = async (): Promise<void> => {
       const uid = currentUserIdRef.current;
       const rid = roomIdRef.current;
       if (!uid || !rid) return;
-      await supabase
-        .from("room_members")
-        .update({ joined_at: new Date().toISOString() })
-        .eq("room_id", rid)
-        .eq("user_id", uid);
+
+      // Reuse the in-flight beat if one is already running
+      if (heartbeatInflightRef.current) return heartbeatInflightRef.current;
+
+      // Skip if we just beat very recently (debounce against burst events)
+      if (Date.now() - heartbeatLastAtRef.current < HEARTBEAT_MIN_GAP) return;
+
+      const run = (async () => {
+        try {
+          await supabase
+            .from("room_members")
+            .update({ joined_at: new Date().toISOString() })
+            .eq("room_id", rid)
+            .eq("user_id", uid);
+          heartbeatLastAtRef.current = Date.now();
+        } catch {
+          // Silent — next interval will retry
+        } finally {
+          heartbeatInflightRef.current = null;
+        }
+      })();
+
+      heartbeatInflightRef.current = run;
+      return run;
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // Re-establish presence the moment the user returns
+        // Re-establish presence the moment the user returns (queued + cached)
         sendHeartbeat();
-        fetchMembers();
+        fetchMembers(true); // force refresh on return — bypass cache
       }
     };
 
+    const handleFocus = () => {
+      sendHeartbeat();
+    };
+
     window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Heartbeat: update joined_at periodically to show user is still active
@@ -243,11 +318,8 @@ export const useVoiceRoom = (roomId: string | null) => {
       const uid = currentUserIdRef.current;
       const rid = roomIdRef.current;
       if (uid && rid) {
-        await supabase
-          .from("room_members")
-          .update({ joined_at: new Date().toISOString() })
-          .eq("room_id", rid)
-          .eq("user_id", uid);
+        // 🚀 Use queued helper — coalesces with any visibility/focus beat in flight
+        await sendHeartbeat();
 
         // Daily task: increment room_minutes every 4 ticks (= 1 minute at 15s/tick)
         heartbeatTickCount += 1;
@@ -285,9 +357,16 @@ export const useVoiceRoom = (roomId: string | null) => {
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       clearInterval(staleSweepRef);
+      // 🚀 Abort any pending fetch + clear caches/queues so a re-mount starts clean
+      membersAbortRef.current?.abort();
+      membersAbortRef.current = null;
+      membersInflightRef.current = null;
+      membersCacheRef.current = null;
+      heartbeatInflightRef.current = null;
       supabase.removeChannel(channel);
     };
   }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);
