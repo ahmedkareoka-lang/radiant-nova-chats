@@ -543,7 +543,8 @@ const VoiceRoom = () => {
     </div>
   );
 
-  // Helper to render avatar with frame
+  // Helper to render avatar with frame — uses central FramedAvatar so the
+  // inner avatar size adapts to each frame's transparent center.
   const renderAvatarWithFrame = (
     avatarUrl: string | null,
     equippedFrame: string | null | undefined,
@@ -551,30 +552,15 @@ const VoiceRoom = () => {
     size: "sm" | "md" | "lg" = "md",
     isSpeaking: boolean = false
   ) => {
-    const sizeMap = { sm: { outer: "w-14 h-14", inner: "w-10 h-10", frame: "w-[72px] h-[72px]" }, md: { outer: "w-16 h-16", inner: "w-12 h-12", frame: "w-[82px] h-[82px]" }, lg: { outer: "w-20 h-20", inner: "w-16 h-16", frame: "w-[100px] h-[100px]" } };
-    const s = sizeMap[size];
-    const mappedFrame = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : null;
-    const directFrame = (!mappedFrame && equippedFrame && (equippedFrame.startsWith("http") || equippedFrame.startsWith("/"))) ? equippedFrame : null;
-    const frameImg = mappedFrame || directFrame;
-
-    if (frameImg) {
-      const animClass = equippedFrame ? (FRAME_ANIMATION[equippedFrame] || "") : "";
-      return (
-        <div className={`relative ${s.frame} flex items-center justify-center`}>
-          {isSpeaking && <SpeakingWaves />}
-          <img src={frameImg} alt="frame" className={`absolute inset-0 w-full h-full object-contain z-10 pointer-events-none ${animClass}`} />
-          <div className={`${s.inner} rounded-full overflow-hidden`}>
-            <img src={avatarUrl || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
-          </div>
-        </div>
-      );
-    }
-
+    const sizePx = size === "sm" ? 72 : size === "lg" ? 100 : 82;
     return (
-      <div className={`relative ${s.outer} rounded-full overflow-hidden ring-2 ${isSpeaking ? 'ring-green-400 shadow-[0_0_12px_rgba(74,222,128,0.5)]' : 'ring-border'}`}>
-        {isSpeaking && <SpeakingWaves />}
-        <img src={avatarUrl || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
-      </div>
+      <FramedAvatar
+        avatarUrl={avatarUrl}
+        equippedFrame={equippedFrame}
+        size={sizePx}
+        ringClassName={isSpeaking ? "ring-2 ring-green-400 shadow-[0_0_12px_rgba(74,222,128,0.5)]" : "ring-2 ring-border"}
+        behind={isSpeaking ? <SpeakingWaves /> : null}
+      />
     );
   };
 
