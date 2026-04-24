@@ -603,6 +603,58 @@ const VoiceRoom = () => {
         onComplete={() => setFullscreenGift(null)}
       />
 
+      {/* Last Gift Delivered Panel — shows the most recent gift broadcasted in
+          the room with a clear "delivered to all" status. Helps the sender (and
+          everyone) confirm the gift reached the entire room. */}
+      <AnimatePresence>
+        {lastGift && (
+          <motion.div
+            key={lastGift.id}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ type: "spring", damping: 20 }}
+            className="fixed top-20 right-3 z-[75] max-w-[260px] rounded-2xl bg-card/90 backdrop-blur-xl border border-primary/40 shadow-[0_4px_24px_hsl(var(--primary)/0.35)] p-3 pointer-events-none"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              {lastGift.imageUrl ? (
+                <img src={lastGift.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
+              ) : (
+                <span className="text-2xl shrink-0">{lastGift.emoji}</span>
+              )}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-[11px] font-bold text-foreground truncate">{lastGift.giftName}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  <span className="text-primary">{lastGift.senderName}</span>
+                  <span> → </span>
+                  <span className="text-accent">{lastGift.recipientName}</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground">💰 {lastGift.amount.toLocaleString()}</p>
+              </div>
+            </div>
+            <div
+              className={`text-[10px] font-bold flex items-center gap-1.5 px-2 py-1 rounded-full ${
+                lastGift.delivered
+                  ? "bg-primary/15 text-primary"
+                  : "bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              {lastGift.delivered ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  ✅ تم التوزيع للجميع
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-ping" />
+                  ⏳ جارٍ البث...
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top text notifications for every gift sent in the room */}
       <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-md px-3">
         <AnimatePresence>
