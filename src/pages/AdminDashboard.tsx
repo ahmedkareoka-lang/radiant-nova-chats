@@ -1014,6 +1014,41 @@ const AdminDashboard = () => {
                 </p>
               </div>
 
+              {/* Host salary lookup */}
+              <div className="card-nova p-4 space-y-2 border border-accent/30">
+                <h4 className="font-bold text-xs flex items-center gap-2 text-accent">
+                  <Search className="w-4 h-4" /> تفاصيل راتب مضيف (بحث بالـ ID)
+                </h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="أدخل ID المضيف"
+                    value={salaryHostId}
+                    onChange={(e) => setSalaryHostId(e.target.value)}
+                    className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!salaryHostId.trim()) return;
+                      const { data } = await supabase
+                        .from("profiles")
+                        .select("id, display_name")
+                        .eq("user_id", salaryHostId.trim())
+                        .single();
+                      if (!data) { toast.error("لم يتم العثور على المضيف"); return; }
+                      setSalaryDetailsTarget({ id: data.id, name: data.display_name });
+                      setSalaryDetailsOpen(true);
+                    }}
+                    className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground text-xs font-bold"
+                  >
+                    عرض
+                  </button>
+                </div>
+                <p className="text-[9px] text-muted-foreground">
+                  📋 يشمل: تفصيل يومي للماس والساعات، أيام النشاط، حالة الاستحقاق، الخصم، وسجل التدقيق الكامل
+                </p>
+              </div>
+
               {payrollLoading && <p className="text-center text-muted-foreground text-sm py-8">جارٍ التحميل...</p>}
 
               {payrollReport && !payrollLoading && (
