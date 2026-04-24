@@ -241,22 +241,74 @@ const AdminDashboard = () => {
     return urlData.publicUrl;
   };
 
-  // Gift management - now supports Lottie JSON & transparent video
+  // Validate video dimensions for fullscreen suitability
+  // Recommended: aspect ratio between 0.5 (portrait) and 2.0 (landscape), and min 480px on shorter side
+  const checkVideoFullscreenFit = (file: File): Promise<{ ok: boolean; msg: string; w: number; h: number; duration: number }> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.muted = true;
+      video.onloadedmetadata = () => {
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        const duration = video.duration;
+        URL.revokeObjectURL(url);
+        if (!w || !h) {
+          resolve({ ok: false, msg: "⚠️ تعذّر قراءة أبعاد الفيديو", w: 0, h: 0, duration: 0 });
+          return;
+        }
+        const ratio = w / h;
+        const minSide = Math.min(w, h);
+        if (minSide < 360) {
+          resolve({ ok: false, msg: `⚠️ دقة الفيديو منخفضة (${w}×${h}). الحد الأدنى الموصى به 360 بكسل لجودة ملء الشاشة.`, w, h, duration });
+        } else if (ratio < 0.4 || ratio > 2.5) {
+          resolve({ ok: false, msg: `⚠️ نسبة أبعاد الفيديو (${ratio.toFixed(2)}) غير متناسقة مع ملء الشاشة. استخدم نسبة بين 1:2 و 2:1.`, w, h, duration });
+        } else if (duration > 15) {
+          resolve({ ok: false, msg: `⚠️ مدة الفيديو طويلة (${duration.toFixed(1)} ث). يفضّل أقل من 15 ث.`, w, h, duration });
+        } else {
+          resolve({ ok: true, msg: `✅ الفيديو مناسب لملء الشاشة (${w}×${h} • ${duration.toFixed(1)}ث)`, w, h, duration });
+        }
+      };
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({ ok: false, msg: "⚠️ تعذّر تحميل الفيديو للفحص", w: 0, h: 0, duration: 0 });
+      };
+      video.src = url;
+    });
+  };
+
+  // Gift management - now supports Lottie JSON & transparent video + thumbnail
   const handleAddGift = async () => {
     if (!newGift.name || !newGift.price) {
       toast.error("املأ الاسم والسعر");
       return;
     }
     const file = giftFileRef.current?.files?.[0];
+    const thumbFile = giftThumbRef.current?.files?.[0];
     let imageUrl: string | null = null;
     let lottieUrl: string | null = null;
     let videoUrl: string | null = null;
+
+    // For video, run a final check before upload
+    if (file && giftMediaType === "video") {
+      const check = await checkVideoFullscreenFit(file);
+      if (!check.ok) {
+        const proceed = confirm(`${check.msg}\n\nهل تريد المتابعة بأي حال؟`);
+        if (!proceed) return;
+      }
+    }
 
     if (file) {
       const uploaded = await uploadFile(file, "gifts");
       if (giftMediaType === "lottie") lottieUrl = uploaded;
       else if (giftMediaType === "video") videoUrl = uploaded;
       else imageUrl = uploaded;
+    }
+
+    // Upload thumbnail (used as poster/fallback when media is video or lottie)
+    if (thumbFile && (giftMediaType === "video" || giftMediaType === "lottie")) {
+      imageUrl = await uploadFile(thumbFile, "gifts");
     }
 
     const { error } = await supabase.from("gifts").insert({
@@ -273,7 +325,9 @@ const AdminDashboard = () => {
     setNewGift({ name: "", price: "", tier: "normal", duration_ms: "3500" });
     setGiftPreviewUrl(null);
     setGiftMediaType("image");
+    setVideoCheckResult(null);
     if (giftFileRef.current) giftFileRef.current.value = "";
+    if (giftThumbRef.current) giftThumbRef.current.value = "";
     await fetchGifts();
   };
 
