@@ -377,16 +377,18 @@ const VoiceRoom = () => {
     comboTimerRef.current = setTimeout(() => setComboCount(0), 3000);
   };
 
-  // Listen for gift broadcasts from other users in the room
+  // Persistent gift broadcast channel for the room.
+  // self:true so the sender also receives via the same path → guarantees every
+  // user in the room (including the sender) sees the same fullscreen gift.
+  const giftChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   useEffect(() => {
     if (!roomId) return;
     const channel = supabase.channel(`room-gifts-${roomId}`, {
-      config: { broadcast: { self: false, ack: false } },
+      config: { broadcast: { self: true, ack: true } },
     })
       .on("broadcast", { event: "gift-sent" }, (payload) => {
         const { emoji, imageUrl, lottieUrl, videoUrl, amount, giftName, senderName, recipientName, durationMs } = payload.payload;
         logAgora("success", "Gift", `← received '${giftName}' from ${senderName}`, { amount, recipientName });
-        // Fullscreen gift effect for all gifts received in the room
         const id = `${Date.now()}-${Math.random()}`;
         setFullscreenGift({
           id,
@@ -401,7 +403,6 @@ const VoiceRoom = () => {
           timestamp: Date.now(),
           durationMs: durationMs,
         });
-        // Top text banner for everyone
         const toastId = `toast-${id}`;
         setGiftToasts(prev => [...prev, {
           id: toastId,
@@ -417,12 +418,29 @@ const VoiceRoom = () => {
         }, 4500);
       })
       .subscribe((status) => {
-        logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `listener channel status: ${status}`, { roomId });
+        logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `gift channel status: ${status}`, { roomId });
       });
+    giftChannelRef.current = channel;
     return () => {
       supabase.removeChannel(channel);
-      logAgora("info", "Gift", "listener channel removed", { roomId });
+      giftChannelRef.current = null;
+      logAgora("info", "Gift", "gift channel removed", { roomId });
     };
+  }, [roomId]);
+
+  // Broadcast a gift to ALL users currently in this room (including self).
+  const broadcastGiftToRoom = useCallback(async (payload: any) => {
+    const ch = giftChannelRef.current;
+    if (!ch) {
+      logAgora("error", "Gift", "broadcast skipped — no active room channel", { roomId });
+      return;
+    }
+    try {
+      const ack = await ch.send({ type: "broadcast", event: "gift-sent", payload });
+      logAgora(ack === "ok" ? "success" : "error", "Gift", `broadcast ack: ${ack}`, { giftName: payload?.giftName });
+    } catch (err: any) {
+      logAgora("error", "Gift", `broadcast threw: ${err?.message || err}`);
+    }
   }, [roomId]);
 
   if (!roomId) {
