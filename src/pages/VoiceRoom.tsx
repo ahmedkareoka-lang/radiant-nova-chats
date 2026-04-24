@@ -30,6 +30,7 @@ import LuckyWheelButton from "@/components/LuckyWheelButton";
 import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import FramedAvatar from "@/components/FramedAvatar";
+import { useRechargeAgentSet } from "@/hooks/useRechargeAgentSet";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
