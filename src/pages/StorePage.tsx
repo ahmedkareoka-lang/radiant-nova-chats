@@ -9,78 +9,24 @@ import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import DualBadge from "@/components/DualBadge";
-import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
-import framePurpleWings from "@/assets/frame-purple-wings.png";
-import frameRoyalCrown from "@/assets/frame-royal-crown.png";
-import lionFrame from "@/assets/lion-frame.png";
-import bossFrame from "@/assets/boss-frame.png";
-import frameFire from "@/assets/frame-fire.png";
-import frameIce from "@/assets/frame-ice.png";
-import frameRainbow from "@/assets/frame-rainbow.png";
-import frameDragon from "@/assets/frame-dragon.png";
+import FramedAvatar from "@/components/FramedAvatar";
+import { FRAME_MAP, FRAME_ANIMATION, FRAMES } from "@/lib/frameConfig";
 
-const STORE_FRAMES = [
-  {
-    id: "frame-purple-wings",
-    name: "إطار الأجنحة البنفسجية",
-    type: "frame",
-    price_coins: 25000,
-    image: framePurpleWings,
-    data: { rarity: "legendary", frame_url: "frame-purple-wings" },
+// Dynamically derived from FRAMES — adding a frame to frameConfig.ts
+// makes it appear in the store automatically (only ones flagged for sale).
+const STORE_FRAMES = FRAMES.filter((f) => !!f.store).map((f) => ({
+  id: f.key,
+  name: f.name,
+  type: "frame",
+  price_coins: f.store!.price_coins,
+  image: f.image,
+  data: {
+    rarity: f.store!.rarity,
+    frame_url: f.key,
+    animated: !!f.animation,
   },
-  {
-    id: "frame-royal-crown",
-    name: "إطار التاج الملكي",
-    type: "frame",
-    price_coins: 50000,
-    image: frameRoyalCrown,
-    data: { rarity: "mythic", frame_url: "frame-royal-crown" },
-  },
-  {
-    id: "lion-frame",
-    name: "إطار الأسد",
-    type: "frame",
-    price_coins: 75000,
-    image: lionFrame,
-    data: { rarity: "mythic", frame_url: "lion-frame" },
-  },
-  {
-    id: "frame-fire",
-    name: "إطار النار 🔥",
-    type: "frame",
-    price_coins: 150000,
-    image: frameFire,
-    data: { rarity: "mythic", frame_url: "frame-fire", animated: true },
-    vipRequired: 3,
-  },
-  {
-    id: "frame-ice",
-    name: "إطار الجليد ❄️",
-    type: "frame",
-    price_coins: 150000,
-    image: frameIce,
-    data: { rarity: "mythic", frame_url: "frame-ice", animated: true },
-    vipRequired: 3,
-  },
-  {
-    id: "frame-rainbow",
-    name: "إطار قوس قزح 🌈",
-    type: "frame",
-    price_coins: 200000,
-    image: frameRainbow,
-    data: { rarity: "mythic", frame_url: "frame-rainbow", animated: true },
-    vipRequired: 5,
-  },
-  {
-    id: "frame-dragon",
-    name: "إطار التنين الذهبي 🐉",
-    type: "frame",
-    price_coins: 300000,
-    image: frameDragon,
-    data: { rarity: "mythic", frame_url: "frame-dragon", animated: true },
-    vipRequired: 7,
-  },
-];
+  vipRequired: f.store!.vipRequired,
+}));
 
 const StorePage = () => {
   const navigate = useNavigate();
@@ -616,20 +562,21 @@ const StorePage = () => {
               <div className="space-y-4 py-2">
                 {/* Mock profile card */}
                 <div className="card-nova p-5 text-center space-y-3">
-                  <div className="relative w-28 h-28 mx-auto">
-                    {/* Frame layer (if frame type) */}
-                    {previewItem.type === "frame" && previewItem.image_url && (
-                      <img
-                        src={previewItem.image_url}
-                        alt="frame"
-                        className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none"
+                  <div className="mx-auto w-fit">
+                    {previewItem.type === "frame" && previewItem.image_url ? (
+                      <FramedAvatar
+                        avatarUrl={profile?.avatar_url}
+                        equippedFrame={previewItem.image_url}
+                        size={112}
+                      />
+                    ) : (
+                      <FramedAvatar
+                        avatarUrl={profile?.avatar_url}
+                        equippedFrame={profile?.equipped_frame}
+                        size={112}
+                        ringClassName="ring-2 ring-primary/40"
                       />
                     )}
-                    <img
-                      src={profile?.avatar_url || "/placeholder.svg"}
-                      alt="avatar"
-                      className="w-full h-full rounded-full object-cover border-2 border-primary/40"
-                    />
                   </div>
                   <p className="font-bold text-base">{profile?.display_name || "أنت"}</p>
                   <div className="flex justify-center">

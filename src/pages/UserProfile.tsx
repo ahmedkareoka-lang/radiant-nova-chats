@@ -8,6 +8,7 @@ import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import PageTransition from "@/components/PageTransition";
+import FramedAvatar from "@/components/FramedAvatar";
 import LoveBadge from "@/components/LoveBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
@@ -81,21 +82,17 @@ const UserProfile = () => {
 
           {/* Big framed avatar overlapping cover */}
           <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 z-10">
-            <div className="relative w-32 h-32">
-              <div className="absolute inset-0 rounded-full p-1" style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 90% 60%))" }}>
-                <div className="w-full h-full rounded-full bg-background p-0.5">
-                  <div className="w-full h-full rounded-full overflow-hidden">
-                    <img src={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="Profile" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-              </div>
-              {finalFrame && (
-                <img
-                  src={finalFrame}
-                  alt="Frame"
-                  className={`absolute -inset-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] object-contain z-20 pointer-events-none ${frameKey ? (FRAME_ANIMATION[frameKey] || "") : ""}`}
+            <div
+              className="rounded-full p-1"
+              style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 90% 60%))" }}
+            >
+              <div className="rounded-full bg-background p-0.5">
+                <FramedAvatar
+                  avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
+                  equippedFrame={frameKey}
+                  size={120}
                 />
-              )}
+              </div>
             </div>
           </div>
         </div>
