@@ -562,20 +562,21 @@ const StorePage = () => {
               <div className="space-y-4 py-2">
                 {/* Mock profile card */}
                 <div className="card-nova p-5 text-center space-y-3">
-                  <div className="relative w-28 h-28 mx-auto">
-                    {/* Frame layer (if frame type) */}
-                    {previewItem.type === "frame" && previewItem.image_url && (
-                      <img
-                        src={previewItem.image_url}
-                        alt="frame"
-                        className="absolute inset-0 w-full h-full object-contain z-10 pointer-events-none"
+                  <div className="mx-auto w-fit">
+                    {previewItem.type === "frame" && previewItem.image_url ? (
+                      <FramedAvatar
+                        avatarUrl={profile?.avatar_url}
+                        equippedFrame={previewItem.image_url}
+                        size={112}
+                      />
+                    ) : (
+                      <FramedAvatar
+                        avatarUrl={profile?.avatar_url}
+                        equippedFrame={profile?.equipped_frame}
+                        size={112}
+                        ringClassName="ring-2 ring-primary/40"
                       />
                     )}
-                    <img
-                      src={profile?.avatar_url || "/placeholder.svg"}
-                      alt="avatar"
-                      className="w-full h-full rounded-full object-cover border-2 border-primary/40"
-                    />
                   </div>
                   <p className="font-bold text-base">{profile?.display_name || "أنت"}</p>
                   <div className="flex justify-center">
