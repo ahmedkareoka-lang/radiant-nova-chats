@@ -142,9 +142,9 @@ const InventoryPage = () => {
                 return (
                   <div key={item.id} className={`card-nova p-3 text-center ${highlighted ? "border border-primary/50" : ""}`}>
                      {frameImg ? (
-                      <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
+                      <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
                      ) : isBadge && item.item_data?.image_url ? (
-                       <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
+                       <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
                     ) : (
                       <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : isBadge ? "🏅" : "✨"}</span>
                     )}

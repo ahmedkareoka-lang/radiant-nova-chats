@@ -12,7 +12,7 @@ import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
-import { useWebRTC } from "@/hooks/useWebRTC";
+import { useAgoraVoice } from "@/hooks/useAgoraVoice";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -115,8 +115,8 @@ const VoiceRoom = () => {
   const lockedSlots: number[] = (roomData as any)?.locked_slots || [];
   const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
-  // WebRTC
-  const { connectedPeers, speakingPeers, localSpeaking } = useWebRTC({
+  // Voice (Agora)
+  const { connectedPeers, speakingPeers, localSpeaking } = useAgoraVoice({
     roomId,
     currentUserId,
     isOnMic,

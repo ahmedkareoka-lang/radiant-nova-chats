@@ -412,7 +412,7 @@ const StorePage = () => {
               return (
                 <div key={frame.id} className={`card-nova p-4 text-center space-y-2 ${equipped ? "border border-primary/50 glow-neon" : ""}`}>
                   <div className="relative w-24 h-24 mx-auto">
-                    <img src={frame.image} alt={frame.name} className={`w-full h-full object-contain ${FRAME_ANIMATION[frame.id] || ""}`} />
+                    <img src={frame.image} alt={frame.name} className={`w-full h-full object-contain ${FRAME_ANIMATION[frame.id] || ""}`} loading="lazy" decoding="async" />
                   </div>
                   <p className="font-bold text-xs">{frame.name}</p>
                   {(frame as any).vipRequired && (
@@ -461,7 +461,7 @@ const StorePage = () => {
                     return (
                     <div key={item.id} className={`card-nova p-4 text-center space-y-2 border ${equipped ? "border-primary glow-neon" : "border-purple-400/40"} shadow-[0_0_20px_hsl(280_90%_60%/0.3)]`}>
                       {item.image_url && (
-                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" loading="lazy" decoding="async" /></div>
                       )}
                       <p className="font-bold text-xs">{item.name}</p>
                       <p className="text-[9px] text-purple-300 font-bold">عنصر NOVA P{tier} ✨</p>
@@ -517,7 +517,7 @@ const StorePage = () => {
                     return (
                     <div key={item.id} className={`card-nova p-4 text-center space-y-2 border ${equipped ? "border-amber-300 glow-gold" : "border-amber-400/40"} shadow-[0_0_20px_hsl(45_95%_55%/0.3)]`}>
                       {item.image_url && (
-                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" /></div>
+                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" loading="lazy" decoding="async" /></div>
                       )}
                       <p className="font-bold text-xs">{item.name}</p>
                       <p className="text-[9px] text-amber-300 font-bold">عنصر VIP {tier} 💎</p>
@@ -569,7 +569,7 @@ const StorePage = () => {
                   <div key={item.id} className={`card-nova p-4 text-center space-y-2 ${equipped ? "border border-primary/50 glow-neon" : ""}`}>
                     {item.image_url && (
                       <div className="w-24 h-24 mx-auto">
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" loading="lazy" decoding="async" />
                       </div>
                     )}
                     <p className="font-bold text-xs">{item.name}</p>
