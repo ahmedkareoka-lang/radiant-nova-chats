@@ -23,6 +23,7 @@ const AgenciesPage = () => {
   const [isBoss, setIsBoss] = useState(false);
   const [isAgent, setIsAgent] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [agencyEligible, setAgencyEligible] = useState(false);
   const [pendingAgencies, setPendingAgencies] = useState<any[]>([]);
   const [agencyHosts, setAgencyHosts] = useState<any[]>([]);
   const [searchId, setSearchId] = useState("");
@@ -39,6 +40,9 @@ const AgenciesPage = () => {
   const [hostEvents, setHostEvents] = useState<any>(null);
   const [showOverview, setShowOverview] = useState(false);
   const [showHostEvents, setShowHostEvents] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<any>(null);
+  const [sentInvites, setSentInvites] = useState<any[]>([]);
+  const [processingInvite, setProcessingInvite] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
