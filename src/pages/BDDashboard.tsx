@@ -430,7 +430,144 @@ const BDDashboard = () => {
             <li>• يمكنك تفعيل وكالة لأي مستخدم مباشرة من خلال البحث أعلاه.</li>
           </ul>
         </Card>
+        </>)}
+
+        {tab === "activity" && (
+          <div className="space-y-3">
+            {/* Filters */}
+            <Card className="p-3 flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <History size={14} /> فلترة:
+              </div>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg border border-border bg-background"
+              />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg border border-border bg-background"
+              >
+                <option value="all">كل الأنواع</option>
+                <option value="search">بحث</option>
+                <option value="activate_agency">تفعيل وكالة</option>
+                <option value="duplicate_attempt">محاولة مكررة</option>
+                <option value="notification_sent">إشعار مُرسل</option>
+              </select>
+              {(filterDate || filterType !== "all") && (
+                <button
+                  onClick={() => { setFilterDate(""); setFilterType("all"); }}
+                  className="text-[11px] text-orange-500 font-bold ms-auto"
+                >
+                  إعادة تعيين
+                </button>
+              )}
+            </Card>
+
+            {activityLoading ? (
+              <div className="py-8 flex justify-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : activity.length === 0 ? (
+              <Card className="p-6 text-center text-muted-foreground text-sm">
+                لا توجد أنشطة مطابقة.
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {activity.map((row) => {
+                  const isErr = row.status === "error";
+                  const isDup = row.status === "duplicate";
+                  const Icon =
+                    row.action_type === "search" ? Search :
+                    row.action_type === "notification_sent" ? Bell :
+                    row.action_type === "duplicate_attempt" ? AlertTriangle :
+                    isErr ? AlertTriangle : CheckCircle2;
+                  const color =
+                    isErr ? "text-destructive" :
+                    isDup ? "text-amber-500" :
+                    row.action_type === "search" ? "text-blue-500" :
+                    row.action_type === "notification_sent" ? "text-purple-500" :
+                    "text-emerald-500";
+                  const labelMap: Record<string, string> = {
+                    search: "بحث",
+                    activate_agency: "تفعيل وكالة",
+                    duplicate_attempt: "محاولة مكررة",
+                    notification_sent: "إشعار مُرسل",
+                    error: "خطأ",
+                  };
+                  return (
+                    <Card key={row.id} className="p-3">
+                      <div className="flex items-start gap-2">
+                        <Icon size={16} className={`mt-0.5 ${color}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="font-bold text-xs">{labelMap[row.action_type] || row.action_type}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {new Date(row.created_at).toLocaleString("ar")}
+                            </div>
+                          </div>
+                          {row.target_display_name && (
+                            <div className="text-[11px] mt-0.5">
+                              {row.target_display_name}
+                              {row.target_public_id && (
+                                <span className="text-muted-foreground"> · ID: {row.target_public_id}</span>
+                              )}
+                            </div>
+                          )}
+                          {row.message && (
+                            <div className={`text-[10px] mt-0.5 ${color}`}>{row.message}</div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
+      {/* Confirmation dialog before activation */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد تفعيل الوكالة</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-start">
+                <div>هل أنت متأكد من تفعيل وكالة المستخدم التالي تحت إشرافك؟</div>
+                {found && (
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted">
+                    <img
+                      src={found.avatar_url || "https://i.pravatar.cc/100"}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm truncate">{found.display_name}</div>
+                      <div className="text-[10px] text-muted-foreground">ID: {found.user_id}</div>
+                    </div>
+                  </div>
+                )}
+                <div className="text-[11px] text-muted-foreground">
+                  لا يمكنك تفعيل نفس الوكالة مرتين. ستحصل على عمولة 10% من دعم الوكالة.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleActivate}
+              className="bg-gradient-to-r from-orange-600 to-amber-500 text-white"
+            >
+              تأكيد التفعيل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
