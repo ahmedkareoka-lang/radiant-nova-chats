@@ -100,6 +100,7 @@ const VoiceRoom = () => {
   } | null>(null);
   const [entranceQueue, setEntranceQueue] = useState<{ id: string; displayName: string; avatarUrl: string | null; videoUrl: string | null; audioUrl: string | null; novaLevel?: number; vipLevel?: number }[]>([]);
   const [muteEntrance, setMuteEntrance] = useState(false);
+  const [showCouplePicker, setShowCouplePicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
 
