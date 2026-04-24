@@ -389,10 +389,11 @@ const AdminDashboard = () => {
       video_url: videoUrl,
       tier: newGift.tier,
       duration_ms: parseInt(newGift.duration_ms) || 3500,
+      category: newGift.category || "general",
     } as any);
     if (error) { toast.error("فشل في إضافة الهدية: " + error.message); return; }
     toast.success("تمت إضافة الهدية ✅");
-    setNewGift({ name: "", price: "", tier: "normal", duration_ms: "3500" });
+    setNewGift({ name: "", price: "", tier: "normal", duration_ms: "3500", category: "general" });
     setGiftPreviewUrl(null);
     setGiftMediaType("image");
     setVideoCheckResult(null);
