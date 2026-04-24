@@ -12,7 +12,7 @@ export const useGifts = () => {
     receiverId: string,
     giftName: string,
     goldAmount: number,
-    extras?: { giftEmoji?: string; imageUrl?: string | null }
+    extras?: { giftEmoji?: string; imageUrl?: string | null; comboCount?: number; unitPrice?: number; roomId?: string | null }
   ) => {
     // Get conversion rate from system settings
     const { data: setting } = await supabase
