@@ -619,11 +619,27 @@ const VoiceRoom = () => {
     return member || null;
   });
 
-  // Adaptive grid: fewer mics → bigger avatars; more mics → tighter columns
-  const gridCols = micCount <= 6 ? "grid-cols-3" : micCount <= 9 ? "grid-cols-4" : "grid-cols-5";
-  // Per-mic avatar size scales inversely with mic count for clarity
-  const micAvatarPx = micCount <= 6 ? 96 : micCount <= 9 ? 78 : micCount <= 12 ? 66 : 58;
-  const micGapClass = micCount <= 6 ? "gap-6" : micCount <= 9 ? "gap-5" : "gap-4";
+  // Stable, fixed grid configuration for 0–20 mics — no shake, no overlap between rows.
+  // Columns are predetermined per range so layout never reflows mid-session.
+  const gridCols =
+    micCount <= 4 ? "grid-cols-2"
+    : micCount <= 9 ? "grid-cols-3"
+    : micCount <= 16 ? "grid-cols-4"
+    : "grid-cols-5";
+  // Avatar size scales down predictably so a row never overflows on 428px viewports.
+  const micAvatarPx =
+    micCount <= 6 ? 86
+    : micCount <= 9 ? 72
+    : micCount <= 12 ? 64
+    : micCount <= 16 ? 58
+    : 52;
+  // Vertical gap is intentionally large so the small support badge under one mic
+  // never visually touches the avatar of the row below.
+  const micGapClass =
+    micCount <= 6 ? "gap-x-5 gap-y-8"
+    : micCount <= 9 ? "gap-x-4 gap-y-7"
+    : micCount <= 12 ? "gap-x-3 gap-y-7"
+    : "gap-x-2.5 gap-y-6";
 
   // Helper: speaking animation
   const SpeakingWaves = () => (
