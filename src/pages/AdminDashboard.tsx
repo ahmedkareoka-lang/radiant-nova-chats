@@ -191,18 +191,15 @@ const AdminDashboard = () => {
       await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchNovaStats(), fetchRechargeAgents()]);
       setLoading(false);
     };
-    loadData();
-  }, []);
+    checkBoss();
+  }, [navigate]);
 
   useEffect(() => {
     if (activeTab === "payroll" && isBoss && !payrollReport) {
       fetchPayrollReport();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isBoss]);
-
-  const _ignored_load = () => {
-    checkBoss();
-  }, [navigate]);
 
   // Realtime subscriptions for gifts, store_items, banners
   useEffect(() => {
