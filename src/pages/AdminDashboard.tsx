@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [novaStats, setNovaStats] = useState<{ level: number; label: string; count: number }[]>([]);
   const [adminId, setAdminId] = useState<string | null>(null);
   const [rechargeAgents, setRechargeAgents] = useState<any[]>([]);
+  const [agentReport, setAgentReport] = useState<{ today_total: number; today_count: number; week_total: number; week_count: number; week_start: string } | null>(null);
   const [newAgentId, setNewAgentId] = useState("");
   const [newAgentName, setNewAgentName] = useState("");
   const [newAgentWhatsapp, setNewAgentWhatsapp] = useState("");
