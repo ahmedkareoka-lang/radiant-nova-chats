@@ -12,6 +12,8 @@ import PageTransition from "@/components/PageTransition";
 import FramedAvatar from "@/components/FramedAvatar";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
+import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
@@ -64,6 +66,7 @@ const Profile = () => {
   const { followersCount, followingCount } = useFollows(myId);
   const { unreadCount } = useNotifications();
   const { couple: loveCouple } = useLoveCouple(myId);
+  const meIsAgent = useIsRechargeAgent(myId);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -280,6 +283,7 @@ const Profile = () => {
                   <FramedAvatar
                     avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
                     equippedFrame={equippedFrameKey}
+                    isRechargeAgent={meIsAgent}
                     size={120}
                   />
                 </div>
@@ -336,6 +340,7 @@ const Profile = () => {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
               )}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
+              {meIsAgent && <RechargeAgentBadge size="md" />}
             </div>
 
             {/* Wealth & Charm visual tier badges */}

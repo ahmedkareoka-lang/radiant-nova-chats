@@ -1317,6 +1317,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      agent_transfer_coins: {
+        Args: { _amount: number; _recipient_id: string }
+        Returns: undefined
+      }
       apply_referral_code: {
         Args: { _code: string; _user_id: string }
         Returns: Json

@@ -30,6 +30,7 @@ import LuckyWheelButton from "@/components/LuckyWheelButton";
 import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import FramedAvatar from "@/components/FramedAvatar";
+import { useRechargeAgentSet } from "@/hooks/useRechargeAgentSet";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
@@ -95,6 +96,7 @@ const VoiceRoom = () => {
   const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
   const { t, locale } = useLanguage();
+  const rechargeAgentSet = useRechargeAgentSet();
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
@@ -630,13 +632,15 @@ const VoiceRoom = () => {
     equippedFrame: string | null | undefined,
     isBossUser: boolean,
     size: "sm" | "md" | "lg" = "md",
-    isSpeaking: boolean = false
+    isSpeaking: boolean = false,
+    isRechargeAgent: boolean = false,
   ) => {
     const sizePx = size === "sm" ? 72 : size === "lg" ? 100 : 82;
     return (
       <FramedAvatar
         avatarUrl={avatarUrl}
         equippedFrame={equippedFrame}
+        isRechargeAgent={isRechargeAgent}
         size={sizePx}
         ringClassName={isSpeaking ? "ring-2 ring-green-400 shadow-[0_0_12px_rgba(74,222,128,0.5)]" : "ring-2 ring-border"}
         behind={isSpeaking ? <SpeakingWaves /> : null}
@@ -872,7 +876,7 @@ const VoiceRoom = () => {
               <button onClick={() => setSelectedProfile(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="flex flex-col items-center gap-2">
-              {renderAvatarWithFrame(selectedProfile.avatar_url, selectedProfile.equipped_frame, selectedProfile.is_boss, "lg")}
+              {renderAvatarWithFrame(selectedProfile.avatar_url, selectedProfile.equipped_frame, selectedProfile.is_boss, "lg", false, rechargeAgentSet.has(selectedProfile.user_id))}
               <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{selectedProfile.display_name}</span>
               <VipBadge level={selectedProfile.vip_level} size="md" />
             </div>
@@ -1159,7 +1163,8 @@ const VoiceRoom = () => {
                         (slot.profile as any)?.equipped_frame || null,
                         slot.profile?.is_boss || false,
                         "sm",
-                        !!slotIsSpeaking && !isUserMuted
+                        !!slotIsSpeaking && !isUserMuted,
+                        rechargeAgentSet.has(slot.user_id)
                       )}
                       {isUserMuted && (
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center z-20">

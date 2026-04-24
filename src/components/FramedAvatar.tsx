@@ -1,4 +1,5 @@
 import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
+import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 
 /** Named size presets so pages don't need to hardcode pixel values everywhere. */
 export const FRAMED_AVATAR_SIZES = {
@@ -27,6 +28,9 @@ type Props = {
   /** Optional element rendered behind the avatar (e.g., speaking waves) */
   behind?: React.ReactNode;
   alt?: string;
+  /** When true, wraps the avatar in the special Recharge Agent frame.
+   *  Takes precedence over `equippedFrame` so agents always show their badge frame. */
+  isRechargeAgent?: boolean;
 };
 
 const resolveSize = (s: FramedAvatarSize | number): number =>
@@ -45,8 +49,26 @@ const FramedAvatar = ({
   ringClassName = "ring-2 ring-border",
   behind,
   alt = "",
+  isRechargeAgent = false,
 }: Props) => {
   const px = resolveSize(size);
+
+  // Recharge agents get a dedicated CSS frame with a "وكيل شحن" label.
+  if (isRechargeAgent) {
+    return (
+      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+        {behind}
+        <RechargeAgentFrame size={px}>
+          <img
+            src={avatarUrl || "https://i.pravatar.cc/200"}
+            alt={alt}
+            className="w-full h-full object-cover"
+          />
+        </RechargeAgentFrame>
+      </div>
+    );
+  }
+
   const frameKey = equippedFrame || null;
   const mapped = frameKey ? FRAME_MAP[frameKey] : null;
   const direct = !mapped && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/")) ? frameKey : null;
