@@ -9,6 +9,7 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import NovaSpinner from "@/components/NovaSpinner";
 import EmptyState from "@/components/EmptyState";
 import PayrollStructureBanner from "@/components/PayrollStructureBanner";
+import SalaryDetailsModal from "@/components/SalaryDetailsModal";
 
 const AgenciesPage = () => {
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ const AgenciesPage = () => {
   const [hasOwnedAgency, setHasOwnedAgency] = useState(false);
   const [hostSalary, setHostSalary] = useState<any>(null);
   const [agencyPayroll, setAgencyPayroll] = useState<any>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsHost, setDetailsHost] = useState<{ id?: string; name?: string }>({});
 
   useEffect(() => {
     const load = async () => {
@@ -348,6 +351,13 @@ const AgenciesPage = () => {
                   <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
                     💡 معدل التحويل: 100,000 ماسة = $8 • لكل دورة 15 يوم: 8 أيام نشطة + 20 ساعة بث
                   </p>
+
+                  <button
+                    onClick={() => { setDetailsHost({ id: userId }); setDetailsOpen(true); }}
+                    className="w-full py-2 rounded-xl bg-primary/15 border border-primary/40 text-primary text-xs font-bold flex items-center justify-center gap-2"
+                  >
+                    📋 عرض تفاصيل الراتب الكاملة
+                  </button>
                 </div>
               )}
               {myMembership?.badge === "host" && (
@@ -392,7 +402,11 @@ const AgenciesPage = () => {
                         <div className="space-y-1.5">
                           <p className="text-[10px] font-bold text-muted-foreground">رواتب المضيفين</p>
                           {(agencyPayroll.hosts || []).map((h: any) => (
-                            <div key={h.host_id} className="bg-card/60 rounded-xl p-2 flex items-center justify-between text-[11px]">
+                            <button
+                              key={h.host_id}
+                              onClick={() => { setDetailsHost({ id: h.host_id, name: h.display_name }); setDetailsOpen(true); }}
+                              className="w-full bg-card/60 hover:bg-card/80 transition-colors rounded-xl p-2 flex items-center justify-between text-[11px]"
+                            >
                               <div className="flex items-center gap-2">
                                 <span className="font-bold">{h.display_name || "—"}</span>
                                 {h.meets_target ? <span>✅</span> : <span title="لم يستوفِ الشروط">⚠️</span>}
@@ -400,11 +414,13 @@ const AgenciesPage = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-muted-foreground">{Number(h.diamonds).toLocaleString()}💎</span>
                                 <span className="font-bold text-primary">${Number(h.final_salary_usd).toLocaleString()}</span>
+                                <span className="text-[9px] text-primary/70">›</span>
                               </div>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       )}
+                      <p className="text-[9px] text-muted-foreground/70 text-center">اضغط على اسم المضيف لعرض التفاصيل الكاملة</p>
 
                       <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
                         💡 100,000 ماس = $8 • شرط: 15 يوم + 40 ساعة • خصم 20% عند المخالفة
@@ -519,6 +535,13 @@ const AgenciesPage = () => {
         </main>
 
         <BottomNav />
+
+        <SalaryDetailsModal
+          open={detailsOpen}
+          onClose={() => setDetailsOpen(false)}
+          hostId={detailsHost.id}
+          hostName={detailsHost.name}
+        />
       </div>
     </PageTransition>
   );
