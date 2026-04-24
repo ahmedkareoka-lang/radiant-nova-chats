@@ -1078,6 +1078,19 @@ const VoiceRoom = () => {
           avatar_url: m.profile?.avatar_url || null,
         }))}
         onMultiGiftSent={handleGiftBurst}
+        onGiftSent={(info) => {
+          // Show fullscreen effect immediately for the sender (broadcasts don't echo back)
+          setFullscreenGift({
+            id: Date.now().toString(),
+            emoji: info.emoji,
+            giftName: info.giftName,
+            imageUrl: info.imageUrl,
+            senderName: info.senderName,
+            recipientName: info.recipientName,
+            amount: info.amount,
+            timestamp: Date.now(),
+          });
+        }}
         roomId={roomId || undefined}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
