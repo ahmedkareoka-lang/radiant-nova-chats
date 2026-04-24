@@ -105,6 +105,7 @@ const VoiceRoom = () => {
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
   const [giftReceiverName, setGiftReceiverName] = useState("");
   const [chatInput, setChatInput] = useState("");
