@@ -747,16 +747,55 @@ const AdminDashboard = () => {
                     type="file"
                     accept={giftMediaType === "lottie" ? "application/json,.json" : giftMediaType === "video" ? "video/*" : "image/*"}
                     className="text-xs flex-1"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const f = e.target.files?.[0];
-                      if (f && giftMediaType === "image") setGiftPreviewUrl(URL.createObjectURL(f));
-                      else setGiftPreviewUrl(null);
+                      setVideoCheckResult(null);
+                      if (!f) { setGiftPreviewUrl(null); return; }
+                      if (giftMediaType === "image") {
+                        setGiftPreviewUrl(URL.createObjectURL(f));
+                      } else if (giftMediaType === "video") {
+                        setGiftPreviewUrl(null);
+                        const check = await checkVideoFullscreenFit(f);
+                        setVideoCheckResult({ ok: check.ok, msg: check.msg });
+                        if (check.ok) toast.success(check.msg);
+                        else toast.error(check.msg, { duration: 6000 });
+                      } else {
+                        setGiftPreviewUrl(null);
+                      }
                     }}
                   />
                   <button onClick={handleAddGift} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
                     {uploading ? "جارٍ الرفع..." : "إضافة"}
                   </button>
                 </div>
+
+                {/* Video fit feedback */}
+                {videoCheckResult && (
+                  <div className={`text-[11px] p-2 rounded-lg border ${
+                    videoCheckResult.ok
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-destructive/10 border-destructive/30 text-destructive"
+                  }`}>
+                    {videoCheckResult.msg}
+                  </div>
+                )}
+
+                {/* Optional thumbnail/cover image for video & lottie */}
+                {(giftMediaType === "video" || giftMediaType === "lottie") && (
+                  <div className="space-y-1 p-2 rounded-xl bg-background/40 border border-border/30">
+                    <p className="text-[10px] font-bold text-foreground">🖼️ صورة الهدية (اختيارية)</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      تظهر في قائمة الهدايا وكصورة احتياطية إذا فشل تشغيل {giftMediaType === "video" ? "الفيديو" : "الـ Lottie"}.
+                    </p>
+                    <input
+                      ref={giftThumbRef}
+                      type="file"
+                      accept="image/*"
+                      className="text-xs w-full"
+                    />
+                  </div>
+                )}
+
                 {giftPreviewUrl && (
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-background/40 border border-border/30">
                     <img src={giftPreviewUrl} alt="معاينة الهدية" className="w-16 h-16 rounded-lg object-contain bg-secondary/40" />
