@@ -62,6 +62,11 @@ export function useLevelUpDetector() {
             }
             lastWealth.current = wL;
             lastCharm.current = cL;
+
+            // Auto-trigger referral level5 reward (no-op if already claimed or <5)
+            if ((next.level ?? 0) >= 5) {
+              supabase.rpc("process_referral_level5", { _user_id: user.id });
+            }
           }
         )
         .subscribe();
