@@ -643,6 +643,42 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_audit_log: {
+        Row: {
+          action_type: string
+          actor_id: string | null
+          coin_amount: number | null
+          created_at: string
+          description: string
+          diamond_amount: number | null
+          id: string
+          metadata: Json | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          actor_id?: string | null
+          coin_amount?: number | null
+          created_at?: string
+          description: string
+          diamond_amount?: number | null
+          id?: string
+          metadata?: Json | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string | null
+          coin_amount?: number | null
+          created_at?: string
+          description?: string
+          diamond_amount?: number | null
+          id?: string
+          metadata?: Json | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -1410,6 +1446,10 @@ export type Database = {
         Args: { _host_id?: string; _ref?: string }
         Returns: Json
       }
+      get_host_salary_details: {
+        Args: { _cycle_mode?: string; _host_id?: string; _ref?: string }
+        Returns: Json
+      }
       get_love_level: { Args: { _points: number }; Returns: number }
       get_nova_p_tier: {
         Args: { gold_amount: number }
@@ -1443,6 +1483,14 @@ export type Database = {
           cycle_start: string
         }[]
       }
+      get_target_cycle_alt: {
+        Args: { _ref?: string }
+        Returns: {
+          cycle_end: string
+          cycle_label: string
+          cycle_start: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1455,6 +1503,17 @@ export type Database = {
         Returns: undefined
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
+      log_payroll_audit: {
+        Args: {
+          _action_type: string
+          _coin_amount?: number
+          _description: string
+          _diamond_amount?: number
+          _metadata?: Json
+          _target_user_id: string
+        }
+        Returns: string
+      }
       open_lucky_box: { Args: { _user_id: string }; Returns: Json }
       process_referral_level5: {
         Args: { _user_id: string }
