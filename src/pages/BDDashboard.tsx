@@ -274,7 +274,7 @@ const BDDashboard = () => {
           <h3 className="font-bold text-sm mb-2 px-1">الوكالات تحت إشرافك</h3>
           {agencies.length === 0 ? (
             <Card className="p-6 text-center text-muted-foreground text-sm">
-              لا توجد وكالات مسجلة بعد. الإدارة ستربط وكلاءك بحسابك.
+              لا توجد وكالات مسجلة بعد. استخدم البحث أعلاه لتفعيل وكالة لمستخدم.
             </Card>
           ) : (
             <div className="space-y-2">
