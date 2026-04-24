@@ -66,7 +66,7 @@ const FramePreviewPage = () => {
               i === avatarIdx ? "border-primary" : "border-border opacity-60"
             }`}
           >
-            <img src={src} alt="" className="w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={src} alt="" className="w-full h-full object-cover" />
           </button>
         ))}
         <span className="ms-auto text-xs text-muted-foreground">

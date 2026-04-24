@@ -289,9 +289,9 @@ const LeaderboardPage = () => {
                           <div className={`relative ${isFirst ? "w-20 h-20" : "w-14 h-14"} mb-1.5`}>
                             {frameImg ? (
                               <>
-                                <img src={frameImg} alt="" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none" />
+                                <img loading="lazy" decoding="async" src={frameImg} alt="" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none" />
                                 <div className={`absolute ${isFirst ? "inset-[15%]" : "inset-[12%]"} rounded-full overflow-hidden z-10`}>
-                                  <img src={user.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
+                                  <img loading="lazy" decoding="async" src={user.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
                                 </div>
                               </>
                             ) : (
@@ -300,7 +300,7 @@ const LeaderboardPage = () => {
                                   isFirst ? "ring-accent shadow-[0_0_18px_hsl(45_100%_55%/0.7)]" : idx === 1 ? "ring-slate-300" : "ring-orange-500"
                                 }`}
                               >
-                                <img src={user.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
+                                <img loading="lazy" decoding="async" src={user.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
                               </div>
                             )}
                           </div>
@@ -353,7 +353,7 @@ const LeaderboardPage = () => {
                     >
                       <span className="text-xs font-black text-muted-foreground w-6 text-center">{i + 4}</span>
                       <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-border/60">
-                        <img src={user.avatar_url || "https://i.pravatar.cc/60"} alt="" className="w-full h-full object-cover" />
+                        <img loading="lazy" decoding="async" src={user.avatar_url || "https://i.pravatar.cc/60"} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{user.display_name}</p>

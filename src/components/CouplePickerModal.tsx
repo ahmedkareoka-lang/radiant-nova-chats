@@ -119,7 +119,7 @@ const CouplePickerModal = ({ open, onClose, roomId, members }: CouplePickerModal
                       )}
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-pink-900/40">
                         {m.profile?.avatar_url ? (
-                          <img src={m.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                          <img loading="lazy" decoding="async" src={m.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-pink-200 font-black">
                             {m.profile?.display_name?.[0] ?? "?"}

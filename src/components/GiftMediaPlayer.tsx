@@ -77,12 +77,10 @@ const GiftMediaPlayer = ({ lottieUrl, videoUrl, imageUrl, emoji = "🎁", classN
   // 3) Static image
   if (imageUrl) {
     return (
-      <img
-        src={imageUrl}
+      <img loading="lazy" decoding="async" src={imageUrl}
         alt="gift"
         className={`w-full h-full object-contain ${className}`}
-        style={{ background: "transparent" }}
-      />
+        style={{ background: "transparent" }} />
     );
   }
 

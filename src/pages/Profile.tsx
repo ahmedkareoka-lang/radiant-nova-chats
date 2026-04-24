@@ -207,7 +207,7 @@ const Profile = () => {
                   return (
                     <button key={item.id} onClick={() => equipFrame(key)}
                       className={`p-2 rounded-xl text-center ${isEquipped ? "border-2 border-primary glow-neon" : "border border-border"}`}>
-                      <img src={img} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
+                      <img loading="lazy" decoding="async" src={img} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" />
                       <p className="text-[9px] font-bold mt-1">{item.item_name}</p>
                     </button>
                   );
@@ -223,7 +223,7 @@ const Profile = () => {
           {/* Cover image */}
           <div className="relative w-full h-56 overflow-hidden">
             {profile?.cover_url ? (
-              <img src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" />
             ) : (
               <div
                 className="w-full h-full"

@@ -81,7 +81,7 @@ export default function Top3RoomSenders({ roomId, hostId }: Top3RoomSendersProps
         <div key={s.id} className="flex items-center gap-1">
           <div className="relative">
             <div className={`w-6 h-6 rounded-full overflow-hidden ring-1 ring-offset-1 ring-offset-background bg-gradient-to-br ${colors[i]}`}>
-              <img src={s.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={s.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-full h-full object-cover" />
             </div>
             <span className="absolute -top-1 -right-1 text-[10px]">{ranks[i]}</span>
           </div>

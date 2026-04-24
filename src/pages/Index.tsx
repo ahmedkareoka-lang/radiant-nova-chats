@@ -199,7 +199,7 @@ const Index = () => {
                   {topRechargers.slice(0, 5).map((user, i) => (
                     <div key={user.id} className="flex flex-col items-center">
                       <div className={`rounded-full overflow-hidden ${i === 0 ? "w-10 h-10 ring-2 ring-accent" : "w-8 h-8 ring-1 ring-accent/50"}`}>
-                        <img src={user.avatar_url || `https://i.pravatar.cc/60?img=${i + 5}`} alt="" className="w-full h-full object-cover" />
+                        <img loading="lazy" decoding="async" src={user.avatar_url || `https://i.pravatar.cc/60?img=${i + 5}`} alt="" className="w-full h-full object-cover" />
                       </div>
                       {i < 3 && <span className="text-[8px] font-bold mt-0.5">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>}
                     </div>

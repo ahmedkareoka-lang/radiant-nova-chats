@@ -143,7 +143,7 @@ const LoginPage = () => {
         transition={{ duration: 0.5 }}
       >
         <div className="flex justify-center mb-8">
-          <img src={novaLogo} alt="NOVA" className="w-40 h-auto" />
+          <img loading="lazy" decoding="async" src={novaLogo} alt="NOVA" className="w-40 h-auto" />
         </div>
 
         {/* Mode toggle */}

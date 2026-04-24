@@ -59,11 +59,9 @@ const FramedAvatar = ({
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}
         <RechargeAgentFrame size={px}>
-          <img
-            src={avatarUrl || "https://i.pravatar.cc/200"}
+          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
             alt={alt}
-            className="w-full h-full object-cover"
-          />
+            className="w-full h-full object-cover" />
         </RechargeAgentFrame>
       </div>
     );
@@ -96,18 +94,14 @@ const FramedAvatar = ({
             transform: `translate(-50%, -50%)`,
           }}
         >
-          <img
-            src={avatarUrl || "https://i.pravatar.cc/200"}
+          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
             alt={alt}
-            className="w-full h-full object-cover"
-          />
+            className="w-full h-full object-cover" />
         </div>
         {/* Frame on top */}
-        <img
-          src={frameImg}
+        <img loading="lazy" decoding="async" src={frameImg}
           alt=""
-          className={`absolute inset-0 w-full h-full object-contain pointer-events-none z-10 ${animClass}`}
-        />
+          className={`absolute inset-0 w-full h-full object-contain pointer-events-none z-10 ${animClass}`} />
       </div>
     );
   }
@@ -118,11 +112,9 @@ const FramedAvatar = ({
       style={{ width: px, height: px }}
     >
       {behind}
-      <img
-        src={avatarUrl || "https://i.pravatar.cc/200"}
+      <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
         alt={alt}
-        className="w-full h-full object-cover"
-      />
+        className="w-full h-full object-cover" />
     </div>
   );
 };

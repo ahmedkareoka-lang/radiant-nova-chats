@@ -242,7 +242,7 @@ const TopUpPage = () => {
                 <div key={a.id} className="card-nova p-3 space-y-3">
                   <div className="flex items-center gap-3">
                     {a.avatar_url ? (
-                      <img src={a.avatar_url} alt={a.agent_name} className="w-12 h-12 rounded-full object-cover ring-2 ring-emerald-400/40" />
+                      <img loading="lazy" decoding="async" src={a.avatar_url} alt={a.agent_name} className="w-12 h-12 rounded-full object-cover ring-2 ring-emerald-400/40" />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center ring-2 ring-emerald-400/40">
                         <Phone className="w-5 h-5 text-emerald-400" />

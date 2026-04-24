@@ -445,7 +445,7 @@ const AgenciesPage = () => {
                             onClick={() => { setDetailsHost({ id: h.host_id, name: h.display_name }); setDetailsOpen(true); }}
                             className="w-full bg-card/70 hover:bg-card rounded-xl p-2.5 flex items-center gap-2 text-right transition-colors"
                           >
-                            <img src={h.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                            <img loading="lazy" decoding="async" src={h.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-bold truncate flex items-center gap-1">
                                 {h.display_name || "—"} {meetsTarget ? "✅" : "⚠️"}
@@ -685,7 +685,7 @@ const AgenciesPage = () => {
                     {searchResult && (
                       <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden">
-                          <img src={searchResult.avatar_url || "https://i.pravatar.cc/60"} alt="" className="w-full h-full object-cover" />
+                          <img loading="lazy" decoding="async" src={searchResult.avatar_url || "https://i.pravatar.cc/60"} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-bold">{searchResult.display_name}</p>
@@ -715,7 +715,7 @@ const AgenciesPage = () => {
                                 : { label: "قيد الانتظار ⏳", cls: "bg-accent/15 text-accent border-accent/30" };
                           return (
                             <div key={s.invite_id} className="bg-secondary/40 rounded-xl p-2.5 flex items-center gap-2">
-                              <img src={s.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                              <img loading="lazy" decoding="async" src={s.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-bold truncate">{s.target_name || "—"}</p>
                                 <p className="text-[9px] text-muted-foreground">ID: {s.target_friendly_id || "—"}</p>

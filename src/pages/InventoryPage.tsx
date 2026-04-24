@@ -83,11 +83,9 @@ const InventoryPage = () => {
 
               <div className="rounded-2xl border border-border bg-secondary/30 p-4">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={profilePreview.avatarUrl || "/placeholder.svg"}
+                  <img loading="lazy" decoding="async" src={profilePreview.avatarUrl || "/placeholder.svg"}
                     alt={profilePreview.displayName}
-                    className="w-14 h-14 rounded-full object-cover border border-border"
-                  />
+                    className="w-14 h-14 rounded-full object-cover border border-border" />
                   <div className="min-w-0 flex-1">
                     <p className="font-black text-sm truncate">{profilePreview.displayName}</p>
                     <div className="mt-2 flex items-center gap-2 flex-wrap">
