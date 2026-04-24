@@ -27,6 +27,8 @@ const AgenciesPage = () => {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [pendingResignations, setPendingResignations] = useState<any[]>([]);
   const [hostStats, setHostStats] = useState<any>(null);
+  const [hostDashboard, setHostDashboard] = useState<any>(null);
+  const [hasOwnedAgency, setHasOwnedAgency] = useState(false);
 
   useEffect(() => {
     const load = async () => {
