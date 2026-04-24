@@ -12,7 +12,7 @@ import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
-import { useWebRTC } from "@/hooks/useWebRTC";
+import { useAgoraVoice } from "@/hooks/useAgoraVoice";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
