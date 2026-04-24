@@ -135,6 +135,30 @@ const AgenciesPage = () => {
 
   useEffect(() => { loadAll(); }, []);
 
+  // Realtime: refresh sent/pending invites when statuses change
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`agency-invites-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "agency_invites" },
+        async (payload: any) => {
+          const row = payload.new || payload.old;
+          if (!row) return;
+          // Only react if I am involved (as agent or target)
+          if (row.agent_id === userId || row.target_user_id === userId) {
+            const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
+            if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
+            const { data: pend } = await supabase.rpc("get_my_pending_invites" as any);
+            if (pend) setPendingInvites(pend);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
   const applyForAgency = async () => {
     if (!agencyName.trim()) return;
     if (hasOwnedAgency) { toast.error("لديك وكالة بالفعل — لا يمكن إنشاء وكالة أخرى"); return; }
@@ -659,6 +683,38 @@ const AgenciesPage = () => {
                     )}
                   </div>
 
+                  {/* Sent invites status panel — realtime */}
+                  {sentInvites.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                        <UserPlus className="w-3 h-3" /> الدعوات المُرسلة ({sentInvites.length})
+                      </h4>
+                      <div className="space-y-1.5">
+                        {sentInvites.map((s: any) => {
+                          const status = s.status as "pending" | "accepted" | "rejected";
+                          const statusBadge =
+                            status === "accepted"
+                              ? { label: "مقبولة ✅", cls: "bg-green-500/15 text-green-400 border-green-500/30" }
+                              : status === "rejected"
+                                ? { label: "مرفوضة ❌", cls: "bg-destructive/15 text-destructive border-destructive/30" }
+                                : { label: "قيد الانتظار ⏳", cls: "bg-accent/15 text-accent border-accent/30" };
+                          return (
+                            <div key={s.invite_id} className="bg-secondary/40 rounded-xl p-2.5 flex items-center gap-2">
+                              <img src={s.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold truncate">{s.target_name || "—"}</p>
+                                <p className="text-[9px] text-muted-foreground">ID: {s.target_friendly_id || "—"}</p>
+                              </div>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${statusBadge.cls}`}>
+                                {statusBadge.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Pending resignations */}
                   {pendingResignations.length > 0 && (
                     <div className="space-y-2">
@@ -701,12 +757,17 @@ const AgenciesPage = () => {
             </div>
           )}
 
-          {/* Apply for agency — only if not in any agency AND doesn't already own one */}
-          {!myAgency && !hasOwnedAgency && (
+          {/* Apply for agency — only if not in any agency, doesn't already own one, AND eligible */}
+          {!myAgency && !hasOwnedAgency && agencyEligible && (
             <button onClick={() => setShowCreate(!showCreate)}
               className="w-full py-3 rounded-2xl border border-dashed border-primary/50 text-primary font-bold text-sm flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> تقديم طلب وكالة جديدة
             </button>
+          )}
+          {!myAgency && !hasOwnedAgency && !agencyEligible && (
+            <div className="card-nova p-3 text-center text-xs text-muted-foreground border border-border">
+              🔒 لإنشاء وكالة، يجب الحصول على موافقة الإدارة (BOSS) أولاً
+            </div>
           )}
           {!myAgency && hasOwnedAgency && (
             <div className="card-nova p-3 text-center text-xs text-muted-foreground border border-accent/30">
