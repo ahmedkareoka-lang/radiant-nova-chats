@@ -340,6 +340,7 @@ const Profile = () => {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
               )}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
+              {meIsAgent && <RechargeAgentBadge size="md" />}
             </div>
 
             {/* Wealth & Charm visual tier badges */}
