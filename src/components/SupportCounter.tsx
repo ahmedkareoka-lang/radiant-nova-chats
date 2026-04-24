@@ -31,9 +31,12 @@ const SupportCounter = ({ userId, sessionStart }: SupportCounterProps) => {
 
   if (total === 0) return null;
 
+  const display = total >= 1000 ? `${(total / 1000).toFixed(1)}K` : total.toLocaleString();
+
   return (
-    <span className="text-[8px] font-bold text-accent/80 flex items-center gap-0.5">
-      💎 {total.toLocaleString()}
+    <span className="mt-0.5 inline-flex items-center gap-0.5 px-1.5 py-[1px] rounded-full bg-accent/15 border border-accent/30 text-[9px] font-bold text-accent leading-none whitespace-nowrap">
+      <span className="text-[10px] leading-none">💎</span>
+      <span className="tabular-nums">{display}</span>
     </span>
   );
 };
