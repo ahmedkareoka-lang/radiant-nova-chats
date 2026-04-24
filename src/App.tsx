@@ -124,7 +124,7 @@ const AnimatedRoutes = () => {
         <Route path="/nova-pass" element={<AuthGate><NovaPassPage /></AuthGate>} />
         <Route path="/lucky-box" element={<AuthGate><LuckyBoxPage /></AuthGate>} />
         <Route path="/streak" element={<AuthGate><StreakPage /></AuthGate>} />
-        <Route path="/invite" element={<AuthGate><InvitePage /></AuthGate>} />
+        <Route path="/invite-friends" element={<AuthGate><InvitePage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
