@@ -64,6 +64,14 @@ const BDDashboard = () => {
   const [searching, setSearching] = useState(false);
   const [found, setFound] = useState<FoundUser | null>(null);
   const [activating, setActivating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Tabs + activity log
+  const [tab, setTab] = useState<"overview" | "activity">("overview");
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [filterDate, setFilterDate] = useState<string>(""); // yyyy-mm-dd
+  const [filterType, setFilterType] = useState<string>("all");
 
   const loadAll = async (uid: string) => {
     const { data: statsData } = await supabase.rpc("get_bd_stats" as any, { _bd_user_id: uid });
