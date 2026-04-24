@@ -34,7 +34,9 @@ export interface RoomMessage {
   };
 }
 
-const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+const HEARTBEAT_INTERVAL = 25000; // 25 seconds — server cleanup runs at 90s/3min thresholds
+const STALE_MIC_MS = 90_000; // hide from mic if no heartbeat for 90s
+const STALE_MEMBER_MS = 180_000; // hide from room if no heartbeat for 3min
 
 export const useVoiceRoom = (roomId: string | null) => {
   const [members, setMembers] = useState<RoomMember[]>([]);
@@ -61,7 +63,26 @@ export const useVoiceRoom = (roomId: string | null) => {
       .eq("room_id", roomId);
 
     if (data && data.length > 0) {
-      const userIds = data.map((m) => m.user_id);
+      // Client-side filter: hide stale users immediately (don't wait for cron)
+      const now = Date.now();
+      const fresh = data.filter((m) => {
+        const age = now - new Date(m.joined_at).getTime();
+        return age < STALE_MEMBER_MS;
+      }).map((m) => {
+        const age = now - new Date(m.joined_at).getTime();
+        // Force-drop from mic if heartbeat is stale, even before cron runs
+        if (m.is_on_mic && age >= STALE_MIC_MS) {
+          return { ...m, is_on_mic: false, mic_slot: null };
+        }
+        return m;
+      });
+
+      const userIds = fresh.map((m) => m.user_id);
+      if (userIds.length === 0) {
+        setMembers([]);
+        return;
+      }
+
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
@@ -70,7 +91,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       const profileMap: Record<string, any> = {};
       profiles?.forEach((p) => { profileMap[p.id] = p; });
 
-      setMembers(data.map((m) => ({
+      setMembers(fresh.map((m) => ({
         ...m,
         profile: profileMap[m.user_id] || null,
       })));
@@ -239,10 +260,16 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     }, HEARTBEAT_INTERVAL);
 
+    // Periodic re-filter to drop stale users from UI even without DB changes
+    const staleSweepRef = setInterval(() => {
+      fetchMembers();
+    }, 30_000);
+
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+      clearInterval(staleSweepRef);
       supabase.removeChannel(channel);
     };
   }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);

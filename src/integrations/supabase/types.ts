@@ -1421,6 +1421,7 @@ export type Database = {
         Returns: undefined
       }
       claim_daily_streak: { Args: { _user_id: string }; Returns: Json }
+      cleanup_stale_room_members: { Args: never; Returns: undefined }
       deactivate_love_couple: { Args: never; Returns: undefined }
       deduct_coins: {
         Args: { _amount: number; _user_id: string }
