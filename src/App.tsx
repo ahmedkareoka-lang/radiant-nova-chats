@@ -11,6 +11,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import FloatingRoomBubble from "@/components/FloatingRoomBubble";
 import GlobalGiftTicker from "@/components/GlobalGiftTicker";
 import LegendaryGiftExplosion from "@/components/LegendaryGiftExplosion";
+import AgoraDebugPanel from "@/components/AgoraDebugPanel";
 import LevelUpEvent from "@/components/LevelUpEvent";
 import { useLevelUpDetector } from "@/hooks/useLevelUpDetector";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -177,6 +178,7 @@ const App = () => {
                 <GlobalGiftTicker />
                 <LegendaryGiftExplosion />
                 <LevelUpRoot />
+                <AgoraDebugPanel />
               </ActiveRoomProvider>
             </BrowserRouter>
           )}
