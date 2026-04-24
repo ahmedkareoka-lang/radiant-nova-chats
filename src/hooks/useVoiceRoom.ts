@@ -212,9 +212,24 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     };
 
+    // 🚀 Smart visibility handling: when the tab becomes visible again,
+    // immediately push a heartbeat + refetch so the user reappears instantly.
+    const sendHeartbeat = async () => {
+      const uid = currentUserIdRef.current;
+      const rid = roomIdRef.current;
+      if (!uid || !rid) return;
+      await supabase
+        .from("room_members")
+        .update({ joined_at: new Date().toISOString() })
+        .eq("room_id", rid)
+        .eq("user_id", uid);
+    };
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // Don't remove immediately on visibility change, heartbeat will handle stale users
+      if (document.visibilityState === 'visible') {
+        // Re-establish presence the moment the user returns
+        sendHeartbeat();
+        fetchMembers();
       }
     };
 
@@ -234,9 +249,9 @@ export const useVoiceRoom = (roomId: string | null) => {
           .eq("room_id", rid)
           .eq("user_id", uid);
 
-        // Daily task: increment room_minutes every 2 ticks (= 1 minute)
+        // Daily task: increment room_minutes every 4 ticks (= 1 minute at 15s/tick)
         heartbeatTickCount += 1;
-        if (heartbeatTickCount % 2 === 0) {
+        if (heartbeatTickCount % 4 === 0) {
           supabase.rpc("increment_daily_task", {
             _user_id: uid,
             _task_type: "room",
@@ -263,10 +278,10 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     }, HEARTBEAT_INTERVAL);
 
-    // Periodic re-filter to drop stale users from UI even without DB changes
+    // 🚀 Periodic re-filter to drop stale users from UI even without DB changes
     const staleSweepRef = setInterval(() => {
       fetchMembers();
-    }, 30_000);
+    }, STALE_SWEEP_INTERVAL);
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
