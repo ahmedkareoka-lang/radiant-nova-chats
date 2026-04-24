@@ -8,6 +8,8 @@ import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import PageTransition from "@/components/PageTransition";
+import LoveBadge from "@/components/LoveBadge";
+import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 
@@ -21,6 +23,7 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("personal");
   const { followersCount, followingCount, isFollowing, toggleFollow, currentUserId } = useFollows(userId);
   const { startConversation } = useConversations();
+  const { couple: loveCouple } = useLoveCouple(userId);
 
   useEffect(() => {
     if (!userId) { navigate("/"); return; }
@@ -148,6 +151,25 @@ const UserProfile = () => {
               </div>
             )}
           </div>
+
+          {/* Love couple badge */}
+          {loveCouple && (
+            <div
+              className="mt-4 rounded-3xl p-4 border-2 border-pink-400/40 backdrop-blur-md"
+              style={{
+                background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
+                boxShadow: "0 4px 20px hsl(330 90% 50% / 0.25)",
+              }}
+            >
+              <LoveBadge
+                user1Avatar={profile?.avatar_url}
+                user2Avatar={loveCouple.partner?.avatar_url}
+                level={loveCouple.love_level}
+                points={loveCouple.love_points}
+                size="md"
+              />
+            </div>
+          )}
 
           {/* Social Stats */}
           <div className="mt-5 rounded-3xl border border-border/30 bg-secondary/30 backdrop-blur-sm p-4">

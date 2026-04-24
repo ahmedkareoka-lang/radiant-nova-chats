@@ -12,6 +12,8 @@ import PageTransition from "@/components/PageTransition";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
+import LoveBadge from "@/components/LoveBadge";
+import { useLoveCouple } from "@/hooks/useLoveCouple";
 // LevelTable hidden per design — kept import removed
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
 
@@ -59,6 +61,7 @@ const Profile = () => {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { followersCount, followingCount } = useFollows(myId);
   const { unreadCount } = useNotifications();
+  const { couple: loveCouple } = useLoveCouple(myId);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -370,7 +373,25 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* === NOVA P CARD === */}
+          {/* === LOVE COUPLE BADGE (حبيبين) === */}
+          {loveCouple && (
+            <button
+              onClick={() => navigate("/lovers")}
+              className="mt-4 w-full rounded-3xl p-4 border-2 border-pink-400/40 backdrop-blur-md transition-transform hover:scale-[1.01]"
+              style={{
+                background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
+                boxShadow: "0 4px 20px hsl(330 90% 50% / 0.25)",
+              }}
+            >
+              <LoveBadge
+                user1Avatar={profile?.avatar_url}
+                user2Avatar={loveCouple.partner?.avatar_url}
+                level={loveCouple.love_level}
+                points={loveCouple.love_points}
+                size="md"
+              />
+            </button>
+          )}
           {(() => {
             const novaLvl = profile?.nova_p_level || 0;
             const totalGold = profile?.total_spend_gold || 0;
