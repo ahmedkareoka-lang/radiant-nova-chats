@@ -31,8 +31,6 @@ const getDuration = (amount: number) => {
   return 3500;                         // عادي — يختفي بسرعة ويعود الغرفة طبيعية
 };
 
-const PARTICLE_COLORS = ["#FFD700", "#FF6B6B", "#A855F7", "#3B82F6", "#10B981", "#F59E0B", "#EC4899"];
-
 const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -52,9 +50,6 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [gift, muted, onComplete]);
-
-  const isLegendary = (gift?.amount ?? 0) >= 10000;
-  const isMega = (gift?.amount ?? 0) >= 100000;
 
   return (
     <AnimatePresence>
