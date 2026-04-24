@@ -1204,12 +1204,12 @@ const VoiceRoom = () => {
             return (
               <div
                 key={i}
-                className="flex flex-col items-center gap-1.5"
+                className="flex flex-col items-center"
                 style={{ width: micAvatarPx + 12 }}
               >
                 {slot ? (
                   <div
-                    className="cursor-pointer relative flex flex-col items-center"
+                    className="cursor-pointer relative flex flex-col items-center w-full"
                     onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}
                   >
                     {/* Stable seat: NO transform / scale / shake on the avatar wrapper */}
@@ -1229,14 +1229,16 @@ const VoiceRoom = () => {
                         </div>
                       )}
                     </div>
+                    {/* Username — full width of slot, single line, never covered by support badge */}
                     <span
-                      className="text-[10px] font-semibold truncate block text-center mt-1"
-                      style={{ maxWidth: micAvatarPx + 8 }}
+                      className="text-[10px] font-semibold truncate block text-center mt-1.5 leading-tight w-full px-0.5"
                     >
                       {slot.profile?.display_name || "User"}
                     </span>
-                    {/* Compact diamond support icon — clean, won't bleed onto next row */}
-                    <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
+                    {/* Compact diamond support icon — fixed-height row reserved so it cannot bleed onto the next row */}
+                    <div className="h-[14px] flex items-center justify-center mt-0.5">
+                      <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
+                    </div>
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
                         hostId={slot.user_id}
