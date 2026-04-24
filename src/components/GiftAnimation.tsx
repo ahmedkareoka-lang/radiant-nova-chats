@@ -134,11 +134,25 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
-  // Broadcast gift to all room members via Realtime (use a stable shared channel)
+  // Broadcast gift to all room members via Realtime (use a stable shared channel that stays subscribed for the lifetime of the modal)
+  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  useEffect(() => {
+    if (!roomId || !isOpen) return;
+    const ch = supabase.channel(`room-gifts-${roomId}`, {
+      config: { broadcast: { self: false, ack: true } },
+    });
+    ch.subscribe();
+    broadcastChannelRef.current = ch;
+    return () => {
+      supabase.removeChannel(ch);
+      broadcastChannelRef.current = null;
+    };
+  }, [roomId, isOpen]);
+
   const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
     if (!roomId) return;
-    const channel = supabase.channel(`room-gifts-${roomId}`);
-    await channel.subscribe();
+    const channel = broadcastChannelRef.current;
+    if (!channel) return;
     await channel.send({
       type: "broadcast",
       event: "gift-sent",
@@ -169,10 +183,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           amount,
         },
       });
-      setTimeout(() => supabase.removeChannel(announceChannel), 1000);
+      setTimeout(() => supabase.removeChannel(announceChannel), 1500);
     }
-
-    setTimeout(() => supabase.removeChannel(channel), 1000);
   };
 
   const handleSend = async () => {
