@@ -134,10 +134,10 @@ const CoupleSeats = ({ roomId, isHost, members, onOpenPicker }: CoupleSeatsProps
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className={`relative w-full rounded-2xl overflow-hidden border border-pink-500/40 bg-gradient-to-r ${tierColors[tier]} backdrop-blur-sm`}
+      exit={{ opacity: 0, y: -8 }}
+      className="relative w-full flex items-center justify-center py-1"
     >
       {/* Floating hearts overlay */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -145,11 +145,11 @@ const CoupleSeats = ({ roomId, isHost, members, onOpenPicker }: CoupleSeatsProps
           {hearts.map((h) => (
             <motion.div
               key={h.id}
-              initial={{ opacity: 0, y: 60, scale: 0.5 }}
-              animate={{ opacity: [0, 1, 1, 0], y: -80, scale: [0.5, 1.2, 1] }}
+              initial={{ opacity: 0, y: 40, scale: 0.5 }}
+              animate={{ opacity: [0, 1, 1, 0], y: -70, scale: [0.5, 1.2, 1] }}
               exit={{ opacity: 0 }}
               transition={{ duration: 2.5, ease: "easeOut" }}
-              className="absolute bottom-0 text-2xl"
+              className="absolute bottom-0 text-xl"
               style={{ left: `${h.left}%` }}
             >
               💖
@@ -158,53 +158,52 @@ const CoupleSeats = ({ roomId, isHost, members, onOpenPicker }: CoupleSeatsProps
         </AnimatePresence>
       </div>
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-pink-600/30 via-rose-600/20 to-pink-600/30">
-        <div className="flex items-center gap-1.5">
-          {tier === "legendary" && <Crown className="w-3.5 h-3.5 text-yellow-300" />}
-          <span className="text-[11px] font-black text-pink-100">💕 {tierLabel[tier]}</span>
-        </div>
-        {isHost && (
-          <button
-            onClick={handleEnd}
-            className="p-1 rounded-full bg-black/30 text-pink-200 hover:bg-red-500/40 transition-colors"
-            aria-label="إنهاء"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        )}
-      </div>
+      {/* End button — small, only host */}
+      {isHost && (
+        <button
+          onClick={handleEnd}
+          className="absolute top-0 right-0 z-20 p-1 rounded-full bg-black/40 text-pink-200 hover:bg-red-500/50 transition-colors"
+          aria-label="إنهاء الزوج"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      )}
 
-      {/* Couple display */}
-      <div className="relative flex items-center justify-around px-3 py-3">
-        {/* User 1 */}
+      {/* Compact couple row: two romantic mics + center heart medallion */}
+      <div className="flex items-center justify-center gap-3">
         <CoupleAvatar profile={u1?.profile} side="left" tier={tier} />
 
-        {/* Heart center with score */}
+        {/* Center medallion — keeps the existing heart icon style, sits BETWEEN the two */}
         <motion.div
-          className="relative flex flex-col items-center mx-2"
-          animate={{ scale: [1, 1.08, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="relative flex flex-col items-center"
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
         >
           <div className="relative">
-            <Heart className="w-10 h-10 fill-pink-500 text-pink-400 drop-shadow-[0_0_12px_rgba(236,72,153,0.7)]" />
+            {/* Outer luxury halo */}
+            <div className="absolute inset-[-6px] rounded-full bg-gradient-to-br from-pink-500/30 via-rose-400/20 to-fuchsia-500/30 blur-md" />
+            <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-600 flex items-center justify-center ring-2 ring-pink-200/60 shadow-[0_0_18px_rgba(236,72,153,0.7)]">
+              <Heart className="w-5 h-5 fill-white text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.9)]" />
+              {tier === "legendary" && (
+                <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-3.5 h-3.5 text-yellow-300 drop-shadow-[0_0_6px_rgba(250,204,21,0.9)]" />
+              )}
+            </div>
             <motion.div
-              className="absolute inset-0"
-              animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              className="absolute inset-0 rounded-full"
+              animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 1.6, repeat: Infinity }}
             >
-              <Heart className="w-10 h-10 fill-pink-400/40 text-pink-400/40" />
+              <div className="w-11 h-11 rounded-full ring-2 ring-pink-300/60" />
             </motion.div>
           </div>
-          <span className="mt-1 text-[10px] font-black text-pink-100 tabular-nums">
+          <span className="mt-1 text-[10px] font-black text-pink-100 tabular-nums leading-none">
             {couple.love_score >= 1000
               ? `${(couple.love_score / 1000).toFixed(1)}K`
               : couple.love_score}
           </span>
-          <span className="text-[8px] text-pink-200/80">نقاط الحب</span>
+          <span className="text-[8px] text-pink-200/80 leading-none mt-0.5">نقاط الحب</span>
         </motion.div>
 
-        {/* User 2 */}
         <CoupleAvatar profile={u2?.profile} side="right" tier={tier} />
       </div>
     </motion.div>
@@ -220,26 +219,43 @@ const CoupleAvatar = ({
   side: "left" | "right";
   tier: string;
 }) => {
+  // Romantic, premium ring colors per tier — distinct from regular mics
   const ringColor =
-    tier === "legendary" ? "ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]"
-    : tier === "epic" ? "ring-fuchsia-400 shadow-[0_0_16px_rgba(217,70,239,0.6)]"
-    : tier === "rare" ? "ring-pink-400 shadow-[0_0_14px_rgba(236,72,153,0.5)]"
-    : "ring-pink-300/70 shadow-[0_0_10px_rgba(236,72,153,0.4)]";
+    tier === "legendary" ? "ring-yellow-300 shadow-[0_0_22px_rgba(250,204,21,0.75)]"
+    : tier === "epic" ? "ring-fuchsia-300 shadow-[0_0_18px_rgba(217,70,239,0.7)]"
+    : tier === "rare" ? "ring-pink-300 shadow-[0_0_16px_rgba(236,72,153,0.65)]"
+    : "ring-pink-200 shadow-[0_0_14px_rgba(244,114,182,0.6)]";
+
+  const gradientBg =
+    tier === "legendary" ? "from-yellow-400/40 via-pink-500/40 to-fuchsia-500/40"
+    : tier === "epic" ? "from-fuchsia-500/40 via-pink-500/30 to-rose-500/40"
+    : "from-pink-500/30 via-rose-400/25 to-fuchsia-500/30";
 
   return (
     <motion.div
-      initial={{ x: side === "left" ? -20 : 20, opacity: 0 }}
+      initial={{ x: side === "left" ? -16 : 16, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       className="flex flex-col items-center gap-1"
     >
-      <div className={`w-14 h-14 rounded-full overflow-hidden ring-2 ${ringColor}`}>
-        {profile?.avatar_url ? (
-          <img loading="lazy" decoding="async" src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-pink-900/40 flex items-center justify-center text-pink-200 text-lg font-black">
-            {profile?.display_name?.[0] ?? "?"}
-          </div>
-        )}
+      {/* Premium romantic frame — distinct color, NOT a generic mic look */}
+      <div className={`relative w-14 h-14 rounded-full p-[2px] bg-gradient-to-br ${gradientBg} ring-2 ${ringColor}`}>
+        <div className="w-full h-full rounded-full overflow-hidden bg-pink-950">
+          {profile?.avatar_url ? (
+            <img
+              loading="lazy"
+              decoding="async"
+              src={profile.avatar_url}
+              alt={profile.display_name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-pink-900/40 flex items-center justify-center text-pink-200 text-lg font-black">
+              {profile?.display_name?.[0] ?? "?"}
+            </div>
+          )}
+        </div>
+        {/* Tiny floating heart accent on the corner */}
+        <Heart className="absolute -top-1 -right-1 w-3.5 h-3.5 fill-pink-400 text-pink-300 drop-shadow-[0_0_4px_rgba(236,72,153,0.8)]" />
       </div>
       <span className="text-[10px] font-bold text-pink-100 max-w-[70px] truncate">
         {profile?.display_name ?? "..."}
