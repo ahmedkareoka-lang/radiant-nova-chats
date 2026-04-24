@@ -35,16 +35,17 @@ interface GiftItem {
   duration_ms?: number;
 }
 
-interface SentGiftInfo {
+interface GiftBroadcastPayload {
   emoji: string;
   giftName: string;
   imageUrl: string | null;
-  lottieUrl?: string | null;
-  videoUrl?: string | null;
+  lottieUrl: string | null;
+  videoUrl: string | null;
+  durationMs?: number;
   senderName: string;
   recipientName: string;
   amount: number;
-  durationMs?: number;
+  timestamp: number;
 }
 
 interface GiftAnimationProps {
@@ -55,7 +56,13 @@ interface GiftAnimationProps {
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
   onMultiGiftSent?: (emoji: string, count: number, imageUrl?: string | null) => void;
-  onGiftSent?: (info: SentGiftInfo) => void;
+  /**
+   * Broadcasts a gift to ALL users currently in the room (sender included).
+   * Provided by the parent (e.g. VoiceRoom) via a persistent channel — this
+   * guarantees the gift reaches every viewer, even if the modal closes
+   * immediately after sending.
+   */
+  broadcastGift?: (payload: GiftBroadcastPayload) => Promise<void> | void;
   roomId?: string;
 }
 
