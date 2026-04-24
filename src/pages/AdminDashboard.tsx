@@ -1337,6 +1337,12 @@ const AdminDashboard = () => {
             </div>
           )}
         </main>
+        <SalaryDetailsModal
+          open={salaryDetailsOpen}
+          onClose={() => setSalaryDetailsOpen(false)}
+          hostId={salaryDetailsTarget.id}
+          hostName={salaryDetailsTarget.name}
+        />
       </div>
     </PageTransition>
   );
