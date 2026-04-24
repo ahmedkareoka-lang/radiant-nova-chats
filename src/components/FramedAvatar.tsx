@@ -1,5 +1,6 @@
 import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
+import BDFrame from "@/components/BDFrame";
 
 /** Named size presets so pages don't need to hardcode pixel values everywhere. */
 export const FRAMED_AVATAR_SIZES = {
@@ -31,6 +32,9 @@ type Props = {
   /** When true, wraps the avatar in the special Recharge Agent frame.
    *  Takes precedence over `equippedFrame` so agents always show their badge frame. */
   isRechargeAgent?: boolean;
+  /** When true, wraps the avatar in the BD (Business Developer) frame.
+   *  Takes precedence over both `isRechargeAgent` and `equippedFrame`. */
+  isBD?: boolean;
 };
 
 const resolveSize = (s: FramedAvatarSize | number): number =>
@@ -50,8 +54,23 @@ const FramedAvatar = ({
   behind,
   alt = "",
   isRechargeAgent = false,
+  isBD = false,
 }: Props) => {
   const px = resolveSize(size);
+
+  // BD accounts get top priority — fiery orange frame.
+  if (isBD) {
+    return (
+      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+        {behind}
+        <BDFrame size={px}>
+          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
+            alt={alt}
+            className="w-full h-full object-cover" />
+        </BDFrame>
+      </div>
+    );
+  }
 
   // Recharge agents get a dedicated CSS frame with a "وكيل شحن" label.
   if (isRechargeAgent) {
