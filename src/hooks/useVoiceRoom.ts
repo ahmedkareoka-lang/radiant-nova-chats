@@ -296,13 +296,9 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const leaveRoom = async () => {
     if (!roomId || !currentUserId) return;
+    // Remove only the leaving user. Rooms are PERMANENT — even when the host
+    // leaves, the room stays so they can re-enter with all settings intact.
     await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", currentUserId);
-
-    // If user is the host, deactivate the room
-    if (roomData?.host_id === currentUserId) {
-      await supabase.from("rooms").update({ is_active: false }).eq("id", roomId);
-      await supabase.from("room_members").delete().eq("room_id", roomId);
-    }
   };
 
   const sendMessage = async (content: string) => {
