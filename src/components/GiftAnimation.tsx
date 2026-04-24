@@ -216,52 +216,56 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const giftEmoji = gift.emoji || "🎁";
     const giftImageUrl = gift.image_url || null;
 
-    // Get sender name for broadcast
-    let senderName = "مستخدم";
-    if (senderId) {
-      const { data: senderProfile } = await supabase.from("profiles").select("display_name").eq("id", senderId).single();
-      if (senderProfile) senderName = senderProfile.display_name;
+    // Use cached sender name immediately (avoid blocking on profile fetch).
+    // Fetch in background to refine future sends.
+    const senderName = cachedSenderNameRef.current || "مستخدم";
+
+    // Optimistic balance check first (non-blocking UX)
+    if (balance !== null && balance < giftCost * (isMultiMode ? selectedRecipients.size : 1)) {
+      toast.error("رصيدك غير كافٍ!");
+      setSending(false);
+      return;
     }
 
     if (isMultiMode && selectedRecipients.size > 0) {
-      let allSuccess = true;
-      for (const rid of selectedRecipients) {
-        const success = await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
-        if (!success) { allSuccess = false; break; }
-      }
-      if (allSuccess) {
-        setBurst(true);
-        onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
-        // Trigger fullscreen effect locally for the SENDER (broadcasts don't echo back to self)
-        const totalAmount = giftCost * selectedRecipients.size;
-        onGiftSent?.({
-          emoji: giftEmoji,
-          giftName: gift.name,
-          imageUrl: giftImageUrl,
-          senderName,
-          recipientName: `${selectedRecipients.size} أشخاص`,
-          amount: totalAmount,
-        });
-        broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl);
-        setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
-      } else { setSending(false); }
+      const totalAmount = giftCost * selectedRecipients.size;
+      // 1) Fire fullscreen effect locally + broadcast to room IMMEDIATELY (no awaits)
+      onGiftSent?.({
+        emoji: giftEmoji,
+        giftName: gift.name,
+        imageUrl: giftImageUrl,
+        senderName,
+        recipientName: `${selectedRecipients.size} أشخاص`,
+        amount: totalAmount,
+      });
+      broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl);
+      onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
+      // 2) Close modal instantly so sender sees the room + animation
+      setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1);
+      onClose();
+      // 3) Persist to DB in background
+      (async () => {
+        for (const rid of selectedRecipients) {
+          await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
+        }
+      })();
     } else if (receiverId) {
-      const success = await sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
-      if (success) {
-        setBurst(true);
-        onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
-        // Trigger fullscreen effect locally for the SENDER (broadcasts don't echo back to self)
-        onGiftSent?.({
-          emoji: giftEmoji,
-          giftName: gift.name,
-          imageUrl: giftImageUrl,
-          senderName,
-          recipientName: receiverName || "مستخدم",
-          amount: giftCost,
-        });
-        broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
-        setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
-      } else { setSending(false); }
+      // 1) Fire fullscreen effect locally + broadcast to room IMMEDIATELY
+      onGiftSent?.({
+        emoji: giftEmoji,
+        giftName: gift.name,
+        imageUrl: giftImageUrl,
+        senderName,
+        recipientName: receiverName || "مستخدم",
+        amount: giftCost,
+      });
+      broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
+      onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
+      // 2) Close modal instantly
+      setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1);
+      onClose();
+      // 3) Persist to DB in background
+      sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
     }
   };
 
