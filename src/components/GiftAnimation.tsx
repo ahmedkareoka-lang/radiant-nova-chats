@@ -35,16 +35,17 @@ interface GiftItem {
   duration_ms?: number;
 }
 
-interface SentGiftInfo {
+interface GiftBroadcastPayload {
   emoji: string;
   giftName: string;
   imageUrl: string | null;
-  lottieUrl?: string | null;
-  videoUrl?: string | null;
+  lottieUrl: string | null;
+  videoUrl: string | null;
+  durationMs?: number;
   senderName: string;
   recipientName: string;
   amount: number;
-  durationMs?: number;
+  timestamp: number;
 }
 
 interface GiftAnimationProps {
@@ -55,11 +56,17 @@ interface GiftAnimationProps {
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
   onMultiGiftSent?: (emoji: string, count: number, imageUrl?: string | null) => void;
-  onGiftSent?: (info: SentGiftInfo) => void;
+  /**
+   * Broadcasts a gift to ALL users currently in the room (sender included).
+   * Provided by the parent (e.g. VoiceRoom) via a persistent channel — this
+   * guarantees the gift reaches every viewer, even if the modal closes
+   * immediately after sending.
+   */
+  broadcastGift?: (payload: GiftBroadcastPayload) => Promise<void> | void;
   roomId?: string;
 }
 
-const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, onGiftSent, roomId }: GiftAnimationProps) => {
+const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, broadcastGift, roomId }: GiftAnimationProps) => {
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [burst, setBurst] = useState(false);
   const [sending, setSending] = useState(false);
@@ -110,24 +117,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     fetchSenderData();
   }, [senderId, isOpen]);
 
-  // Broadcast channel — keep one stable channel subscribed for the modal lifetime so sends are reliable
-  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  useEffect(() => {
-    if (!roomId || !isOpen) return;
-    const ch = supabase.channel(`room-gifts-${roomId}`, {
-      config: { broadcast: { self: false, ack: true } },
-    });
-    ch.subscribe((status) => {
-      logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `sender channel status: ${status}`, { roomId });
-    });
-    broadcastChannelRef.current = ch;
-    return () => {
-      supabase.removeChannel(ch);
-      broadcastChannelRef.current = null;
-      logAgora("info", "Gift", "sender channel removed", { roomId });
-    };
-  }, [roomId, isOpen]);
-
   if (!isOpen) return null;
 
   const isMultiMode = showMulti && roomMembers && roomMembers.length > 0;
@@ -153,70 +142,25 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
-  const broadcastGift = async (
+  // Big-gift announcement (room ticker for amounts ≥ 1000) — kept separate from
+  // the main gift broadcast which is now driven by the parent's persistent channel.
+  const sendBigGiftAnnounce = async (
     giftEmoji: string,
     giftName: string,
     senderName: string,
     amount: number,
-    recipientName?: string,
-    imageUrl?: string | null,
-    extras?: { lottieUrl?: string | null; videoUrl?: string | null; durationMs?: number },
+    recipientName: string,
+    imageUrl: string | null,
   ) => {
-    if (!roomId) {
-      logAgora("warn", "Gift", "broadcastGift skipped: missing roomId", { giftName });
-      return;
-    }
-    const channel = broadcastChannelRef.current;
-    if (!channel) {
-      logAgora("error", "Gift", "broadcastGift failed: no active channel", { roomId, giftName });
-      return;
-    }
-    const payload = {
-      emoji: giftEmoji,
-      giftName,
-      imageUrl: imageUrl || null,
-      lottieUrl: extras?.lottieUrl || null,
-      videoUrl: extras?.videoUrl || null,
-      durationMs: extras?.durationMs,
-      senderName,
-      recipientName: recipientName || receiverName || "",
-      amount,
-      timestamp: Date.now(),
-    };
-    logAgora("info", "Gift", `→ sending broadcast '${giftName}' x${amount}`, { recipient: payload.recipientName });
-    try {
-      const ack = await channel.send({
-        type: "broadcast",
-        event: "gift-sent",
-        payload,
-      });
-      if (ack === "ok") {
-        logAgora("success", "Gift", `✓ ack OK for '${giftName}'`, { amount });
-      } else {
-        logAgora("error", "Gift", `✗ ack ${ack} for '${giftName}'`, { payload });
-      }
-    } catch (err: any) {
-      logAgora("error", "Gift", `broadcast threw: ${err?.message || err}`, { payload });
-    }
-
-    // Big gift announcement (over 1000 coins)
-    if (amount >= 1000) {
-      const announceChannel = supabase.channel(`gift-announce-${roomId}`);
-      await announceChannel.subscribe();
-      await announceChannel.send({
-        type: "broadcast",
-        event: "big-gift",
-        payload: {
-          senderName,
-          receiverName: recipientName || receiverName || "مستخدم",
-          giftName,
-          giftEmoji,
-          imageUrl: imageUrl || null,
-          amount,
-        },
-      });
-      setTimeout(() => supabase.removeChannel(announceChannel), 1500);
-    }
+    if (!roomId || amount < 1000) return;
+    const announceChannel = supabase.channel(`gift-announce-${roomId}`);
+    await announceChannel.subscribe();
+    await announceChannel.send({
+      type: "broadcast",
+      event: "big-gift",
+      payload: { senderName, receiverName: recipientName, giftName, giftEmoji, imageUrl, amount },
+    });
+    setTimeout(() => supabase.removeChannel(announceChannel), 1500);
   };
 
   const handleSend = async () => {
@@ -243,20 +187,24 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
 
     if (isMultiMode && selectedRecipients.size > 0) {
       const totalAmount = giftCost * selectedRecipients.size;
-      onGiftSent?.({
+      const recipientLabel = `${selectedRecipients.size} أشخاص`;
+      // Single broadcast through the parent's persistent room channel —
+      // every user in the room (sender included) receives this and renders
+      // the fullscreen gift via the listener in VoiceRoom.
+      logAgora("info", "Gift", `→ broadcasting multi gift '${gift.name}' x${totalAmount}`, { recipients: selectedRecipients.size });
+      await broadcastGift?.({
         emoji: giftEmoji,
         giftName: gift.name,
         imageUrl: giftImageUrl,
         lottieUrl: giftLottieUrl,
         videoUrl: giftVideoUrl,
-        senderName,
-        recipientName: `${selectedRecipients.size} أشخاص`,
-        amount: totalAmount,
         durationMs: giftDurationMs,
+        senderName,
+        recipientName: recipientLabel,
+        amount: totalAmount,
+        timestamp: Date.now(),
       });
-      broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl, {
-        lottieUrl: giftLottieUrl, videoUrl: giftVideoUrl, durationMs: giftDurationMs,
-      });
+      sendBigGiftAnnounce(giftEmoji, gift.name, senderName, totalAmount, recipientLabel, giftImageUrl);
       onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
       setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1);
       onClose();
@@ -266,20 +214,21 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
         }
       })();
     } else if (receiverId) {
-      onGiftSent?.({
+      const recipientLabel = receiverName || "مستخدم";
+      logAgora("info", "Gift", `→ broadcasting gift '${gift.name}' x${giftCost}`, { recipient: recipientLabel });
+      await broadcastGift?.({
         emoji: giftEmoji,
         giftName: gift.name,
         imageUrl: giftImageUrl,
         lottieUrl: giftLottieUrl,
         videoUrl: giftVideoUrl,
-        senderName,
-        recipientName: receiverName || "مستخدم",
-        amount: giftCost,
         durationMs: giftDurationMs,
+        senderName,
+        recipientName: recipientLabel,
+        amount: giftCost,
+        timestamp: Date.now(),
       });
-      broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl, {
-        lottieUrl: giftLottieUrl, videoUrl: giftVideoUrl, durationMs: giftDurationMs,
-      });
+      sendBigGiftAnnounce(giftEmoji, gift.name, senderName, giftCost, recipientLabel, giftImageUrl);
       onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
       setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1);
       onClose();
