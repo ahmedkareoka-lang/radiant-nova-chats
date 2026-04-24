@@ -45,8 +45,10 @@ const AdminDashboard = () => {
   const [bulkJson, setBulkJson] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
   const giftFileRef = useRef<HTMLInputElement>(null);
+  const giftThumbRef = useRef<HTMLInputElement>(null);
   const storeFileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
+  const [videoCheckResult, setVideoCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   // Fetch functions
   const fetchGifts = async () => {
