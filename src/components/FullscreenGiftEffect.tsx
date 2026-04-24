@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { playTieredGiftSound } from "@/lib/effects";
 import GiftMediaPlayer from "@/components/GiftMediaPlayer";
 
 interface GiftPayload {
@@ -41,10 +40,7 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
     if (!gift) return;
     const duration = getDuration(gift.amount, gift.durationMs);
 
-    if (!muted) {
-      // Audio starts at the same instant the animation mounts.
-      playTieredGiftSound(gift.amount);
-    }
+    // No synthesized sounds — rely solely on the gift media's own audio (video/Lottie).
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(onComplete, duration);

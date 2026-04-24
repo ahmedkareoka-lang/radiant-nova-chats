@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { playGiftSound, triggerConfetti } from "@/lib/effects";
 
 // Gift tier thresholds (gold value of a single gift, after multiplier).
 const TIER_BIG = 10000;        // Show global ticker across the app
@@ -114,8 +113,7 @@ export const useGifts = () => {
       }
     }
 
-    playGiftSound();
-    if (goldAmount >= 1000) triggerConfetti();
+    // No synthesized sounds or confetti — the gift's own media (video/Lottie) plays its sound.
     toast.success(`تم إرسال ${giftName}! 🎁`);
     return true;
   };
