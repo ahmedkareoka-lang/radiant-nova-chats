@@ -1487,6 +1487,10 @@ export type Database = {
         Args: { _agency_id: string; _bd_user_id: string }
         Returns: Json
       }
+      bd_activate_agency_for_user: {
+        Args: { _target_public_id: string }
+        Returns: Json
+      }
       claim_daily_reward: {
         Args: { _task_type: string; _user_id: string }
         Returns: undefined
