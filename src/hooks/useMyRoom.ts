@@ -18,15 +18,19 @@ export const useMyRoom = (userId: string | null) => {
     let active = true;
 
     const fetchMyRoom = async () => {
+      // Rooms are permanent — fetch the host's room regardless of is_active.
+      // If the room was auto-deactivated, also reactivate it so the host can re-enter.
       const { data } = await supabase
         .from("rooms")
-        .select("id")
+        .select("id, is_active")
         .eq("host_id", userId)
-        .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (!active) return;
+      if (data && !data.is_active) {
+        await supabase.from("rooms").update({ is_active: true }).eq("id", data.id);
+      }
       setMyRoomId(data?.id ?? null);
       setLoading(false);
     };
