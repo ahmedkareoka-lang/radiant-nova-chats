@@ -679,6 +679,40 @@ const AdminDashboard = () => {
                     </button>
                   </div>
 
+                  {/* Agency creation eligibility toggle */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-accent" />
+                      صلاحية إنشاء وكالة
+                    </h4>
+                    <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-2.5 border border-border">
+                      <p className="text-xs text-muted-foreground">
+                        {targetUser.agency_eligible
+                          ? "✅ يمكن لهذا المستخدم إنشاء وكالة"
+                          : "❌ هذا المستخدم لا يمكنه إنشاء وكالة"}
+                      </p>
+                      <button
+                        onClick={async () => {
+                          const next = !targetUser.agency_eligible;
+                          const { error } = await supabase.rpc("set_agency_eligibility" as any, {
+                            _user_id: targetUser.id,
+                            _eligible: next,
+                          });
+                          if (error) { toast.error("فشل: " + error.message); return; }
+                          setTargetUser({ ...targetUser, agency_eligible: next });
+                          toast.success(next ? "تم منح الصلاحية ✅" : "تم سحب الصلاحية");
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
+                          targetUser.agency_eligible
+                            ? "bg-destructive/20 text-destructive border border-destructive/40"
+                            : "gradient-neon text-primary-foreground"
+                        }`}
+                      >
+                        {targetUser.agency_eligible ? "سحب الصلاحية" : "منح الصلاحية"}
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Manual grants */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold">منح يدوي</h4>

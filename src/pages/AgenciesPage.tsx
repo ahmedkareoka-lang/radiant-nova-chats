@@ -23,6 +23,7 @@ const AgenciesPage = () => {
   const [isBoss, setIsBoss] = useState(false);
   const [isAgent, setIsAgent] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [agencyEligible, setAgencyEligible] = useState(false);
   const [pendingAgencies, setPendingAgencies] = useState<any[]>([]);
   const [agencyHosts, setAgencyHosts] = useState<any[]>([]);
   const [searchId, setSearchId] = useState("");
@@ -39,89 +40,100 @@ const AgenciesPage = () => {
   const [hostEvents, setHostEvents] = useState<any>(null);
   const [showOverview, setShowOverview] = useState(false);
   const [showHostEvents, setShowHostEvents] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<any>(null);
+  const [sentInvites, setSentInvites] = useState<any[]>([]);
+  const [processingInvite, setProcessingInvite] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
+  const loadAll = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setUserId(user.id);
 
-      const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setIsBoss(prof?.is_boss || false);
-      setIsAgent(prof?.is_agent || false);
-      setIsHost(prof?.is_host || false);
+    const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    setIsBoss(prof?.is_boss || false);
+    setIsAgent(prof?.is_agent || false);
+    setIsHost(prof?.is_host || false);
+    setAgencyEligible(!!(prof as any)?.agency_eligible);
 
-      const { data: all } = await supabase.from("agencies").select("*").eq("status", "approved").eq("is_active", true);
-      setAgencies(all || []);
+    const { data: all } = await supabase.from("agencies").select("*").eq("status", "approved").eq("is_active", true);
+    setAgencies(all || []);
 
-      if (prof?.is_boss) {
-        const { data: pending } = await supabase.from("agencies").select("*").eq("status", "pending");
-        setPendingAgencies(pending || []);
+    if (prof?.is_boss) {
+      const { data: pending } = await supabase.from("agencies").select("*").eq("status", "pending");
+      setPendingAgencies(pending || []);
+    }
+
+    // Pending invites for THIS user (host inbox) — rich preview with own 15-day target stats
+    const { data: invData } = await supabase.rpc("get_my_pending_invites" as any);
+    if (invData) setPendingInvites(invData);
+
+    const { data: membership } = await supabase.from("agency_members").select("*").eq("user_id", user.id).single();
+    if (membership) {
+      setMyMembership(membership);
+      const { data: ag } = await supabase.from("agencies").select("*").eq("id", membership.agency_id).single();
+      setMyAgency(ag);
+
+      if (membership.badge === "agent" || ag?.owner_id === user.id) {
+        const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", membership.agency_id);
+        if (hosts) {
+          const ids = hosts.map(h => h.user_id);
+          const { data: profiles } = await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids);
+          setAgencyHosts(hosts.map(h => ({ ...h, profile: profiles?.find(p => p.id === h.user_id) })));
+        }
+
+        // Load pending resignations
+        const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", membership.agency_id).eq("status", "pending");
+        if (resignations && resignations.length > 0) {
+          const rIds = resignations.map(r => r.host_id);
+          const { data: rProfiles } = await supabase.from("profiles").select("id, display_name, user_id").in("id", rIds);
+          setPendingResignations(resignations.map(r => ({ ...r, profile: rProfiles?.find(p => p.id === r.host_id) })));
+        }
+
+        // Sent invites status (for agent panel)
+        const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
+        if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
       }
 
-      const { data: membership } = await supabase.from("agency_members").select("*").eq("user_id", user.id).single();
-      if (membership) {
-        setMyMembership(membership);
-        const { data: ag } = await supabase.from("agencies").select("*").eq("id", membership.agency_id).single();
-        setMyAgency(ag);
+      // Host stats + cycle dashboard (today/cycle 15-day)
+      if (membership.badge === "host") {
+        const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
+        const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
+        const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
+        setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
 
-        if (membership.badge === "agent" || ag?.owner_id === user.id) {
-          const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", membership.agency_id);
-          if (hosts) {
-            const ids = hosts.map(h => h.user_id);
-            const { data: profiles } = await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids);
-            setAgencyHosts(hosts.map(h => ({ ...h, profile: profiles?.find(p => p.id === h.user_id) })));
-          }
+        const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
+        if (dash) setHostDashboard(dash);
 
-          // Load pending resignations
-          const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", membership.agency_id).eq("status", "pending");
-          if (resignations && resignations.length > 0) {
-            const rIds = resignations.map(r => r.host_id);
-            const { data: rProfiles } = await supabase.from("profiles").select("id, display_name, user_id").in("id", rIds);
-            setPendingResignations(resignations.map(r => ({ ...r, profile: rProfiles?.find(p => p.id === r.host_id) })));
-          }
-        }
-
-        // Host stats + cycle dashboard (today/cycle 15-day)
-        if (membership.badge === "host") {
-          const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
-          const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
-          const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
-          setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
-
-          const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
-          if (dash) setHostDashboard(dash);
-
-          // Monthly salary report (current month, day 1 to last)
-          const { data: salary } = await supabase.rpc("get_host_monthly_salary" as any, {});
-          if (salary) setHostSalary(salary);
-        }
-
-        // Agent: load monthly payroll for their agency (their hosts + 15% commission)
-        if (membership.badge === "agent" || ag?.owner_id === user.id) {
-          const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
-          if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
-
-          // Full agency overview (hosts + 15-day cycle stats)
-          const { data: ov } = await supabase.rpc("get_my_agency_overview" as any);
-          if (ov && (ov as any).has_agency) setAgencyOverview(ov);
-        }
-
-        // Host: full event log within the 15-day cycle
-        if (membership.badge === "host") {
-          const { data: ev } = await supabase.rpc("get_my_host_events" as any);
-          if (ev && (ev as any).has_agency) setHostEvents(ev);
-        }
+        // Monthly salary report (current month, day 1 to last)
+        const { data: salary } = await supabase.rpc("get_host_monthly_salary" as any, {});
+        if (salary) setHostSalary(salary);
       }
 
-      // Track if this user already owns an agency (any status) — for the "one agency per agent" rule
-      const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
-      setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
+      // Agent: load monthly payroll for their agency (their hosts + 15% commission)
+      if (membership.badge === "agent" || ag?.owner_id === user.id) {
+        const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
+        if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
 
-      setLoading(false);
-    };
-    load();
-  }, []);
+        // Full agency overview (hosts + 15-day cycle stats)
+        const { data: ov } = await supabase.rpc("get_my_agency_overview" as any);
+        if (ov && (ov as any).has_agency) setAgencyOverview(ov);
+      }
+
+      // Host: full event log within the 15-day cycle
+      if (membership.badge === "host") {
+        const { data: ev } = await supabase.rpc("get_my_host_events" as any);
+        if (ev && (ev as any).has_agency) setHostEvents(ev);
+      }
+    }
+
+    // Track if this user already owns an agency (any status) — for the "one agency per agent" rule
+    const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
+    setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
+
+    setLoading(false);
+  };
+
+  useEffect(() => { loadAll(); }, []);
 
   const applyForAgency = async () => {
     if (!agencyName.trim()) return;
@@ -176,10 +188,29 @@ const AgenciesPage = () => {
   const inviteAsHost = async () => {
     if (!searchResult || !myAgency) return;
     if (searchResult.is_host) { toast.error("هذا المستخدم مضيف بالفعل!"); return; }
-    
-    await supabase.from("agency_invites").insert({
+    if (searchResult.is_agent) { toast.error("هذا المستخدم وكيل بالفعل ولا يمكن دعوته كمضيف!"); return; }
+    if (searchResult.id === userId) { toast.error("لا يمكن دعوة نفسك"); return; }
+
+    // Block duplicate pending invites
+    const { data: existing } = await supabase
+      .from("agency_invites")
+      .select("id")
+      .eq("agency_id", myAgency.id)
+      .eq("target_user_id", searchResult.id)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (existing) { toast.error("لقد أرسلت دعوة بالفعل لهذا المستخدم — في انتظار الرد"); return; }
+
+    const ok = window.confirm(
+      `إرسال دعوة لـ "${searchResult.display_name}" (ID: ${searchResult.user_id}) للانضمام إلى وكالة "${myAgency.name}" كمضيف؟`,
+    );
+    if (!ok) return;
+
+    const { error } = await supabase.from("agency_invites").insert({
       agency_id: myAgency.id, agent_id: userId, target_user_id: searchResult.id,
     });
+    if (error) { toast.error("فشل إرسال الدعوة: " + error.message); return; }
+
     await supabase.from("notifications").insert({
       user_id: searchResult.id, title: "دعوة وكالة 🏢",
       message: `تم دعوتك للانضمام كمضيف في وكالة "${myAgency.name}"`, type: "agency_invite",
@@ -187,6 +218,30 @@ const AgenciesPage = () => {
     toast.success("تم إرسال الدعوة! 📨");
     setSearchResult(null);
     setSearchId("");
+
+    // Refresh sent-invites panel
+    const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
+    if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
+  };
+
+  const respondToInvite = async (inviteId: string, action: "accept" | "reject") => {
+    setProcessingInvite(inviteId);
+    try {
+      if (action === "accept") {
+        const { error } = await supabase.rpc("accept_agency_invite" as any, {
+          _invite_id: inviteId, _user_id: userId,
+        });
+        if (error) { toast.error("فشل قبول الدعوة: " + error.message); return; }
+        toast.success("تم قبول الدعوة! أنت الآن مضيف 🎤");
+      } else {
+        await supabase.from("agency_invites").update({ status: "rejected" }).eq("id", inviteId);
+        toast.info("تم رفض الدعوة");
+      }
+      // Refresh entire view (membership may have changed)
+      await loadAll();
+    } finally {
+      setProcessingInvite(null);
+    }
   };
 
   const removeHost = async (hostId: string) => {
@@ -230,7 +285,52 @@ const AgenciesPage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
-          {/* BOSS: Pending approvals */}
+          {/* HOST INBOX: pending invites with rich preview (15-day target stats) */}
+          {pendingInvites && (pendingInvites.invites || []).length > 0 && (
+            <div className="card-nova p-4 space-y-3 border border-primary/40">
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-primary" />
+                دعوات الانضمام ({(pendingInvites.invites || []).length})
+              </h3>
+              <div className="rounded-xl bg-secondary/40 p-2.5 space-y-1">
+                <p className="text-[10px] text-muted-foreground">إحصائياتك في الدورة الحالية ({pendingInvites.cycle_label})</p>
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                  <div className="bg-card/60 rounded-lg p-1.5">
+                    <p className="text-muted-foreground">ماس الدورة</p>
+                    <p className="font-bold text-primary">{Number(pendingInvites.host_cycle_diamonds).toLocaleString()}💎</p>
+                  </div>
+                  <div className={`rounded-lg p-1.5 ${(pendingInvites.host_cycle_minutes/60) >= pendingInvites.required_hours ? "bg-primary/15" : "bg-card/60"}`}>
+                    <p className="text-muted-foreground">ساعات</p>
+                    <p className="font-bold">{(pendingInvites.host_cycle_minutes/60).toFixed(1)} / {pendingInvites.required_hours}h</p>
+                  </div>
+                  <div className={`rounded-lg p-1.5 ${pendingInvites.host_cycle_active_days >= pendingInvites.required_days ? "bg-primary/15" : "bg-card/60"}`}>
+                    <p className="text-muted-foreground">أيام نشطة</p>
+                    <p className="font-bold">{pendingInvites.host_cycle_active_days} / {pendingInvites.required_days}</p>
+                  </div>
+                </div>
+              </div>
+              {(pendingInvites.invites || []).map((inv: any) => (
+                <div key={inv.invite_id} className="rounded-xl border border-border bg-secondary/40 p-3 space-y-2">
+                  <p className="font-bold text-sm flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5 text-accent" />{inv.agency_name}</p>
+                  <p className="text-[10px] text-muted-foreground">من الوكيل: {inv.agent_name || "—"} (ID: {inv.agent_friendly_id || "—"})</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    💡 ستحتاج لتحقيق <b>{pendingInvites.required_days} أيام نشطة</b> و <b>{pendingInvites.required_hours} ساعة بث</b> كل 15 يوم.
+                  </p>
+                  <div className="flex gap-2">
+                    <button onClick={() => respondToInvite(inv.invite_id, "accept")} disabled={processingInvite === inv.invite_id}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold gradient-neon text-primary-foreground flex items-center justify-center gap-1 disabled:opacity-50">
+                      <Check className="w-3.5 h-3.5" /> قبول
+                    </button>
+                    <button onClick={() => respondToInvite(inv.invite_id, "reject")} disabled={processingInvite === inv.invite_id}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold border border-destructive/30 text-destructive flex items-center justify-center gap-1 disabled:opacity-50">
+                      <X className="w-3.5 h-3.5" /> رفض
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {isBoss && pendingAgencies.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-bold text-sm text-accent">⏳ طلبات بانتظار الموافقة</h3>

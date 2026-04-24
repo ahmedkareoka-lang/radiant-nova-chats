@@ -765,6 +765,7 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          agency_eligible: boolean
           agency_id: string | null
           avatar_url: string | null
           charisma_level: number
@@ -800,6 +801,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          agency_eligible?: boolean
           agency_id?: string | null
           avatar_url?: string | null
           charisma_level?: number
@@ -835,6 +837,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          agency_eligible?: boolean
           agency_id?: string | null
           avatar_url?: string | null
           charisma_level?: number
@@ -1453,6 +1456,8 @@ export type Database = {
       get_love_level: { Args: { _points: number }; Returns: number }
       get_my_agency_overview: { Args: never; Returns: Json }
       get_my_host_events: { Args: never; Returns: Json }
+      get_my_pending_invites: { Args: never; Returns: Json }
+      get_my_sent_invites: { Args: never; Returns: Json }
       get_nova_p_tier: {
         Args: { gold_amount: number }
         Returns: {
@@ -1529,6 +1534,10 @@ export type Database = {
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
       remove_agency_host: {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
+        Returns: undefined
+      }
+      set_agency_eligibility: {
+        Args: { _eligible: boolean; _user_id: string }
         Returns: undefined
       }
       start_couple_seat: {
