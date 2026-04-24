@@ -360,17 +360,22 @@ const AgenciesPage = () => {
             </div>
           )}
 
-          {/* Apply for agency */}
-          {!myAgency && (
+          {/* Apply for agency — only if not in any agency AND doesn't already own one */}
+          {!myAgency && !hasOwnedAgency && (
             <button onClick={() => setShowCreate(!showCreate)}
               className="w-full py-3 rounded-2xl border border-dashed border-primary/50 text-primary font-bold text-sm flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> تقديم طلب وكالة جديدة
             </button>
           )}
+          {!myAgency && hasOwnedAgency && (
+            <div className="card-nova p-3 text-center text-xs text-muted-foreground border border-accent/30">
+              ⏳ لديك طلب وكالة قيد المراجعة — لا يمكن إنشاء وكالة أخرى
+            </div>
+          )}
 
-          {showCreate && (
+          {showCreate && !hasOwnedAgency && (
             <div className="card-nova p-4 space-y-3">
-              <p className="text-[10px] text-muted-foreground">سيتم مراجعة طلبك من قبل الإدارة</p>
+              <p className="text-[10px] text-muted-foreground">سيتم مراجعة طلبك من قبل الإدارة. يمكن للوكيل إنشاء وكالة واحدة فقط.</p>
               <input type="text" placeholder="اسم الوكالة" value={agencyName} onChange={(e) => setAgencyName(e.target.value)}
                 className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none" />
               <button onClick={applyForAgency} className="w-full py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تقديم الطلب</button>
