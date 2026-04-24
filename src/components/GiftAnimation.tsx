@@ -39,15 +39,22 @@ interface GiftItem {
   name: string;
   price: number;
   image_url?: string | null;
+  lottie_url?: string | null;
+  video_url?: string | null;
+  tier?: string;
+  duration_ms?: number;
 }
 
 interface SentGiftInfo {
   emoji: string;
   giftName: string;
   imageUrl: string | null;
+  lottieUrl?: string | null;
+  videoUrl?: string | null;
   senderName: string;
   recipientName: string;
   amount: number;
+  durationMs?: number;
 }
 
 interface GiftAnimationProps {
