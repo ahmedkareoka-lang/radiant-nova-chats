@@ -115,8 +115,8 @@ const VoiceRoom = () => {
   const lockedSlots: number[] = (roomData as any)?.locked_slots || [];
   const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
-  // WebRTC
-  const { connectedPeers, speakingPeers, localSpeaking } = useWebRTC({
+  // Voice (Agora)
+  const { connectedPeers, speakingPeers, localSpeaking } = useAgoraVoice({
     roomId,
     currentUserId,
     isOnMic,
