@@ -269,6 +269,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_combos: {
+        Row: {
+          combo_count: number
+          created_at: string
+          gift_name: string
+          id: string
+          receiver_id: string
+          room_id: string | null
+          sender_id: string
+          total_gold: number
+          unit_price: number
+        }
+        Insert: {
+          combo_count: number
+          created_at?: string
+          gift_name: string
+          id?: string
+          receiver_id: string
+          room_id?: string | null
+          sender_id: string
+          total_gold: number
+          unit_price: number
+        }
+        Update: {
+          combo_count?: number
+          created_at?: string
+          gift_name?: string
+          id?: string
+          receiver_id?: string
+          room_id?: string | null
+          sender_id?: string
+          total_gold?: number
+          unit_price?: number
+        }
+        Relationships: []
+      }
       gift_transactions: {
         Row: {
           created_at: string
@@ -349,6 +385,45 @@ export type Database = {
           item_data?: Json | null
           item_name?: string
           item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lucky_box_openings: {
+        Row: {
+          box_tier: string
+          cost_coins: number
+          created_at: string
+          id: string
+          is_jackpot: boolean
+          reward_coins: number
+          reward_diamonds: number
+          reward_item_name: string | null
+          reward_item_type: string | null
+          user_id: string
+        }
+        Insert: {
+          box_tier?: string
+          cost_coins: number
+          created_at?: string
+          id?: string
+          is_jackpot?: boolean
+          reward_coins?: number
+          reward_diamonds?: number
+          reward_item_name?: string | null
+          reward_item_type?: string | null
+          user_id: string
+        }
+        Update: {
+          box_tier?: string
+          cost_coins?: number
+          created_at?: string
+          id?: string
+          is_jackpot?: boolean
+          reward_coins?: number
+          reward_diamonds?: number
+          reward_item_name?: string | null
+          reward_item_type?: string | null
           user_id?: string
         }
         Relationships: []
@@ -695,6 +770,87 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          total_earned_coins: number
+          user_id: string
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          total_earned_coins?: number
+          user_id: string
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          total_earned_coins?: number
+          user_id?: string
+          uses_count?: number
+        }
+        Relationships: []
+      }
+      referral_recharge_log: {
+        Row: {
+          bonus_coins: number
+          created_at: string
+          id: string
+          recharge_amount_coins: number
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          bonus_coins: number
+          created_at?: string
+          id?: string
+          recharge_amount_coins: number
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          bonus_coins?: number
+          created_at?: string
+          id?: string
+          recharge_amount_coins?: number
+          referred_id?: string
+          referrer_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          level5_reward_claimed: boolean
+          referred_id: string
+          referrer_id: string
+          signup_reward_claimed: boolean
+          total_recharge_bonus: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level5_reward_claimed?: boolean
+          referred_id: string
+          referrer_id: string
+          signup_reward_claimed?: boolean
+          total_recharge_bonus?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level5_reward_claimed?: boolean
+          referred_id?: string
+          referrer_id?: string
+          signup_reward_claimed?: boolean
+          total_recharge_bonus?: number
+        }
+        Relationships: []
+      }
       room_bans: {
         Row: {
           banned_by: string
@@ -930,6 +1086,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_streaks: {
+        Row: {
+          current_streak: number
+          last_claim_date: string | null
+          longest_streak: number
+          total_claims: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          last_claim_date?: string | null
+          longest_streak?: number
+          total_claims?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          last_claim_date?: string | null
+          longest_streak?: number
+          total_claims?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       profiles_public: {
@@ -1043,6 +1226,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_referral_code: {
+        Args: { _code: string; _user_id: string }
+        Returns: Json
+      }
       approve_resignation: {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
@@ -1051,6 +1238,7 @@ export type Database = {
         Args: { _task_type: string; _user_id: string }
         Returns: undefined
       }
+      claim_daily_streak: { Args: { _user_id: string }; Returns: Json }
       deduct_coins: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined
@@ -1067,6 +1255,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_referral_code: { Args: never; Returns: string }
       generate_user_id: { Args: never; Returns: string }
       get_nova_p_tier: {
         Args: { gold_amount: number }
@@ -1104,6 +1293,15 @@ export type Database = {
         Returns: undefined
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
+      open_lucky_box: { Args: { _user_id: string }; Returns: Json }
+      process_referral_level5: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      process_referral_recharge: {
+        Args: { _recharge_coins: number; _user_id: string }
+        Returns: undefined
+      }
       recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
       remove_agency_host: {
