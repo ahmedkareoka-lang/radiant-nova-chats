@@ -92,6 +92,47 @@ const BDDashboard = () => {
     })();
   }, [navigate]);
 
+  const handleSearch = async () => {
+    const id = searchId.trim();
+    if (!id) { toast.error("أدخل ID المستخدم"); return; }
+    setSearching(true);
+    setFound(null);
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, user_id, display_name, avatar_url")
+        .eq("user_id", id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) { toast.error("لم يتم العثور على المستخدم"); return; }
+      setFound(data as FoundUser);
+    } catch (e: any) {
+      toast.error(e.message || "خطأ في البحث");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleActivate = async () => {
+    if (!found) return;
+    setActivating(true);
+    try {
+      const { error } = await supabase.rpc("bd_activate_agency_for_user" as any, {
+        _target_public_id: found.user_id,
+      });
+      if (error) throw error;
+      toast.success(`تم تفعيل وكالة ${found.display_name} ✅`);
+      setFound(null);
+      setSearchId("");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await loadAll(user.id);
+    } catch (e: any) {
+      toast.error(e.message || "فشل التفعيل");
+    } finally {
+      setActivating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
