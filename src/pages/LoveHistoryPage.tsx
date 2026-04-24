@@ -1,8 +1,9 @@
 import { ArrowLeft, Heart, Gift, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import LoveBadge from "@/components/LoveBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
@@ -25,6 +26,25 @@ const LoveHistoryPage = () => {
   const [gifts, setGifts] = useState<GiftRow[]>([]);
   const [loading, setLoading] = useState(true);
   const { couple } = useLoveCouple(myId);
+  const prevCoupleIdRef = useRef<string | null>(null);
+
+  // Toast when an active couple is detected (newly activated, while on this page)
+  useEffect(() => {
+    if (!couple) { prevCoupleIdRef.current = null; return; }
+    const prev = prevCoupleIdRef.current;
+    if (prev !== couple.id) {
+      // Avoid firing on the very first load when we already had a partner
+      if (prev !== null) {
+        const partnerName = couple.partner?.display_name || "شريكك";
+        toast.success(`💕 تم تفعيل علاقة حبيبين مع ${partnerName}!`, {
+          description: `أنتم الآن في المستوى ${couple.love_level} • ${couple.love_points.toLocaleString()} نقطة حب`,
+          duration: 6000,
+        });
+      }
+      prevCoupleIdRef.current = couple.id;
+    }
+  }, [couple]);
+
 
   useEffect(() => {
     (async () => {
@@ -105,7 +125,7 @@ const LoveHistoryPage = () => {
                 background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
                 boxShadow: "0 8px 40px hsl(330 90% 50% / 0.3)",
               }}>
-                <div className="flex justify-center mb-3">
+                <div className="flex items-center justify-center gap-3 mb-3">
                   <LoveBadge
                     user1Avatar={myAvatar}
                     user2Avatar={couple.partner?.avatar_url}
@@ -113,6 +133,15 @@ const LoveHistoryPage = () => {
                     points={couple.love_points}
                     size="md"
                   />
+                  <div className="text-right">
+                    <p className="text-[10px] text-pink-200/80">شريكك في الحب</p>
+                    <p className="text-base font-black text-white truncate max-w-[140px]" style={{ textShadow: "0 0 10px hsl(330 90% 60% / 0.6)" }}>
+                      {couple.partner?.display_name || "شريكي"}
+                    </p>
+                    {couple.partner?.user_id && (
+                      <p className="text-[10px] text-pink-200/70">ID: {couple.partner.user_id}</p>
+                    )}
+                  </div>
                 </div>
                 {progress?.nextTh !== null && (
                   <>

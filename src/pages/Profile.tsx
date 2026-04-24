@@ -373,25 +373,8 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* === LOVE COUPLE BADGE (حبيبين) === */}
-          {loveCouple && (
-            <button
-              onClick={() => navigate("/lovers")}
-              className="mt-4 w-full rounded-3xl p-4 border-2 border-pink-400/40 backdrop-blur-md transition-transform hover:scale-[1.01]"
-              style={{
-                background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
-                boxShadow: "0 4px 20px hsl(330 90% 50% / 0.25)",
-              }}
-            >
-              <LoveBadge
-                user1Avatar={profile?.avatar_url}
-                user2Avatar={loveCouple.partner?.avatar_url}
-                level={loveCouple.love_level}
-                points={loveCouple.love_points}
-                size="md"
-              />
-            </button>
-          )}
+          {/* (Love couple badge moved next to Backpack below) */}
+
           {(() => {
             const novaLvl = profile?.nova_p_level || 0;
             const totalGold = profile?.total_spend_gold || 0;
@@ -497,36 +480,60 @@ const Profile = () => {
             );
           })()}
 
-          {/* Backpack quick-access (all owned items: gifts, frames, badges, VIP, perks) */}
-          <button
-            onClick={openInventory}
-            className="mt-4 w-full rounded-2xl border border-accent/30 p-3 flex items-center gap-3 hover:bg-secondary/40 transition-colors"
-            style={{ background: "linear-gradient(135deg, hsl(280 50% 18% / 0.6), hsl(45 60% 18% / 0.4))" }}
-          >
-            <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 80% 55%))" }}>
-              <Package className="w-5 h-5 text-white" />
-              {newItemsCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-destructive flex items-center justify-center border-2 border-background animate-pulse">
-                  <span className="text-[10px] font-black text-destructive-foreground leading-none">
-                    {newItemsCount > 99 ? "99+" : newItemsCount}
-                  </span>
-                </span>
-              )}
-            </div>
-            <div className="flex-1 text-right min-w-0">
-              <p className="font-black text-sm text-foreground flex items-center gap-2">
-                الحقيبة
+          {/* Backpack + Lovers quick-access row */}
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={openInventory}
+              className="flex-1 rounded-2xl border border-accent/30 p-3 flex items-center gap-3 hover:bg-secondary/40 transition-colors text-right"
+              style={{ background: "linear-gradient(135deg, hsl(280 50% 18% / 0.6), hsl(45 60% 18% / 0.4))" }}
+            >
+              <div className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 80% 55%))" }}>
+                <Package className="w-5 h-5 text-white" />
                 {newItemsCount > 0 && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-destructive/20 text-destructive font-bold">
-                    {newItemsCount} جديد
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-destructive flex items-center justify-center border-2 border-background animate-pulse">
+                    <span className="text-[10px] font-black text-destructive-foreground leading-none">
+                      {newItemsCount > 99 ? "99+" : newItemsCount}
+                    </span>
                   </span>
                 )}
-              </p>
-              <p className="text-[10px] text-muted-foreground">جميع الإطارات، الشارات، الهدايا، VIP والمميزات</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180 shrink-0" />
-          </button>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-sm text-foreground flex items-center gap-2">
+                  الحقيبة
+                  {newItemsCount > 0 && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-destructive/20 text-destructive font-bold">
+                      {newItemsCount} جديد
+                    </span>
+                  )}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">إطارات، شارات، VIP…</p>
+              </div>
+            </button>
+
+            {/* Lovers quick-access (next to Backpack) */}
+            <button
+              onClick={() => navigate("/lovers")}
+              className="rounded-2xl border-2 border-pink-400/40 p-3 flex items-center justify-center shrink-0 transition-transform hover:scale-[1.03] relative"
+              style={{
+                background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
+                boxShadow: "0 4px 14px hsl(330 90% 50% / 0.25)",
+                width: 64,
+              }}
+              aria-label="حبيبين"
+            >
+              {loveCouple ? (
+                <div className="relative">
+                  <span className="text-2xl" style={{ filter: "drop-shadow(0 0 8px hsl(330 90% 60%))" }}>💞</span>
+                  <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-pink-500 flex items-center justify-center border-2 border-background">
+                    <span className="text-[9px] font-black text-white leading-none">{loveCouple.love_level}</span>
+                  </span>
+                </div>
+              ) : (
+                <span className="text-2xl opacity-80">💕</span>
+              )}
+            </button>
+          </div>
 
 
           {/* === DUAL CURRENCY (display only, no navigation) === */}
