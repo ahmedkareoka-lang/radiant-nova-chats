@@ -52,7 +52,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       try {
         user.audioTrack?.play();
       } catch (e: any) {
-        console.warn("[Agora] play() failed:", e?.message || e);
+        logAgora("warn", "play", `play() failed: ${e?.message || e}`);
         blocked = true;
       }
     });
@@ -61,25 +61,23 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
 
   const unlockAudio = useCallback(async () => {
     try {
-      // Resume any suspended audio context
       const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
       if (AC) {
         const ctx = new AC();
-        if (ctx.state === "suspended") {
-          await ctx.resume();
-        }
-        // Play a tiny silent buffer to unlock iOS
+        if (ctx.state === "suspended") await ctx.resume();
         const buffer = ctx.createBuffer(1, 1, 22050);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
         source.connect(ctx.destination);
         source.start(0);
+        logAgora("info", "unlock", `AudioContext state=${ctx.state}`);
       }
-    } catch (e) {
-      console.warn("[Agora] unlockAudio AC failed:", e);
+    } catch (e: any) {
+      logAgora("warn", "unlock", `AudioContext failed: ${e?.message || e}`);
     }
     playAllRemote();
     setAudioBlocked(false);
+    logAgora("success", "unlock", "Audio unlocked by user gesture");
   }, [playAllRemote]);
 
   // Lazily create one shared client
@@ -88,24 +86,27 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 
       client.on("user-published", async (user: IAgoraRTCRemoteUser, mediaType) => {
+        logAgora("info", "user-published", `uid=${user.uid} type=${mediaType}`);
         try {
           await client.subscribe(user, mediaType);
           if (mediaType === "audio") {
             remoteUsersRef.current.set(String(user.uid), user);
             try {
               user.audioTrack?.play();
+              logAgora("success", "subscribe", `Playing audio from uid=${user.uid}`);
             } catch (e: any) {
-              console.warn("[Agora] autoplay blocked:", e?.message || e);
+              logAgora("error", "autoplay", `Blocked by browser: ${e?.message || e}`);
               setAudioBlocked(true);
             }
             setConnectedPeers((prev) => new Set(prev).add(String(user.uid)));
           }
-        } catch (e) {
-          console.error("[Agora] subscribe failed:", e);
+        } catch (e: any) {
+          logAgora("error", "subscribe", `Failed: ${e?.message || e}`);
         }
       });
 
       client.on("user-unpublished", (user) => {
+        logAgora("info", "user-unpublished", `uid=${user.uid}`);
         remoteUsersRef.current.delete(String(user.uid));
         setConnectedPeers((prev) => {
           const next = new Set(prev);
@@ -120,6 +121,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       });
 
       client.on("user-left", (user) => {
+        logAgora("info", "user-left", `uid=${user.uid}`);
         remoteUsersRef.current.delete(String(user.uid));
         setConnectedPeers((prev) => {
           const next = new Set(prev);
@@ -133,10 +135,23 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         });
       });
 
-      // Detect autoplay being blocked by the browser
+      client.on("user-joined", (user) => {
+        logAgora("info", "user-joined", `uid=${user.uid}`);
+      });
+
+      // @ts-ignore
+      client.on("connection-state-change", (curState: string, prevState: string, reason?: string) => {
+        logAgora("info", "connection", `${prevState} → ${curState}${reason ? " (" + reason + ")" : ""}`);
+      });
+
+      // @ts-ignore
+      client.on("exception", (event: any) => {
+        logAgora("warn", "exception", `code=${event?.code} msg=${event?.msg} uid=${event?.uid}`);
+      });
+
       // @ts-ignore - event exists on Agora client
       client.on("autoplay-failed", () => {
-        console.warn("[Agora] autoplay-failed event fired");
+        logAgora("error", "autoplay-failed", "Browser blocked audio autoplay — tap to enable");
         setAudioBlocked(true);
       });
 
