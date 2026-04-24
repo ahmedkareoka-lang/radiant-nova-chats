@@ -722,12 +722,16 @@ const AdminDashboard = () => {
               </div>
 
               <div className="space-y-2">
-                {giftsList.map(g => (
+                {giftsList.map((g: any) => (
                   <div key={g.id} className="card-nova p-3 flex items-center gap-3">
-                    {g.image_url ? <img src={g.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🎁</span>}
+                    {g.image_url ? <img src={g.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">{g.video_url ? "🎬" : g.lottie_url ? "✨" : "🎁"}</span>}
                     <div className="flex-1">
                       <p className="font-bold text-sm">{g.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{g.price} عملة</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {g.price} عملة · {g.tier || "normal"} · {g.duration_ms || 3500}ms
+                        {g.lottie_url && " · Lottie"}
+                        {g.video_url && " · فيديو"}
+                      </p>
                     </div>
                     <button onClick={() => deleteGift(g.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
                   </div>
