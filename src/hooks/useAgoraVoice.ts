@@ -375,6 +375,8 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
           console.error("[Agora] leave failed:", e);
         } finally {
           joinedRef.current = false;
+          channelRef.current = null;
+          agoraUidRef.current = null;
           remoteUsersRef.current.clear();
           setConnectedPeers(new Set());
           setSpeakingPeers(new Set());
