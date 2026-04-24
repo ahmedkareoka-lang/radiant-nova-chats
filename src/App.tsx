@@ -75,6 +75,7 @@ const InvitePage = lazyWithRetry(() => import("./pages/InvitePage"));
 const LoversPage = lazyWithRetry(() => import("./pages/LoversPage"));
 const LoveHistoryPage = lazyWithRetry(() => import("./pages/LoveHistoryPage"));
 const FramePreviewPage = lazyWithRetry(() => import("./pages/FramePreviewPage"));
+const BDDashboard = lazyWithRetry(() => import("./pages/BDDashboard"));
 
 // 🚀 World-class cache: aggressive freshness, no wasteful refetches
 const queryClient = new QueryClient({
@@ -188,6 +189,7 @@ const AnimatedRoutes = () => {
         <Route path="/lovers" element={<AuthGate><LoversPage /></AuthGate>} />
         <Route path="/love-history" element={<AuthGate><LoveHistoryPage /></AuthGate>} />
         <Route path="/dev/frames" element={<AuthGate><FramePreviewPage /></AuthGate>} />
+        <Route path="/bd" element={<AuthGate><BDDashboard /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />

@@ -13,8 +13,10 @@ import FramedAvatar from "@/components/FramedAvatar";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import BDBadge from "@/components/BDBadge";
 import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
+import { useIsBD } from "@/hooks/useIsBD";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
@@ -68,6 +70,7 @@ const Profile = () => {
   const { unreadCount } = useNotifications();
   const { couple: loveCouple } = useLoveCouple(myId);
   const meIsAgent = useIsRechargeAgent(myId);
+  const meIsBD = useIsBD(myId);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -285,6 +288,7 @@ const Profile = () => {
                     avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
                     equippedFrame={equippedFrameKey}
                     isRechargeAgent={meIsAgent}
+                    isBD={meIsBD}
                     size={120}
                   />
                 </div>
@@ -341,6 +345,7 @@ const Profile = () => {
               ) : null}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {meIsAgent && <RechargeAgentBadge size="md" />}
+              {meIsBD && <BDBadge size="md" />}
             </div>
 
             {/* Wealth & Charm visual tier badges */}
@@ -583,6 +588,18 @@ const Profile = () => {
               myCoins={profile?.coins || 0}
               onBalanceChange={(newBalance) => setProfile((p: any) => p ? { ...p, coins: newBalance } : p)}
             />
+          )}
+
+          {/* === BD DASHBOARD ENTRY — visible only for BD accounts === */}
+          {meIsBD && (
+            <button
+              onClick={() => navigate("/bd")}
+              className="w-full mt-3 py-3 rounded-2xl font-black text-white flex items-center justify-center gap-2 text-sm
+                bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400
+                shadow-[0_0_20px_hsl(25_100%_55%/0.55)] border border-amber-200/60"
+            >
+              🟠 لوحة Business Developer
+            </button>
           )}
 
 
