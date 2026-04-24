@@ -176,48 +176,39 @@
     box-shadow: var(--shadow-card);
   }
 
-  /* Vibrant fire-red accent - clearly visible */
-  .accent-fire {
-    border: 1px solid hsl(0 85% 55% / 0.55);
-    box-shadow:
-      0 0 16px hsl(0 90% 50% / 0.28),
-      inset 0 0 12px hsl(15 100% 50% / 0.08);
-  }
-
-  .accent-fire-glow {
-    box-shadow:
-      0 0 22px hsl(0 90% 50% / 0.45),
-      0 0 44px hsl(15 100% 50% / 0.22);
-  }
-
-  /* Crisp white highlight - clearly visible */
-  .accent-white {
-    border: 1px solid hsl(0 0% 100% / 0.22);
-    box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.15),
-      0 0 12px hsl(0 0% 100% / 0.08);
-  }
+  /* ===== Color Accent Palette ===== */
+  .accent-fire { border: 1px solid hsl(0 85% 55% / 0.5); box-shadow: 0 0 14px hsl(0 90% 50% / 0.25), inset 0 0 10px hsl(15 100% 50% / 0.06); }
+  .accent-fire-glow { box-shadow: 0 0 22px hsl(0 90% 50% / 0.45), 0 0 44px hsl(15 100% 50% / 0.22); }
+  .accent-white { border: 1px solid hsl(0 0% 100% / 0.25); box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.15), 0 0 12px hsl(0 0% 100% / 0.1); }
+  .accent-orange { border: 1px solid hsl(25 100% 55% / 0.55); box-shadow: 0 0 14px hsl(25 100% 55% / 0.3), inset 0 0 10px hsl(35 100% 55% / 0.08); }
+  .accent-cyan { border: 1px solid hsl(190 100% 55% / 0.5); box-shadow: 0 0 14px hsl(190 100% 55% / 0.28), inset 0 0 10px hsl(200 100% 55% / 0.08); }
+  .accent-mint { border: 1px solid hsl(150 80% 50% / 0.5); box-shadow: 0 0 14px hsl(150 80% 50% / 0.28), inset 0 0 10px hsl(160 80% 50% / 0.08); }
+  .accent-purple { border: 1px solid hsl(270 100% 65% / 0.5); box-shadow: 0 0 14px hsl(270 100% 65% / 0.28), inset 0 0 10px hsl(280 100% 65% / 0.08); }
+  .accent-pink { border: 1px solid hsl(330 100% 60% / 0.5); box-shadow: 0 0 14px hsl(330 100% 60% / 0.28), inset 0 0 10px hsl(320 100% 60% / 0.08); }
+  .accent-gold { border: 1px solid hsl(45 100% 55% / 0.55); box-shadow: 0 0 14px hsl(45 100% 55% / 0.3), inset 0 0 10px hsl(40 100% 55% / 0.08); }
 
   /* Elegant white + fire divider */
   .divider-fire-white {
     height: 1px;
     width: 100%;
-    background: linear-gradient(90deg,
-      transparent 0%,
-      hsl(0 0% 100% / 0.4) 30%,
-      hsl(0 90% 55% / 0.65) 50%,
-      hsl(0 0% 100% / 0.4) 70%,
-      transparent 100%);
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.4) 30%, hsl(0 90% 55% / 0.65) 50%, hsl(0 0% 100% / 0.4) 70%, transparent);
   }
 
-  /* Fire-white text gradient for highlights */
-  .text-fire {
-    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(15 100% 60%), hsl(0 90% 50%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 700;
-  }
+  /* ===== Text gradient highlights ===== */
+  .text-fire { background: linear-gradient(135deg, hsl(0 0% 100%), hsl(15 100% 60%), hsl(0 90% 50%)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+  .text-orange { background: linear-gradient(135deg, hsl(0 0% 100%), hsl(25 100% 60%)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+  .text-cyan { background: linear-gradient(135deg, hsl(0 0% 100%), hsl(190 100% 60%)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+  .text-mint { background: linear-gradient(135deg, hsl(0 0% 100%), hsl(150 80% 55%)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+
+  /* ===== Icon color helpers (with glow) ===== */
+  .icon-fire { color: hsl(15 100% 60%); filter: drop-shadow(0 0 6px hsl(0 90% 50% / 0.5)); }
+  .icon-white { color: hsl(0 0% 100%); filter: drop-shadow(0 0 6px hsl(0 0% 100% / 0.4)); }
+  .icon-orange { color: hsl(25 100% 60%); filter: drop-shadow(0 0 6px hsl(25 100% 55% / 0.5)); }
+  .icon-cyan { color: hsl(190 100% 60%); filter: drop-shadow(0 0 6px hsl(190 100% 55% / 0.5)); }
+  .icon-mint { color: hsl(150 80% 55%); filter: drop-shadow(0 0 6px hsl(150 80% 50% / 0.5)); }
+  .icon-purple { color: hsl(280 100% 70%); filter: drop-shadow(0 0 6px hsl(270 100% 65% / 0.5)); }
+  .icon-pink { color: hsl(325 100% 65%); filter: drop-shadow(0 0 6px hsl(330 100% 60% / 0.5)); }
+  .icon-gold { color: hsl(45 100% 60%); filter: drop-shadow(0 0 6px hsl(45 100% 55% / 0.5)); }
 
   .btn-nova {
     @apply rounded-full font-semibold transition-all duration-300;
