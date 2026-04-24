@@ -115,14 +115,40 @@ export const useRooms = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // Enforce one room per host: deactivate any existing active rooms first
-    await supabase.from("rooms").update({ is_active: false }).eq("host_id", user.id).eq("is_active", true);
-    // Clean leftover memberships
-    const { data: oldRooms } = await supabase.from("rooms").select("id").eq("host_id", user.id).eq("is_active", false);
-    if (oldRooms && oldRooms.length > 0) {
-      await supabase.from("room_members").delete().in("room_id", oldRooms.map(r => r.id));
+    // Rooms are permanent: re-use the host's existing room if it exists.
+    const { data: existing } = await supabase
+      .from("rooms")
+      .select("id")
+      .eq("host_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      // Update settings + reactivate, keep all stats/history intact
+      const { data: updated } = await supabase
+        .from("rooms")
+        .update({
+          name,
+          type,
+          is_private: isPrivate,
+          password: isPrivate ? password : null,
+          mic_count: micCount,
+          is_active: true,
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+
+      // Ensure host is on mic seat 0
+      await supabase.from("room_members").upsert(
+        { room_id: existing.id, user_id: user.id, is_on_mic: true, mic_slot: 0 },
+        { onConflict: "room_id,user_id" }
+      );
+      return updated;
     }
 
+    // First-time creation
     const { data, error } = await supabase.from("rooms").insert({
       name,
       type,
