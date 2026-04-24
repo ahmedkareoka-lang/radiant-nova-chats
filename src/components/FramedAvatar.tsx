@@ -57,9 +57,15 @@ const FramedAvatar = ({
   isBD = false,
 }: Props) => {
   const px = resolveSize(size);
+  const equipped = equippedFrame || null;
 
-  // BD accounts get top priority — fiery orange frame.
-  if (isBD) {
+  // Special keys: explicitly equipped BD / Recharge Agent frame from inventory.
+  // If user has NOT equipped anything else, fall back to their role frame
+  // (BD takes priority over Recharge Agent).
+  const wantsBDFrame = equipped === "frame-bd" || (!equipped && isBD);
+  const wantsAgentFrame = equipped === "frame-recharge-agent" || (!equipped && !wantsBDFrame && isRechargeAgent);
+
+  if (wantsBDFrame) {
     return (
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}
@@ -72,8 +78,7 @@ const FramedAvatar = ({
     );
   }
 
-  // Recharge agents get a dedicated CSS frame with a "وكيل شحن" label.
-  if (isRechargeAgent) {
+  if (wantsAgentFrame) {
     return (
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}

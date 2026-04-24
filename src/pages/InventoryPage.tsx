@@ -7,6 +7,8 @@ import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 import EquippedBadge from "@/components/EquippedBadge";
+import BDFrame from "@/components/BDFrame";
+import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 
 const InventoryPage = () => {
   const navigate = useNavigate();
@@ -16,6 +18,8 @@ const InventoryPage = () => {
   const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
   const [equippedBadge, setEquippedBadge] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
+  const [isBD, setIsBD] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
   const [profilePreview, setProfilePreview] = useState<{ displayName: string; avatarUrl: string | null }>({ displayName: "أنت", avatarUrl: null });
 
   useEffect(() => {
@@ -23,10 +27,21 @@ const InventoryPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const { data: prof } = await supabase.from("profiles").select("display_name, avatar_url, equipped_frame, equipped_badge").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("display_name, avatar_url, equipped_frame, equipped_badge, is_bd").eq("id", user.id).single();
       setEquippedFrame(prof?.equipped_frame || null);
       setEquippedBadge((prof as any)?.equipped_badge || null);
+      setIsBD(!!(prof as any)?.is_bd);
       setProfilePreview({ displayName: prof?.display_name || "أنت", avatarUrl: prof?.avatar_url || null });
+
+      // Check active recharge agent status
+      const { data: agentRow } = await supabase
+        .from("recharge_agents" as any)
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+      setIsAgent(!!agentRow);
+
       const { data } = await supabase.from("inventory").select("*").eq("user_id", user.id).order("acquired_at", { ascending: false });
       setItems(data || []);
       setLoading(false);
@@ -55,8 +70,33 @@ const InventoryPage = () => {
     { id: "special", label: "مميزات" },
   ];
 
-  const filtered = activeTab === "all" ? items : items.filter((i) => i.item_type === activeTab);
-  const badgeItems = useMemo(() => items.filter((i) => i.item_type === "badge"), [items]);
+  // Inject role-based virtual frames (BD / Recharge Agent) so they appear
+  // in the bag and the user can choose to wear them or any other frame.
+  const allItems = useMemo(() => {
+    const virtuals: any[] = [];
+    if (isBD) {
+      virtuals.push({
+        id: "virtual-frame-bd",
+        item_type: "frame",
+        item_name: "إطار BD",
+        acquired_at: new Date().toISOString(),
+        item_data: { frame_url: "frame-bd", special: "bd" },
+      });
+    }
+    if (isAgent) {
+      virtuals.push({
+        id: "virtual-frame-recharge-agent",
+        item_type: "frame",
+        item_name: "إطار وكيل شحن",
+        acquired_at: new Date().toISOString(),
+        item_data: { frame_url: "frame-recharge-agent", special: "agent" },
+      });
+    }
+    return [...virtuals, ...items];
+  }, [items, isBD, isAgent]);
+
+  const filtered = activeTab === "all" ? allItems : allItems.filter((i) => i.item_type === activeTab);
+  const badgeItems = useMemo(() => allItems.filter((i) => i.item_type === "badge"), [allItems]);
 
   return (
     <PageTransition>
@@ -129,8 +169,9 @@ const InventoryPage = () => {
               {filtered.map((item) => {
                 const isFrame = item.item_type === "frame";
                 const isBadge = item.item_type === "badge";
+                const special = item.item_data?.special as "bd" | "agent" | undefined;
                 const frameKey = item.item_data?.frame_url || item.item_data?.image_url || null;
-                const frameImg = item.item_data?.frame_url
+                const frameImg = !special && item.item_data?.frame_url
                   ? FRAME_MAP[item.item_data.frame_url] || item.item_data?.image_url || item.item_data?.frame_url
                   : item.item_data?.image_url || null;
                 const isFrameEquipped = isFrame && equippedFrame === frameKey;
@@ -139,16 +180,28 @@ const InventoryPage = () => {
 
                 return (
                   <div key={item.id} className={`card-nova p-3 text-center ${highlighted ? "border border-primary/50" : ""}`}>
-                     {frameImg ? (
+                    {special === "bd" ? (
+                      <div className="w-16 h-16 mx-auto">
+                        <BDFrame size={64}>
+                          <img src={profilePreview.avatarUrl || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
+                        </BDFrame>
+                      </div>
+                    ) : special === "agent" ? (
+                      <div className="w-16 h-16 mx-auto">
+                        <RechargeAgentFrame size={64}>
+                          <img src={profilePreview.avatarUrl || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
+                        </RechargeAgentFrame>
+                      </div>
+                    ) : frameImg ? (
                       <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
-                     ) : isBadge && item.item_data?.image_url ? (
-                       <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
+                    ) : isBadge && item.item_data?.image_url ? (
+                      <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
                     ) : (
                       <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : isBadge ? "🏅" : "✨"}</span>
                     )}
                     <p className="font-bold text-[11px] mt-1 line-clamp-1">{item.item_name}</p>
                     <p className="text-[9px] text-muted-foreground">
-                      {new Date(item.acquired_at).toLocaleDateString("ar")}
+                      {special ? "إطار خاص" : new Date(item.acquired_at).toLocaleDateString("ar")}
                     </p>
                     {isFrame && frameKey && (
                       <button
