@@ -247,7 +247,7 @@ const VoiceRoom = () => {
       const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
       // Stable, deterministic id: same member = same id across clients (no Date.now())
       additions.push({
-        id: `entrance-${m.user_id}-${m.joined_at || ""}`,
+        id: `entrance-${m.user_id}-${(m as any).joined_at || ""}`,
         displayName: m.profile!.display_name,
         avatarUrl: m.profile!.avatar_url,
         videoUrl: entranceMedia,
