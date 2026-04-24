@@ -345,15 +345,15 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         channelRef.current = tok.channel;
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
-        agoraUidRef.current = String(tok.uid);
         logAgora("info", "join", `Joining channel "${tok.channel}" as uid=${tok.uid}…`);
-        await client.join(tok.appId, tok.channel, tok.token, tok.uid);
+        const joinedUid = await client.join(tok.appId, tok.channel, tok.token, tok.uid);
+        agoraUidRef.current = String(joinedUid);
         if (cancelled) {
           await client.leave();
           return;
         }
         joinedRef.current = true;
-        logAgora("success", "join", `Joined channel "${tok.channel}"`);
+        logAgora("success", "join", `Joined channel "${tok.channel}" with resolved uid=${joinedUid}`);
         if (isOnMicRef.current) {
           await startLocalStream();
         }
