@@ -1552,6 +1552,10 @@ export type Database = {
         Returns: string
       }
       sweep_expired_perks: { Args: never; Returns: undefined }
+      transfer_diamonds_to_user: {
+        Args: { _amount: number; _recipient_user_id: string }
+        Returns: Json
+      }
       validate_mic_access: {
         Args: { _room_id: string; _slot: number; _user_id: string }
         Returns: boolean
