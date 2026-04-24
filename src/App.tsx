@@ -20,35 +20,61 @@ import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
 
+/**
+ * 🛡️ Resilient lazy import — auto-recovers from "Importing a module script failed"
+ * which happens when the browser holds an old chunk hash after a redeploy/HMR.
+ * We retry once, then trigger a one-time hard reload to fetch fresh chunks.
+ */
+const RELOAD_KEY = "nova-chunk-reload";
+const lazyWithRetry = <T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+) =>
+  lazy(async () => {
+    try {
+      return await factory();
+    } catch (err: any) {
+      const msg = String(err?.message || err);
+      const isChunkError =
+        /Importing a module script failed|Failed to fetch dynamically imported module|ChunkLoadError|Loading chunk \d+ failed/i.test(msg);
+      if (isChunkError && !sessionStorage.getItem(RELOAD_KEY)) {
+        sessionStorage.setItem(RELOAD_KEY, "1");
+        window.location.reload();
+        // Return a placeholder while the page reloads
+        return { default: (() => null) as unknown as T };
+      }
+      throw err;
+    }
+  });
+
 // 🚀 Code-splitting: routes load only when visited (smaller initial bundle, faster TTI)
-const NotFound = lazy(() => import("./pages/NotFound"));
-const TopUpPage = lazy(() => import("./pages/TopUpPage"));
-const CreateRoom = lazy(() => import("./pages/CreateRoom"));
-const VoiceRoom = lazy(() => import("./pages/VoiceRoom"));
-const Profile = lazy(() => import("./pages/Profile"));
-const SearchPage = lazy(() => import("./pages/SearchPage"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const StorePage = lazy(() => import("./pages/StorePage"));
-const WalletPage = lazy(() => import("./pages/WalletPage"));
-const InventoryPage = lazy(() => import("./pages/InventoryPage"));
-const AgenciesPage = lazy(() => import("./pages/AgenciesPage"));
-const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
-const UserProfile = lazy(() => import("./pages/UserProfile"));
-const EditProfile = lazy(() => import("./pages/EditProfile"));
-const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
-const DailyTasksPage = lazy(() => import("./pages/DailyTasksPage"));
-const PostsFeedPage = lazy(() => import("./pages/PostsFeedPage"));
-const GamesPage = lazy(() => import("./pages/GamesPage"));
-const NovaPPage = lazy(() => import("./pages/NovaPPage"));
-const VipPrivilegePage = lazy(() => import("./pages/VipPrivilegePage"));
-const NovaPassPage = lazy(() => import("./pages/NovaPassPage"));
-const LuckyBoxPage = lazy(() => import("./pages/LuckyBoxPage"));
-const StreakPage = lazy(() => import("./pages/StreakPage"));
-const InvitePage = lazy(() => import("./pages/InvitePage"));
-const LoversPage = lazy(() => import("./pages/LoversPage"));
-const LoveHistoryPage = lazy(() => import("./pages/LoveHistoryPage"));
-const FramePreviewPage = lazy(() => import("./pages/FramePreviewPage"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const TopUpPage = lazyWithRetry(() => import("./pages/TopUpPage"));
+const CreateRoom = lazyWithRetry(() => import("./pages/CreateRoom"));
+const VoiceRoom = lazyWithRetry(() => import("./pages/VoiceRoom"));
+const Profile = lazyWithRetry(() => import("./pages/Profile"));
+const SearchPage = lazyWithRetry(() => import("./pages/SearchPage"));
+const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const StorePage = lazyWithRetry(() => import("./pages/StorePage"));
+const WalletPage = lazyWithRetry(() => import("./pages/WalletPage"));
+const InventoryPage = lazyWithRetry(() => import("./pages/InventoryPage"));
+const AgenciesPage = lazyWithRetry(() => import("./pages/AgenciesPage"));
+const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
+const UserProfile = lazyWithRetry(() => import("./pages/UserProfile"));
+const EditProfile = lazyWithRetry(() => import("./pages/EditProfile"));
+const LeaderboardPage = lazyWithRetry(() => import("./pages/LeaderboardPage"));
+const DailyTasksPage = lazyWithRetry(() => import("./pages/DailyTasksPage"));
+const PostsFeedPage = lazyWithRetry(() => import("./pages/PostsFeedPage"));
+const GamesPage = lazyWithRetry(() => import("./pages/GamesPage"));
+const NovaPPage = lazyWithRetry(() => import("./pages/NovaPPage"));
+const VipPrivilegePage = lazyWithRetry(() => import("./pages/VipPrivilegePage"));
+const NovaPassPage = lazyWithRetry(() => import("./pages/NovaPassPage"));
+const LuckyBoxPage = lazyWithRetry(() => import("./pages/LuckyBoxPage"));
+const StreakPage = lazyWithRetry(() => import("./pages/StreakPage"));
+const InvitePage = lazyWithRetry(() => import("./pages/InvitePage"));
+const LoversPage = lazyWithRetry(() => import("./pages/LoversPage"));
+const LoveHistoryPage = lazyWithRetry(() => import("./pages/LoveHistoryPage"));
+const FramePreviewPage = lazyWithRetry(() => import("./pages/FramePreviewPage"));
 
 // 🚀 World-class cache: aggressive freshness, no wasteful refetches
 const queryClient = new QueryClient({
