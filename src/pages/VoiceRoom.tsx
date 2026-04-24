@@ -1155,34 +1155,7 @@ const VoiceRoom = () => {
           avatar_url: m.profile?.avatar_url || null,
         }))}
         onMultiGiftSent={handleGiftBurst}
-        onGiftSent={(info) => {
-          // Show fullscreen effect + top banner immediately for the sender (broadcasts don't echo back)
-          const id = Date.now().toString();
-          setFullscreenGift({
-            id,
-            emoji: info.emoji,
-            giftName: info.giftName,
-            imageUrl: info.imageUrl,
-            lottieUrl: info.lottieUrl || null,
-            videoUrl: info.videoUrl || null,
-            senderName: info.senderName,
-            recipientName: info.recipientName,
-            amount: info.amount,
-            timestamp: Date.now(),
-            durationMs: info.durationMs,
-          });
-          const toastId = `toast-self-${id}`;
-          setGiftToasts(prev => [...prev, {
-            id: toastId,
-            emoji: info.emoji,
-            imageUrl: info.imageUrl,
-            senderName: info.senderName,
-            recipientName: info.recipientName,
-            giftName: info.giftName,
-            amount: info.amount,
-          }]);
-          setTimeout(() => setGiftToasts(prev => prev.filter(t => t.id !== toastId)), 4500);
-        }}
+        broadcastGift={broadcastGiftToRoom}
         roomId={roomId || undefined}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
