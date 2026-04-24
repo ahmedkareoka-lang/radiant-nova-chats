@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Coins as CoinsIcon, Loader2, AlertCircle } from "lucide-react";
+import { X, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import CurrencyIcon from "./CurrencyIcon";
 
 type Props = {
   open: boolean;
@@ -95,7 +96,7 @@ const AgentTransferModal = ({ open, onClose, recipientId, recipientName, onSucce
           >
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-black text-lg text-white flex items-center gap-2">
-                <CoinsIcon className="w-5 h-5 text-yellow-300" />
+                <CurrencyIcon type="gold" size="md" />
                 شحن عملات
               </h3>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-background/30 flex items-center justify-center">
@@ -113,7 +114,7 @@ const AgentTransferModal = ({ open, onClose, recipientId, recipientName, onSucce
                 {refreshing ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <>{myCoins.toLocaleString()} 🪙</>
+                  <>{myCoins.toLocaleString()} <CurrencyIcon type="gold" size="sm" /></>
                 )}
               </span>
             </div>
@@ -134,7 +135,7 @@ const AgentTransferModal = ({ open, onClose, recipientId, recipientName, onSucce
             {exceedsBalance && (
               <div className="mt-2 flex items-center gap-1.5 text-[11px] text-destructive font-bold">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>المبلغ أكبر من رصيدك ({myCoins.toLocaleString()} 🪙)</span>
+                <span className="flex items-center gap-1">المبلغ أكبر من رصيدك ({myCoins.toLocaleString()} <CurrencyIcon type="gold" size="xs" />)</span>
               </div>
             )}
 
@@ -152,7 +153,7 @@ const AgentTransferModal = ({ open, onClose, recipientId, recipientName, onSucce
                   bg-gradient-to-r from-red-600 via-red-500 to-orange-500
                   shadow-[0_0_14px_hsl(0_85%_55%/0.7)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CoinsIcon className="w-4 h-4" /> تحويل</>}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CurrencyIcon type="gold" size="sm" /> تحويل</>}
               </button>
             </div>
           </motion.div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Gift, Clock, Gamepad2, Coins, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Gift, Clock, Gamepad2, CheckCircle2 } from "lucide-react";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -125,7 +126,7 @@ const DailyTasksPage = () => {
         <main className="px-4 py-5 max-w-lg mx-auto space-y-4">
           <div className="rounded-3xl p-5 text-center" style={{ background: "linear-gradient(135deg, hsl(45 90% 40% / 0.2), hsl(35 80% 30% / 0.2))", border: "1px solid hsl(45 80% 50% / 0.3)" }}>
             <p className="text-sm text-muted-foreground mb-1">مكافآت يومية متجددة</p>
-            <p className="text-3xl font-black glow-gold-text">2,300 🪙</p>
+            <p className="text-3xl font-black glow-gold-text flex items-center justify-center gap-2">2,300 <CurrencyIcon type="gold" size="lg" /></p>
             <p className="text-xs text-muted-foreground mt-1">إجمالي المكافآت اليوم</p>
           </div>
 
@@ -151,7 +152,7 @@ const DailyTasksPage = () => {
                     <div className="flex justify-between text-xs mb-1">
                       <span className="text-muted-foreground">{t.progress} / {t.required}</span>
                       <span className="text-accent font-bold flex items-center gap-1">
-                        <Coins className="w-3 h-3" /> +{t.reward}
+                        <CurrencyIcon type="gold" size="xs" /> +{t.reward}
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-background/40 overflow-hidden">
