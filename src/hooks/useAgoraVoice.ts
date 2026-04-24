@@ -245,7 +245,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   useEffect(() => {
     if (!roomId || !currentUserId) return;
     if (!AGORA_APP_ID) {
-      console.error("[Agora] VITE_AGORA_APP_ID is not set — voice will not work. Add it in Vercel env vars and redeploy.");
+      logAgora("error", "config", "VITE_AGORA_APP_ID is missing — voice disabled. Add it to Vercel env vars and redeploy.");
       return;
     }
 
@@ -256,18 +256,19 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       try {
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
+        logAgora("info", "join", `Joining channel "${roomId}" as ${currentUserId}…`);
         await client.join(AGORA_APP_ID, roomId, null, currentUserId);
         if (cancelled) {
           await client.leave();
           return;
         }
         joinedRef.current = true;
-        console.log("[Agora] joined channel", roomId, "as", currentUserId);
+        logAgora("success", "join", `Joined channel "${roomId}"`);
       } catch (e: any) {
         const code = e?.code || e?.name || "Unknown";
-        console.error("[Agora] join failed:", code, e?.message || e);
+        logAgora("error", "join", `${code}: ${e?.message || e}`);
         if (String(code).includes("CAN_NOT_GET_GATEWAY_SERVER") || String(code).includes("INVALID_VENDOR_KEY")) {
-          console.error("[Agora] Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
+          logAgora("error", "join", "Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
         }
       }
     })();
