@@ -389,6 +389,42 @@ export type Database = {
         }
         Relationships: []
       }
+      love_couples: {
+        Row: {
+          activated_at: string
+          created_at: string
+          id: string
+          is_active: boolean
+          love_level: number
+          love_points: number
+          updated_at: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          activated_at?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          love_level?: number
+          love_points?: number
+          updated_at?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          activated_at?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          love_level?: number
+          love_points?: number
+          updated_at?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
       lucky_box_openings: {
         Row: {
           box_tier: string
@@ -1243,6 +1279,7 @@ export type Database = {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
       }
+      activate_love_couple: { Args: { _partner_id: string }; Returns: Json }
       add_coins: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined
@@ -1275,6 +1312,7 @@ export type Database = {
         Returns: undefined
       }
       claim_daily_streak: { Args: { _user_id: string }; Returns: Json }
+      deactivate_love_couple: { Args: never; Returns: undefined }
       deduct_coins: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined
@@ -1294,6 +1332,7 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       generate_user_id: { Args: never; Returns: string }
+      get_love_level: { Args: { _points: number }; Returns: number }
       get_nova_p_tier: {
         Args: { gold_amount: number }
         Returns: {
