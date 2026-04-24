@@ -1374,6 +1374,112 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {/* BD MANAGEMENT TAB */}
+          {activeTab === "bd" && (
+            <div className="space-y-4">
+              {/* Activate new BD */}
+              <div className="card-nova p-4 space-y-3 border-orange-500/30 bg-orange-500/5">
+                <h3 className="font-bold text-sm flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-orange-500" /> تفعيل حساب BD جديد
+                </h3>
+                <div className="flex gap-2">
+                  <input
+                    placeholder="ID المستخدم (6 أرقام)"
+                    value={bdSearchId}
+                    onChange={(e) => setBdSearchId(e.target.value)}
+                    className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
+                  />
+                  <button
+                    onClick={activateBD}
+                    className="px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-xs whitespace-nowrap"
+                  >
+                    تفعيل BD
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  المتطلبات: العمولة 20% • التارجت 500K ماسة لكل وكالة
+                </p>
+              </div>
+
+              {/* Assign agency to BD */}
+              {bdList.length > 0 && agencies.length > 0 && (
+                <div className="card-nova p-4 space-y-3">
+                  <h3 className="font-bold text-sm">ربط وكالة بـ BD</h3>
+                  <select
+                    value={bdAssignBdId}
+                    onChange={(e) => setBdAssignBdId(e.target.value)}
+                    className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
+                  >
+                    <option value="">اختر BD</option>
+                    {bdList.map((b) => (
+                      <option key={b.id} value={b.id}>{b.display_name} ({b.user_id})</option>
+                    ))}
+                  </select>
+                  <select
+                    value={bdAssignAgencyId}
+                    onChange={(e) => setBdAssignAgencyId(e.target.value)}
+                    className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none"
+                  >
+                    <option value="">اختر الوكالة</option>
+                    {agencies.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={assignAgencyToBD}
+                    className="w-full py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs"
+                  >
+                    ربط
+                  </button>
+                </div>
+              )}
+
+              {/* BD list */}
+              <div className="space-y-2">
+                <h3 className="font-bold text-sm px-1">حسابات BD المُفعَّلة ({bdList.length})</h3>
+                {bdList.map((b) => (
+                  <div key={b.id} className="card-nova p-3 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <img src={b.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-orange-500" />
+                      <div className="flex-1">
+                        <p className="font-bold text-sm">{b.display_name}</p>
+                        <p className="text-[10px] text-muted-foreground">ID: {b.user_id}</p>
+                      </div>
+                      <button
+                        onClick={() => deactivateBD(b.id)}
+                        className="text-destructive p-2"
+                        aria-label="إلغاء BD"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border/40 text-center">
+                      <div>
+                        <p className="text-[9px] text-muted-foreground">وكالات</p>
+                        <p className="text-sm font-extrabold text-primary">{b.stats?.agency_count || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-muted-foreground">مؤهلة</p>
+                        <p className="text-sm font-extrabold text-emerald-500">{b.stats?.qualified_count || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-muted-foreground">إجمالي الدعم</p>
+                        <p className="text-sm font-extrabold">{(b.stats?.total_support || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-muted-foreground">عمولة</p>
+                        <p className="text-sm font-extrabold text-orange-500">{(b.stats?.total_commission || 0).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {bdList.length === 0 && (
+                  <p className="text-center text-muted-foreground text-sm py-8">لا يوجد BD مُفعَّل بعد</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === "pricing" && (
             <div className="space-y-4">
               <div className="card-nova p-4 space-y-3">
