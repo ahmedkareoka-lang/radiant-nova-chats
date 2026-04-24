@@ -537,6 +537,14 @@ const Profile = () => {
             </button>
           </div>
 
+          {/* === AGENT RECHARGE PANEL — visible only for active recharge agents === */}
+          {meIsAgent && (
+            <AgentRechargePanel
+              myCoins={profile?.coins || 0}
+              onBalanceChange={(newBalance) => setProfile((p: any) => p ? { ...p, coins: newBalance } : p)}
+            />
+          )}
+
 
           {/* === DUAL CURRENCY (display only, no navigation) === */}
           <div className="flex gap-3 mt-4">
