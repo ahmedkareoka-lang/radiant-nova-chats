@@ -141,7 +141,7 @@ const StreakPage = () => {
                   "جارٍ الاستلام..."
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    🎁 استلم اليوم {nextDay} <span className="opacity-80">(+{previewReward} 🪙)</span>
+                    🎁 استلم اليوم {nextDay} <span className="opacity-80 flex items-center gap-1">(+{previewReward} <CurrencyIcon type="gold" size="xs" />)</span>
                   </span>
                 )}
               </button>

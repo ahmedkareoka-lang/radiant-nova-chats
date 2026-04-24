@@ -1,4 +1,5 @@
 import { ArrowLeft, Heart, Sparkles, X, Users, History } from "lucide-react";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
