@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Shield, Ban, Users, Crown, Search, Zap, Building2, Globe, Settings, ArrowRightLeft, Gift, Image, Upload, Trash2, Plus, BarChart3, Phone, DollarSign } from "lucide-react";
+import { Shield, Ban, Users, Crown, Search, Zap, Building2, Globe, Settings, ArrowRightLeft, Gift, Image, Upload, Trash2, Plus, BarChart3, Phone, DollarSign, Briefcase } from "lucide-react";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +38,12 @@ const AdminDashboard = () => {
   const [salaryHostId, setSalaryHostId] = useState("");
   const [salaryDetailsOpen, setSalaryDetailsOpen] = useState(false);
   const [salaryDetailsTarget, setSalaryDetailsTarget] = useState<{ id?: string; name?: string }>({});
+
+  // BD Management
+  const [bdList, setBdList] = useState<any[]>([]);
+  const [bdSearchId, setBdSearchId] = useState("");
+  const [bdAssignAgencyId, setBdAssignAgencyId] = useState("");
+  const [bdAssignBdId, setBdAssignBdId] = useState("");
 
   // Gift & Store management
   const [giftsList, setGiftsList] = useState<any[]>([]);
@@ -500,6 +506,7 @@ const AdminDashboard = () => {
     { id: "agencies", label: "الوكالات", icon: Building2 },
     { id: "payroll", label: "رواتب الوكالات", icon: DollarSign },
     { id: "recharge_agents", label: "وكلاء الشحن", icon: Phone },
+    { id: "bd", label: "حسابات BD", icon: Briefcase },
     { id: "pricing", label: "الأسعار", icon: Globe },
     { id: "settings", label: "الإعدادات", icon: Settings },
   ];
