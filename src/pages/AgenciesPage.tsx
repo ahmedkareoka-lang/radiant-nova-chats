@@ -45,87 +45,96 @@ const AgenciesPage = () => {
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserId(user.id);
+  const loadAll = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setUserId(user.id);
 
-      const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setIsBoss(prof?.is_boss || false);
-      setIsAgent(prof?.is_agent || false);
-      setIsHost(prof?.is_host || false);
+    const { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    setIsBoss(prof?.is_boss || false);
+    setIsAgent(prof?.is_agent || false);
+    setIsHost(prof?.is_host || false);
+    setAgencyEligible(!!(prof as any)?.agency_eligible);
 
-      const { data: all } = await supabase.from("agencies").select("*").eq("status", "approved").eq("is_active", true);
-      setAgencies(all || []);
+    const { data: all } = await supabase.from("agencies").select("*").eq("status", "approved").eq("is_active", true);
+    setAgencies(all || []);
 
-      if (prof?.is_boss) {
-        const { data: pending } = await supabase.from("agencies").select("*").eq("status", "pending");
-        setPendingAgencies(pending || []);
+    if (prof?.is_boss) {
+      const { data: pending } = await supabase.from("agencies").select("*").eq("status", "pending");
+      setPendingAgencies(pending || []);
+    }
+
+    // Pending invites for THIS user (host inbox) — rich preview with own 15-day target stats
+    const { data: invData } = await supabase.rpc("get_my_pending_invites" as any);
+    if (invData) setPendingInvites(invData);
+
+    const { data: membership } = await supabase.from("agency_members").select("*").eq("user_id", user.id).single();
+    if (membership) {
+      setMyMembership(membership);
+      const { data: ag } = await supabase.from("agencies").select("*").eq("id", membership.agency_id).single();
+      setMyAgency(ag);
+
+      if (membership.badge === "agent" || ag?.owner_id === user.id) {
+        const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", membership.agency_id);
+        if (hosts) {
+          const ids = hosts.map(h => h.user_id);
+          const { data: profiles } = await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids);
+          setAgencyHosts(hosts.map(h => ({ ...h, profile: profiles?.find(p => p.id === h.user_id) })));
+        }
+
+        // Load pending resignations
+        const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", membership.agency_id).eq("status", "pending");
+        if (resignations && resignations.length > 0) {
+          const rIds = resignations.map(r => r.host_id);
+          const { data: rProfiles } = await supabase.from("profiles").select("id, display_name, user_id").in("id", rIds);
+          setPendingResignations(resignations.map(r => ({ ...r, profile: rProfiles?.find(p => p.id === r.host_id) })));
+        }
+
+        // Sent invites status (for agent panel)
+        const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
+        if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
       }
 
-      const { data: membership } = await supabase.from("agency_members").select("*").eq("user_id", user.id).single();
-      if (membership) {
-        setMyMembership(membership);
-        const { data: ag } = await supabase.from("agencies").select("*").eq("id", membership.agency_id).single();
-        setMyAgency(ag);
+      // Host stats + cycle dashboard (today/cycle 15-day)
+      if (membership.badge === "host") {
+        const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
+        const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
+        const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
+        setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
 
-        if (membership.badge === "agent" || ag?.owner_id === user.id) {
-          const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", membership.agency_id);
-          if (hosts) {
-            const ids = hosts.map(h => h.user_id);
-            const { data: profiles } = await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids);
-            setAgencyHosts(hosts.map(h => ({ ...h, profile: profiles?.find(p => p.id === h.user_id) })));
-          }
+        const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
+        if (dash) setHostDashboard(dash);
 
-          // Load pending resignations
-          const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", membership.agency_id).eq("status", "pending");
-          if (resignations && resignations.length > 0) {
-            const rIds = resignations.map(r => r.host_id);
-            const { data: rProfiles } = await supabase.from("profiles").select("id, display_name, user_id").in("id", rIds);
-            setPendingResignations(resignations.map(r => ({ ...r, profile: rProfiles?.find(p => p.id === r.host_id) })));
-          }
-        }
-
-        // Host stats + cycle dashboard (today/cycle 15-day)
-        if (membership.badge === "host") {
-          const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
-          const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
-          const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
-          setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
-
-          const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
-          if (dash) setHostDashboard(dash);
-
-          // Monthly salary report (current month, day 1 to last)
-          const { data: salary } = await supabase.rpc("get_host_monthly_salary" as any, {});
-          if (salary) setHostSalary(salary);
-        }
-
-        // Agent: load monthly payroll for their agency (their hosts + 15% commission)
-        if (membership.badge === "agent" || ag?.owner_id === user.id) {
-          const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
-          if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
-
-          // Full agency overview (hosts + 15-day cycle stats)
-          const { data: ov } = await supabase.rpc("get_my_agency_overview" as any);
-          if (ov && (ov as any).has_agency) setAgencyOverview(ov);
-        }
-
-        // Host: full event log within the 15-day cycle
-        if (membership.badge === "host") {
-          const { data: ev } = await supabase.rpc("get_my_host_events" as any);
-          if (ev && (ev as any).has_agency) setHostEvents(ev);
-        }
+        // Monthly salary report (current month, day 1 to last)
+        const { data: salary } = await supabase.rpc("get_host_monthly_salary" as any, {});
+        if (salary) setHostSalary(salary);
       }
 
-      // Track if this user already owns an agency (any status) — for the "one agency per agent" rule
-      const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
-      setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
+      // Agent: load monthly payroll for their agency (their hosts + 15% commission)
+      if (membership.badge === "agent" || ag?.owner_id === user.id) {
+        const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
+        if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
 
-      setLoading(false);
-    };
-    load();
-  }, []);
+        // Full agency overview (hosts + 15-day cycle stats)
+        const { data: ov } = await supabase.rpc("get_my_agency_overview" as any);
+        if (ov && (ov as any).has_agency) setAgencyOverview(ov);
+      }
+
+      // Host: full event log within the 15-day cycle
+      if (membership.badge === "host") {
+        const { data: ev } = await supabase.rpc("get_my_host_events" as any);
+        if (ev && (ev as any).has_agency) setHostEvents(ev);
+      }
+    }
+
+    // Track if this user already owns an agency (any status) — for the "one agency per agent" rule
+    const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
+    setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
+
+    setLoading(false);
+  };
+
+  useEffect(() => { loadAll(); }, []);
 
   const applyForAgency = async () => {
     if (!agencyName.trim()) return;
