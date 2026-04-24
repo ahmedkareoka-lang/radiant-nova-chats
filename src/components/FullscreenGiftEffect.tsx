@@ -65,46 +65,9 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.4 } }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none overflow-hidden"
+          className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none overflow-hidden bg-transparent"
         >
-          {/* Dark backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-gradient-radial from-black/60 via-black/75 to-black/90"
-            style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0.95) 100%)" }}
-          />
-
-          {/* Massive radial glow behind gift */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 1.4, 1.2], opacity: [0, 0.9, 0.6] }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="absolute rounded-full"
-            style={{
-              width: "120vw",
-              height: "120vw",
-              maxWidth: "1200px",
-              maxHeight: "1200px",
-              background: isLegendary
-                ? "radial-gradient(circle, rgba(255,215,0,0.55), rgba(255,107,107,0.25), rgba(168,85,247,0.15), transparent 70%)"
-                : "radial-gradient(circle, rgba(168,85,247,0.45), rgba(59,130,246,0.2), transparent 70%)",
-              filter: "blur(20px)",
-            }}
-          />
-
-          {/* Spinning ring for legendary */}
-          {isLegendary && (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-              className="absolute rounded-full border-2 border-dashed border-yellow-400/40"
-              style={{ width: "85vw", height: "85vw", maxWidth: "600px", maxHeight: "600px" }}
-            />
-          )}
-
-          {/* MAIN GIFT — truly fills the screen */}
+          {/* MAIN GIFT — no backdrop, no ring, just the gift itself */}
           <div className="relative z-10 flex flex-col items-center gap-3 px-4 w-full">
             <motion.div
               initial={{ scale: 0.2, rotate: -15, opacity: 0 }}
