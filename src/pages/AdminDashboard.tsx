@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import PageTransition from "@/components/PageTransition";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { NOVA_ASSETS } from "@/lib/novaAssets";
+import SalaryDetailsModal from "@/components/SalaryDetailsModal";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
