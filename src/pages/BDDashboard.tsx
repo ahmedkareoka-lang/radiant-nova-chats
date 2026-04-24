@@ -217,6 +217,58 @@ const BDDashboard = () => {
           </Card>
         </div>
 
+        {/* Activate agency by user ID */}
+        <Card className="p-4 border-orange-500/30 bg-orange-500/5">
+          <h3 className="font-bold text-sm mb-2 flex items-center gap-2">
+            <UserPlus size={16} className="text-orange-500" /> تفعيل وكالة لمستخدم
+          </h3>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            ابحث عن المستخدم بـ ID المكوّن من 6 أرقام لتفعيل وكالته تحت إشرافك.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={searchId}
+              onChange={(e) => setSearchId(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="مثال: 123456"
+              inputMode="numeric"
+              maxLength={6}
+              className="flex-1"
+            />
+            <button
+              onClick={handleSearch}
+              disabled={searching || !searchId.trim()}
+              className="px-4 rounded-lg bg-orange-500 text-white font-bold disabled:opacity-50 flex items-center gap-1"
+            >
+              <Search size={16} /> بحث
+            </button>
+          </div>
+
+          {found && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 p-3 rounded-xl bg-background border border-orange-500/30 flex items-center gap-3"
+            >
+              <img
+                src={found.avatar_url || "https://i.pravatar.cc/100"}
+                alt=""
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="font-bold truncate">{found.display_name}</div>
+                <div className="text-[10px] text-muted-foreground">ID: {found.user_id}</div>
+              </div>
+              <button
+                onClick={handleActivate}
+                disabled={activating}
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-600 to-amber-500 text-white text-xs font-bold shadow-[0_0_14px_hsl(25_100%_55%/0.6)] disabled:opacity-50"
+              >
+                {activating ? "..." : "تفعيل وكالة"}
+              </button>
+            </motion.div>
+          )}
+        </Card>
+
         {/* Agencies list */}
         <div>
           <h3 className="font-bold text-sm mb-2 px-1">الوكالات تحت إشرافك</h3>
