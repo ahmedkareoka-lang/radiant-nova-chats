@@ -249,59 +249,38 @@ export default function RoomUserProfileCard({
           </button>
         </div>
 
-        {/* Premium Showcase Badges – VIP / Recharge Agent / BD / NOVA P only */}
-        <div className="relative rounded-3xl overflow-hidden p-[1.5px] bg-gradient-to-br from-fuchsia-400/40 via-purple-500/30 to-indigo-500/40">
-          <div className="rounded-3xl bg-gradient-to-b from-[#1c1138]/95 to-[#0f0826]/95 p-3.5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-700 flex items-center justify-center shadow-[0_0_12px_hsl(280_85%_55%/0.6)]">
-                  <span className="text-sm">🏆</span>
-                </div>
-                <div>
-                  <p className="font-black text-sm bg-gradient-to-r from-fuchsia-200 to-purple-200 bg-clip-text text-transparent">
-                    الشارات المميزة
-                  </p>
-                  <p className="text-[9px] text-fuchsia-200/60">VIP · وكيل · BD · NOVA P</p>
-                </div>
+        {/* Showcase Badges – same components used in Profile page */}
+        {(() => {
+          const hasVipOrNova = (profile.vip_level || 0) > 0 || (profile.nova_p_level || 0) > 0;
+          const count =
+            (hasVipOrNova ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0);
+          return (
+            <div className="rounded-2xl bg-gradient-to-b from-white/5 to-white/[0.02] border border-white/10 p-3">
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-black text-sm text-fuchsia-200">الشارات</p>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-200 border border-fuchsia-400/25">
+                  {count}
+                </span>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30">
-                {showcaseBadges.length}
-              </span>
+              {count === 0 ? (
+                <p className="text-center text-[11px] text-muted-foreground py-3">
+                  لا توجد شارات بعد
+                </p>
+              ) : (
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  {hasVipOrNova && (
+                    <DualBadge
+                      novaLevel={profile.nova_p_level || 0}
+                      vipLevel={profile.vip_level || 0}
+                    />
+                  )}
+                  {isRechargeAgent && <RechargeAgentBadge size="md" />}
+                  {isBD && <BDBadge size="md" />}
+                </div>
+              )}
             </div>
-
-            {showcaseBadges.length === 0 ? (
-              <div className="text-center py-6">
-                <div className="text-3xl mb-1 opacity-40">🎖️</div>
-                <p className="text-[11px] text-muted-foreground">لا توجد شارات مميزة بعد</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-4 gap-2.5">
-                {showcaseBadges.map((b) => (
-                  <div key={b.key} className="flex flex-col items-center gap-1.5">
-                    <div
-                      className={`relative w-full aspect-square rounded-2xl bg-gradient-to-br ${b.gradient} ${b.shadow} ring-2 ${b.ring} flex items-center justify-center overflow-hidden`}
-                    >
-                      {/* shine sweep */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent" />
-                      <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white/20 blur-md" />
-                      <div className="relative flex flex-col items-center justify-center">
-                        <span className="text-2xl drop-shadow-lg">{b.icon}</span>
-                        {b.sublabel && (
-                          <span className="text-[8px] font-black text-white/95 leading-none mt-0.5 drop-shadow">
-                            {b.sublabel}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-black text-white/90 tracking-wide">
-                      {b.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Games section */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-600/25 to-cyan-600/25 border border-cyan-400/20 p-3">
