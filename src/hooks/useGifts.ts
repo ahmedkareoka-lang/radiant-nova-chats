@@ -12,7 +12,7 @@ export const useGifts = () => {
     receiverId: string,
     giftName: string,
     goldAmount: number,
-    extras?: { giftEmoji?: string; imageUrl?: string | null }
+    extras?: { giftEmoji?: string; imageUrl?: string | null; comboCount?: number; unitPrice?: number; roomId?: string | null }
   ) => {
     // Get conversion rate from system settings
     const { data: setting } = await supabase
@@ -72,6 +72,19 @@ export const useGifts = () => {
 
     // Track daily task: gift sent
     supabase.rpc("increment_daily_task", { _user_id: senderId, _task_type: "gift", _amount: 1 });
+
+    // Log combo if multi-send (×10 / ×99 / ×520 / ×1314)
+    if (extras?.comboCount && extras.comboCount > 1 && extras?.unitPrice) {
+      supabase.from("gift_combos").insert({
+        sender_id: senderId,
+        receiver_id: receiverId,
+        room_id: extras.roomId || null,
+        gift_name: giftName,
+        combo_count: extras.comboCount,
+        unit_price: extras.unitPrice,
+        total_gold: goldAmount,
+      });
+    }
 
     // Global broadcasts for big / legendary gifts (Soulmatch / Yalla style)
     if (goldAmount >= TIER_BIG) {
