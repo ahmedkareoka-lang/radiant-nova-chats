@@ -125,12 +125,11 @@ const UserProfile = () => {
               ) : (
                 <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
               )}
-              {profile?.is_agent && (
+              {profile?.is_agent ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">🏅 وكيل</span>
-              )}
-              {profile?.is_host && (
+              ) : profile?.is_host ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
-              )}
+              ) : null}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {targetIsAgent && <RechargeAgentBadge size="md" />}
             </div>
