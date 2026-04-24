@@ -4,6 +4,7 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import storeCatalog from "@/lib/storeCatalog.json";
+import { logAgora } from "@/lib/agoraDebugLog";
 
 const FALLBACK_GIFTS = [
   { emoji: "🌹", name: "وردة", price: 10 },
@@ -116,11 +117,14 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const ch = supabase.channel(`room-gifts-${roomId}`, {
       config: { broadcast: { self: false, ack: true } },
     });
-    ch.subscribe();
+    ch.subscribe((status) => {
+      logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `sender channel status: ${status}`, { roomId });
+    });
     broadcastChannelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);
       broadcastChannelRef.current = null;
+      logAgora("info", "Gift", "sender channel removed", { roomId });
     };
   }, [roomId, isOpen]);
 
@@ -150,22 +154,39 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
   const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
-    if (!roomId) return;
+    if (!roomId) {
+      logAgora("warn", "Gift", "broadcastGift skipped: missing roomId", { giftName });
+      return;
+    }
     const channel = broadcastChannelRef.current;
-    if (!channel) return;
-    await channel.send({
-      type: "broadcast",
-      event: "gift-sent",
-      payload: {
-        emoji: giftEmoji,
-        giftName,
-        imageUrl: imageUrl || null,
-        senderName,
-        recipientName: recipientName || receiverName || "",
-        amount,
-        timestamp: Date.now(),
-      },
-    });
+    if (!channel) {
+      logAgora("error", "Gift", "broadcastGift failed: no active channel", { roomId, giftName });
+      return;
+    }
+    const payload = {
+      emoji: giftEmoji,
+      giftName,
+      imageUrl: imageUrl || null,
+      senderName,
+      recipientName: recipientName || receiverName || "",
+      amount,
+      timestamp: Date.now(),
+    };
+    logAgora("info", "Gift", `→ sending broadcast '${giftName}' x${amount}`, { recipient: payload.recipientName });
+    try {
+      const ack = await channel.send({
+        type: "broadcast",
+        event: "gift-sent",
+        payload,
+      });
+      if (ack === "ok") {
+        logAgora("success", "Gift", `✓ ack OK for '${giftName}'`, { amount });
+      } else {
+        logAgora("error", "Gift", `✗ ack ${ack} for '${giftName}'`, { payload });
+      }
+    } catch (err: any) {
+      logAgora("error", "Gift", `broadcast threw: ${err?.message || err}`, { payload });
+    }
 
     // Big gift announcement (over 1000 coins)
     if (amount >= 1000) {

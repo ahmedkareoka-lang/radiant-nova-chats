@@ -29,6 +29,7 @@ import GiftComboBar from "@/components/GiftComboBar";
 import LuckyWheelButton from "@/components/LuckyWheelButton";
 import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
+import { logAgora } from "@/lib/agoraDebugLog";
 
 interface UserProfile {
   user_id: string;
@@ -92,6 +93,7 @@ const VoiceRoom = () => {
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
   const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
   const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; senderName: string; recipientName: string; amount: number; timestamp: number } | null>(null);
+  const [giftToasts, setGiftToasts] = useState<{ id: string; emoji: string; imageUrl: string | null; senderName: string; recipientName: string; giftName: string; amount: number }[]>([]);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
     wealthLevel: number;
@@ -383,9 +385,11 @@ const VoiceRoom = () => {
     })
       .on("broadcast", { event: "gift-sent" }, (payload) => {
         const { emoji, imageUrl, amount, giftName, senderName, recipientName } = payload.payload;
+        logAgora("success", "Gift", `← received '${giftName}' from ${senderName}`, { amount, recipientName });
         // Fullscreen gift effect for all gifts received in the room
+        const id = `${Date.now()}-${Math.random()}`;
         setFullscreenGift({
-          id: `${Date.now()}-${Math.random()}`,
+          id,
           emoji: emoji || "🎁",
           giftName: giftName || "هدية",
           imageUrl: imageUrl || null,
@@ -394,9 +398,28 @@ const VoiceRoom = () => {
           amount: amount || 100,
           timestamp: Date.now(),
         });
+        // Top text banner for everyone
+        const toastId = `toast-${id}`;
+        setGiftToasts(prev => [...prev, {
+          id: toastId,
+          emoji: emoji || "🎁",
+          imageUrl: imageUrl || null,
+          senderName: senderName || "مستخدم",
+          recipientName: recipientName || "مستخدم",
+          giftName: giftName || "هدية",
+          amount: amount || 0,
+        }]);
+        setTimeout(() => {
+          setGiftToasts(prev => prev.filter(t => t.id !== toastId));
+        }, 4500);
       })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `listener channel status: ${status}`, { roomId });
+      });
+    return () => {
+      supabase.removeChannel(channel);
+      logAgora("info", "Gift", "listener channel removed", { roomId });
+    };
   }, [roomId]);
 
   if (!roomId) {
@@ -508,6 +531,38 @@ const VoiceRoom = () => {
         gift={fullscreenGift}
         onComplete={() => setFullscreenGift(null)}
       />
+
+      {/* Top text notifications for every gift sent in the room */}
+      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-md px-3">
+        <AnimatePresence>
+          {giftToasts.map((t) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: -30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ type: "spring", damping: 18 }}
+              className="w-full rounded-2xl px-3 py-2 flex items-center gap-2 backdrop-blur-xl bg-card/85 border border-accent/40 shadow-[0_4px_20px_hsl(var(--accent)/0.35)]"
+            >
+              {t.imageUrl ? (
+                <img src={t.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
+              ) : (
+                <span className="text-2xl shrink-0">{t.emoji}</span>
+              )}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-xs font-bold text-foreground truncate">
+                  <span className="text-primary">{t.senderName}</span>
+                  <span className="text-muted-foreground"> أهدى </span>
+                  <span className="text-accent">{t.recipientName}</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  🎁 {t.giftName} • 💰 {t.amount.toLocaleString()}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
 
       {/* Multi-Gift Visual Burst (uses designed image when available) */}
       <AnimatePresence>
@@ -1080,9 +1135,10 @@ const VoiceRoom = () => {
         }))}
         onMultiGiftSent={handleGiftBurst}
         onGiftSent={(info) => {
-          // Show fullscreen effect immediately for the sender (broadcasts don't echo back)
+          // Show fullscreen effect + top banner immediately for the sender (broadcasts don't echo back)
+          const id = Date.now().toString();
           setFullscreenGift({
-            id: Date.now().toString(),
+            id,
             emoji: info.emoji,
             giftName: info.giftName,
             imageUrl: info.imageUrl,
@@ -1091,6 +1147,17 @@ const VoiceRoom = () => {
             amount: info.amount,
             timestamp: Date.now(),
           });
+          const toastId = `toast-self-${id}`;
+          setGiftToasts(prev => [...prev, {
+            id: toastId,
+            emoji: info.emoji,
+            imageUrl: info.imageUrl,
+            senderName: info.senderName,
+            recipientName: info.recipientName,
+            giftName: info.giftName,
+            amount: info.amount,
+          }]);
+          setTimeout(() => setGiftToasts(prev => prev.filter(t => t.id !== toastId)), 4500);
         }}
         roomId={roomId || undefined}
       />
