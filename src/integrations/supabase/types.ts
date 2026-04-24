@@ -158,6 +158,30 @@ export type Database = {
           },
         ]
       }
+      agent_transfer_log: {
+        Row: {
+          agent_id: string
+          amount: number
+          created_at: string
+          id: string
+          recipient_id: string
+        }
+        Insert: {
+          agent_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          recipient_id: string
+        }
+        Update: {
+          agent_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          recipient_id?: string
+        }
+        Relationships: []
+      }
       banners: {
         Row: {
           created_at: string
