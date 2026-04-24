@@ -351,6 +351,13 @@ const AgenciesPage = () => {
                   <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
                     💡 معدل التحويل: 100,000 ماسة = $8 • لكل دورة 15 يوم: 8 أيام نشطة + 20 ساعة بث
                   </p>
+
+                  <button
+                    onClick={() => { setDetailsHost({ id: userId }); setDetailsOpen(true); }}
+                    className="w-full py-2 rounded-xl bg-primary/15 border border-primary/40 text-primary text-xs font-bold flex items-center justify-center gap-2"
+                  >
+                    📋 عرض تفاصيل الراتب الكاملة
+                  </button>
                 </div>
               )}
               {myMembership?.badge === "host" && (
