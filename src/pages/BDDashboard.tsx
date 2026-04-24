@@ -38,11 +38,51 @@ const BDDashboard = () => {
   const [stats, setStats] = useState<BDStats | null>(null);
   const [agencies, setAgencies] = useState<BDAgencyRow[]>([]);
 
+  // Search + activate
+  const [searchId, setSearchId] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [found, setFound] = useState<FoundUser | null>(null);
+  const [activating, setActivating] = useState(false);
+
+  const loadAll = async (uid: string) => {
+    const { data: statsData } = await supabase.rpc("get_bd_stats" as any, { _bd_user_id: uid });
+    if (statsData) setStats(statsData as unknown as BDStats);
+
+    const { data: rows } = await supabase
+      .from("bd_agencies" as any)
+      .select("id, agency_id, total_agency_support, total_commission_earned, is_target_reached, created_at")
+      .eq("bd_user_id", uid)
+      .order("created_at", { ascending: false });
+
+    const enriched: BDAgencyRow[] = [];
+    for (const r of (rows as any[]) || []) {
+      const { data: ag } = await supabase
+        .from("agencies")
+        .select("name")
+        .eq("id", r.agency_id)
+        .maybeSingle();
+      enriched.push({ ...r, agency_name: (ag as any)?.name || "—" });
+    }
+    setAgencies(enriched);
+  };
+
   useEffect(() => {
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { navigate("/login"); return; }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_bd")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const isBDUser = !!(profile as any)?.is_bd;
+        setIsBD(isBDUser);
+        if (!isBDUser) { setLoading(false); return; }
+
+        await loadAll(user.id);
 
         const { data: profile } = await supabase
           .from("profiles")
