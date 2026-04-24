@@ -149,7 +149,7 @@ const NovaCup = ({ roomId }: NovaCupProps) => {
                   leaders.map((l, i) => (
                     <div key={l.sender_id} className={`flex items-center gap-3 p-2.5 rounded-xl ${i < 3 ? 'bg-gradient-to-r from-accent/10 to-transparent border border-accent/20' : 'bg-secondary/50'}`}>
                       <span className="text-sm font-bold w-6 text-center">{i < 3 ? medals[i] : i + 1}</span>
-                      <img src={l.avatar_url || "https://i.pravatar.cc/100"} className="w-8 h-8 rounded-full object-cover" alt="" />
+                      <img loading="lazy" decoding="async" src={l.avatar_url || "https://i.pravatar.cc/100"} className="w-8 h-8 rounded-full object-cover" alt="" />
                       <span className="flex-1 text-xs font-bold truncate">{l.display_name}</span>
                       <span className="text-xs font-bold text-accent flex items-center gap-0.5">
                         <CurrencyIcon type="gold" size="xs" />{l.total.toLocaleString()}

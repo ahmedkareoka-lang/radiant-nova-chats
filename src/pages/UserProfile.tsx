@@ -72,7 +72,7 @@ const UserProfile = () => {
         <div className="relative">
           <div className="relative w-full h-56 overflow-hidden">
             {profile?.cover_url ? (
-              <img src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" />
+              <img loading="lazy" decoding="async" src={profile.cover_url} alt="Cover" className="w-full h-full object-cover" />
             ) : (
               <div
                 className="w-full h-full"

@@ -97,11 +97,9 @@ const AgentRechargePanel = ({ myCoins, onBalanceChange }: Props) => {
 
         {found && (
           <div className="mt-3 rounded-2xl bg-background/40 border border-border/30 p-3 flex items-center gap-3">
-            <img
-              src={found.avatar_url || "https://i.pravatar.cc/100?img=3"}
+            <img loading="lazy" decoding="async" src={found.avatar_url || "https://i.pravatar.cc/100?img=3"}
               alt={found.display_name}
-              className="w-10 h-10 rounded-full object-cover border border-border/40"
-            />
+              className="w-10 h-10 rounded-full object-cover border border-border/40" />
             <div className="flex-1 min-w-0">
               <p className="font-bold text-sm text-foreground truncate">{found.display_name}</p>
               <p className="text-[10px] text-muted-foreground">ID: {found.user_id}</p>

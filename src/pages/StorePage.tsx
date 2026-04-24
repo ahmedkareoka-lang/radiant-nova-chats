@@ -590,7 +590,7 @@ const StorePage = () => {
                   {/* Badge / entrance / other type preview */}
                   {previewItem.type !== "frame" && previewItem.image_url && (
                     <div className="flex justify-center">
-                      <img src={previewItem.image_url} alt={previewItem.name} className="w-20 h-20 object-contain" />
+                      <img loading="lazy" decoding="async" src={previewItem.image_url} alt={previewItem.name} className="w-20 h-20 object-contain" />
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">{previewItem.name}</p>

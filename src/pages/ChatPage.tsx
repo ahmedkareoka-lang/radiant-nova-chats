@@ -88,7 +88,7 @@ const ChatPage = () => {
                 <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0" onClick={() => setActiveConvId(conv.id)}>
                   <div className="party-avatar-ring">
                     <div className="w-14 h-14 rounded-full overflow-hidden bg-background">
-                      <img src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
                     </div>
                   </div>
                   <span className="text-[9px] text-muted-foreground max-w-[60px] truncate text-center">{conv.other_user.display_name}</span>
@@ -123,7 +123,7 @@ const ChatPage = () => {
               className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors cursor-pointer border-b border-border/20"
             >
               <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border/30">
-                <img src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
                 <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
               </div>
               <div className="flex-1 min-w-0 text-right">

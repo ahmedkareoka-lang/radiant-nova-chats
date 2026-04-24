@@ -223,11 +223,9 @@ const InvitePage = () => {
               <div className="space-y-2 max-h-72 overflow-auto">
                 {referrals.map((r) => (
                   <div key={r.id} className="flex items-center gap-2 p-2 rounded-xl bg-background/30">
-                    <img
-                      src={r.profile?.avatar_url || "https://i.pravatar.cc/60"}
+                    <img loading="lazy" decoding="async" src={r.profile?.avatar_url || "https://i.pravatar.cc/60"}
                       alt=""
-                      className="w-9 h-9 rounded-full object-cover"
-                    />
+                      className="w-9 h-9 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold truncate">{r.profile?.display_name || "مستخدم"}</p>
                       <div className="flex items-center gap-1.5 text-[9px]">

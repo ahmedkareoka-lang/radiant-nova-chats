@@ -84,11 +84,9 @@ export default function LegendaryGiftExplosion() {
               className="relative"
             >
               {active.imageUrl ? (
-                <img
-                  src={active.imageUrl}
+                <img loading="lazy" decoding="async" src={active.imageUrl}
                   alt={active.giftName}
-                  className="w-48 h-48 object-contain drop-shadow-[0_0_60px_hsl(45_100%_55%/0.9)]"
-                />
+                  className="w-48 h-48 object-contain drop-shadow-[0_0_60px_hsl(45_100%_55%/0.9)]" />
               ) : (
                 <span className="text-[10rem] drop-shadow-[0_0_60px_hsl(45_100%_55%/0.9)]">
                   {active.giftEmoji}

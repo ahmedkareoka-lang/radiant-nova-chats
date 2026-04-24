@@ -173,7 +173,7 @@ const PostsFeedPage = () => {
             />
             {imagePreview && (
               <div className="relative mt-2 rounded-xl overflow-hidden">
-                <img src={imagePreview} alt="" className="w-full max-h-72 object-cover" />
+                <img loading="lazy" decoding="async" src={imagePreview} alt="" className="w-full max-h-72 object-cover" />
                 <button
                   onClick={() => { setImageFile(null); setImagePreview(null); }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 flex items-center justify-center"

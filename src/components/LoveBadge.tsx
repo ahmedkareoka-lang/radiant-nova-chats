@@ -40,7 +40,7 @@ const LoveBadge = ({ user1Avatar, user2Avatar, level, points, size = "md" }: Pro
       <div className="relative flex items-center gap-1">
         {/* Avatar 1 */}
         <div className={`${dims.avatar} rounded-full overflow-hidden ring-2 ring-pink-400/70 shadow-[0_0_12px_hsl(330_90%_60%/0.5)]`}>
-          <img src={user1Avatar || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={user1Avatar || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
         </div>
 
         {/* Heart with wings */}
@@ -162,7 +162,7 @@ const LoveBadge = ({ user1Avatar, user2Avatar, level, points, size = "md" }: Pro
 
         {/* Avatar 2 */}
         <div className={`${dims.avatar} rounded-full overflow-hidden ring-2 ring-pink-400/70 shadow-[0_0_12px_hsl(330_90%_60%/0.5)]`}>
-          <img src={user2Avatar || "https://i.pravatar.cc/100?img=5"} alt="" className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={user2Avatar || "https://i.pravatar.cc/100?img=5"} alt="" className="w-full h-full object-cover" />
         </div>
       </div>
 

@@ -234,7 +234,7 @@ const CoupleAvatar = ({
     >
       <div className={`w-14 h-14 rounded-full overflow-hidden ring-2 ${ringColor}`}>
         {profile?.avatar_url ? (
-          <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-pink-900/40 flex items-center justify-center text-pink-200 text-lg font-black">
             {profile?.display_name?.[0] ?? "?"}

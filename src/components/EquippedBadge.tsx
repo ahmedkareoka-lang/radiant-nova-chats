@@ -47,7 +47,7 @@ export default function EquippedBadge({ badgeName, size = "sm" }: EquippedBadgeP
         transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
       />
       {imageUrl ? (
-        <img src={imageUrl} alt={badgeName} className={`relative ${imgSize} object-contain`} />
+        <img loading="lazy" decoding="async" src={imageUrl} alt={badgeName} className={`relative ${imgSize} object-contain`} />
       ) : (
         <span className="relative">🏅</span>
       )}

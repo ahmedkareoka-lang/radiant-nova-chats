@@ -296,7 +296,7 @@ const LoversPage = () => {
                         onClick={() => handleActivate(m.id)}
                         className="w-full flex items-center gap-3 p-3 rounded-2xl border border-pink-400/20 bg-secondary/30 hover:bg-pink-500/20 transition-colors disabled:opacity-50"
                       >
-                        <img src={m.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-pink-400/40" />
+                        <img loading="lazy" decoding="async" src={m.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-pink-400/40" />
                         <div className="flex-1 text-right">
                           <p className="font-bold text-sm text-foreground">{m.display_name}</p>
                           <p className="text-[10px] text-muted-foreground">ID: {m.user_id}</p>

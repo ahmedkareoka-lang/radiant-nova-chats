@@ -36,7 +36,7 @@ export default function BannerCarousel({ banners, onBannerClick }: BannerCarouse
           className="absolute inset-0 cursor-pointer"
           onClick={() => onBannerClick?.(current)}
         >
-          <img src={current.image_url} alt={current.title || "banner"} className="w-full h-full object-cover" />
+          <img loading="lazy" decoding="async" src={current.image_url} alt={current.title || "banner"} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
         </motion.div>
       </AnimatePresence>

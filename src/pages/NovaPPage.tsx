@@ -139,20 +139,20 @@ function PerkCard({
       <div className="flex-1 flex items-center justify-center w-full">
         {visual === "frame" && asset && (
           <div className="relative w-20 h-20">
-            <img src={asset.frame} alt={asset.label} className="absolute inset-0 w-full h-full object-contain z-10" />
+            <img loading="lazy" decoding="async" src={asset.frame} alt={asset.label} className="absolute inset-0 w-full h-full object-contain z-10" />
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full object-cover" />
+              <img loading="lazy" decoding="async" src={avatarUrl} alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full object-cover" />
             ) : (
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-secondary" />
             )}
           </div>
         )}
         {visual === "badge" && asset && (
-          <img src={asset.frame} alt={asset.label} className="w-16 h-16 object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]" />
+          <img loading="lazy" decoding="async" src={asset.frame} alt={asset.label} className="w-16 h-16 object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]" />
         )}
         {visual === "id" && (
           <div className={`px-5 py-1.5 rounded-full bg-gradient-to-r ${theme.badgeBg} border-2 border-white/30 shadow-xl flex items-center gap-2`}>
-            {asset && <img src={asset.frame} alt="" className="w-5 h-5 object-contain" />}
+            {asset && <img loading="lazy" decoding="async" src={asset.frame} alt="" className="w-5 h-5 object-contain" />}
             <span className="text-white font-black text-base">P{level}</span>
           </div>
         )}
@@ -437,7 +437,7 @@ export default function NovaPPage() {
               className={`rounded-2xl p-3 bg-gradient-to-r ${lastMonthTheme.from} ${lastMonthTheme.to} border ${lastMonthTheme.ring} ring-1 backdrop-blur flex items-center gap-3`}
             >
               <div className="relative w-14 h-14 shrink-0">
-                <img src={lastMonthAsset.frame} alt={lastMonthAsset.label} className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,200,0,0.6)]" />
+                <img loading="lazy" decoding="async" src={lastMonthAsset.frame} alt={lastMonthAsset.label} className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,200,0,0.6)]" />
                 <Medal className="absolute -bottom-1 -right-1 w-5 h-5 text-amber-300 fill-amber-400" />
               </div>
               <div className="flex-1 text-right">
@@ -465,10 +465,10 @@ export default function NovaPPage() {
             <div className="relative -mb-8 z-10 flex justify-center">
               <div className="relative w-16 h-16">
                 {currentAsset && (
-                  <img src={currentAsset.frame} alt="" className="absolute inset-0 w-full h-full object-contain z-10 scale-150" />
+                  <img loading="lazy" decoding="async" src={currentAsset.frame} alt="" className="absolute inset-0 w-full h-full object-contain z-10 scale-150" />
                 )}
                 {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-white/30" />
+                  <img loading="lazy" decoding="async" src={profile.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-white/30" />
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-secondary border-2 border-white/30" />
                 )}
@@ -479,7 +479,7 @@ export default function NovaPPage() {
             <div className={`relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br ${currentLevel > 0 ? `${tierTheme.from} ${tierTheme.to}` : "from-secondary/40 to-secondary/20"} backdrop-blur-xl p-5 pt-12`}>
               <div className="flex items-center gap-4">
                 {currentAsset ? (
-                  <img src={currentAsset.frame} alt="" className="w-24 h-24 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
+                  <img loading="lazy" decoding="async" src={currentAsset.frame} alt="" className="w-24 h-24 object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
                 ) : (
                   <div className="w-24 h-24 rounded-2xl bg-secondary/40 flex items-center justify-center">
                     <Trophy className="w-10 h-10 text-muted-foreground" />

@@ -116,7 +116,7 @@ const EditProfile = () => {
           <div className="flex flex-col items-center">
             <div className="relative">
               <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/50">
-                <img src={profile.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="Avatar" className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={profile.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
                 className="absolute bottom-0 right-0 w-8 h-8 rounded-full gradient-neon flex items-center justify-center">

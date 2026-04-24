@@ -586,7 +586,7 @@ const AdminDashboard = () => {
         <div className="space-y-2">
           {filteredItems.map(s => (
             <div key={s.id} className="card-nova p-3 flex items-center gap-3">
-              {s.image_url ? <img src={s.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
+              {s.image_url ? <img loading="lazy" decoding="async" src={s.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
               <div className="flex-1">
                 <p className="font-bold text-sm">{s.name}</p>
                 <p className="text-[10px] text-muted-foreground">
@@ -661,7 +661,7 @@ const AdminDashboard = () => {
                 <motion.div className="card-nova p-4 space-y-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-accent">
-                      <img src={targetUser.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={targetUser.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <p className="font-bold text-sm">{targetUser.display_name}</p>
@@ -905,7 +905,7 @@ const AdminDashboard = () => {
 
                 {giftPreviewUrl && (
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-background/40 border border-border/30">
-                    <img src={giftPreviewUrl} alt="معاينة الهدية" className="w-16 h-16 rounded-lg object-contain bg-secondary/40" />
+                    <img loading="lazy" decoding="async" src={giftPreviewUrl} alt="معاينة الهدية" className="w-16 h-16 rounded-lg object-contain bg-secondary/40" />
                     <div className="flex-1">
                       <p className="text-[10px] text-muted-foreground">معاينة</p>
                       <p className="text-xs font-bold">{newGift.name || "بدون اسم"}</p>
@@ -926,7 +926,7 @@ const AdminDashboard = () => {
               <div className="space-y-2">
                 {giftsList.map((g: any) => (
                   <div key={g.id} className="card-nova p-3 flex items-center gap-3">
-                    {g.image_url ? <img src={g.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">{g.video_url ? "🎬" : g.lottie_url ? "✨" : "🎁"}</span>}
+                    {g.image_url ? <img loading="lazy" decoding="async" src={g.image_url} className="w-10 h-10 rounded-lg object-cover" alt="" /> : <span className="text-2xl">{g.video_url ? "🎬" : g.lottie_url ? "✨" : "🎁"}</span>}
                     <div className="flex-1">
                       <p className="font-bold text-sm">{g.name}</p>
                       <p className="text-[10px] text-muted-foreground">
@@ -988,7 +988,7 @@ const AdminDashboard = () => {
               <div className="space-y-2">
                 {banners.map(b => (
                   <div key={b.id} className="card-nova p-3">
-                    <img src={b.image_url} className="w-full h-24 object-cover rounded-xl mb-2" alt="" />
+                    <img loading="lazy" decoding="async" src={b.image_url} className="w-full h-24 object-cover rounded-xl mb-2" alt="" />
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-bold">{b.title || "بدون عنوان"}</p>
                       <button onClick={() => deleteBanner(b.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
@@ -1238,7 +1238,7 @@ const AdminDashboard = () => {
                   <div key={a.id} className="card-nova p-3 space-y-3">
                     <div className="flex items-center gap-3">
                       {a.avatar_url ? (
-                        <img src={a.avatar_url} alt={a.agent_name} className="w-10 h-10 rounded-full object-cover" />
+                        <img loading="lazy" decoding="async" src={a.avatar_url} alt={a.agent_name} className="w-10 h-10 rounded-full object-cover" />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"><Phone className="w-4 h-4 text-muted-foreground" /></div>
                       )}

@@ -85,7 +85,7 @@ export default function NovaDashboard({ totalGold, level, expiry, userId, equipp
               }`}
             >
               <div className="aspect-square w-full mb-1 flex items-center justify-center">
-                <img src={asset.frame} alt={asset.label} className="w-full h-full object-contain" />
+                <img loading="lazy" decoding="async" src={asset.frame} alt={asset.label} className="w-full h-full object-contain" />
               </div>
               <p className={`text-[10px] font-black ${isCurrent ? "text-white" : "text-muted-foreground"}`}>
                 P{lvl}

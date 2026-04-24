@@ -70,7 +70,7 @@ export default function GlobalGiftTicker() {
             <span className="relative text-[11px] font-black text-foreground truncate max-w-[80px]">{current.senderName}</span>
             <span className="relative text-[10px] text-foreground/70">أهدى</span>
             {current.imageUrl ? (
-              <img src={current.imageUrl} alt="" className="relative w-5 h-5 object-contain" />
+              <img loading="lazy" decoding="async" src={current.imageUrl} alt="" className="relative w-5 h-5 object-contain" />
             ) : (
               <span className="relative text-base">{current.giftEmoji}</span>
             )}

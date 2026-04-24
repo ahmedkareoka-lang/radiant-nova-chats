@@ -479,3 +479,131 @@
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-4px) scale(1.05); }
 }
+
+/* ===================================================================
+   🌟 NOVA WORLD-CLASS PREMIUM UTILITIES (v2)
+   Hand-tuned to feel as luxurious as global tier-1 apps.
+   =================================================================== */
+
+@layer utilities {
+  /* Premium glassmorphism — multi-layer depth */
+  .glass-premium {
+    background:
+      linear-gradient(135deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.02)),
+      linear-gradient(180deg, hsl(260 25% 12% / 0.85), hsl(260 28% 8% / 0.92));
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    box-shadow:
+      0 1px 0 0 hsl(0 0% 100% / 0.08) inset,
+      0 8px 32px -8px hsl(260 50% 2% / 0.6),
+      0 0 0 1px hsl(270 100% 65% / 0.04);
+  }
+
+  /* Royal gold premium card */
+  .card-royal-gold {
+    background:
+      linear-gradient(135deg, hsl(45 80% 55% / 0.08), transparent 60%),
+      linear-gradient(180deg, hsl(260 25% 12% / 0.96), hsl(260 28% 8% / 0.98));
+    border: 1px solid hsl(45 100% 55% / 0.25);
+    box-shadow:
+      inset 0 1px 0 hsl(45 100% 70% / 0.18),
+      0 8px 32px -10px hsl(45 80% 30% / 0.35),
+      0 0 24px -8px hsl(45 100% 55% / 0.25);
+  }
+
+  /* Smooth scaling press feedback used app-wide */
+  .press-tactile {
+    transition: transform 120ms cubic-bezier(.2,.8,.2,1), filter 120ms ease;
+    will-change: transform;
+  }
+  .press-tactile:active { transform: scale(0.96); filter: brightness(1.08); }
+
+  /* Soft hover lift */
+  .hover-lift {
+    transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -12px hsl(270 100% 50% / 0.35);
+  }
+
+  /* Premium shimmer for skeletons / loading */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+    background: hsl(260 22% 12%);
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 100% / 0.06) 50%,
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: shimmer-sweep 1.6s infinite;
+  }
+  @keyframes shimmer-sweep {
+    100% { transform: translateX(100%); }
+  }
+
+  /* Animated gold gradient text — for VIP / premium labels */
+  .text-gold-shine {
+    background: linear-gradient(
+      90deg,
+      hsl(45 100% 55%),
+      hsl(50 100% 75%),
+      hsl(45 100% 55%),
+      hsl(35 100% 50%),
+      hsl(45 100% 55%)
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: gold-shine 4s linear infinite;
+    font-weight: 800;
+  }
+  @keyframes gold-shine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  /* World-class focus ring (a11y + style) */
+  .focus-ring-premium:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(270 100% 65% / 0.65);
+  }
+
+  /* Smooth fade-in for lazy content */
+  .fade-in-soft { animation: fade-in-soft 360ms cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes fade-in-soft {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Render hint for hot list items (rooms, gifts) */
+  .gpu-layer { transform: translateZ(0); backface-visibility: hidden; }
+}
+
+/* Respect users who prefer reduced motion (a11y + battery) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  body { animation: none !important; }
+}
+
+/* High-DPI text crispness on mobile WebViews */
+@media (min-resolution: 2dppx) {
+  body { text-rendering: optimizeLegibility; }
+}

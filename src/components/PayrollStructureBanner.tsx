@@ -63,11 +63,9 @@ const PayrollStructureBanner = () => {
               >
                 <X className="w-5 h-5" />
               </button>
-              <img
-                src={bannerImage}
+              <img loading="lazy" decoding="async" src={bannerImage}
                 alt="هيكل رواتب وأهداف وكالة نوفا"
-                className="w-full h-auto rounded-2xl shadow-2xl border border-primary/30 bg-card"
-              />
+                className="w-full h-auto rounded-2xl shadow-2xl border border-primary/30 bg-card" />
               <p className="text-center text-[11px] text-muted-foreground mt-3 leading-relaxed px-2">
                 💡 يتم احتساب التارجت كل 15 يوم (دورتان شهريًا: 1-15 و 16-نهاية الشهر).
                 الالتزام لكل دورة: 8 أيام نشطة + 20 ساعة بث.

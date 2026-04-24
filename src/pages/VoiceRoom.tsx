@@ -715,7 +715,7 @@ const VoiceRoom = () => {
           >
             <div className="flex items-center gap-2 mb-2">
               {lastGift.imageUrl ? (
-                <img src={lastGift.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
+                <img loading="lazy" decoding="async" src={lastGift.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
               ) : (
                 <span className="text-2xl shrink-0">{lastGift.emoji}</span>
               )}
@@ -765,7 +765,7 @@ const VoiceRoom = () => {
               className="w-full rounded-2xl px-3 py-2 flex items-center gap-2 backdrop-blur-xl bg-card/85 border border-accent/40 shadow-[0_4px_20px_hsl(var(--accent)/0.35)]"
             >
               {t.imageUrl ? (
-                <img src={t.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
+                <img loading="lazy" decoding="async" src={t.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
               ) : (
                 <span className="text-2xl shrink-0">{t.emoji}</span>
               )}
@@ -796,12 +796,10 @@ const VoiceRoom = () => {
                 transition={{ type: "spring", damping: 14 }}
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               >
-                <img
-                  src={giftBurst.imageUrl}
+                <img loading="lazy" decoding="async" src={giftBurst.imageUrl}
                   alt="gift"
                   className="w-52 h-52 object-contain drop-shadow-[0_0_40px_rgba(255,200,80,0.8)]"
-                  style={{ background: "transparent" }}
-                />
+                  style={{ background: "transparent" }} />
               </motion.div>
             )}
             {Array.from({ length: Math.min(giftBurst.count * 3, 30) }).map((_, i) => (
@@ -823,7 +821,7 @@ const VoiceRoom = () => {
                 transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5 }}
               >
                 {giftBurst.imageUrl ? (
-                  <img src={giftBurst.imageUrl} alt="" className="w-16 h-16 object-contain" style={{ background: "transparent" }} />
+                  <img loading="lazy" decoding="async" src={giftBurst.imageUrl} alt="" className="w-16 h-16 object-contain" style={{ background: "transparent" }} />
                 ) : (
                   <span className="text-5xl">{giftBurst.emoji}</span>
                 )}
@@ -1126,7 +1124,7 @@ const VoiceRoom = () => {
           <div className="mb-6">
             <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
               <div className="relative">
-                <img src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
+                <img loading="lazy" decoding="async" src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
                 <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
               </div>
               <div className="flex-1 min-w-0">
