@@ -378,13 +378,14 @@ const VoiceRoom = () => {
   // Listen for gift broadcasts from other users in the room
   useEffect(() => {
     if (!roomId) return;
-    const channelName = `room-gifts-${roomId}`;
-    const channel = supabase.channel(channelName + "-listener-" + Date.now())
+    const channel = supabase.channel(`room-gifts-${roomId}`, {
+      config: { broadcast: { self: false, ack: false } },
+    })
       .on("broadcast", { event: "gift-sent" }, (payload) => {
         const { emoji, imageUrl, amount, giftName, senderName, recipientName } = payload.payload;
-        // Fullscreen gift effect for all gifts
+        // Fullscreen gift effect for all gifts received in the room
         setFullscreenGift({
-          id: Date.now().toString(),
+          id: `${Date.now()}-${Math.random()}`,
           emoji: emoji || "🎁",
           giftName: giftName || "هدية",
           imageUrl: imageUrl || null,
@@ -1078,6 +1079,19 @@ const VoiceRoom = () => {
           avatar_url: m.profile?.avatar_url || null,
         }))}
         onMultiGiftSent={handleGiftBurst}
+        onGiftSent={(info) => {
+          // Show fullscreen effect immediately for the sender (broadcasts don't echo back)
+          setFullscreenGift({
+            id: Date.now().toString(),
+            emoji: info.emoji,
+            giftName: info.giftName,
+            imageUrl: info.imageUrl,
+            senderName: info.senderName,
+            recipientName: info.recipientName,
+            amount: info.amount,
+            timestamp: Date.now(),
+          });
+        }}
         roomId={roomId || undefined}
       />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />

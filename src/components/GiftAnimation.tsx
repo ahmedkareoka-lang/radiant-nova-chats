@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
@@ -39,6 +39,15 @@ interface GiftItem {
   image_url?: string | null;
 }
 
+interface SentGiftInfo {
+  emoji: string;
+  giftName: string;
+  imageUrl: string | null;
+  senderName: string;
+  recipientName: string;
+  amount: number;
+}
+
 interface GiftAnimationProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,10 +56,11 @@ interface GiftAnimationProps {
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
   onMultiGiftSent?: (emoji: string, count: number, imageUrl?: string | null) => void;
+  onGiftSent?: (info: SentGiftInfo) => void;
   roomId?: string;
 }
 
-const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, roomId }: GiftAnimationProps) => {
+const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, onGiftSent, roomId }: GiftAnimationProps) => {
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [burst, setBurst] = useState(false);
   const [sending, setSending] = useState(false);
@@ -99,6 +109,21 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     fetchBalance();
   }, [senderId, isOpen]);
 
+  // Broadcast channel — keep one stable channel subscribed for the modal lifetime so sends are reliable
+  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  useEffect(() => {
+    if (!roomId || !isOpen) return;
+    const ch = supabase.channel(`room-gifts-${roomId}`, {
+      config: { broadcast: { self: false, ack: true } },
+    });
+    ch.subscribe();
+    broadcastChannelRef.current = ch;
+    return () => {
+      supabase.removeChannel(ch);
+      broadcastChannelRef.current = null;
+    };
+  }, [roomId, isOpen]);
+
   if (!isOpen) return null;
 
   const isMultiMode = showMulti && roomMembers && roomMembers.length > 0;
@@ -124,11 +149,10 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
-  // Broadcast gift to all room members via Realtime (use a stable shared channel)
   const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
     if (!roomId) return;
-    const channel = supabase.channel(`room-gifts-${roomId}`);
-    await channel.subscribe();
+    const channel = broadcastChannelRef.current;
+    if (!channel) return;
     await channel.send({
       type: "broadcast",
       event: "gift-sent",
@@ -159,10 +183,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           amount,
         },
       });
-      setTimeout(() => supabase.removeChannel(announceChannel), 1000);
+      setTimeout(() => supabase.removeChannel(announceChannel), 1500);
     }
-
-    setTimeout(() => supabase.removeChannel(channel), 1000);
   };
 
   const handleSend = async () => {
@@ -189,7 +211,17 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (allSuccess) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
-        broadcastGift(giftEmoji, gift.name, senderName, giftCost * selectedRecipients.size, undefined, giftImageUrl);
+        // Trigger fullscreen effect locally for the SENDER (broadcasts don't echo back to self)
+        const totalAmount = giftCost * selectedRecipients.size;
+        onGiftSent?.({
+          emoji: giftEmoji,
+          giftName: gift.name,
+          imageUrl: giftImageUrl,
+          senderName,
+          recipientName: `${selectedRecipients.size} أشخاص`,
+          amount: totalAmount,
+        });
+        broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     } else if (receiverId) {
@@ -197,6 +229,15 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (success) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
+        // Trigger fullscreen effect locally for the SENDER (broadcasts don't echo back to self)
+        onGiftSent?.({
+          emoji: giftEmoji,
+          giftName: gift.name,
+          imageUrl: giftImageUrl,
+          senderName,
+          recipientName: receiverName || "مستخدم",
+          amount: giftCost,
+        });
         broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
