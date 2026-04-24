@@ -994,7 +994,7 @@ const AdminDashboard = () => {
               <div className="card-nova p-4 space-y-2 border border-primary/30">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-sm flex items-center gap-2 text-primary">
-                    <DollarSign className="w-4 h-4" /> تقرير الرواتب الشهري
+                    <DollarSign className="w-4 h-4" /> تقرير الرواتب (دورة 15 يوم)
                   </h3>
                   <button onClick={fetchPayrollReport} className="text-[10px] px-3 py-1 rounded-lg bg-primary/20 text-primary font-bold">
                     تحديث 🔄
@@ -1002,11 +1002,11 @@ const AdminDashboard = () => {
                 </div>
                 {payrollReport && (
                   <p className="text-[10px] text-muted-foreground">
-                    الفترة: {payrollReport.month_start} إلى {payrollReport.month_end}
+                    الفترة: {payrollReport.cycle_label || `${payrollReport.month_start} إلى ${payrollReport.month_end}`}
                   </p>
                 )}
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  💰 معدل التحويل: 100,000 ماس = $8 • شرط: 15 يوم نشط + 40 ساعة • خصم 20% عند عدم الالتزام • عمولة الوكيل: 15%
+                  💰 معدل التحويل: 100,000 ماس = $8 • شرط لكل دورة: 8 أيام نشطة + 20 ساعة • خصم 20% عند عدم الالتزام • عمولة الوكيل: 15%
                 </p>
               </div>
 
