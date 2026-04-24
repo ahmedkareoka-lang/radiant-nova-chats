@@ -66,6 +66,7 @@ const Profile = () => {
   const { followersCount, followingCount } = useFollows(myId);
   const { unreadCount } = useNotifications();
   const { couple: loveCouple } = useLoveCouple(myId);
+  const meIsAgent = useIsRechargeAgent(myId);
 
   useEffect(() => {
     const fetchProfile = async () => {
