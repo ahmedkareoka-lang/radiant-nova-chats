@@ -29,6 +29,8 @@ const AgenciesPage = () => {
   const [hostStats, setHostStats] = useState<any>(null);
   const [hostDashboard, setHostDashboard] = useState<any>(null);
   const [hasOwnedAgency, setHasOwnedAgency] = useState(false);
+  const [hostSalary, setHostSalary] = useState<any>(null);
+  const [agencyPayroll, setAgencyPayroll] = useState<any>(null);
 
   useEffect(() => {
     const load = async () => {
