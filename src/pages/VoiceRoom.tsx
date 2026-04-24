@@ -1316,7 +1316,7 @@ const VoiceRoom = () => {
             <Gift className="w-6 h-6 text-accent-foreground" />
           </button>
           <button
-            onClick={() => navigate("/inventory")}
+            onClick={() => setShowInventory(true)}
             className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
             aria-label="الحقيبة"
           >
