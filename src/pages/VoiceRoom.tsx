@@ -876,7 +876,7 @@ const VoiceRoom = () => {
               <button onClick={() => setSelectedProfile(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="flex flex-col items-center gap-2">
-              {renderAvatarWithFrame(selectedProfile.avatar_url, selectedProfile.equipped_frame, selectedProfile.is_boss, "lg", false, rechargeAgentSet.has(selectedProfile.id))}
+              {renderAvatarWithFrame(selectedProfile.avatar_url, selectedProfile.equipped_frame, selectedProfile.is_boss, "lg", false, rechargeAgentSet.has(selectedProfile.user_id))}
               <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{selectedProfile.display_name}</span>
               <VipBadge level={selectedProfile.vip_level} size="md" />
             </div>
