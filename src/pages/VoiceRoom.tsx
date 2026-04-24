@@ -1084,6 +1084,14 @@ const VoiceRoom = () => {
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />
       <LuckyWheelButton />
+      {roomId && (
+        <CouplePickerModal
+          open={showCouplePicker}
+          onClose={() => setShowCouplePicker(false)}
+          roomId={roomId}
+          members={members}
+        />
+      )}
     </div>
   );
 };
