@@ -875,6 +875,42 @@ export type Database = {
         }
         Relationships: []
       }
+      room_couples: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          love_score: number
+          room_id: string
+          slot1: number
+          slot2: number
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          love_score?: number
+          room_id: string
+          slot1: number
+          slot2: number
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          love_score?: number
+          room_id?: string
+          slot1?: number
+          slot2?: number
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: []
+      }
       room_members: {
         Row: {
           id: string
@@ -1247,6 +1283,7 @@ export type Database = {
         Args: { _coin_amount: number; _user_id: string; _xp_amount: number }
         Returns: undefined
       }
+      end_couple_seat: { Args: { _room_id: string }; Returns: undefined }
       exchange_diamonds_to_coins: {
         Args: {
           _coin_amount: number
@@ -1307,6 +1344,16 @@ export type Database = {
       remove_agency_host: {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
+      }
+      start_couple_seat: {
+        Args: {
+          _room_id: string
+          _slot1: number
+          _slot2: number
+          _user1_id: string
+          _user2_id: string
+        }
+        Returns: string
       }
       sweep_expired_perks: { Args: never; Returns: undefined }
       validate_mic_access: {

@@ -4,6 +4,8 @@ import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
 import PKChallenge from "@/components/PKChallenge";
+import CoupleSeats from "@/components/CoupleSeats";
+import CouplePickerModal from "@/components/CouplePickerModal";
 import GlobalWinTicker from "@/components/GlobalWinTicker";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -98,6 +100,7 @@ const VoiceRoom = () => {
   } | null>(null);
   const [entranceQueue, setEntranceQueue] = useState<{ id: string; displayName: string; avatarUrl: string | null; videoUrl: string | null; audioUrl: string | null; novaLevel?: number; vipLevel?: number }[]>([]);
   const [muteEntrance, setMuteEntrance] = useState(false);
+  const [showCouplePicker, setShowCouplePicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
 
@@ -830,6 +833,18 @@ const VoiceRoom = () => {
           </div>
         )}
 
+        {/* Couple Seats — heart-shaped pairing */}
+        {roomId && (
+          <div className="mb-4">
+            <CoupleSeats
+              roomId={roomId}
+              isHost={isHost}
+              members={members}
+              onOpenPicker={() => setShowCouplePicker(true)}
+            />
+          </div>
+        )}
+
         {/* Host Info Banner with Top 3 Senders strip */}
         {host && (
           <div className="mb-6">
@@ -1069,6 +1084,14 @@ const VoiceRoom = () => {
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />
       <LuckyWheelButton />
+      {roomId && (
+        <CouplePickerModal
+          open={showCouplePicker}
+          onClose={() => setShowCouplePicker(false)}
+          roomId={roomId}
+          members={members}
+        />
+      )}
     </div>
   );
 };
