@@ -1402,8 +1402,14 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       generate_user_id: { Args: never; Returns: string }
+      get_agency_payroll_report: { Args: { _ref?: string }; Returns: Json }
       get_agent_transfer_stats: { Args: never; Returns: Json }
+      get_boss_monthly_payroll: { Args: { _ref?: string }; Returns: Json }
       get_host_agency_dashboard: { Args: never; Returns: Json }
+      get_host_monthly_salary: {
+        Args: { _host_id?: string; _ref?: string }
+        Returns: Json
+      }
       get_love_level: { Args: { _points: number }; Returns: number }
       get_nova_p_tier: {
         Args: { gold_amount: number }
