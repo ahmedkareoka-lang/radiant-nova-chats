@@ -83,11 +83,15 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   useEffect(() => {
     const fetchGifts = async () => {
       const { data } = await supabase.from("gifts").select("*").order("price", { ascending: true });
-      const dbGifts = data?.map(g => ({
+      const dbGifts = (data as any[])?.map(g => ({
           name: g.name,
           price: Number(g.price),
           image_url: g.image_url,
-          emoji: g.image_url ? undefined : "🎁",
+          lottie_url: g.lottie_url,
+          video_url: g.video_url,
+          tier: g.tier,
+          duration_ms: g.duration_ms,
+          emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
         })) || [];
       const catalogGifts = storeCatalog.gifts.map((g) => ({
         name: g.name,
@@ -167,7 +171,15 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
-  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
+  const broadcastGift = async (
+    giftEmoji: string,
+    giftName: string,
+    senderName: string,
+    amount: number,
+    recipientName?: string,
+    imageUrl?: string | null,
+    extras?: { lottieUrl?: string | null; videoUrl?: string | null; durationMs?: number },
+  ) => {
     if (!roomId) {
       logAgora("warn", "Gift", "broadcastGift skipped: missing roomId", { giftName });
       return;
@@ -181,6 +193,9 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       emoji: giftEmoji,
       giftName,
       imageUrl: imageUrl || null,
+      lottieUrl: extras?.lottieUrl || null,
+      videoUrl: extras?.videoUrl || null,
+      durationMs: extras?.durationMs,
       senderName,
       recipientName: recipientName || receiverName || "",
       amount,
