@@ -102,6 +102,11 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
   const activeEntry = current;
   const mediaUrl = activeEntry?.videoUrl || null;
   const isImageMedia = !!mediaUrl && /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(mediaUrl);
+  const isVideoMedia = !!mediaUrl && !isImageMedia;
+  const debugMode =
+    typeof window !== "undefined" &&
+    (new URLSearchParams(window.location.search).get("debug") === "1" ||
+      localStorage.getItem("agora-debug") === "1");
 
   return (
     <AnimatePresence>
@@ -114,6 +119,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none bg-transparent"
         >
+          {/* Debug HUD: confirms entrance media duration matches actual playback */}
+          {debugMode && (
+            <div className="absolute top-4 right-4 z-[71] px-2 py-1 rounded-md bg-background/80 backdrop-blur border border-accent/40 text-[10px] font-mono text-accent pointer-events-none">
+              <div>id: {activeEntry.id.slice(-12)}</div>
+              <div>type: {isVideoMedia ? "video" : isImageMedia ? "image" : "name"}</div>
+              <div>
+                dur: {videoDurationMs !== null ? `${videoDurationMs}ms` : isVideoMedia ? "loading…" : `${FALLBACK_DURATION_MS}ms`}
+              </div>
+            </div>
+          )}
+
           {mediaUrl ? (
             isImageMedia ? (
               <motion.img
