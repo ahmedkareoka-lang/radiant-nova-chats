@@ -191,6 +191,16 @@ const AdminDashboard = () => {
       await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchNovaStats(), fetchRechargeAgents()]);
       setLoading(false);
     };
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "payroll" && isBoss && !payrollReport) {
+      fetchPayrollReport();
+    }
+  }, [activeTab, isBoss]);
+
+  const _ignored_load = () => {
     checkBoss();
   }, [navigate]);
 
