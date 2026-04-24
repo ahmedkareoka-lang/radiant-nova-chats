@@ -212,6 +212,69 @@ export type Database = {
         }
         Relationships: []
       }
+      bd_agencies: {
+        Row: {
+          activated_by: string
+          agency_id: string
+          bd_user_id: string
+          created_at: string
+          id: string
+          is_target_reached: boolean
+          total_agency_support: number
+          total_commission_earned: number
+        }
+        Insert: {
+          activated_by: string
+          agency_id: string
+          bd_user_id: string
+          created_at?: string
+          id?: string
+          is_target_reached?: boolean
+          total_agency_support?: number
+          total_commission_earned?: number
+        }
+        Update: {
+          activated_by?: string
+          agency_id?: string
+          bd_user_id?: string
+          created_at?: string
+          id?: string
+          is_target_reached?: boolean
+          total_agency_support?: number
+          total_commission_earned?: number
+        }
+        Relationships: []
+      }
+      bd_commissions: {
+        Row: {
+          agency_id: string
+          agency_support_amount: number
+          bd_user_id: string
+          commission_amount: number
+          created_at: string
+          id: string
+          period_label: string
+        }
+        Insert: {
+          agency_id: string
+          agency_support_amount: number
+          bd_user_id: string
+          commission_amount: number
+          created_at?: string
+          id?: string
+          period_label: string
+        }
+        Update: {
+          agency_id?: string
+          agency_support_amount?: number
+          bd_user_id?: string
+          commission_amount?: number
+          created_at?: string
+          id?: string
+          period_label?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -786,6 +849,7 @@ export type Database = {
           gender: string | null
           id: string
           is_agent: boolean
+          is_bd: boolean
           is_boss: boolean
           is_host: boolean
           level: number
@@ -822,6 +886,7 @@ export type Database = {
           gender?: string | null
           id: string
           is_agent?: boolean
+          is_bd?: boolean
           is_boss?: boolean
           is_host?: boolean
           level?: number
@@ -858,6 +923,7 @@ export type Database = {
           gender?: string | null
           id?: string
           is_agent?: boolean
+          is_bd?: boolean
           is_boss?: boolean
           is_host?: boolean
           level?: number
@@ -1384,6 +1450,7 @@ export type Database = {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
       }
+      activate_bd_account: { Args: { _user_id: string }; Returns: Json }
       activate_love_couple: { Args: { _partner_id: string }; Returns: Json }
       add_coins: {
         Args: { _amount: number; _user_id: string }
@@ -1416,12 +1483,17 @@ export type Database = {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
       }
+      assign_agency_to_bd: {
+        Args: { _agency_id: string; _bd_user_id: string }
+        Returns: Json
+      }
       claim_daily_reward: {
         Args: { _task_type: string; _user_id: string }
         Returns: undefined
       }
       claim_daily_streak: { Args: { _user_id: string }; Returns: Json }
       cleanup_stale_room_members: { Args: never; Returns: undefined }
+      deactivate_bd_account: { Args: { _user_id: string }; Returns: Json }
       deactivate_love_couple: { Args: never; Returns: undefined }
       deduct_coins: {
         Args: { _amount: number; _user_id: string }
@@ -1444,6 +1516,7 @@ export type Database = {
       generate_user_id: { Args: never; Returns: string }
       get_agency_payroll_report: { Args: { _ref?: string }; Returns: Json }
       get_agent_transfer_stats: { Args: never; Returns: Json }
+      get_bd_stats: { Args: { _bd_user_id: string }; Returns: Json }
       get_boss_monthly_payroll: { Args: { _ref?: string }; Returns: Json }
       get_host_agency_dashboard: { Args: never; Returns: Json }
       get_host_monthly_salary: {
