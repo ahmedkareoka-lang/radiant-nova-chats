@@ -318,11 +318,8 @@ export const useVoiceRoom = (roomId: string | null) => {
       const uid = currentUserIdRef.current;
       const rid = roomIdRef.current;
       if (uid && rid) {
-        await supabase
-          .from("room_members")
-          .update({ joined_at: new Date().toISOString() })
-          .eq("room_id", rid)
-          .eq("user_id", uid);
+        // 🚀 Use queued helper — coalesces with any visibility/focus beat in flight
+        await sendHeartbeat();
 
         // Daily task: increment room_minutes every 4 ticks (= 1 minute at 15s/tick)
         heartbeatTickCount += 1;
