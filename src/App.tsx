@@ -44,6 +44,7 @@ import NovaPassPage from "./pages/NovaPassPage";
 import LuckyBoxPage from "./pages/LuckyBoxPage";
 import StreakPage from "./pages/StreakPage";
 import InvitePage from "./pages/InvitePage";
+import LoversPage from "./pages/LoversPage";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const AnimatedRoutes = () => {
         <Route path="/lucky-box" element={<AuthGate><LuckyBoxPage /></AuthGate>} />
         <Route path="/streak" element={<AuthGate><StreakPage /></AuthGate>} />
         <Route path="/invite-friends" element={<AuthGate><InvitePage /></AuthGate>} />
+        <Route path="/lovers" element={<AuthGate><LoversPage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
