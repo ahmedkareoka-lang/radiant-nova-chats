@@ -86,6 +86,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [multiplier, setMultiplier] = useState(1);
   const [balance, setBalance] = useState(0);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("general");
   const { sendGift } = useGifts();
 
   useEffect(() => {
