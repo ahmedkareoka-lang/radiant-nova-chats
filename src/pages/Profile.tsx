@@ -288,6 +288,7 @@ const Profile = () => {
                     avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
                     equippedFrame={equippedFrameKey}
                     isRechargeAgent={meIsAgent}
+                    isBD={meIsBD}
                     size={120}
                   />
                 </div>
@@ -344,6 +345,7 @@ const Profile = () => {
               ) : null}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {meIsAgent && <RechargeAgentBadge size="md" />}
+              {meIsBD && <BDBadge size="md" />}
             </div>
 
             {/* Wealth & Charm visual tier badges */}
