@@ -10,6 +10,7 @@ import GlobalWinTicker from "@/components/GlobalWinTicker";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
+import InventorySheet from "@/components/InventorySheet";
 import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
 import BossEntrance from "@/components/BossEntrance";
