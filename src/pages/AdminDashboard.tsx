@@ -45,8 +45,10 @@ const AdminDashboard = () => {
   const [bulkJson, setBulkJson] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
   const giftFileRef = useRef<HTMLInputElement>(null);
+  const giftThumbRef = useRef<HTMLInputElement>(null);
   const storeFileRef = useRef<HTMLInputElement>(null);
   const bannerFileRef = useRef<HTMLInputElement>(null);
+  const [videoCheckResult, setVideoCheckResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   // Fetch functions
   const fetchGifts = async () => {
@@ -239,22 +241,74 @@ const AdminDashboard = () => {
     return urlData.publicUrl;
   };
 
-  // Gift management - now supports Lottie JSON & transparent video
+  // Validate video dimensions for fullscreen suitability
+  // Recommended: aspect ratio between 0.5 (portrait) and 2.0 (landscape), and min 480px on shorter side
+  const checkVideoFullscreenFit = (file: File): Promise<{ ok: boolean; msg: string; w: number; h: number; duration: number }> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.muted = true;
+      video.onloadedmetadata = () => {
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        const duration = video.duration;
+        URL.revokeObjectURL(url);
+        if (!w || !h) {
+          resolve({ ok: false, msg: "⚠️ تعذّر قراءة أبعاد الفيديو", w: 0, h: 0, duration: 0 });
+          return;
+        }
+        const ratio = w / h;
+        const minSide = Math.min(w, h);
+        if (minSide < 360) {
+          resolve({ ok: false, msg: `⚠️ دقة الفيديو منخفضة (${w}×${h}). الحد الأدنى الموصى به 360 بكسل لجودة ملء الشاشة.`, w, h, duration });
+        } else if (ratio < 0.4 || ratio > 2.5) {
+          resolve({ ok: false, msg: `⚠️ نسبة أبعاد الفيديو (${ratio.toFixed(2)}) غير متناسقة مع ملء الشاشة. استخدم نسبة بين 1:2 و 2:1.`, w, h, duration });
+        } else if (duration > 15) {
+          resolve({ ok: false, msg: `⚠️ مدة الفيديو طويلة (${duration.toFixed(1)} ث). يفضّل أقل من 15 ث.`, w, h, duration });
+        } else {
+          resolve({ ok: true, msg: `✅ الفيديو مناسب لملء الشاشة (${w}×${h} • ${duration.toFixed(1)}ث)`, w, h, duration });
+        }
+      };
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({ ok: false, msg: "⚠️ تعذّر تحميل الفيديو للفحص", w: 0, h: 0, duration: 0 });
+      };
+      video.src = url;
+    });
+  };
+
+  // Gift management - now supports Lottie JSON & transparent video + thumbnail
   const handleAddGift = async () => {
     if (!newGift.name || !newGift.price) {
       toast.error("املأ الاسم والسعر");
       return;
     }
     const file = giftFileRef.current?.files?.[0];
+    const thumbFile = giftThumbRef.current?.files?.[0];
     let imageUrl: string | null = null;
     let lottieUrl: string | null = null;
     let videoUrl: string | null = null;
+
+    // For video, run a final check before upload
+    if (file && giftMediaType === "video") {
+      const check = await checkVideoFullscreenFit(file);
+      if (!check.ok) {
+        const proceed = confirm(`${check.msg}\n\nهل تريد المتابعة بأي حال؟`);
+        if (!proceed) return;
+      }
+    }
 
     if (file) {
       const uploaded = await uploadFile(file, "gifts");
       if (giftMediaType === "lottie") lottieUrl = uploaded;
       else if (giftMediaType === "video") videoUrl = uploaded;
       else imageUrl = uploaded;
+    }
+
+    // Upload thumbnail (used as poster/fallback when media is video or lottie)
+    if (thumbFile && (giftMediaType === "video" || giftMediaType === "lottie")) {
+      imageUrl = await uploadFile(thumbFile, "gifts");
     }
 
     const { error } = await supabase.from("gifts").insert({
@@ -271,7 +325,9 @@ const AdminDashboard = () => {
     setNewGift({ name: "", price: "", tier: "normal", duration_ms: "3500" });
     setGiftPreviewUrl(null);
     setGiftMediaType("image");
+    setVideoCheckResult(null);
     if (giftFileRef.current) giftFileRef.current.value = "";
+    if (giftThumbRef.current) giftThumbRef.current.value = "";
     await fetchGifts();
   };
 
@@ -691,16 +747,55 @@ const AdminDashboard = () => {
                     type="file"
                     accept={giftMediaType === "lottie" ? "application/json,.json" : giftMediaType === "video" ? "video/*" : "image/*"}
                     className="text-xs flex-1"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const f = e.target.files?.[0];
-                      if (f && giftMediaType === "image") setGiftPreviewUrl(URL.createObjectURL(f));
-                      else setGiftPreviewUrl(null);
+                      setVideoCheckResult(null);
+                      if (!f) { setGiftPreviewUrl(null); return; }
+                      if (giftMediaType === "image") {
+                        setGiftPreviewUrl(URL.createObjectURL(f));
+                      } else if (giftMediaType === "video") {
+                        setGiftPreviewUrl(null);
+                        const check = await checkVideoFullscreenFit(f);
+                        setVideoCheckResult({ ok: check.ok, msg: check.msg });
+                        if (check.ok) toast.success(check.msg);
+                        else toast.error(check.msg, { duration: 6000 });
+                      } else {
+                        setGiftPreviewUrl(null);
+                      }
                     }}
                   />
                   <button onClick={handleAddGift} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
                     {uploading ? "جارٍ الرفع..." : "إضافة"}
                   </button>
                 </div>
+
+                {/* Video fit feedback */}
+                {videoCheckResult && (
+                  <div className={`text-[11px] p-2 rounded-lg border ${
+                    videoCheckResult.ok
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-destructive/10 border-destructive/30 text-destructive"
+                  }`}>
+                    {videoCheckResult.msg}
+                  </div>
+                )}
+
+                {/* Optional thumbnail/cover image for video & lottie */}
+                {(giftMediaType === "video" || giftMediaType === "lottie") && (
+                  <div className="space-y-1 p-2 rounded-xl bg-background/40 border border-border/30">
+                    <p className="text-[10px] font-bold text-foreground">🖼️ صورة الهدية (اختيارية)</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      تظهر في قائمة الهدايا وكصورة احتياطية إذا فشل تشغيل {giftMediaType === "video" ? "الفيديو" : "الـ Lottie"}.
+                    </p>
+                    <input
+                      ref={giftThumbRef}
+                      type="file"
+                      accept="image/*"
+                      className="text-xs w-full"
+                    />
+                  </div>
+                )}
+
                 {giftPreviewUrl && (
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-background/40 border border-border/30">
                     <img src={giftPreviewUrl} alt="معاينة الهدية" className="w-16 h-16 rounded-lg object-contain bg-secondary/40" />
