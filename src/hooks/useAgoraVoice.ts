@@ -6,6 +6,7 @@ import AgoraRTC, {
   ClientRole,
 } from "agora-rtc-sdk-ng";
 import { logAgora } from "@/lib/agoraDebugLog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseAgoraVoiceOptions {
   roomId: string | null;
@@ -14,15 +15,41 @@ interface UseAgoraVoiceOptions {
   isMuted: boolean;
 }
 
-const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID as string | undefined;
 const SPEAKING_THRESHOLD = 5;
+const TOKEN_TTL_SECONDS = 3600; // 1 hour
+const TOKEN_RENEW_BEFORE_MS = 5 * 60 * 1000; // renew 5 min before expiry
 
 // Set Agora log level (0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR, 4=NONE)
 try {
   AgoraRTC.setLogLevel(2);
 } catch { /* noop */ }
 
-logAgora("info", "env", `AGORA_APP_ID ${AGORA_APP_ID ? "loaded (" + AGORA_APP_ID.slice(0, 4) + "...)" : "MISSING"}`);
+logAgora("info", "env", "Token-based auth enabled (App ID + Certificate)");
+
+// Fetch a fresh RTC token from our edge function
+async function fetchAgoraToken(
+  channelName: string,
+  role: "host" | "audience",
+): Promise<{ token: string; appId: string; uid: string } | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("agora-token", {
+      body: { channelName, role, expireSeconds: TOKEN_TTL_SECONDS },
+    });
+    if (error) {
+      logAgora("error", "token", `Edge function error: ${error.message}`);
+      return null;
+    }
+    if (!data?.token || !data?.appId) {
+      logAgora("error", "token", "Invalid token response");
+      return null;
+    }
+    logAgora("success", "token", `Got ${role} token for "${channelName}"`);
+    return { token: data.token, appId: data.appId, uid: String(data.uid) };
+  } catch (e: any) {
+    logAgora("error", "token", `Fetch failed: ${e?.message || e}`);
+    return null;
+  }
+}
 
 /**
  * Drop-in replacement for useWebRTC using Agora RTC SDK (App ID Only mode).
@@ -40,6 +67,9 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   const currentRoleRef = useRef<ClientRole>("audience");
   const remoteUsersRef = useRef<Map<string, IAgoraRTCRemoteUser>>(new Map());
   const currentUserIdRef = useRef<string | null>(currentUserId);
+  const channelRef = useRef<string | null>(null);
+  const renewTimerRef = useRef<number | null>(null);
+  const agoraUidRef = useRef<string | null>(null);
 
   useEffect(() => {
     currentUserIdRef.current = currentUserId;
@@ -155,6 +185,40 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         setAudioBlocked(true);
       });
 
+      // @ts-ignore - token will expire soon
+      client.on("token-privilege-will-expire", async () => {
+        logAgora("warn", "token", "Token expiring soon — renewing…");
+        const channel = channelRef.current;
+        if (!channel) return;
+        const role = currentRoleRef.current === "host" ? "host" : "audience";
+        const fresh = await fetchAgoraToken(channel, role);
+        if (fresh?.token) {
+          try {
+            await client.renewToken(fresh.token);
+            logAgora("success", "token", "Token renewed");
+          } catch (e: any) {
+            logAgora("error", "token", `Renew failed: ${e?.message || e}`);
+          }
+        }
+      });
+
+      // @ts-ignore - token already expired
+      client.on("token-privilege-did-expire", async () => {
+        logAgora("error", "token", "Token expired — re-fetching…");
+        const channel = channelRef.current;
+        if (!channel) return;
+        const role = currentRoleRef.current === "host" ? "host" : "audience";
+        const fresh = await fetchAgoraToken(channel, role);
+        if (fresh?.token) {
+          try {
+            await client.renewToken(fresh.token);
+            logAgora("success", "token", "Token re-fetched after expiry");
+          } catch (e: any) {
+            logAgora("error", "token", `Re-fetch failed: ${e?.message || e}`);
+          }
+        }
+      });
+
       // Voice activity detection
       client.enableAudioVolumeIndicator();
       client.on("volume-indicator", (volumes) => {
@@ -203,6 +267,19 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
 
       const client = getClient();
       if (currentRoleRef.current !== "host") {
+        // Need a fresh HOST token to publish
+        const channel = channelRef.current;
+        if (channel) {
+          const fresh = await fetchAgoraToken(channel, "host");
+          if (fresh?.token) {
+            try {
+              await client.renewToken(fresh.token);
+              logAgora("info", "token", "Renewed with host privileges");
+            } catch (e: any) {
+              logAgora("warn", "token", `Renew before host failed: ${e?.message || e}`);
+            }
+          }
+        }
         await client.setClientRole("host");
         currentRoleRef.current = "host";
         logAgora("info", "role", "Switched to host");
@@ -244,20 +321,26 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   // Join / leave channel based on roomId
   useEffect(() => {
     if (!roomId || !currentUserId) return;
-    if (!AGORA_APP_ID) {
-      logAgora("error", "config", "VITE_AGORA_APP_ID is missing — voice disabled. Add it to Vercel env vars and redeploy.");
-      return;
-    }
 
     let cancelled = false;
+    channelRef.current = roomId;
 
     (async () => {
       const client = getClient();
       try {
+        // Fetch token (audience role by default — published when user takes mic)
+        const tok = await fetchAgoraToken(roomId, "audience");
+        if (cancelled) return;
+        if (!tok) {
+          logAgora("error", "join", "No token returned — voice disabled");
+          return;
+        }
+
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
-        logAgora("info", "join", `Joining channel "${roomId}" as ${currentUserId}…`);
-        await client.join(AGORA_APP_ID, roomId, null, currentUserId);
+        agoraUidRef.current = tok.uid;
+        logAgora("info", "join", `Joining channel "${roomId}" as ${tok.uid}…`);
+        await client.join(tok.appId, roomId, tok.token, tok.uid);
         if (cancelled) {
           await client.leave();
           return;
@@ -267,8 +350,8 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       } catch (e: any) {
         const code = e?.code || e?.name || "Unknown";
         logAgora("error", "join", `${code}: ${e?.message || e}`);
-        if (String(code).includes("CAN_NOT_GET_GATEWAY_SERVER") || String(code).includes("INVALID_VENDOR_KEY")) {
-          logAgora("error", "join", "Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
+        if (String(code).includes("INVALID_VENDOR_KEY") || String(code).includes("DYNAMIC_KEY_TIMEOUT") || String(code).includes("INVALID_TOKEN")) {
+          logAgora("error", "join", "Token rejected. Check AGORA_APP_ID and AGORA_APP_CERTIFICATE in Lovable Cloud secrets.");
         }
       }
     })();
@@ -292,6 +375,8 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
           console.error("[Agora] leave failed:", e);
         } finally {
           joinedRef.current = false;
+          channelRef.current = null;
+          agoraUidRef.current = null;
           remoteUsersRef.current.clear();
           setConnectedPeers(new Set());
           setSpeakingPeers(new Set());
