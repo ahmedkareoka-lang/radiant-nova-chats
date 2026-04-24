@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { playNovaEntranceSound } from "@/lib/novaEntranceSounds";
 
 interface EntranceEntry {
@@ -21,23 +20,38 @@ interface CustomEntranceEffectProps {
   muteEntrance: boolean;
 }
 
+// Default duration when no video to time against (used for images & name-only entrances)
+const FALLBACK_DURATION_MS = 3500;
+// Hard safety cap so a broken/long video can't block the queue forever
+const MAX_DURATION_MS = 12000;
+
 const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEntrance }: CustomEntranceEffectProps) => {
   const [current, setCurrent] = useState<EntranceEntry | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // SELF-ONLY entrance: only show the user's OWN entrance to themselves.
-  // No broadcasting, no remote display — each user sees only their own join effect.
+  const finish = useCallback((entryId: string) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setCurrent(null);
+    onComplete(entryId);
+  }, [onComplete]);
 
   const playNext = useCallback((entry: EntranceEntry) => {
     setCurrent(entry);
 
-    // Play tier-based NOVA P entrance sound (P4 fire, P5 rainbow, P6 dragon)
+    // Tier-based NOVA P entrance sound
     if (!muteEntrance && entry.novaLevel && entry.novaLevel >= 4) {
       playNovaEntranceSound(entry.novaLevel);
     }
 
-    // Play custom audio
+    // Custom audio
     if (entry.audioUrl && !muteEntrance) {
       try {
         const audio = new Audio(entry.audioUrl);
@@ -47,16 +61,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       } catch {}
     }
 
+    const isVideo =
+      !!entry.videoUrl &&
+      !/\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(entry.videoUrl);
+
+    // For videos, the <video onEnded> handler will call finish().
+    // We still set a hard safety cap so a broken video can't freeze the queue.
+    const duration = isVideo ? MAX_DURATION_MS : FALLBACK_DURATION_MS;
+
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setCurrent(null);
-      onComplete(entry.id);
-    }, 4000);
-  }, [muteEntrance, onComplete]);
+    timerRef.current = setTimeout(() => finish(entry.id), duration);
+  }, [muteEntrance, finish]);
 
   useEffect(() => {
     if (!current && queue.length > 0) {
@@ -80,13 +95,12 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       {activeEntry && (
         <motion.div
           key={activeEntry.id}
-          initial={{ opacity: 0, scale: 0.85, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -10 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none bg-transparent"
         >
-          {/* Only the entrance media itself — no backdrop, no halos, no extra effects */}
           {mediaUrl ? (
             isImageMedia ? (
               <motion.img
@@ -100,28 +114,51 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
               />
             ) : (
               <motion.video
+                key={activeEntry.id}
                 src={mediaUrl}
                 autoPlay
                 muted={muteEntrance}
                 playsInline
-                initial={{ scale: 0.85, opacity: 0 }}
+                onEnded={() => finish(activeEntry.id)}
+                onError={() => finish(activeEntry.id)}
+                initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="max-w-[80vw] max-h-[80vh] object-contain drop-shadow-2xl"
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="max-w-[85vw] max-h-[85vh] object-contain drop-shadow-2xl"
               />
             )
           ) : (
-            // Fallback when user has no custom entrance media: just an animated avatar pop, no halos
-            <motion.img
-              src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
-              alt=""
-              initial={{ scale: 0, rotate: -90, opacity: 0 }}
-              animate={{ scale: [0, 1.15, 1], rotate: [-90, 0], opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.9, ease: "easeOut" }}
-              className="w-32 h-32 rounded-full object-cover drop-shadow-2xl"
-            />
+            // No custom media → animated name banner that LOOKS like an entrance
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-primary/30 via-accent/20 to-primary/30 border border-accent/40 backdrop-blur-md shadow-[0_0_40px_hsl(var(--accent)/0.4)]"
+            >
+              <motion.img
+                src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
+                alt=""
+                initial={{ rotate: -90, scale: 0 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ duration: 0.5, ease: "backOut" }}
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-accent shadow-lg"
+              />
+              <div className="flex flex-col">
+                <span className="text-base font-black text-foreground glow-neon-text">
+                  {activeEntry.displayName}
+                </span>
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-[10px] text-accent font-semibold tracking-wider"
+                >
+                  ✨ دخل الغرفة
+                </motion.span>
+              </div>
+            </motion.div>
           )}
         </motion.div>
       )}

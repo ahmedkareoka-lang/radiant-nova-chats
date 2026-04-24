@@ -130,6 +130,8 @@ const VoiceRoom = () => {
   const [showCouplePicker, setShowCouplePicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
+  const didInitialMemberSync = useRef(false);
+  const didAnnounceJoin = useRef(false);
 
   // AI moderator state
   const [translationsEnabled, setTranslationsEnabled] = useState(false);
@@ -195,41 +197,70 @@ const VoiceRoom = () => {
   }, [members, currentUserId]);
 
   // Entrance banner + entrance effect queue
-  // Self-only: only show the user's OWN entrance to themselves on join.
+  // Shows for ALL newly-joined members (not just self) so everyone in the room sees joins.
+  // The first sync after mount only marks existing members as "seen" — we don't replay
+  // entrances for people who were already in the room when we joined.
   useEffect(() => {
-    for (const m of members) {
-      if (!seenMemberIds.current.has(m.user_id)) {
-        seenMemberIds.current.add(m.user_id);
-        // Only show entrance UI for the current user joining (self)
-        if (m.user_id !== currentUserId) continue;
-        if (m.profile) {
-          const wealthLvl = m.profile.wealth_level || 1;
-          const charismaLvl = m.profile.charisma_level || 1;
-          const effect = getEntranceEffect(wealthLvl, charismaLvl);
-          setEntranceBanner({
-            name: m.profile.display_name,
-            wealthLevel: wealthLvl,
-            charismaLevel: charismaLvl,
-            effect,
-          });
-          setTimeout(() => setEntranceBanner(null), 4000);
+    if (members.length === 0) return;
 
-          const p = m.profile as any;
-          const novaLvl = p.nova_p_level || 0;
-          const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
-          setEntranceQueue(prev => [...prev, {
-            id: m.user_id + "-" + Date.now(),
-            displayName: m.profile!.display_name,
-            avatarUrl: m.profile!.avatar_url,
-            videoUrl: entranceMedia,
-            audioUrl: p.entrance_audio_url || null,
-            novaLevel: novaLvl,
-            vipLevel: m.profile!.vip_level || 0,
-          }]);
-        }
+    // Initial sync: just mark everyone already present as seen (no entrance for them).
+    if (!didInitialMemberSync.current) {
+      didInitialMemberSync.current = true;
+      for (const m of members) seenMemberIds.current.add(m.user_id);
+      return;
+    }
+
+    for (const m of members) {
+      if (seenMemberIds.current.has(m.user_id)) continue;
+      seenMemberIds.current.add(m.user_id);
+      if (!m.profile) continue;
+
+      const wealthLvl = m.profile.wealth_level || 1;
+      const charismaLvl = m.profile.charisma_level || 1;
+      const effect = getEntranceEffect(wealthLvl, charismaLvl);
+
+      // Top entrance banner — only for SELF (so it doesn't spam others)
+      if (m.user_id === currentUserId) {
+        setEntranceBanner({
+          name: m.profile.display_name,
+          wealthLevel: wealthLvl,
+          charismaLevel: charismaLvl,
+          effect,
+        });
+        setTimeout(() => setEntranceBanner(null), 4000);
       }
+
+      // Fullscreen entrance effect — for EVERY new member, visible to all in the room
+      const p = m.profile as any;
+      const novaLvl = p.nova_p_level || 0;
+      const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
+      setEntranceQueue(prev => [...prev, {
+        id: m.user_id + "-" + Date.now(),
+        displayName: m.profile!.display_name,
+        avatarUrl: m.profile!.avatar_url,
+        videoUrl: entranceMedia,
+        audioUrl: p.entrance_audio_url || null,
+        novaLevel: novaLvl,
+        vipLevel: m.profile!.vip_level || 0,
+      }]);
     }
   }, [members, currentUserId]);
+
+  // Announce SELF joining via a system chat message — broadcast to every room member via realtime.
+  // This way every user sees "🚪 Name joined" in the chat regardless of entrance media.
+  useEffect(() => {
+    if (didAnnounceJoin.current) return;
+    if (!roomId || !currentUserId) return;
+    const me = members.find(m => m.user_id === currentUserId);
+    if (!me?.profile) return;
+
+    didAnnounceJoin.current = true;
+    supabase.from("messages").insert({
+      sender_id: currentUserId,
+      room_id: roomId,
+      content: `🚪 ${me.profile.display_name} انضم إلى الغرفة`,
+    });
+  }, [members, currentUserId, roomId]);
 
   const handleEntranceComplete = useCallback((id: string) => {
     setEntranceQueue(prev => prev.filter(e => e.id !== id));
