@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playNovaEntranceSound } from "@/lib/novaEntranceSounds";
+import { logAgora } from "@/lib/agoraDebugLog";
 
 interface EntranceEntry {
   id: string;
@@ -27,10 +28,12 @@ const MAX_DURATION_MS = 12000;
 
 const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEntrance }: CustomEntranceEffectProps) => {
   const [current, setCurrent] = useState<EntranceEntry | null>(null);
+  const [videoDurationMs, setVideoDurationMs] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startedAtRef = useRef<number>(0);
 
-  const finish = useCallback((entryId: string) => {
+  const finish = useCallback((entryId: string, reason: "video-ended" | "fallback-timeout" | "safety-cap" | "video-error") => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -39,12 +42,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       audioRef.current.pause();
       audioRef.current = null;
     }
+    const elapsed = Date.now() - startedAtRef.current;
+    logAgora("info", "entrance", `finish [${reason}] id=${entryId} elapsed=${elapsed}ms`);
+    setVideoDurationMs(null);
     setCurrent(null);
     onComplete(entryId);
   }, [onComplete]);
 
   const playNext = useCallback((entry: EntranceEntry) => {
     setCurrent(entry);
+    setVideoDurationMs(null);
+    startedAtRef.current = Date.now();
 
     // Tier-based NOVA P entrance sound
     if (!muteEntrance && entry.novaLevel && entry.novaLevel >= 4) {
@@ -65,12 +73,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       !!entry.videoUrl &&
       !/\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(entry.videoUrl);
 
+    logAgora("info", "entrance", `start id=${entry.id} user="${entry.displayName}" type=${isVideo ? "video" : entry.videoUrl ? "image" : "name"} url=${entry.videoUrl || "(none)"}`);
+
     // For videos, the <video onEnded> handler will call finish().
     // We still set a hard safety cap so a broken video can't freeze the queue.
     const duration = isVideo ? MAX_DURATION_MS : FALLBACK_DURATION_MS;
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => finish(entry.id), duration);
+    timerRef.current = setTimeout(
+      () => finish(entry.id, isVideo ? "safety-cap" : "fallback-timeout"),
+      duration
+    );
   }, [muteEntrance, finish]);
 
   useEffect(() => {
