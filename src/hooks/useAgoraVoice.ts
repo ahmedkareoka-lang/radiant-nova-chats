@@ -273,7 +273,6 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
 
       const client = getClient();
       if (currentRoleRef.current !== "host") {
-        // Need a fresh HOST token to publish
         const channel = channelRef.current;
         if (channel) {
           const fresh = await fetchAgoraToken(channel, "host");
@@ -290,8 +289,9 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         currentRoleRef.current = "host";
         logAgora("info", "role", "Switched to host");
       }
-      if (joinedRef.current) {
+      if (joinedRef.current && !localPublishedRef.current) {
         await client.publish([track]);
+        localPublishedRef.current = true;
         logAgora("success", "publish", "Local mic published to channel");
       } else {
         logAgora("warn", "publish", "Mic ready but channel not joined yet");
@@ -307,13 +307,14 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
     const track = localTrackRef.current;
     if (track) {
       try {
-        if (client && joinedRef.current) {
+        if (client && joinedRef.current && localPublishedRef.current) {
           await client.unpublish([track]);
         }
       } catch { /* ignore */ }
       track.stop();
       track.close();
       localTrackRef.current = null;
+      localPublishedRef.current = false;
     }
     if (client && joinedRef.current && currentRoleRef.current !== "audience") {
       try {
@@ -334,7 +335,6 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
     (async () => {
       const client = getClient();
       try {
-        // Fetch token (audience role by default — published when user takes mic)
         const tok = await fetchAgoraToken(roomId, "audience");
         if (cancelled) return;
         if (!tok) {
@@ -342,17 +342,21 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
           return;
         }
 
+        channelRef.current = tok.channel;
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
-        agoraUidRef.current = tok.uid;
-        logAgora("info", "join", `Joining channel "${roomId}" as ${tok.uid}…`);
-        await client.join(tok.appId, roomId, tok.token, tok.uid);
+        agoraUidRef.current = String(tok.uid);
+        logAgora("info", "join", `Joining channel "${tok.channel}" as uid=${tok.uid}…`);
+        await client.join(tok.appId, tok.channel, tok.token, tok.uid);
         if (cancelled) {
           await client.leave();
           return;
         }
         joinedRef.current = true;
-        logAgora("success", "join", `Joined channel "${roomId}"`);
+        logAgora("success", "join", `Joined channel "${tok.channel}"`);
+        if (isOnMicRef.current) {
+          await startLocalStream();
+        }
       } catch (e: any) {
         const code = e?.code || e?.name || "Unknown";
         logAgora("error", "join", `${code}: ${e?.message || e}`);
@@ -381,6 +385,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
           console.error("[Agora] leave failed:", e);
         } finally {
           joinedRef.current = false;
+          localPublishedRef.current = false;
           channelRef.current = null;
           agoraUidRef.current = null;
           remoteUsersRef.current.clear();
@@ -391,7 +396,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         }
       })();
     };
-  }, [roomId, currentUserId, getClient]);
+  }, [roomId, currentUserId, getClient, startLocalStream]);
 
   // Mute / unmute local track
   useEffect(() => {
