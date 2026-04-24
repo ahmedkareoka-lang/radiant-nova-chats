@@ -103,64 +103,7 @@ export default function RoomUserProfileCard({
     };
   }, [profile.user_id]);
 
-  // Premium showcase badges – only VIP, Recharge Agent, BD, NOVA P (per request)
-  const showcaseBadges = useMemo(() => {
-    const list: {
-      key: string;
-      label: string;
-      sublabel?: string;
-      icon: string;
-      gradient: string;
-      shadow: string;
-      ring: string;
-    }[] = [];
 
-    if ((profile.vip_level || 0) > 0) {
-      list.push({
-        key: "vip",
-        label: "VIP",
-        sublabel: `LV ${profile.vip_level}`,
-        icon: "👑",
-        gradient: "from-yellow-300 via-amber-400 to-orange-500",
-        shadow: "shadow-[0_8px_28px_-6px_hsl(38_95%_55%/0.7)]",
-        ring: "ring-yellow-300/60",
-      });
-    }
-    if (isRechargeAgent) {
-      list.push({
-        key: "agent",
-        label: "وكيل",
-        sublabel: "شحن",
-        icon: "🏛️",
-        gradient: "from-amber-400 via-orange-500 to-red-500",
-        shadow: "shadow-[0_8px_28px_-6px_hsl(20_90%_55%/0.7)]",
-        ring: "ring-orange-300/60",
-      });
-    }
-    if (isBD) {
-      list.push({
-        key: "bd",
-        label: "BD",
-        sublabel: "مدير",
-        icon: "💼",
-        gradient: "from-fuchsia-500 via-purple-600 to-indigo-700",
-        shadow: "shadow-[0_8px_28px_-6px_hsl(280_85%_55%/0.7)]",
-        ring: "ring-fuchsia-300/60",
-      });
-    }
-    if ((profile.nova_p_level || 0) > 0) {
-      list.push({
-        key: "novap",
-        label: "NOVA P",
-        sublabel: `P${profile.nova_p_level}`,
-        icon: "✨",
-        gradient: "from-cyan-300 via-sky-400 to-blue-600",
-        shadow: "shadow-[0_8px_28px_-6px_hsl(210_90%_55%/0.7)]",
-        ring: "ring-cyan-300/60",
-      });
-    }
-    return list;
-  }, [isRechargeAgent, isBD, profile.vip_level, profile.nova_p_level]);
 
   const copyId = async () => {
     if (!registeredId) return;
