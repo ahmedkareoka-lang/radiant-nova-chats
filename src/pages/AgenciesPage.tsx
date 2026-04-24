@@ -757,12 +757,17 @@ const AgenciesPage = () => {
             </div>
           )}
 
-          {/* Apply for agency — only if not in any agency AND doesn't already own one */}
-          {!myAgency && !hasOwnedAgency && (
+          {/* Apply for agency — only if not in any agency, doesn't already own one, AND eligible */}
+          {!myAgency && !hasOwnedAgency && agencyEligible && (
             <button onClick={() => setShowCreate(!showCreate)}
               className="w-full py-3 rounded-2xl border border-dashed border-primary/50 text-primary font-bold text-sm flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> تقديم طلب وكالة جديدة
             </button>
+          )}
+          {!myAgency && !hasOwnedAgency && !agencyEligible && (
+            <div className="card-nova p-3 text-center text-xs text-muted-foreground border border-border">
+              🔒 لإنشاء وكالة، يجب الحصول على موافقة الإدارة (BOSS) أولاً
+            </div>
           )}
           {!myAgency && hasOwnedAgency && (
             <div className="card-nova p-3 text-center text-xs text-muted-foreground border border-accent/30">
