@@ -169,8 +169,9 @@ const InventoryPage = () => {
               {filtered.map((item) => {
                 const isFrame = item.item_type === "frame";
                 const isBadge = item.item_type === "badge";
+                const special = item.item_data?.special as "bd" | "agent" | undefined;
                 const frameKey = item.item_data?.frame_url || item.item_data?.image_url || null;
-                const frameImg = item.item_data?.frame_url
+                const frameImg = !special && item.item_data?.frame_url
                   ? FRAME_MAP[item.item_data.frame_url] || item.item_data?.image_url || item.item_data?.frame_url
                   : item.item_data?.image_url || null;
                 const isFrameEquipped = isFrame && equippedFrame === frameKey;
@@ -179,16 +180,28 @@ const InventoryPage = () => {
 
                 return (
                   <div key={item.id} className={`card-nova p-3 text-center ${highlighted ? "border border-primary/50" : ""}`}>
-                     {frameImg ? (
+                    {special === "bd" ? (
+                      <div className="w-16 h-16 mx-auto">
+                        <BDFrame size={64}>
+                          <img src={profilePreview.avatarUrl || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
+                        </BDFrame>
+                      </div>
+                    ) : special === "agent" ? (
+                      <div className="w-16 h-16 mx-auto">
+                        <RechargeAgentFrame size={64}>
+                          <img src={profilePreview.avatarUrl || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
+                        </RechargeAgentFrame>
+                      </div>
+                    ) : frameImg ? (
                       <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
-                     ) : isBadge && item.item_data?.image_url ? (
-                       <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
+                    ) : isBadge && item.item_data?.image_url ? (
+                      <img src={item.item_data.image_url} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
                     ) : (
                       <span className="text-3xl">{item.item_type === "gift" ? "🎁" : item.item_type === "vip" ? "👑" : isBadge ? "🏅" : "✨"}</span>
                     )}
                     <p className="font-bold text-[11px] mt-1 line-clamp-1">{item.item_name}</p>
                     <p className="text-[9px] text-muted-foreground">
-                      {new Date(item.acquired_at).toLocaleDateString("ar")}
+                      {special ? "إطار خاص" : new Date(item.acquired_at).toLocaleDateString("ar")}
                     </p>
                     {isFrame && frameKey && (
                       <button
