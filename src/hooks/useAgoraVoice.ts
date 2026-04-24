@@ -267,6 +267,19 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
 
       const client = getClient();
       if (currentRoleRef.current !== "host") {
+        // Need a fresh HOST token to publish
+        const channel = channelRef.current;
+        if (channel) {
+          const fresh = await fetchAgoraToken(channel, "host");
+          if (fresh?.token) {
+            try {
+              await client.renewToken(fresh.token);
+              logAgora("info", "token", "Renewed with host privileges");
+            } catch (e: any) {
+              logAgora("warn", "token", `Renew before host failed: ${e?.message || e}`);
+            }
+          }
+        }
         await client.setClientRole("host");
         currentRoleRef.current = "host";
         logAgora("info", "role", "Switched to host");
