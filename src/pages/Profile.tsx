@@ -13,6 +13,7 @@ import FramedAvatar from "@/components/FramedAvatar";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
@@ -554,6 +555,15 @@ const Profile = () => {
               </div>
             </div>
           </div>
+
+          {/* === AGENT RECHARGE PANEL — visible only for active recharge agents === */}
+          {meIsAgent && (
+            <AgentRechargePanel
+              myCoins={profile?.coins || 0}
+              onBalanceChange={(newBalance) => setProfile((p: any) => p ? { ...p, coins: newBalance } : p)}
+            />
+          )}
+
 
           {/* Hint to redirect to home for actions */}
           <button
