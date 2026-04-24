@@ -33,6 +33,7 @@ import FramedAvatar from "@/components/FramedAvatar";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
   AlertDialogAction,
