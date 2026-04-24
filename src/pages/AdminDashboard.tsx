@@ -65,7 +65,30 @@ const AdminDashboard = () => {
   };
   const fetchRechargeAgents = async () => {
     const { data } = await supabase.from("recharge_agents" as any).select("*").order("created_at", { ascending: false });
-    setRechargeAgents((data as any) || []);
+    const agents = (data as any[]) || [];
+
+    // For each agent: fetch current coin balance + transfer stats
+    const enriched = await Promise.all(
+      agents.map(async (a: any) => {
+        const [{ data: prof }, { data: logs }] = await Promise.all([
+          supabase.from("profiles").select("coins, display_name, user_id, avatar_url").eq("id", a.user_id).maybeSingle(),
+          supabase.from("agent_transfer_log" as any).select("recipient_id, amount").eq("agent_id", a.user_id),
+        ]);
+        const logArr = (logs as any[]) || [];
+        const totalSent = logArr.reduce((s, l) => s + Number(l.amount || 0), 0);
+        const uniqueRecipients = new Set(logArr.map((l) => l.recipient_id)).size;
+        return {
+          ...a,
+          current_coins: Number(prof?.coins || 0),
+          profile_user_id: prof?.user_id || null,
+          profile_display_name: prof?.display_name || a.agent_name,
+          transfers_count: logArr.length,
+          total_sent: totalSent,
+          unique_recipients: uniqueRecipients,
+        };
+      })
+    );
+    setRechargeAgents(enriched);
   };
   const addRechargeAgent = async () => {
     if (!newAgentId.trim() || !newAgentName.trim() || !newAgentWhatsapp.trim()) {
