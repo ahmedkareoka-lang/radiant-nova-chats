@@ -16,6 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import FramedAvatar from "./FramedAvatar";
 import TierBadge from "./TierBadge";
+import DualBadge from "./DualBadge";
+import RechargeAgentBadge from "./RechargeAgentBadge";
+import BDBadge from "./BDBadge";
 
 export interface RoomUserProfileData {
   user_id: string;
