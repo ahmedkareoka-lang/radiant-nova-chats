@@ -874,8 +874,8 @@ const VoiceRoom = () => {
       {/* Global Win Ticker */}
       <GlobalWinTicker />
 
-      {/* Big Gift Announcement Banner */}
-      {roomId && <GiftAnnouncementBanner roomId={roomId} />}
+      {/* Big Gift Announcement Banner — hidden while fullscreen gift is playing to avoid duplicate */}
+      {roomId && !fullscreenGift && <GiftAnnouncementBanner roomId={roomId} />}
 
       {/* Treasure Box (auto-trigger at 300K daily room support) */}
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
