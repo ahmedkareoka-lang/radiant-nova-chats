@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Gift, Clock, Gamepad2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Gift, Clock, Gamepad2, CheckCircle2, UserPlus, FileText, Heart, MessageCircle } from "lucide-react";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,10 +11,37 @@ interface TaskRow {
   gifts_sent: number;
   room_minutes: number;
   games_played: number;
+  follows_made: number;
+  posts_made: number;
+  likes_given: number;
+  messages_sent: number;
   gift_reward_claimed: boolean;
   room_reward_claimed: boolean;
   games_reward_claimed: boolean;
+  follow_reward_claimed: boolean;
+  post_reward_claimed: boolean;
+  like_reward_claimed: boolean;
+  message_reward_claimed: boolean;
 }
+
+const EMPTY_TASK: TaskRow = {
+  gifts_sent: 0,
+  room_minutes: 0,
+  games_played: 0,
+  follows_made: 0,
+  posts_made: 0,
+  likes_given: 0,
+  messages_sent: 0,
+  gift_reward_claimed: false,
+  room_reward_claimed: false,
+  games_reward_claimed: false,
+  follow_reward_claimed: false,
+  post_reward_claimed: false,
+  like_reward_claimed: false,
+  message_reward_claimed: false,
+};
+
+type TaskType = "gift" | "room" | "games" | "follow" | "post" | "like" | "message";
 
 const DailyTasksPage = () => {
   const navigate = useNavigate();
@@ -31,29 +58,40 @@ const DailyTasksPage = () => {
       .eq("user_id", uid)
       .eq("task_date", today)
       .maybeSingle();
-    setTask(
-      data || {
-        gifts_sent: 0,
-        room_minutes: 0,
-        games_played: 0,
-        gift_reward_claimed: false,
-        room_reward_claimed: false,
-        games_reward_claimed: false,
-      }
-    );
+    setTask((data as any) || EMPTY_TASK);
     setLoading(false);
   };
 
   useEffect(() => {
+    let unsub: (() => void) | null = null;
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/login"); return; }
       setUserId(user.id);
       await fetchTasks(user.id);
+
+      // Realtime: update progress as the user completes tasks elsewhere
+      const today = new Date().toISOString().split("T")[0];
+      const channel = supabase
+        .channel(`daily-tasks-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "daily_tasks", filter: `user_id=eq.${user.id}` },
+          (payload: any) => {
+            const row = payload.new;
+            if (row && row.task_date === today) {
+              setTask({ ...EMPTY_TASK, ...row });
+            }
+          }
+        )
+        .subscribe();
+
+      unsub = () => { supabase.removeChannel(channel); };
     })();
+    return () => { unsub?.(); };
   }, [navigate]);
 
-  const claim = async (type: "gift" | "room" | "games") => {
+  const claim = async (type: TaskType) => {
     if (!userId) return;
     setClaiming(type);
     const { error } = await supabase.rpc("claim_daily_reward", {
@@ -61,7 +99,7 @@ const DailyTasksPage = () => {
       _task_type: type,
     });
     if (error) {
-      toast.error(error.message.includes("Not completed") || error.message.includes("not completed") ? "أكمل المهمة أولاً" : "حدث خطأ");
+      toast.error(error.message.toLowerCase().includes("not completed") ? "أكمل المهمة أولاً" : "حدث خطأ");
     } else {
       toast.success("تمت المكافأة! 🎁");
       await fetchTasks(userId);
@@ -72,7 +110,7 @@ const DailyTasksPage = () => {
   const tasks = task
     ? [
         {
-          id: "gift",
+          id: "gift" as TaskType,
           icon: Gift,
           title: "إرسال هدية",
           desc: "أرسل هدية واحدة لأي مستخدم",
@@ -84,7 +122,7 @@ const DailyTasksPage = () => {
           border: "border-pink-500/40",
         },
         {
-          id: "room",
+          id: "room" as TaskType,
           icon: Clock,
           title: "البقاء في غرفة 30 دقيقة",
           desc: "ابقَ نشطاً في غرفة صوتية",
@@ -96,7 +134,7 @@ const DailyTasksPage = () => {
           border: "border-blue-500/40",
         },
         {
-          id: "games",
+          id: "games" as TaskType,
           icon: Gamepad2,
           title: "العب 3 جولات",
           desc: "العب 3 جولات في أي لعبة",
@@ -107,8 +145,58 @@ const DailyTasksPage = () => {
           color: "from-purple-500/30 to-violet-700/30",
           border: "border-purple-500/40",
         },
+        {
+          id: "follow" as TaskType,
+          icon: UserPlus,
+          title: "تابع مستخدماً",
+          desc: "تابع شخصاً جديداً اليوم",
+          progress: task.follows_made,
+          required: 1,
+          reward: 300,
+          claimed: task.follow_reward_claimed,
+          color: "from-emerald-500/30 to-teal-700/30",
+          border: "border-emerald-500/40",
+        },
+        {
+          id: "post" as TaskType,
+          icon: FileText,
+          title: "انشر منشوراً",
+          desc: "شارك منشوراً واحداً في الموجز",
+          progress: task.posts_made,
+          required: 1,
+          reward: 400,
+          claimed: task.post_reward_claimed,
+          color: "from-amber-500/30 to-orange-700/30",
+          border: "border-amber-500/40",
+        },
+        {
+          id: "like" as TaskType,
+          icon: Heart,
+          title: "أعجِب بـ 5 منشورات",
+          desc: "ادعم منشورات الآخرين",
+          progress: task.likes_given,
+          required: 5,
+          reward: 250,
+          claimed: task.like_reward_claimed,
+          color: "from-red-500/30 to-pink-700/30",
+          border: "border-red-500/40",
+        },
+        {
+          id: "message" as TaskType,
+          icon: MessageCircle,
+          title: "أرسل 5 رسائل خاصة",
+          desc: "تواصل مع أصدقائك في الدردشة الخاصة",
+          progress: task.messages_sent,
+          required: 5,
+          reward: 350,
+          claimed: task.message_reward_claimed,
+          color: "from-cyan-500/30 to-sky-700/30",
+          border: "border-cyan-500/40",
+        },
       ]
     : [];
+
+  const totalRewards = tasks.reduce((s, t) => s + t.reward, 0);
 
   return (
     <PageTransition>
@@ -126,7 +214,9 @@ const DailyTasksPage = () => {
         <main className="px-4 py-5 max-w-lg mx-auto space-y-4">
           <div className="rounded-3xl p-5 text-center" style={{ background: "linear-gradient(135deg, hsl(45 90% 40% / 0.2), hsl(35 80% 30% / 0.2))", border: "1px solid hsl(45 80% 50% / 0.3)" }}>
             <p className="text-sm text-muted-foreground mb-1">مكافآت يومية متجددة</p>
-            <p className="text-3xl font-black glow-gold-text flex items-center justify-center gap-2">2,300 <CurrencyIcon type="gold" size="lg" /></p>
+            <p className="text-3xl font-black glow-gold-text flex items-center justify-center gap-2">
+              {totalRewards.toLocaleString()} <CurrencyIcon type="gold" size="lg" />
+            </p>
             <p className="text-xs text-muted-foreground mt-1">إجمالي المكافآت اليوم</p>
           </div>
 
@@ -138,7 +228,7 @@ const DailyTasksPage = () => {
               const completed = t.progress >= t.required;
               const percent = Math.min(100, (t.progress / t.required) * 100);
               return (
-                <div key={t.id} className={`rounded-2xl p-4 border ${t.border} bg-gradient-to-br ${t.color}`}>
+                <div key={t.id} className={`rounded-2xl p-4 border ${t.border} bg-gradient-to-br ${t.color} transition-all`}>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-2xl bg-background/40 flex items-center justify-center">
                       <Icon className="w-6 h-6 text-accent" />
@@ -156,12 +246,12 @@ const DailyTasksPage = () => {
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-background/40 overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-accent to-amber-400 transition-all" style={{ width: `${percent}%` }} />
+                      <div className="h-full rounded-full bg-gradient-to-r from-accent to-amber-400 transition-all duration-500" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
                   <button
                     disabled={!completed || t.claimed || claiming === t.id}
-                    onClick={() => claim(t.id as any)}
+                    onClick={() => claim(t.id)}
                     className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${
                       t.claimed
                         ? "bg-secondary/40 text-muted-foreground"
