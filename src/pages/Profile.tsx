@@ -536,6 +536,28 @@ const Profile = () => {
             </button>
           </div>
 
+          {/* وكالتي / الوكالات shortcut — visible to hosts AND agents */}
+          {(profile?.is_host || profile?.is_agent) && (
+            <button
+              onClick={() => navigate("/agencies")}
+              className="mt-3 w-full rounded-2xl border border-primary/30 p-3 flex items-center gap-3 hover:bg-secondary/40 transition-colors text-right"
+              style={{ background: "linear-gradient(135deg, hsl(280 50% 18% / 0.55), hsl(220 60% 18% / 0.45))" }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "linear-gradient(135deg, hsl(220 90% 55%), hsl(280 80% 55%))" }}>
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-sm text-foreground">
+                  {profile?.is_agent ? "وكالتي 🏅" : "وكالتي 🎤"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  عرض المضيفين، التارجت، وتقدم الـ15 يوم
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
 
           {/* === DUAL CURRENCY (display only, no navigation) === */}
           <div className="flex gap-3 mt-4">
