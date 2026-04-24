@@ -10,6 +10,7 @@ import GlobalWinTicker from "@/components/GlobalWinTicker";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GiftAnimation from "@/components/GiftAnimation";
+import InventorySheet from "@/components/InventorySheet";
 import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
 import BossEntrance from "@/components/BossEntrance";
@@ -105,6 +106,7 @@ const VoiceRoom = () => {
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
   const [giftReceiverName, setGiftReceiverName] = useState("");
   const [chatInput, setChatInput] = useState("");
@@ -1315,7 +1317,7 @@ const VoiceRoom = () => {
             <Gift className="w-6 h-6 text-accent-foreground" />
           </button>
           <button
-            onClick={() => navigate("/inventory")}
+            onClick={() => setShowInventory(true)}
             className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
             aria-label="الحقيبة"
           >
@@ -1342,6 +1344,7 @@ const VoiceRoom = () => {
         broadcastGift={broadcastGiftToRoom}
         roomId={roomId || undefined}
       />
+      <InventorySheet open={showInventory} onClose={() => setShowInventory(false)} />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />

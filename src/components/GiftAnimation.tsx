@@ -33,7 +33,18 @@ interface GiftItem {
   video_url?: string | null;
   tier?: string;
   duration_ms?: number;
+  category?: string;
+  created_at?: string;
 }
+
+const GIFT_TABS: { id: string; label: string; locked?: boolean }[] = [
+  { id: "general", label: "عام" },
+  { id: "latest", label: "أحدث" },
+  { id: "gallery", label: "هدايا المعرض" },
+  { id: "lucky", label: "محظوظ" },
+  { id: "lover", label: "حبيبي" },
+  { id: "locked", label: "🔒", locked: true },
+];
 
 interface GiftBroadcastPayload {
   emoji: string;
@@ -75,6 +86,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [multiplier, setMultiplier] = useState(1);
   const [balance, setBalance] = useState(0);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("general");
   const { sendGift } = useGifts();
 
   useEffect(() => {
@@ -88,6 +100,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           video_url: g.video_url,
           tier: g.tier,
           duration_ms: g.duration_ms,
+          category: g.category || "general",
+          created_at: g.created_at,
           emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
         })) || [];
       // Use ONLY gifts from database (BOSS-managed). No fallback or static catalog.
@@ -291,24 +305,82 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           </div>
         )}
 
-        {/* Gift grid */}
+        {/* Category tabs (BOSS-controlled categories) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-thin -mx-1 px-1">
+          {GIFT_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const count =
+              tab.id === "latest"
+                ? gifts.filter((g) => {
+                    if (!g.created_at) return false;
+                    return Date.now() - new Date(g.created_at).getTime() < 14 * 24 * 60 * 60 * 1000;
+                  }).length
+                : gifts.filter((g) => (g.category || "general") === tab.id).length;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 ${
+                  isActive
+                    ? "bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white shadow-[0_2px_10px_-2px_hsl(280_85%_55%/0.6)]"
+                    : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span>{tab.label}</span>
+                {count > 0 && !tab.locked && (
+                  <span className={`text-[9px] px-1.5 py-px rounded-full ${isActive ? "bg-white/25" : "bg-foreground/10"}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Gift grid (filtered by active tab; we keep original `i` index so selectedGift stays valid) */}
         <div className="grid grid-cols-4 gap-3 mb-3 max-h-48 overflow-auto">
-          {gifts.map((gift, i) => (
-            <button key={i} onClick={() => setSelectedGift(i)}
-              className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-200 ${
-                selectedGift === i ? "bg-primary/20 border border-primary glow-neon scale-105" : "bg-secondary hover:bg-secondary/80"
-              }`}>
-              {gift.image_url ? (
-                <img src={gift.image_url} alt={gift.name} className="w-8 h-8 object-contain" loading="lazy" decoding="async" />
-              ) : (
-                <span className="text-2xl">{gift.emoji}</span>
-              )}
-              <span className="text-[9px] text-muted-foreground truncate max-w-full">{gift.name}</span>
-              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                <CurrencyIcon type="gold" size="xs" />{gift.price}
-              </span>
-            </button>
-          ))}
+          {gifts
+            .map((gift, i) => ({ gift, i }))
+            .filter(({ gift }) => {
+              if (activeTab === "latest") {
+                if (!gift.created_at) return false;
+                return Date.now() - new Date(gift.created_at).getTime() < 14 * 24 * 60 * 60 * 1000;
+              }
+              return (gift.category || "general") === activeTab;
+            })
+            .map(({ gift, i }) => (
+              <button key={i} onClick={() => setSelectedGift(i)}
+                className={`relative flex flex-col items-center gap-1 p-3 rounded-2xl transition-all duration-200 ${
+                  selectedGift === i ? "bg-primary/20 border border-primary glow-neon scale-105" : "bg-secondary hover:bg-secondary/80"
+                }`}>
+                {/* "New" badge for gifts added in the last 7 days */}
+                {gift.created_at && Date.now() - new Date(gift.created_at).getTime() < 7 * 24 * 60 * 60 * 1000 && (
+                  <span className="absolute top-1 left-1 text-[8px] font-black bg-orange-500 text-white px-1 rounded">New</span>
+                )}
+                {gift.image_url ? (
+                  <img src={gift.image_url} alt={gift.name} className="w-8 h-8 object-contain" loading="lazy" decoding="async" />
+                ) : (
+                  <span className="text-2xl">{gift.emoji}</span>
+                )}
+                <span className="text-[9px] text-muted-foreground truncate max-w-full">{gift.name}</span>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <CurrencyIcon type="gold" size="xs" />{gift.price}
+                </span>
+              </button>
+            ))}
+          {gifts
+            .map((gift, i) => ({ gift, i }))
+            .filter(({ gift }) => {
+              if (activeTab === "latest") {
+                if (!gift.created_at) return false;
+                return Date.now() - new Date(gift.created_at).getTime() < 14 * 24 * 60 * 60 * 1000;
+              }
+              return (gift.category || "general") === activeTab;
+            }).length === 0 && (
+            <div className="col-span-4 text-center py-6 text-[11px] text-muted-foreground">
+              لا توجد هدايا في هذه الخانة بعد
+            </div>
+          )}
         </div>
 
         {/* Multiplier with combo effects */}

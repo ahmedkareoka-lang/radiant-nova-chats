@@ -491,6 +491,7 @@ export type Database = {
       gifts: {
         Row: {
           animation_url: string | null
+          category: string
           created_at: string | null
           duration_ms: number
           id: string
@@ -505,6 +506,7 @@ export type Database = {
         }
         Insert: {
           animation_url?: string | null
+          category?: string
           created_at?: string | null
           duration_ms?: number
           id?: string
@@ -519,6 +521,7 @@ export type Database = {
         }
         Update: {
           animation_url?: string | null
+          category?: string
           created_at?: string | null
           duration_ms?: number
           id?: string
