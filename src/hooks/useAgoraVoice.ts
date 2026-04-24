@@ -321,20 +321,26 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   // Join / leave channel based on roomId
   useEffect(() => {
     if (!roomId || !currentUserId) return;
-    if (!AGORA_APP_ID) {
-      logAgora("error", "config", "VITE_AGORA_APP_ID is missing — voice disabled. Add it to Vercel env vars and redeploy.");
-      return;
-    }
 
     let cancelled = false;
+    channelRef.current = roomId;
 
     (async () => {
       const client = getClient();
       try {
+        // Fetch token (audience role by default — published when user takes mic)
+        const tok = await fetchAgoraToken(roomId, "audience");
+        if (cancelled) return;
+        if (!tok) {
+          logAgora("error", "join", "No token returned — voice disabled");
+          return;
+        }
+
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
-        logAgora("info", "join", `Joining channel "${roomId}" as ${currentUserId}…`);
-        await client.join(AGORA_APP_ID, roomId, null, currentUserId);
+        agoraUidRef.current = tok.uid;
+        logAgora("info", "join", `Joining channel "${roomId}" as ${tok.uid}…`);
+        await client.join(tok.appId, roomId, tok.token, tok.uid);
         if (cancelled) {
           await client.leave();
           return;
@@ -344,8 +350,8 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       } catch (e: any) {
         const code = e?.code || e?.name || "Unknown";
         logAgora("error", "join", `${code}: ${e?.message || e}`);
-        if (String(code).includes("CAN_NOT_GET_GATEWAY_SERVER") || String(code).includes("INVALID_VENDOR_KEY")) {
-          logAgora("error", "join", "Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
+        if (String(code).includes("INVALID_VENDOR_KEY") || String(code).includes("DYNAMIC_KEY_TIMEOUT") || String(code).includes("INVALID_TOKEN")) {
+          logAgora("error", "join", "Token rejected. Check AGORA_APP_ID and AGORA_APP_CERTIFICATE in Lovable Cloud secrets.");
         }
       }
     })();
