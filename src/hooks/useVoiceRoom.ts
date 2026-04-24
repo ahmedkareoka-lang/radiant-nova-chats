@@ -50,6 +50,17 @@ export const useVoiceRoom = (roomId: string | null) => {
   const roomIdRef = useRef<string | null>(roomId);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 🚀 Performance: micro-cache + in-flight dedup + abort for fetchMembers
+  const membersCacheRef = useRef<{ ts: number; data: RoomMember[] } | null>(null);
+  const membersInflightRef = useRef<Promise<void> | null>(null);
+  const membersAbortRef = useRef<AbortController | null>(null);
+  const MEMBERS_CACHE_TTL = 1500; // 1.5s — shorter than sweep, longer than burst clicks
+
+  // 🚀 Heartbeat queue: coalesce rapid triggers (visibility, focus, manual)
+  const heartbeatInflightRef = useRef<Promise<void> | null>(null);
+  const heartbeatLastAtRef = useRef<number>(0);
+  const HEARTBEAT_MIN_GAP = 2000; // ignore extra calls within 2s of last beat
+
   // Keep refs in sync
   useEffect(() => {
     currentUserIdRef.current = currentUserId;
