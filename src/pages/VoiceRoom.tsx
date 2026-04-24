@@ -415,6 +415,19 @@ const VoiceRoom = () => {
           timestamp: Date.now(),
           durationMs: durationMs,
         });
+        // Update "last gift delivered" panel — receiving the broadcast is the
+        // strongest possible proof of delivery to all room members.
+        setLastGift({
+          id,
+          emoji: emoji || "🎁",
+          giftName: giftName || "هدية",
+          imageUrl: imageUrl || null,
+          senderName: senderName || "مستخدم",
+          recipientName: recipientName || "مستخدم",
+          amount: amount || 0,
+          timestamp: Date.now(),
+          delivered: true,
+        });
         const toastId = `toast-${id}`;
         setGiftToasts(prev => [...prev, {
           id: toastId,
@@ -441,17 +454,42 @@ const VoiceRoom = () => {
   }, [roomId]);
 
   // Broadcast a gift to ALL users currently in this room (including self).
+  // Provides IMMEDIATE feedback to the sender (no need to wait for the
+  // listener round-trip) by:
+  //   1) Optimistically setting `lastGift` with delivered=false
+  //   2) Showing a toast based on the channel ACK from Realtime
+  //   3) Listener (above) will then flip delivered=true on echo
   const broadcastGiftToRoom = useCallback(async (payload: any) => {
     const ch = giftChannelRef.current;
+    // Optimistic "sending" state for the sender
+    const optimisticId = `opt-${Date.now()}-${Math.random()}`;
+    setLastGift({
+      id: optimisticId,
+      emoji: payload?.emoji || "🎁",
+      giftName: payload?.giftName || "هدية",
+      imageUrl: payload?.imageUrl || null,
+      senderName: payload?.senderName || "مستخدم",
+      recipientName: payload?.recipientName || "مستخدم",
+      amount: payload?.amount || 0,
+      timestamp: Date.now(),
+      delivered: false,
+    });
     if (!ch) {
       logAgora("error", "Gift", "broadcast skipped — no active room channel", { roomId });
+      toast.error("تعذّر بث الهدية — أعد المحاولة");
       return;
     }
     try {
       const ack = await ch.send({ type: "broadcast", event: "gift-sent", payload });
       logAgora(ack === "ok" ? "success" : "error", "Gift", `broadcast ack: ${ack}`, { giftName: payload?.giftName });
+      if (ack === "ok") {
+        toast.success("✅ تم بث الهدية لكل أعضاء الغرفة");
+      } else {
+        toast.warning("⚠️ لم يتأكد البث — قد لا يصل الجميع");
+      }
     } catch (err: any) {
       logAgora("error", "Gift", `broadcast threw: ${err?.message || err}`);
+      toast.error("فشل بث الهدية");
     }
   }, [roomId]);
 
