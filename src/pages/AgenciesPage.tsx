@@ -135,6 +135,30 @@ const AgenciesPage = () => {
 
   useEffect(() => { loadAll(); }, []);
 
+  // Realtime: refresh sent/pending invites when statuses change
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`agency-invites-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "agency_invites" },
+        async (payload: any) => {
+          const row = payload.new || payload.old;
+          if (!row) return;
+          // Only react if I am involved (as agent or target)
+          if (row.agent_id === userId || row.target_user_id === userId) {
+            const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
+            if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
+            const { data: pend } = await supabase.rpc("get_my_pending_invites" as any);
+            if (pend) setPendingInvites(pend);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
   const applyForAgency = async () => {
     if (!agencyName.trim()) return;
     if (hasOwnedAgency) { toast.error("لديك وكالة بالفعل — لا يمكن إنشاء وكالة أخرى"); return; }
