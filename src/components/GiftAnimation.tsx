@@ -244,9 +244,11 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const giftCost = gift.price * multiplier;
     const giftEmoji = gift.emoji || "🎁";
     const giftImageUrl = gift.image_url || null;
+    const giftLottieUrl = gift.lottie_url || null;
+    const giftVideoUrl = gift.video_url || null;
+    const giftDurationMs = gift.duration_ms || undefined;
 
     // Use cached sender name immediately (avoid blocking on profile fetch).
-    // Fetch in background to refine future sends.
     const senderName = cachedSenderNameRef.current || "مستخدم";
 
     // Optimistic balance check first (non-blocking UX)
@@ -259,42 +261,46 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
 
     if (isMultiMode && selectedRecipients.size > 0) {
       const totalAmount = giftCost * selectedRecipients.size;
-      // 1) Fire fullscreen effect locally + broadcast to room IMMEDIATELY (no awaits)
       onGiftSent?.({
         emoji: giftEmoji,
         giftName: gift.name,
         imageUrl: giftImageUrl,
+        lottieUrl: giftLottieUrl,
+        videoUrl: giftVideoUrl,
         senderName,
         recipientName: `${selectedRecipients.size} أشخاص`,
         amount: totalAmount,
+        durationMs: giftDurationMs,
       });
-      broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl);
+      broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl, {
+        lottieUrl: giftLottieUrl, videoUrl: giftVideoUrl, durationMs: giftDurationMs,
+      });
       onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
-      // 2) Close modal instantly so sender sees the room + animation
       setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1);
       onClose();
-      // 3) Persist to DB in background
       (async () => {
         for (const rid of selectedRecipients) {
           await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
         }
       })();
     } else if (receiverId) {
-      // 1) Fire fullscreen effect locally + broadcast to room IMMEDIATELY
       onGiftSent?.({
         emoji: giftEmoji,
         giftName: gift.name,
         imageUrl: giftImageUrl,
+        lottieUrl: giftLottieUrl,
+        videoUrl: giftVideoUrl,
         senderName,
         recipientName: receiverName || "مستخدم",
         amount: giftCost,
+        durationMs: giftDurationMs,
       });
-      broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
+      broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl, {
+        lottieUrl: giftLottieUrl, videoUrl: giftVideoUrl, durationMs: giftDurationMs,
+      });
       onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
-      // 2) Close modal instantly
       setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1);
       onClose();
-      // 3) Persist to DB in background
       sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
     }
   };
