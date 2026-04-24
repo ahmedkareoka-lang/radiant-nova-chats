@@ -1,14 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Briefcase, TrendingUp, Target, DollarSign, Users, Search, UserPlus } from "lucide-react";
+import { ArrowRight, Briefcase, TrendingUp, Target, DollarSign, Users, Search, UserPlus, History, Bell, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import BDBadge from "@/components/BDBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type FoundUser = { id: string; user_id: string; display_name: string; avatar_url: string | null };
+
+type ActivityRow = {
+  id: string;
+  action_type: string;
+  status: string;
+  message: string | null;
+  target_public_id: string | null;
+  target_display_name: string | null;
+  agency_id: string | null;
+  created_at: string;
+};
 
 type BDStats = {
   agency_count: number;
@@ -43,6 +64,14 @@ const BDDashboard = () => {
   const [searching, setSearching] = useState(false);
   const [found, setFound] = useState<FoundUser | null>(null);
   const [activating, setActivating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Tabs + activity log
+  const [tab, setTab] = useState<"overview" | "activity">("overview");
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [filterDate, setFilterDate] = useState<string>(""); // yyyy-mm-dd
+  const [filterType, setFilterType] = useState<string>("all");
 
   const loadAll = async (uid: string) => {
     const { data: statsData } = await supabase.rpc("get_bd_stats" as any, { _bd_user_id: uid });
@@ -92,6 +121,45 @@ const BDDashboard = () => {
     })();
   }, [navigate]);
 
+  const loadActivity = async (uid: string) => {
+    setActivityLoading(true);
+    try {
+      let q = supabase
+        .from("bd_activity_log" as any)
+        .select("id, action_type, status, message, target_public_id, target_display_name, agency_id, created_at")
+        .eq("bd_user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (filterDate) {
+        const start = new Date(filterDate + "T00:00:00").toISOString();
+        const end = new Date(filterDate + "T23:59:59.999").toISOString();
+        q = q.gte("created_at", start).lte("created_at", end);
+      }
+      if (filterType !== "all") {
+        q = q.eq("action_type", filterType);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      setActivity((data as any[] as ActivityRow[]) || []);
+    } catch (e: any) {
+      toast.error(e.message || "خطأ في تحميل السجل");
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  // Reload activity whenever tab opens or filters change
+  useEffect(() => {
+    if (tab !== "activity") return;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await loadActivity(user.id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, filterDate, filterType]);
+
   const handleSearch = async () => {
     const id = searchId.trim();
     if (!id) { toast.error("أدخل ID المستخدم"); return; }
@@ -104,6 +172,17 @@ const BDDashboard = () => {
         .eq("user_id", id)
         .maybeSingle();
       if (error) throw error;
+
+      // Log the search attempt regardless of outcome
+      await supabase.rpc("log_bd_activity" as any, {
+        _action_type: "search",
+        _target_user_id: data?.id || null,
+        _target_public_id: id,
+        _target_display_name: data?.display_name || null,
+        _status: data ? "success" : "error",
+        _message: data ? "User found" : "User not found",
+      });
+
       if (!data) { toast.error("لم يتم العثور على المستخدم"); return; }
       setFound(data as FoundUser);
     } catch (e: any) {
@@ -115,13 +194,20 @@ const BDDashboard = () => {
 
   const handleActivate = async () => {
     if (!found) return;
+    setConfirmOpen(false);
     setActivating(true);
     try {
-      const { error } = await supabase.rpc("bd_activate_agency_for_user" as any, {
+      const { data, error } = await supabase.rpc("bd_activate_agency_for_user" as any, {
         _target_public_id: found.user_id,
       });
       if (error) throw error;
-      toast.success(`تم تفعيل وكالة ${found.display_name} ✅`);
+
+      const result = (data as any) || {};
+      if (result.duplicate) {
+        toast.warning(result.message || "هذه الوكالة مفعّلة لديك بالفعل");
+      } else {
+        toast.success(`تم تفعيل وكالة ${found.display_name} ✅`);
+      }
       setFound(null);
       setSearchId("");
       const { data: { user } } = await supabase.auth.getUser();
@@ -132,6 +218,7 @@ const BDDashboard = () => {
       setActivating(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -179,6 +266,27 @@ const BDDashboard = () => {
       </header>
 
       <main className="p-4 space-y-4 max-w-2xl mx-auto">
+        {/* Tabs */}
+        <div className="flex gap-2 p-1 rounded-2xl bg-muted/50 border border-border">
+          <button
+            onClick={() => setTab("overview")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+              tab === "overview" ? "bg-background shadow text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <Briefcase size={14} /> النظرة العامة
+          </button>
+          <button
+            onClick={() => setTab("activity")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+              tab === "activity" ? "bg-background shadow text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <History size={14} /> سجل النشاط
+          </button>
+        </div>
+
+        {tab === "overview" && (<>
         {/* Hero stats */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -259,7 +367,7 @@ const BDDashboard = () => {
                 <div className="text-[10px] text-muted-foreground">ID: {found.user_id}</div>
               </div>
               <button
-                onClick={handleActivate}
+                onClick={() => setConfirmOpen(true)}
                 disabled={activating}
                 className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-600 to-amber-500 text-white text-xs font-bold shadow-[0_0_14px_hsl(25_100%_55%/0.6)] disabled:opacity-50"
               >
@@ -322,7 +430,144 @@ const BDDashboard = () => {
             <li>• يمكنك تفعيل وكالة لأي مستخدم مباشرة من خلال البحث أعلاه.</li>
           </ul>
         </Card>
+        </>)}
+
+        {tab === "activity" && (
+          <div className="space-y-3">
+            {/* Filters */}
+            <Card className="p-3 flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <History size={14} /> فلترة:
+              </div>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg border border-border bg-background"
+              />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="text-xs px-2 py-1 rounded-lg border border-border bg-background"
+              >
+                <option value="all">كل الأنواع</option>
+                <option value="search">بحث</option>
+                <option value="activate_agency">تفعيل وكالة</option>
+                <option value="duplicate_attempt">محاولة مكررة</option>
+                <option value="notification_sent">إشعار مُرسل</option>
+              </select>
+              {(filterDate || filterType !== "all") && (
+                <button
+                  onClick={() => { setFilterDate(""); setFilterType("all"); }}
+                  className="text-[11px] text-orange-500 font-bold ms-auto"
+                >
+                  إعادة تعيين
+                </button>
+              )}
+            </Card>
+
+            {activityLoading ? (
+              <div className="py-8 flex justify-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : activity.length === 0 ? (
+              <Card className="p-6 text-center text-muted-foreground text-sm">
+                لا توجد أنشطة مطابقة.
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {activity.map((row) => {
+                  const isErr = row.status === "error";
+                  const isDup = row.status === "duplicate";
+                  const Icon =
+                    row.action_type === "search" ? Search :
+                    row.action_type === "notification_sent" ? Bell :
+                    row.action_type === "duplicate_attempt" ? AlertTriangle :
+                    isErr ? AlertTriangle : CheckCircle2;
+                  const color =
+                    isErr ? "text-destructive" :
+                    isDup ? "text-amber-500" :
+                    row.action_type === "search" ? "text-blue-500" :
+                    row.action_type === "notification_sent" ? "text-purple-500" :
+                    "text-emerald-500";
+                  const labelMap: Record<string, string> = {
+                    search: "بحث",
+                    activate_agency: "تفعيل وكالة",
+                    duplicate_attempt: "محاولة مكررة",
+                    notification_sent: "إشعار مُرسل",
+                    error: "خطأ",
+                  };
+                  return (
+                    <Card key={row.id} className="p-3">
+                      <div className="flex items-start gap-2">
+                        <Icon size={16} className={`mt-0.5 ${color}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="font-bold text-xs">{labelMap[row.action_type] || row.action_type}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {new Date(row.created_at).toLocaleString("ar")}
+                            </div>
+                          </div>
+                          {row.target_display_name && (
+                            <div className="text-[11px] mt-0.5">
+                              {row.target_display_name}
+                              {row.target_public_id && (
+                                <span className="text-muted-foreground"> · ID: {row.target_public_id}</span>
+                              )}
+                            </div>
+                          )}
+                          {row.message && (
+                            <div className={`text-[10px] mt-0.5 ${color}`}>{row.message}</div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
+      {/* Confirmation dialog before activation */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد تفعيل الوكالة</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-start">
+                <div>هل أنت متأكد من تفعيل وكالة المستخدم التالي تحت إشرافك؟</div>
+                {found && (
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-muted">
+                    <img
+                      src={found.avatar_url || "https://i.pravatar.cc/100"}
+                      alt=""
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm truncate">{found.display_name}</div>
+                      <div className="text-[10px] text-muted-foreground">ID: {found.user_id}</div>
+                    </div>
+                  </div>
+                )}
+                <div className="text-[11px] text-muted-foreground">
+                  لا يمكنك تفعيل نفس الوكالة مرتين. ستحصل على عمولة 10% من دعم الوكالة.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleActivate}
+              className="bg-gradient-to-r from-orange-600 to-amber-500 text-white"
+            >
+              تأكيد التفعيل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
