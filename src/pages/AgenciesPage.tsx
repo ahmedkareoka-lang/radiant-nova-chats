@@ -72,14 +72,22 @@ const AgenciesPage = () => {
           }
         }
 
-        // Host stats
+        // Host stats + cycle dashboard (today/cycle 15-day)
         if (membership.badge === "host") {
           const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
           const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
           const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
           setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
+
+          const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
+          if (dash) setHostDashboard(dash);
         }
       }
+
+      // Track if this user already owns an agency (any status) — for the "one agency per agent" rule
+      const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
+      setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
+
       setLoading(false);
     };
     load();
