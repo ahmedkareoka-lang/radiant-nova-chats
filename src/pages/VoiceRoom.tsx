@@ -619,7 +619,11 @@ const VoiceRoom = () => {
     return member || null;
   });
 
-  const gridCols = micCount <= 8 ? "grid-cols-4" : "grid-cols-5";
+  // Adaptive grid: fewer mics → bigger avatars; more mics → tighter columns
+  const gridCols = micCount <= 6 ? "grid-cols-3" : micCount <= 9 ? "grid-cols-4" : "grid-cols-5";
+  // Per-mic avatar size scales inversely with mic count for clarity
+  const micAvatarPx = micCount <= 6 ? 96 : micCount <= 9 ? 78 : micCount <= 12 ? 66 : 58;
+  const micGapClass = micCount <= 6 ? "gap-6" : micCount <= 9 ? "gap-5" : "gap-4";
 
   // Helper: speaking animation
   const SpeakingWaves = () => (
