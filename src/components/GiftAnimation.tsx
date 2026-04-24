@@ -33,7 +33,18 @@ interface GiftItem {
   video_url?: string | null;
   tier?: string;
   duration_ms?: number;
+  category?: string;
+  created_at?: string;
 }
+
+const GIFT_TABS: { id: string; label: string; locked?: boolean }[] = [
+  { id: "general", label: "عام" },
+  { id: "latest", label: "أحدث" },
+  { id: "gallery", label: "هدايا المعرض" },
+  { id: "lucky", label: "محظوظ" },
+  { id: "lover", label: "حبيبي" },
+  { id: "locked", label: "🔒", locked: true },
+];
 
 interface GiftBroadcastPayload {
   emoji: string;
