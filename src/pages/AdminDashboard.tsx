@@ -65,7 +65,30 @@ const AdminDashboard = () => {
   };
   const fetchRechargeAgents = async () => {
     const { data } = await supabase.from("recharge_agents" as any).select("*").order("created_at", { ascending: false });
-    setRechargeAgents((data as any) || []);
+    const agents = (data as any[]) || [];
+
+    // For each agent: fetch current coin balance + transfer stats
+    const enriched = await Promise.all(
+      agents.map(async (a: any) => {
+        const [{ data: prof }, { data: logs }] = await Promise.all([
+          supabase.from("profiles").select("coins, display_name, user_id, avatar_url").eq("id", a.user_id).maybeSingle(),
+          supabase.from("agent_transfer_log" as any).select("recipient_id, amount").eq("agent_id", a.user_id),
+        ]);
+        const logArr = (logs as any[]) || [];
+        const totalSent = logArr.reduce((s, l) => s + Number(l.amount || 0), 0);
+        const uniqueRecipients = new Set(logArr.map((l) => l.recipient_id)).size;
+        return {
+          ...a,
+          current_coins: Number(prof?.coins || 0),
+          profile_user_id: prof?.user_id || null,
+          profile_display_name: prof?.display_name || a.agent_name,
+          transfers_count: logArr.length,
+          total_sent: totalSent,
+          unique_recipients: uniqueRecipients,
+        };
+      })
+    );
+    setRechargeAgents(enriched);
   };
   const addRechargeAgent = async () => {
     if (!newAgentId.trim() || !newAgentName.trim() || !newAgentWhatsapp.trim()) {
@@ -953,28 +976,86 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
+              {/* Aggregate summary */}
+              {rechargeAgents.length > 0 && (
+                <div className="card-nova p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">إجمالي الوكلاء</p>
+                    <p className="text-lg font-extrabold text-primary">{rechargeAgents.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">إجمالي الرصيد</p>
+                    <div className="flex items-center justify-center gap-1">
+                      <CurrencyIcon type="gold" size="sm" />
+                      <p className="text-lg font-extrabold">{rechargeAgents.reduce((s, a) => s + (a.current_coins || 0), 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">إجمالي التحويلات</p>
+                    <p className="text-lg font-extrabold text-accent">{rechargeAgents.reduce((s, a) => s + (a.transfers_count || 0), 0)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">إجمالي المُرسل</p>
+                    <div className="flex items-center justify-center gap-1">
+                      <CurrencyIcon type="gold" size="sm" />
+                      <p className="text-lg font-extrabold">{rechargeAgents.reduce((s, a) => s + (a.total_sent || 0), 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <h4 className="font-bold text-xs text-muted-foreground">الوكلاء الحاليون ({rechargeAgents.length})</h4>
                 {rechargeAgents.map((a) => (
-                  <div key={a.id} className="card-nova p-3 flex items-center gap-3">
-                    {a.avatar_url ? (
-                      <img src={a.avatar_url} alt={a.agent_name} className="w-10 h-10 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"><Phone className="w-4 h-4 text-muted-foreground" /></div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{a.agent_name}</p>
-                      <p className="text-[10px] text-muted-foreground" dir="ltr">{a.whatsapp_number}</p>
+                  <div key={a.id} className="card-nova p-3 space-y-3">
+                    <div className="flex items-center gap-3">
+                      {a.avatar_url ? (
+                        <img src={a.avatar_url} alt={a.agent_name} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"><Phone className="w-4 h-4 text-muted-foreground" /></div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">{a.agent_name}</p>
+                        <p className="text-[10px] text-muted-foreground" dir="ltr">
+                          {a.profile_user_id ? `ID: ${a.profile_user_id} • ` : ""}{a.whatsapp_number}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => toggleRechargeAgent(a.id, a.is_active)}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold ${a.is_active ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}
+                      >
+                        {a.is_active ? "نشط" : "موقوف"}
+                      </button>
+                      <button onClick={() => deleteRechargeAgent(a.id)} className="text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => toggleRechargeAgent(a.id, a.is_active)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold ${a.is_active ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"}`}
-                    >
-                      {a.is_active ? "نشط" : "موقوف"}
-                    </button>
-                    <button onClick={() => deleteRechargeAgent(a.id)} className="text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+
+                    {/* Per-agent stats */}
+                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/40">
+                      <div className="text-center">
+                        <p className="text-[9px] text-muted-foreground">الرصيد الحالي</p>
+                        <div className="flex items-center justify-center gap-1">
+                          <CurrencyIcon type="gold" size="sm" />
+                          <p className="text-xs font-extrabold text-primary">{(a.current_coins || 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] text-muted-foreground">عدد التحويلات</p>
+                        <p className="text-xs font-extrabold text-accent">{a.transfers_count || 0}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[9px] text-muted-foreground">عدد المستفيدين</p>
+                        <p className="text-xs font-extrabold">{a.unique_recipients || 0}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between bg-secondary/30 rounded-lg px-3 py-1.5">
+                      <span className="text-[10px] text-muted-foreground">إجمالي المُرسل</span>
+                      <div className="flex items-center gap-1">
+                        <CurrencyIcon type="gold" size="sm" />
+                        <span className="text-xs font-extrabold">{(a.total_sent || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
                 {rechargeAgents.length === 0 && (
