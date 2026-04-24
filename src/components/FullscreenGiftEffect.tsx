@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GiftMediaPlayer from "@/components/GiftMediaPlayer";
 
@@ -23,38 +23,86 @@ interface FullscreenGiftEffectProps {
 }
 
 /**
- * Duration tiers based on gift gold amount (used as fallback when no explicit durationMs).
+ * Fallback duration tiers based on gift gold amount — used ONLY if the gift
+ * has no media file (pure emoji/image) and no explicit durationMs.
  */
-const getDuration = (amount: number, explicit?: number) => {
+const getFallbackDuration = (amount: number, explicit?: number) => {
   if (explicit && explicit > 0) return explicit;
-  if (amount >= 100000) return 12000; // أسطوري
-  if (amount >= 10000) return 8000;   // ملحمي
-  if (amount >= 1000) return 5000;    // نادر
-  return 3500;                         // عادي
+  if (amount >= 100000) return 9000;
+  if (amount >= 10000) return 6000;
+  if (amount >= 1000) return 4500;
+  return 3500;
 };
+
+const MIN_VISIBLE_MS = 2200;  // never disappear too fast
+const MAX_VISIBLE_MS = 15000; // hard cap to avoid runaway animations
 
 const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [mediaReady, setMediaReady] = useState(false);
 
+  // Reset on every new gift
   useEffect(() => {
+    setMediaReady(false);
     if (!gift) return;
-    const duration = getDuration(gift.amount, gift.durationMs);
-
-    // No synthesized sounds — rely solely on the gift media's own audio (video/Lottie).
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(onComplete, duration);
+
+    // Initial safety fallback timer (used if media never loads metadata).
+    const fallback = getFallbackDuration(gift.amount, gift.durationMs);
+    const safetyMs = Math.min(MAX_VISIBLE_MS, Math.max(MIN_VISIBLE_MS, fallback));
+    timerRef.current = setTimeout(onComplete, safetyMs);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [gift, muted, onComplete]);
+  }, [gift, onComplete]);
+
+  /**
+   * Once the media element mounts, sync the close timer with the media's
+   * actual duration so the fullscreen overlay disappears exactly when the
+   * animation/video finishes — not before, not after.
+   */
+  useEffect(() => {
+    if (!gift) return;
+    const root = containerRef.current;
+    if (!root) return;
+
+    const scheduleClose = (ms: number) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      const clamped = Math.min(MAX_VISIBLE_MS, Math.max(MIN_VISIBLE_MS, ms));
+      timerRef.current = setTimeout(onComplete, clamped);
+    };
+
+    // VIDEO: read actual duration once metadata is loaded; close on `ended`.
+    const video = root.querySelector("video") as HTMLVideoElement | null;
+    const onLoadedMeta = () => {
+      if (video && isFinite(video.duration) && video.duration > 0) {
+        scheduleClose(video.duration * 1000 + 250); // small buffer
+      }
+    };
+    const onEnded = () => onComplete();
+    if (video) {
+      if (video.readyState >= 1) onLoadedMeta();
+      video.addEventListener("loadedmetadata", onLoadedMeta);
+      video.addEventListener("ended", onEnded);
+    }
+
+    return () => {
+      if (video) {
+        video.removeEventListener("loadedmetadata", onLoadedMeta);
+        video.removeEventListener("ended", onEnded);
+      }
+    };
+  }, [gift, mediaReady, onComplete]);
 
   return (
     <AnimatePresence>
       {gift && (
         <motion.div
           key={gift.id}
+          ref={containerRef}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.4 } }}
@@ -70,6 +118,7 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
               transition={{ duration: 0.45, type: "spring", damping: 16, stiffness: 140 }}
               className="relative flex items-center justify-center"
               style={{ width: "min(85vw, 520px)", height: "min(85vw, 520px)" }}
+              onAnimationComplete={() => setMediaReady(true)}
             >
               <GiftMediaPlayer
                 lottieUrl={gift.lottieUrl}
