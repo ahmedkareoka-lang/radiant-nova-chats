@@ -44,7 +44,6 @@ const AgenciesPage = () => {
   const [sentInvites, setSentInvites] = useState<any[]>([]);
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
 
-  useEffect(() => {
   const loadAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
