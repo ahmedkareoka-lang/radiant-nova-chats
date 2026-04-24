@@ -35,6 +35,9 @@ const AdminDashboard = () => {
   const [newAgentWhatsapp, setNewAgentWhatsapp] = useState("");
   const [payrollReport, setPayrollReport] = useState<any>(null);
   const [payrollLoading, setPayrollLoading] = useState(false);
+  const [salaryHostId, setSalaryHostId] = useState("");
+  const [salaryDetailsOpen, setSalaryDetailsOpen] = useState(false);
+  const [salaryDetailsTarget, setSalaryDetailsTarget] = useState<{ id?: string; name?: string }>({});
 
   // Gift & Store management
   const [giftsList, setGiftsList] = useState<any[]>([]);
