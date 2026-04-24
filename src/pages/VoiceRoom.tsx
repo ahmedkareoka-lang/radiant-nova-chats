@@ -1235,18 +1235,34 @@ const VoiceRoom = () => {
 
           <div className="space-y-2 max-h-40 overflow-auto mb-3">
             {messages.map((msg) => {
-              const isSystemMsg = msg.content.startsWith("🚪");
+              // System "join" message detection.
+              // New format: "[[JOIN:<uid>]] DisplayName"
+              // Legacy format: "🚪 Name انضم إلى الغرفة"
+              const joinMatch = msg.content.match(/^\[\[JOIN:[^\]]+\]\]\s*(.+)$/);
+              const isLegacyJoin = !joinMatch && msg.content.startsWith("🚪");
+              const isSystemMsg = !!joinMatch || isLegacyJoin;
+              const joinedName = joinMatch
+                ? joinMatch[1].trim()
+                : (msg.sender?.display_name || "");
               const isBossMsg = msg.sender?.is_boss;
               return (
-                <div key={msg.id} className={`text-xs ${isSystemMsg ? "text-center" : ""} group relative`}>
+                <div key={msg.id} className={`text-xs ${isSystemMsg ? "flex justify-center" : ""} group relative`}>
                   {isSystemMsg ? (
-                    <motion.span
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-accent/80 font-medium italic"
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-accent/15 via-primary/10 to-accent/15 border border-accent/30 shadow-[0_0_12px_hsl(var(--accent)/0.25)] select-none"
+                      // System messages are NOT editable: no admin pin/delete affordances rendered
                     >
-                      {msg.content}
-                    </motion.span>
+                      <span className="text-accent text-sm leading-none" aria-hidden>🚪</span>
+                      <span className="text-accent font-semibold text-[11px] tracking-wide">
+                        {joinedName || msg.sender?.display_name}
+                      </span>
+                      <span className="text-accent/80 font-medium text-[11px]">
+                        {t("room.system.joined")}
+                      </span>
+                    </motion.div>
                   ) : (
                     <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
                       <span className="inline-flex items-center gap-1 align-middle mr-1">
@@ -1259,8 +1275,8 @@ const VoiceRoom = () => {
                       <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
                       {/* AI live translation */}
                       <TranslatedMessage text={msg.content} enabled={translationsEnabled} />
-                      {/* Admin actions: Pin & Delete */}
-                      {isAdmin && !isSystemMsg && (
+                      {/* Admin actions: Pin & Delete (system messages excluded above) */}
+                      {isAdmin && (
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 inline-flex gap-1">
                           <button onClick={() => handlePinMessage(msg.content)} title="تثبيت">
                             <Pin className="w-3 h-3 text-muted-foreground hover:text-accent" />
