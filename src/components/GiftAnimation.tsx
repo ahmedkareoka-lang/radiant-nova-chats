@@ -228,7 +228,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const senderName = cachedSenderNameRef.current || "مستخدم";
 
     // Optimistic balance check first (non-blocking UX)
-    if (balance !== null && balance < giftCost * (isMultiMode ? selectedRecipients.size : 1)) {
+    const totalNeeded = giftCost * (isMultiMode ? Math.max(selectedRecipients.size, 1) : 1);
+    if (balance > 0 && balance < totalNeeded) {
       toast.error("رصيدك غير كافٍ!");
       setSending(false);
       return;
