@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock } from "lucide-react";
+import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock, Target, Mic, Gem } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +27,8 @@ const AgenciesPage = () => {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [pendingResignations, setPendingResignations] = useState<any[]>([]);
   const [hostStats, setHostStats] = useState<any>(null);
+  const [hostDashboard, setHostDashboard] = useState<any>(null);
+  const [hasOwnedAgency, setHasOwnedAgency] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -70,14 +72,22 @@ const AgenciesPage = () => {
           }
         }
 
-        // Host stats
+        // Host stats + cycle dashboard (today/cycle 15-day)
         if (membership.badge === "host") {
           const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
           const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
           const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
           setHostStats({ totalGifts: giftCount || 0, totalDiamonds });
+
+          const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
+          if (dash) setHostDashboard(dash);
         }
       }
+
+      // Track if this user already owns an agency (any status) — for the "one agency per agent" rule
+      const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
+      setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
+
       setLoading(false);
     };
     load();
@@ -85,7 +95,15 @@ const AgenciesPage = () => {
 
   const applyForAgency = async () => {
     if (!agencyName.trim()) return;
-    await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending" });
+    if (hasOwnedAgency) { toast.error("لديك وكالة بالفعل — لا يمكن إنشاء وكالة أخرى"); return; }
+    if (myMembership) { toast.error("أنت عضو في وكالة بالفعل"); return; }
+    const { error } = await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending" });
+    if (error) {
+      if (error.code === "23505") toast.error("لديك وكالة مسجلة مسبقاً");
+      else toast.error("فشل التقديم: " + error.message);
+      return;
+    }
+    setHasOwnedAgency(true);
     const { data: boss } = await supabase.from("profiles").select("id").eq("is_boss", true).single();
     if (boss) {
       await supabase.from("notifications").insert({
@@ -214,7 +232,39 @@ const AgenciesPage = () => {
               </div>
               <p className="font-bold text-lg">{myAgency.name}</p>
 
-              {/* Host stats */}
+              {/* Host: today + 15-day cycle banner */}
+              {myMembership?.badge === "host" && hostDashboard?.has_agency && (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-primary/10 rounded-xl p-3 text-center space-y-1">
+                      <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Gem className="w-3 h-3" />دعم اليوم</p>
+                      <p className="font-extrabold text-base text-primary">{Number(hostDashboard.today_diamonds || 0).toLocaleString()} 💎</p>
+                    </div>
+                    <div className="bg-accent/10 rounded-xl p-3 text-center space-y-1">
+                      <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Mic className="w-3 h-3" />ساعات اليوم</p>
+                      <p className="font-extrabold text-base text-accent">{(Number(hostDashboard.today_minutes || 0) / 60).toFixed(1)}h</p>
+                    </div>
+                  </div>
+                  <div className="bg-secondary/40 rounded-xl p-3 space-y-2 border border-primary/20">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold flex items-center gap-1"><Target className="w-3 h-3 text-primary" />دورة التارجت</p>
+                      <p className="text-[10px] text-muted-foreground">{hostDashboard.cycle_label}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">ماس الدورة</p>
+                        <p className="text-sm font-extrabold text-primary">{Number(hostDashboard.cycle_diamonds || 0).toLocaleString()} 💎</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">ساعات الدورة</p>
+                        <p className="text-sm font-extrabold text-accent">{(Number(hostDashboard.cycle_minutes || 0) / 60).toFixed(1)}h</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Host stats (lifetime) */}
               {myMembership?.badge === "host" && hostStats && (
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-secondary/50 rounded-xl p-3 text-center">
@@ -310,17 +360,22 @@ const AgenciesPage = () => {
             </div>
           )}
 
-          {/* Apply for agency */}
-          {!myAgency && (
+          {/* Apply for agency — only if not in any agency AND doesn't already own one */}
+          {!myAgency && !hasOwnedAgency && (
             <button onClick={() => setShowCreate(!showCreate)}
               className="w-full py-3 rounded-2xl border border-dashed border-primary/50 text-primary font-bold text-sm flex items-center justify-center gap-2">
               <Plus className="w-4 h-4" /> تقديم طلب وكالة جديدة
             </button>
           )}
+          {!myAgency && hasOwnedAgency && (
+            <div className="card-nova p-3 text-center text-xs text-muted-foreground border border-accent/30">
+              ⏳ لديك طلب وكالة قيد المراجعة — لا يمكن إنشاء وكالة أخرى
+            </div>
+          )}
 
-          {showCreate && (
+          {showCreate && !hasOwnedAgency && (
             <div className="card-nova p-4 space-y-3">
-              <p className="text-[10px] text-muted-foreground">سيتم مراجعة طلبك من قبل الإدارة</p>
+              <p className="text-[10px] text-muted-foreground">سيتم مراجعة طلبك من قبل الإدارة. يمكن للوكيل إنشاء وكالة واحدة فقط.</p>
               <input type="text" placeholder="اسم الوكالة" value={agencyName} onChange={(e) => setAgencyName(e.target.value)}
                 className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none" />
               <button onClick={applyForAgency} className="w-full py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تقديم الطلب</button>

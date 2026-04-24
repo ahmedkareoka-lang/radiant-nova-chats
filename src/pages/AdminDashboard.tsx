@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [novaStats, setNovaStats] = useState<{ level: number; label: string; count: number }[]>([]);
   const [adminId, setAdminId] = useState<string | null>(null);
   const [rechargeAgents, setRechargeAgents] = useState<any[]>([]);
+  const [agentReport, setAgentReport] = useState<{ today_total: number; today_count: number; week_total: number; week_count: number; week_start: string } | null>(null);
   const [newAgentId, setNewAgentId] = useState("");
   const [newAgentName, setNewAgentName] = useState("");
   const [newAgentWhatsapp, setNewAgentWhatsapp] = useState("");
@@ -67,24 +68,51 @@ const AdminDashboard = () => {
     const { data } = await supabase.from("recharge_agents" as any).select("*").order("created_at", { ascending: false });
     const agents = (data as any[]) || [];
 
-    // For each agent: fetch current coin balance + transfer stats
+    // Fetch the rich daily/weekly report (BOSS-only RPC)
+    const { data: reportData } = await supabase.rpc("get_agent_transfer_stats" as any);
+    const report = (reportData as any) || null;
+    if (report) {
+      setAgentReport({
+        today_total: Number(report.today_total || 0),
+        today_count: Number(report.today_count || 0),
+        week_total: Number(report.week_total || 0),
+        week_count: Number(report.week_count || 0),
+        week_start: report.week_start,
+      });
+    }
+    const perAgentMap = new Map<string, any>(
+      ((report?.per_agent as any[]) || []).map((p) => [p.user_id, p]),
+    );
+
+    // Merge profile info + per-agent stats from RPC
     const enriched = await Promise.all(
       agents.map(async (a: any) => {
-        const [{ data: prof }, { data: logs }] = await Promise.all([
-          supabase.from("profiles").select("coins, display_name, user_id, avatar_url").eq("id", a.user_id).maybeSingle(),
-          supabase.from("agent_transfer_log" as any).select("recipient_id, amount").eq("agent_id", a.user_id),
-        ]);
-        const logArr = (logs as any[]) || [];
-        const totalSent = logArr.reduce((s, l) => s + Number(l.amount || 0), 0);
-        const uniqueRecipients = new Set(logArr.map((l) => l.recipient_id)).size;
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("coins, display_name, user_id, avatar_url")
+          .eq("id", a.user_id)
+          .maybeSingle();
+        const stats = perAgentMap.get(a.user_id) || {};
+        const lifetimeAmount = Number(stats.lifetime_amount || 0);
+        const lifetimeCount = Number(stats.lifetime_transfers || 0);
+        // Fetch unique recipients separately (RPC doesn't aggregate uniques)
+        const { data: logs } = await supabase
+          .from("agent_transfer_log" as any)
+          .select("recipient_id")
+          .eq("agent_id", a.user_id);
+        const uniqueRecipients = new Set(((logs as any[]) || []).map((l) => l.recipient_id)).size;
         return {
           ...a,
-          current_coins: Number(prof?.coins || 0),
+          current_coins: Number(prof?.coins ?? stats.current_balance ?? 0),
           profile_user_id: prof?.user_id || null,
           profile_display_name: prof?.display_name || a.agent_name,
-          transfers_count: logArr.length,
-          total_sent: totalSent,
+          transfers_count: lifetimeCount,
+          total_sent: lifetimeAmount,
           unique_recipients: uniqueRecipients,
+          today_amount: Number(stats.today_amount || 0),
+          today_transfers: Number(stats.today_transfers || 0),
+          week_amount: Number(stats.week_amount || 0),
+          week_transfers: Number(stats.week_transfers || 0),
         };
       })
     );
@@ -976,6 +1004,36 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
+              {/* Daily / Weekly transfer report */}
+              {agentReport && (
+                <div className="card-nova p-4 space-y-3 border border-primary/30">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-primary" />
+                    <h3 className="font-bold text-sm">تقرير التحويلات</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-secondary/40 rounded-xl p-3 space-y-1">
+                      <p className="text-[10px] text-muted-foreground">اليوم</p>
+                      <div className="flex items-center gap-1">
+                        <CurrencyIcon type="gold" size="sm" />
+                        <p className="text-lg font-extrabold text-primary">{agentReport.today_total.toLocaleString()}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{agentReport.today_count} عملية</p>
+                    </div>
+                    <div className="bg-secondary/40 rounded-xl p-3 space-y-1">
+                      <p className="text-[10px] text-muted-foreground">
+                        الأسبوع (من السبت {agentReport.week_start})
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <CurrencyIcon type="gold" size="sm" />
+                        <p className="text-lg font-extrabold text-accent">{agentReport.week_total.toLocaleString()}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{agentReport.week_count} عملية</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Aggregate summary */}
               {rechargeAgents.length > 0 && (
                 <div className="card-nova p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1047,6 +1105,25 @@ const AdminDashboard = () => {
                       <div className="text-center">
                         <p className="text-[9px] text-muted-foreground">عدد المستفيدين</p>
                         <p className="text-xs font-extrabold">{a.unique_recipients || 0}</p>
+                      </div>
+                    </div>
+                    {/* Daily / Weekly per-agent */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-primary/10 rounded-lg px-3 py-2 space-y-0.5">
+                        <p className="text-[9px] text-muted-foreground">اليوم</p>
+                        <div className="flex items-center gap-1">
+                          <CurrencyIcon type="gold" size="sm" />
+                          <span className="text-xs font-extrabold text-primary">{(a.today_amount || 0).toLocaleString()}</span>
+                          <span className="text-[9px] text-muted-foreground ml-auto">({a.today_transfers || 0})</span>
+                        </div>
+                      </div>
+                      <div className="bg-accent/10 rounded-lg px-3 py-2 space-y-0.5">
+                        <p className="text-[9px] text-muted-foreground">الأسبوع</p>
+                        <div className="flex items-center gap-1">
+                          <CurrencyIcon type="gold" size="sm" />
+                          <span className="text-xs font-extrabold text-accent">{(a.week_amount || 0).toLocaleString()}</span>
+                          <span className="text-[9px] text-muted-foreground ml-auto">({a.week_transfers || 0})</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center justify-between bg-secondary/30 rounded-lg px-3 py-1.5">
