@@ -492,6 +492,61 @@ const AdminDashboard = () => {
     await fetchBanners();
   };
 
+  // ====== BD Management ======
+  const fetchBDList = async () => {
+    const { data: bds } = await supabase
+      .from("profiles")
+      .select("id, display_name, user_id, avatar_url")
+      .eq("is_bd", true)
+      .order("display_name");
+
+    const enriched: any[] = [];
+    for (const b of (bds as any[]) || []) {
+      const { data: stats } = await supabase.rpc("get_bd_stats" as any, { _bd_user_id: b.id });
+      enriched.push({ ...b, stats: stats || {} });
+    }
+    setBdList(enriched);
+  };
+
+  const activateBD = async () => {
+    if (!bdSearchId.trim()) return toast.error("أدخل ID المستخدم");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .eq("user_id", bdSearchId.trim())
+      .maybeSingle();
+    if (!profile) return toast.error("المستخدم غير موجود");
+    const { error } = await supabase.rpc("activate_bd_account" as any, { _user_id: (profile as any).id });
+    if (error) return toast.error(error.message);
+    toast.success(`تم تفعيل ${(profile as any).display_name} كـ BD`);
+    setBdSearchId("");
+    fetchBDList();
+  };
+
+  const deactivateBD = async (userId: string) => {
+    const { error } = await supabase.rpc("deactivate_bd_account" as any, { _user_id: userId });
+    if (error) return toast.error(error.message);
+    toast.success("تم إلغاء BD");
+    fetchBDList();
+  };
+
+  const assignAgencyToBD = async () => {
+    if (!bdAssignAgencyId || !bdAssignBdId) return toast.error("اختر BD ووكالة");
+    const { error } = await supabase.rpc("assign_agency_to_bd" as any, {
+      _bd_user_id: bdAssignBdId,
+      _agency_id: bdAssignAgencyId,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("تم ربط الوكالة بـ BD");
+    setBdAssignAgencyId("");
+    setBdAssignBdId("");
+    fetchBDList();
+  };
+
+  useEffect(() => {
+    if (isBoss) fetchBDList();
+  }, [isBoss]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>;
   if (!isBoss) return null;
 
