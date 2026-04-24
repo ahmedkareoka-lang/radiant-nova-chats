@@ -639,16 +639,20 @@ const VoiceRoom = () => {
     avatarUrl: string | null,
     equippedFrame: string | null | undefined,
     isBossUser: boolean,
-    size: "sm" | "md" | "lg" = "md",
+    size: "sm" | "md" | "lg" | number = "md",
     isSpeaking: boolean = false,
     isRechargeAgent: boolean = false,
+    isBD: boolean = false,
   ) => {
-    const sizePx = size === "sm" ? 72 : size === "lg" ? 100 : 82;
+    const sizePx = typeof size === "number"
+      ? size
+      : size === "sm" ? 72 : size === "lg" ? 100 : 82;
     return (
       <FramedAvatar
         avatarUrl={avatarUrl}
         equippedFrame={equippedFrame}
         isRechargeAgent={isRechargeAgent}
+        isBD={isBD}
         size={sizePx}
         ringClassName={isSpeaking ? "ring-2 ring-green-400 shadow-[0_0_12px_rgba(74,222,128,0.5)]" : "ring-2 ring-border"}
         behind={isSpeaking ? <SpeakingWaves /> : null}
