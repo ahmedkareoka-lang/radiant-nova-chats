@@ -236,7 +236,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
                     selectedRecipients.has(m.user_id) ? 'bg-primary/20 border border-primary' : 'bg-secondary'
                   }`}>
                   <div className="relative">
-                    <img src={m.avatar_url || 'https://i.pravatar.cc/100'} className="w-8 h-8 rounded-full object-cover" alt="" />
+                    <img src={m.avatar_url || 'https://i.pravatar.cc/100'} className="w-8 h-8 rounded-full object-cover" alt="" loading="lazy" decoding="async" />
                     {selectedRecipients.has(m.user_id) && (
                       <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
                         <Check className="w-2.5 h-2.5 text-primary-foreground" />
@@ -258,7 +258,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
                 selectedGift === i ? "bg-primary/20 border border-primary glow-neon scale-105" : "bg-secondary hover:bg-secondary/80"
               }`}>
               {gift.image_url ? (
-                <img src={gift.image_url} alt={gift.name} className="w-8 h-8 object-contain" />
+                <img src={gift.image_url} alt={gift.name} className="w-8 h-8 object-contain" loading="lazy" decoding="async" />
               ) : (
                 <span className="text-2xl">{gift.emoji}</span>
               )}
