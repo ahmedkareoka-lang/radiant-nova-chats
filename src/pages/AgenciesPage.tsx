@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import NovaSpinner from "@/components/NovaSpinner";
 import EmptyState from "@/components/EmptyState";
+import PayrollStructureBanner from "@/components/PayrollStructureBanner";
 
 const AgenciesPage = () => {
   const navigate = useNavigate();
@@ -208,6 +209,9 @@ const AgenciesPage = () => {
             <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></button>
             <Building2 className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-lg">الوكالات</h1>
+            <div className="ml-auto">
+              <PayrollStructureBanner />
+            </div>
           </div>
         </header>
 
@@ -300,10 +304,10 @@ const AgenciesPage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-5 h-5 text-accent" />
-                      <p className="font-bold text-sm">راتب الشهر</p>
+                      <p className="font-bold text-sm">راتب الدورة (15 يوم)</p>
                     </div>
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> {hostSalary.month_start} → {hostSalary.month_end}
+                      <Calendar className="w-3 h-3" /> {hostSalary.cycle_label || `${hostSalary.month_start} → ${hostSalary.month_end}`}
                     </p>
                   </div>
 
@@ -337,12 +341,12 @@ const AgenciesPage = () => {
                   )}
 
                   <div className="bg-primary/20 rounded-xl p-3 text-center border border-primary/40">
-                    <p className="text-[10px] text-muted-foreground">الراتب الصافي للشهر</p>
+                    <p className="text-[10px] text-muted-foreground">الراتب الصافي للدورة</p>
                     <p className="font-extrabold text-2xl text-primary">${Number(hostSalary.final_salary_usd || 0).toLocaleString()}</p>
                   </div>
 
                   <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
-                    💡 معدل التحويل: 100,000 ماسة = $8 • يجب تحقيق 15 يوم نشط و 40 ساعة بث
+                    💡 معدل التحويل: 100,000 ماسة = $8 • لكل دورة 15 يوم: 8 أيام نشطة + 20 ساعة بث
                   </p>
                 </div>
               )}
@@ -362,10 +366,10 @@ const AgenciesPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <DollarSign className="w-5 h-5 text-accent" />
-                          <p className="font-bold text-sm">رواتب الوكالة الشهرية</p>
+                          <p className="font-bold text-sm">رواتب الوكالة (دورة 15 يوم)</p>
                         </div>
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> {agencyPayroll.month_start} → {agencyPayroll.month_end}
+                          <Calendar className="w-3 h-3" /> {agencyPayroll.cycle_label || `${agencyPayroll.month_start} → ${agencyPayroll.month_end}`}
                         </p>
                       </div>
 
