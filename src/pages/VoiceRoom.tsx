@@ -92,7 +92,7 @@ const VoiceRoom = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
   const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
-  const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; senderName: string; recipientName: string; amount: number; timestamp: number } | null>(null);
+  const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; lottieUrl?: string | null; videoUrl?: string | null; senderName: string; recipientName: string; amount: number; timestamp: number; durationMs?: number } | null>(null);
   const [giftToasts, setGiftToasts] = useState<{ id: string; emoji: string; imageUrl: string | null; senderName: string; recipientName: string; giftName: string; amount: number }[]>([]);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
@@ -384,7 +384,7 @@ const VoiceRoom = () => {
       config: { broadcast: { self: false, ack: false } },
     })
       .on("broadcast", { event: "gift-sent" }, (payload) => {
-        const { emoji, imageUrl, amount, giftName, senderName, recipientName } = payload.payload;
+        const { emoji, imageUrl, lottieUrl, videoUrl, amount, giftName, senderName, recipientName, durationMs } = payload.payload;
         logAgora("success", "Gift", `← received '${giftName}' from ${senderName}`, { amount, recipientName });
         // Fullscreen gift effect for all gifts received in the room
         const id = `${Date.now()}-${Math.random()}`;
@@ -393,10 +393,13 @@ const VoiceRoom = () => {
           emoji: emoji || "🎁",
           giftName: giftName || "هدية",
           imageUrl: imageUrl || null,
+          lottieUrl: lottieUrl || null,
+          videoUrl: videoUrl || null,
           senderName: senderName || "مستخدم",
           recipientName: recipientName || "مستخدم",
           amount: amount || 100,
           timestamp: Date.now(),
+          durationMs: durationMs,
         });
         // Top text banner for everyone
         const toastId = `toast-${id}`;
@@ -1142,10 +1145,13 @@ const VoiceRoom = () => {
             emoji: info.emoji,
             giftName: info.giftName,
             imageUrl: info.imageUrl,
+            lottieUrl: info.lottieUrl || null,
+            videoUrl: info.videoUrl || null,
             senderName: info.senderName,
             recipientName: info.recipientName,
             amount: info.amount,
             timestamp: Date.now(),
+            durationMs: info.durationMs,
           });
           const toastId = `toast-self-${id}`;
           setGiftToasts(prev => [...prev, {

@@ -1,16 +1,20 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playTieredGiftSound } from "@/lib/effects";
+import GiftMediaPlayer from "@/components/GiftMediaPlayer";
 
 interface GiftPayload {
   id: string;
   emoji: string;
   giftName: string;
   imageUrl: string | null;
+  lottieUrl?: string | null;
+  videoUrl?: string | null;
   senderName: string;
   recipientName: string;
   amount: number;
   timestamp: number;
+  durationMs?: number;
 }
 
 interface FullscreenGiftEffectProps {
@@ -20,15 +24,14 @@ interface FullscreenGiftEffectProps {
 }
 
 /**
- * Duration tiers based on gift gold amount.
- * Tuned shorter than before so normal gifts feel snappy (Yalla / BIGO style)
- * while big / legendary gifts still get a long cinematic moment.
+ * Duration tiers based on gift gold amount (used as fallback when no explicit durationMs).
  */
-const getDuration = (amount: number) => {
+const getDuration = (amount: number, explicit?: number) => {
+  if (explicit && explicit > 0) return explicit;
   if (amount >= 100000) return 12000; // أسطوري
   if (amount >= 10000) return 8000;   // ملحمي
   if (amount >= 1000) return 5000;    // نادر
-  return 3500;                         // عادي — يختفي بسرعة ويعود الغرفة طبيعية
+  return 3500;                         // عادي
 };
 
 const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
@@ -36,7 +39,7 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
 
   useEffect(() => {
     if (!gift) return;
-    const duration = getDuration(gift.amount);
+    const duration = getDuration(gift.amount, gift.durationMs);
 
     if (!muted) {
       // Audio starts at the same instant the animation mounts.
@@ -62,7 +65,7 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none overflow-hidden bg-transparent"
         >
-          {/* MAIN GIFT — only the gift shape, no backdrop, no ring, no clouds */}
+          {/* MAIN GIFT — only the gift shape, fills screen */}
           <div className="relative z-10 flex flex-col items-center gap-2 px-4 w-full">
             <motion.div
               initial={{ scale: 0.4, opacity: 0 }}
@@ -70,26 +73,17 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
               exit={{ scale: 0.6, opacity: 0 }}
               transition={{ duration: 0.45, type: "spring", damping: 16, stiffness: 140 }}
               className="relative flex items-center justify-center"
-              style={{ width: "min(80vw, 460px)", height: "min(80vw, 460px)" }}
+              style={{ width: "min(85vw, 520px)", height: "min(85vw, 520px)" }}
             >
-              {gift.imageUrl ? (
-                <img
-                  src={gift.imageUrl}
-                  alt={gift.giftName}
-                  className="relative w-full h-full object-contain"
-                  style={{ background: "transparent" }}
-                />
-              ) : (
-                <span
-                  className="relative"
-                  style={{ fontSize: "min(60vw, 360px)", lineHeight: 1 }}
-                >
-                  {gift.emoji}
-                </span>
-              )}
+              <GiftMediaPlayer
+                lottieUrl={gift.lottieUrl}
+                videoUrl={gift.videoUrl}
+                imageUrl={gift.imageUrl}
+                emoji={gift.emoji}
+              />
             </motion.div>
 
-            {/* Sender → Receiver (small text, no background) */}
+            {/* Sender → Receiver (small, no background) */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

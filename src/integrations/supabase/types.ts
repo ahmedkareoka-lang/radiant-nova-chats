@@ -339,26 +339,44 @@ export type Database = {
         Row: {
           animation_url: string | null
           created_at: string | null
+          duration_ms: number
           id: string
           image_url: string | null
+          is_active: boolean
+          lottie_url: string | null
           name: string
           price: number
+          sort_order: number
+          tier: string
+          video_url: string | null
         }
         Insert: {
           animation_url?: string | null
           created_at?: string | null
+          duration_ms?: number
           id?: string
           image_url?: string | null
+          is_active?: boolean
+          lottie_url?: string | null
           name: string
           price: number
+          sort_order?: number
+          tier?: string
+          video_url?: string | null
         }
         Update: {
           animation_url?: string | null
           created_at?: string | null
+          duration_ms?: number
           id?: string
           image_url?: string | null
+          is_active?: boolean
+          lottie_url?: string | null
           name?: string
           price?: number
+          sort_order?: number
+          tier?: string
+          video_url?: string | null
         }
         Relationships: []
       }

@@ -39,15 +39,22 @@ interface GiftItem {
   name: string;
   price: number;
   image_url?: string | null;
+  lottie_url?: string | null;
+  video_url?: string | null;
+  tier?: string;
+  duration_ms?: number;
 }
 
 interface SentGiftInfo {
   emoji: string;
   giftName: string;
   imageUrl: string | null;
+  lottieUrl?: string | null;
+  videoUrl?: string | null;
   senderName: string;
   recipientName: string;
   amount: number;
+  durationMs?: number;
 }
 
 interface GiftAnimationProps {
@@ -76,11 +83,15 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   useEffect(() => {
     const fetchGifts = async () => {
       const { data } = await supabase.from("gifts").select("*").order("price", { ascending: true });
-      const dbGifts = data?.map(g => ({
+      const dbGifts = (data as any[])?.map(g => ({
           name: g.name,
           price: Number(g.price),
           image_url: g.image_url,
-          emoji: g.image_url ? undefined : "🎁",
+          lottie_url: g.lottie_url,
+          video_url: g.video_url,
+          tier: g.tier,
+          duration_ms: g.duration_ms,
+          emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
         })) || [];
       const catalogGifts = storeCatalog.gifts.map((g) => ({
         name: g.name,
@@ -160,7 +171,15 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
 
-  const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
+  const broadcastGift = async (
+    giftEmoji: string,
+    giftName: string,
+    senderName: string,
+    amount: number,
+    recipientName?: string,
+    imageUrl?: string | null,
+    extras?: { lottieUrl?: string | null; videoUrl?: string | null; durationMs?: number },
+  ) => {
     if (!roomId) {
       logAgora("warn", "Gift", "broadcastGift skipped: missing roomId", { giftName });
       return;
@@ -174,6 +193,9 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       emoji: giftEmoji,
       giftName,
       imageUrl: imageUrl || null,
+      lottieUrl: extras?.lottieUrl || null,
+      videoUrl: extras?.videoUrl || null,
+      durationMs: extras?.durationMs,
       senderName,
       recipientName: recipientName || receiverName || "",
       amount,
@@ -222,9 +244,11 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const giftCost = gift.price * multiplier;
     const giftEmoji = gift.emoji || "🎁";
     const giftImageUrl = gift.image_url || null;
+    const giftLottieUrl = gift.lottie_url || null;
+    const giftVideoUrl = gift.video_url || null;
+    const giftDurationMs = gift.duration_ms || undefined;
 
     // Use cached sender name immediately (avoid blocking on profile fetch).
-    // Fetch in background to refine future sends.
     const senderName = cachedSenderNameRef.current || "مستخدم";
 
     // Optimistic balance check first (non-blocking UX)
@@ -237,42 +261,46 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
 
     if (isMultiMode && selectedRecipients.size > 0) {
       const totalAmount = giftCost * selectedRecipients.size;
-      // 1) Fire fullscreen effect locally + broadcast to room IMMEDIATELY (no awaits)
       onGiftSent?.({
         emoji: giftEmoji,
         giftName: gift.name,
         imageUrl: giftImageUrl,
+        lottieUrl: giftLottieUrl,
+        videoUrl: giftVideoUrl,
         senderName,
         recipientName: `${selectedRecipients.size} أشخاص`,
         amount: totalAmount,
+        durationMs: giftDurationMs,
       });
-      broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl);
+      broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl, {
+        lottieUrl: giftLottieUrl, videoUrl: giftVideoUrl, durationMs: giftDurationMs,
+      });
       onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
-      // 2) Close modal instantly so sender sees the room + animation
       setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1);
       onClose();
-      // 3) Persist to DB in background
       (async () => {
         for (const rid of selectedRecipients) {
           await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
         }
       })();
     } else if (receiverId) {
-      // 1) Fire fullscreen effect locally + broadcast to room IMMEDIATELY
       onGiftSent?.({
         emoji: giftEmoji,
         giftName: gift.name,
         imageUrl: giftImageUrl,
+        lottieUrl: giftLottieUrl,
+        videoUrl: giftVideoUrl,
         senderName,
         recipientName: receiverName || "مستخدم",
         amount: giftCost,
+        durationMs: giftDurationMs,
       });
-      broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
+      broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl, {
+        lottieUrl: giftLottieUrl, videoUrl: giftVideoUrl, durationMs: giftDurationMs,
+      });
       onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
-      // 2) Close modal instantly
       setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1);
       onClose();
-      // 3) Persist to DB in background
       sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
     }
   };
