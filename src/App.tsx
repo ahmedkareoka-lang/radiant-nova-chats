@@ -41,6 +41,9 @@ import GamesPage from "./pages/GamesPage";
 import NovaPPage from "./pages/NovaPPage";
 import VipPrivilegePage from "./pages/VipPrivilegePage";
 import NovaPassPage from "./pages/NovaPassPage";
+import LuckyBoxPage from "./pages/LuckyBoxPage";
+import StreakPage from "./pages/StreakPage";
+import InvitePage from "./pages/InvitePage";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +122,9 @@ const AnimatedRoutes = () => {
         <Route path="/nova-p" element={<AuthGate><NovaPPage /></AuthGate>} />
         <Route path="/vip" element={<AuthGate><VipPrivilegePage /></AuthGate>} />
         <Route path="/nova-pass" element={<AuthGate><NovaPassPage /></AuthGate>} />
+        <Route path="/lucky-box" element={<AuthGate><LuckyBoxPage /></AuthGate>} />
+        <Route path="/streak" element={<AuthGate><StreakPage /></AuthGate>} />
+        <Route path="/invite-friends" element={<AuthGate><InvitePage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />

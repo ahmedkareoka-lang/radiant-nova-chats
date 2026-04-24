@@ -16,7 +16,15 @@ const FALLBACK_GIFTS = [
   { emoji: "🏰", name: "قصر", price: 5000 },
 ];
 
-const MULTIPLIERS = [1, 10, 66, 188, 520, 1314];
+const MULTIPLIERS = [1, 10, 99, 520, 1314];
+
+const getComboEffect = (mult: number) => {
+  if (mult >= 1314) return { label: "💖 LEGENDARY", glow: "0 0 60px hsl(330 100% 60%)", scale: "scale-110" };
+  if (mult >= 520) return { label: "❤️ EPIC", glow: "0 0 40px hsl(0 90% 55%)", scale: "scale-105" };
+  if (mult >= 99) return { label: "🔥 RARE", glow: "0 0 25px hsl(30 90% 55%)", scale: "" };
+  if (mult >= 10) return { label: "✨ COMBO", glow: "0 0 15px hsl(45 90% 55%)", scale: "" };
+  return null;
+};
 
 interface RoomMemberInfo {
   user_id: string;
@@ -270,18 +278,31 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           ))}
         </div>
 
-        {/* Multiplier */}
+        {/* Multiplier with combo effects */}
         <div className="mb-3">
-          <p className="text-[10px] text-muted-foreground mb-1.5">العدد</p>
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[10px] text-muted-foreground">العدد (Combo)</p>
+            {getComboEffect(multiplier) && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full gradient-neon text-primary-foreground animate-pulse">
+                {getComboEffect(multiplier)!.label}
+              </span>
+            )}
+          </div>
           <div className="flex gap-1.5">
-            {MULTIPLIERS.map(m => (
-              <button key={m} onClick={() => setMultiplier(m)}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
-                  multiplier === m ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground"
-                }`}>
-                x{m}
-              </button>
-            ))}
+            {MULTIPLIERS.map(m => {
+              const fx = getComboEffect(m);
+              return (
+                <button key={m} onClick={() => setMultiplier(m)}
+                  style={multiplier === m && fx ? { boxShadow: fx.glow } : undefined}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+                    multiplier === m
+                      ? `gradient-neon text-primary-foreground ${fx?.scale || ""}`
+                      : "bg-secondary text-muted-foreground"
+                  }`}>
+                  ×{m}
+                </button>
+              );
+            })}
           </div>
         </div>
 

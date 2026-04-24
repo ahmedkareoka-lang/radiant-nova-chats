@@ -246,11 +246,28 @@ const Index = () => {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-base">🎯</div>
               <span className="text-[9px] font-bold text-muted-foreground">المهام</span>
             </button>
+            <button onClick={() => navigate("/lucky-box")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-base">🎰</div>
+              <span className="text-[9px] font-bold text-muted-foreground">صندوق الحظ</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            <button onClick={() => navigate("/streak")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-base">🔥</div>
+              <span className="text-[9px] font-bold text-muted-foreground">الستريك</span>
+            </button>
+            <button onClick={() => navigate("/invite-friends")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-base">👥</div>
+              <span className="text-[9px] font-bold text-muted-foreground">ادعُ صديق</span>
+            </button>
             <button onClick={() => navigate("/posts")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-base">📸</div>
               <span className="text-[9px] font-bold text-muted-foreground">المنشورات</span>
             </button>
-          </div>
+            <button onClick={() => navigate("/nova-p")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-base">⭐</div>
+              <span className="text-[9px] font-bold text-muted-foreground">NOVA P</span>
+            </button>
 
           {/* Categories scrollable bar */}
           <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-none">
