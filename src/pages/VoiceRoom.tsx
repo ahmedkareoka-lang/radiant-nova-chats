@@ -116,7 +116,7 @@ const VoiceRoom = () => {
   const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
   // Voice (Agora)
-  const { connectedPeers, speakingPeers, localSpeaking } = useAgoraVoice({
+  const { connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoice({
     roomId,
     currentUserId,
     isOnMic,
