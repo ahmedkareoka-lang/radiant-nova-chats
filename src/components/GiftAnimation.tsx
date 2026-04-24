@@ -67,7 +67,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [showMulti, setShowMulti] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
   const [balance, setBalance] = useState(0);
-  const [gifts, setGifts] = useState<GiftItem[]>(FALLBACK_GIFTS);
+  const [gifts, setGifts] = useState<GiftItem[]>([]);
   const { sendGift } = useGifts();
 
   useEffect(() => {
