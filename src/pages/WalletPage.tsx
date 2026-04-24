@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRightLeft, Send, User, Users, Search, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Send, User, Users, Search, Loader2, ShieldCheck, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,19 +12,45 @@ type FoundUser = { id: string; user_id: string; display_name: string; avatar_url
 const WalletPage = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
-  const [exchangeAmount, setExchangeAmount] = useState("");
-  const [exchangeRate, setExchangeRate] = useState(100);
-  const [loading, setLoading] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState(100); // 100 = 1 diamond → 1 coin
 
-  // Tabs: 'self' = exchange diamonds → coins for me, 'other' = transfer diamonds to another user
+  // Unified mode for diamond → coin exchange
   const [mode, setMode] = useState<"self" | "other">("self");
+  const [amount, setAmount] = useState(""); // diamonds to convert
 
-  // Transfer-to-other state
+  // Recipient (only used in 'other' mode)
   const [recipientCode, setRecipientCode] = useState("");
   const [searching, setSearching] = useState(false);
   const [found, setFound] = useState<FoundUser | null>(null);
-  const [transferAmount, setTransferAmount] = useState("");
-  const [transferring, setTransferring] = useState(false);
+
+  // Confirmation modal
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile(p);
+      const { data: setting } = await supabase
+        .from("system_settings").select("value").eq("key", "exchange_rate").single();
+      if (setting) setExchangeRate(parseInt(setting.value));
+    };
+    load();
+  }, []);
+
+  // Reset recipient/amount when switching tabs
+  useEffect(() => {
+    setAmount("");
+    setFound(null);
+    setRecipientCode("");
+  }, [mode]);
+
+  const parsedAmount = parseInt(amount) || 0;
+  const goldReceived = Math.floor((parsedAmount * exchangeRate) / 100);
+  const fee: number = 0; // No platform fee for now — surface in UI for transparency
+  const netGold = goldReceived - fee;
 
   const searchRecipient = async () => {
     const code = recipientCode.trim();
@@ -48,62 +74,44 @@ const WalletPage = () => {
     setFound(data as FoundUser);
   };
 
-  const handleTransferToUser = async () => {
-    if (!profile || !found) return;
-    const amount = parseInt(transferAmount);
-    if (isNaN(amount) || amount <= 0) { toast.error("أدخل كمية صحيحة"); return; }
-    if (profile.diamonds < amount) { toast.error("رصيد الماس غير كافٍ!"); return; }
-    setTransferring(true);
-    const { data, error } = await supabase.rpc("transfer_diamonds_to_user", {
-      _recipient_user_id: found.user_id,
-      _amount: amount,
-    });
-    setTransferring(false);
-    if (error) {
-      toast.error(error.message || "فشل في التحويل");
-      return;
-    }
-    setProfile({ ...profile, diamonds: profile.diamonds - amount });
-    setTransferAmount("");
-    toast.success(`💎 تم تحويل ${amount.toLocaleString()} ماسة إلى ${found.display_name}!`);
+  const openConfirm = () => {
+    if (!profile || parsedAmount <= 0) { toast.error("أدخل كمية صحيحة"); return; }
+    if (profile.diamonds < parsedAmount) { toast.error("رصيد الماس غير كافٍ!"); return; }
+    if (mode === "other" && !found) { toast.error("ابحث عن المستلم أولاً"); return; }
+    if (netGold <= 0) { toast.error("الكمية أقل من الحد الأدنى"); return; }
+    setConfirmOpen(true);
   };
 
-  useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: p } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(p);
-      const { data: setting } = await supabase.from("system_settings").select("value").eq("key", "exchange_rate").single();
-      if (setting) setExchangeRate(parseInt(setting.value));
-    };
-    load();
-  }, []);
+  const submit = async () => {
+    if (!profile) return;
+    setSubmitting(true);
 
-  const handleExchange = async () => {
-    if (!profile || !exchangeAmount) return;
-    const amount = parseInt(exchangeAmount);
-    if (isNaN(amount) || amount <= 0) return;
-    if (profile.diamonds < amount) {
-      toast.error("رصيد الماس غير كافٍ!");
-      return;
+    if (mode === "self") {
+      const { error } = await supabase.rpc("exchange_diamonds_to_coins", {
+        _user_id: profile.id,
+        _diamond_amount: parsedAmount,
+        _coin_amount: netGold,
+      });
+      setSubmitting(false);
+      if (error) { toast.error("فشل في التبديل"); return; }
+      setProfile({ ...profile, diamonds: profile.diamonds - parsedAmount, coins: profile.coins + netGold });
+      toast.success(`تم تحويل ${parsedAmount.toLocaleString()} ماسة إلى ${netGold.toLocaleString()} 💰`);
+    } else {
+      if (!found) return;
+      const { error } = await supabase.rpc("gift_diamonds_as_coins_to_user", {
+        _recipient_user_id: found.user_id,
+        _diamond_amount: parsedAmount,
+      });
+      setSubmitting(false);
+      if (error) { toast.error(error.message || "فشل في التحويل"); return; }
+      setProfile({ ...profile, diamonds: profile.diamonds - parsedAmount });
+      toast.success(`💰 وصل ${netGold.toLocaleString()} Coin إلى ${found.display_name}!`);
     }
-    setLoading(true);
-    const goldReceived = Math.floor((amount * exchangeRate) / 100);
-    const { error } = await supabase.rpc("exchange_diamonds_to_coins", {
-      _user_id: profile.id,
-      _diamond_amount: amount,
-      _coin_amount: goldReceived,
-    });
-    if (error) {
-      toast.error("فشل في التبديل");
-      setLoading(false);
-      return;
-    }
-    setProfile({ ...profile, diamonds: profile.diamonds - amount, coins: profile.coins + goldReceived });
-    setExchangeAmount("");
-    toast.success(`تم تحويل ${amount} ماسة إلى ${goldReceived} ذهبة! 💰`);
-    setLoading(false);
+
+    setAmount("");
+    setFound(null);
+    setRecipientCode("");
+    setConfirmOpen(false);
   };
 
   const sendReceipt = async () => {
@@ -116,14 +124,16 @@ const WalletPage = () => {
       .single();
     let convId = existing?.id;
     if (!convId) {
-      const { data: newConv } = await supabase.from("conversations").insert({ user1_id: profile.id, user2_id: boss.id }).select("id").single();
+      const { data: newConv } = await supabase
+        .from("conversations").insert({ user1_id: profile.id, user2_id: boss.id })
+        .select("id").single();
       convId = newConv?.id;
     }
     if (convId) {
       await supabase.from("messages").insert({
         conversation_id: convId,
         sender_id: profile.id,
-        content: `📧 طلب تحويل\n🆔 ID: ${profile.user_id}\n💰 المبلغ: ${exchangeAmount || "—"}\n📅 ${new Date().toLocaleDateString("ar")}`,
+        content: `📧 طلب تحويل\n🆔 ID: ${profile.user_id}\n💰 المبلغ: ${amount || "—"}\n📅 ${new Date().toLocaleDateString("ar")}`,
       });
       toast.success("تم إرسال إيصال التحويل إلى BOSS! 📧");
       navigate("/chat");
@@ -157,10 +167,10 @@ const WalletPage = () => {
 
           <div className="card-nova p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
-              <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس
+              <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس إلى NOVA Coins
             </h3>
 
-            {/* Two-tab switcher: لنفسي / للآخرين */}
+            {/* Tabs */}
             <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border">
               <button
                 onClick={() => setMode("self")}
@@ -170,7 +180,7 @@ const WalletPage = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <User className="w-3.5 h-3.5" /> لنفسي (إلى Coins)
+                <User className="w-3.5 h-3.5" /> لنفسي
               </button>
               <button
                 onClick={() => setMode("other")}
@@ -180,34 +190,17 @@ const WalletPage = () => {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Users className="w-3.5 h-3.5" /> للآخرين (ماس → ماس)
+                <Users className="w-3.5 h-3.5" /> للآخرين
               </button>
             </div>
 
-            {mode === "self" ? (
-              <>
-                <p className="text-[10px] text-muted-foreground">
-                  نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} NOVA Coin
-                </p>
-                <div className="flex gap-2">
-                  <input type="number" placeholder="عدد الماسات" value={exchangeAmount} onChange={(e) => setExchangeAmount(e.target.value)}
-                    className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
-                  <button onClick={handleExchange} disabled={loading}
-                    className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تبديل</button>
-                </div>
-                {exchangeAmount && parseInt(exchangeAmount) > 0 && (
-                  <p className="text-xs text-accent text-center">
-                    ستحصل على {Math.floor((parseInt(exchangeAmount) * exchangeRate) / 100).toLocaleString()} NOVA Coin
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="text-[10px] text-muted-foreground">
-                  أرسل الماس مباشرة إلى مستخدم آخر باستخدام ID العام (6 أرقام).
-                </p>
+            <p className="text-[10px] text-muted-foreground">
+              نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} NOVA Coin
+            </p>
 
-                {/* Step 1: search recipient by ID */}
+            {/* Recipient picker (other only) */}
+            {mode === "other" && (
+              <div className="space-y-2">
                 <div className="flex gap-2">
                   <input
                     value={recipientCode}
@@ -226,55 +219,46 @@ const WalletPage = () => {
                   </button>
                 </div>
 
-                {/* Step 2: confirm recipient + amount */}
                 {found && (
-                  <div className="rounded-2xl bg-background/40 border border-border/30 p-3 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <img
-                        loading="lazy"
-                        decoding="async"
-                        src={found.avatar_url || "https://i.pravatar.cc/100?img=3"}
-                        alt={found.display_name}
-                        className="w-10 h-10 rounded-full object-cover border border-border/40"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-foreground truncate">{found.display_name}</p>
-                        <p className="text-[10px] text-muted-foreground">ID: {found.user_id}</p>
-                      </div>
+                  <div className="rounded-2xl bg-background/40 border border-border/30 p-2.5 flex items-center gap-3">
+                    <img
+                      loading="lazy" decoding="async"
+                      src={found.avatar_url || "https://i.pravatar.cc/100?img=3"}
+                      alt={found.display_name}
+                      className="w-9 h-9 rounded-full object-cover border border-border/40"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-foreground truncate">{found.display_name}</p>
+                      <p className="text-[10px] text-muted-foreground">ID: {found.user_id}</p>
                     </div>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        value={transferAmount}
-                        onChange={(e) => setTransferAmount(e.target.value)}
-                        placeholder="عدد الماسات للتحويل"
-                        inputMode="numeric"
-                        className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
-                      <button
-                        onClick={handleTransferToUser}
-                        disabled={transferring || !transferAmount}
-                        className="px-4 py-2 rounded-xl font-black text-xs text-primary-foreground flex items-center gap-1
-                          bg-gradient-to-r from-primary to-accent shadow-[0_0_12px_hsl(var(--primary)/0.5)] disabled:opacity-50"
-                      >
-                        {transferring ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                        تحويل
-                      </button>
-                    </div>
-
-                    {transferAmount && parseInt(transferAmount) > 0 && (
-                      <p className="text-[11px] text-center text-muted-foreground">
-                        سيتم خصم{" "}
-                        <span className="text-primary font-black">
-                          {parseInt(transferAmount).toLocaleString()} 💎
-                        </span>{" "}
-                        من رصيدك مباشرة.
-                      </p>
-                    )}
                   </div>
                 )}
-              </>
+              </div>
+            )}
+
+            {/* Amount + action */}
+            <div className="flex gap-2">
+              <input
+                type="number"
+                placeholder="عدد الماسات"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <button
+                onClick={openConfirm}
+                disabled={!parsedAmount || (mode === "other" && !found)}
+                className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova disabled:opacity-50"
+              >
+                {mode === "self" ? "تبديل" : "إرسال"}
+              </button>
+            </div>
+
+            {parsedAmount > 0 && (
+              <p className="text-xs text-accent text-center">
+                {mode === "self" ? "ستحصل على " : "سيستلم المستخدم "}
+                {netGold.toLocaleString()} NOVA Coin
+              </p>
             )}
           </div>
 
@@ -289,10 +273,102 @@ const WalletPage = () => {
           </button>
         </main>
 
+        {/* Confirmation modal */}
+        {confirmOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            onClick={() => !submitting && setConfirmOpen(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-3xl border border-border bg-card shadow-[0_20px_60px_hsl(var(--primary)/0.35)] p-5 space-y-4 animate-in slide-in-from-bottom-4"
+            >
+              <div className="flex items-center justify-between">
+                <h4 className="font-black text-base flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-primary" /> تأكيد العملية
+                </h4>
+                <button
+                  onClick={() => !submitting && setConfirmOpen(false)}
+                  className="p-1 rounded-full hover:bg-secondary/60"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {mode === "other" && found && (
+                <div className="rounded-2xl bg-background/40 border border-border/40 p-3 flex items-center gap-3">
+                  <img loading="lazy" decoding="async"
+                    src={found.avatar_url || "https://i.pravatar.cc/100?img=3"}
+                    alt={found.display_name}
+                    className="w-10 h-10 rounded-full object-cover border border-border/40" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-muted-foreground">المستلم</p>
+                    <p className="font-bold text-sm truncate">{found.display_name}</p>
+                    <p className="text-[10px] text-muted-foreground">ID: {found.user_id}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-border/40 divide-y divide-border/40 overflow-hidden">
+                <Row label="الكمية المخصومة" value={
+                  <span className="flex items-center gap-1 font-black text-primary">
+                    {parsedAmount.toLocaleString()} <CurrencyIcon type="diamond" size="sm" />
+                  </span>
+                } />
+                <Row label="نسبة التبديل" value={`1000 💎 = ${(1000 * exchangeRate / 100).toLocaleString()} 💰`} />
+                <Row label="الإجمالي قبل الرسوم" value={
+                  <span className="font-bold">{goldReceived.toLocaleString()} 💰</span>
+                } />
+                <Row label="رسوم المنصة" value={
+                  <span className="text-emerald-400 font-bold">
+                    {fee === 0 ? "بدون رسوم" : `${fee.toLocaleString()} 💰`}
+                  </span>
+                } />
+                <Row label={mode === "self" ? "الصافي لك" : "الصافي للمستلم"} value={
+                  <span className="flex items-center gap-1 font-black text-accent text-base">
+                    {netGold.toLocaleString()} <CurrencyIcon type="gold" size="sm" />
+                  </span>
+                } highlight />
+              </div>
+
+              <p className="text-[11px] text-muted-foreground text-center">
+                {mode === "self"
+                  ? "سيتم تحويل الماس إلى Coins في رصيدك مباشرة."
+                  : "سيتم خصم الماس من رصيدك وإيداع Coins فوراً في حساب المستلم."}
+              </p>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setConfirmOpen(false)}
+                  disabled={submitting}
+                  className="py-3 rounded-2xl font-black text-sm border border-border text-foreground hover:bg-secondary/60 disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={submit}
+                  disabled={submitting}
+                  className="py-3 rounded-2xl font-black text-sm gradient-neon text-primary-foreground btn-nova flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  تأكيد التحويل
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <BottomNav />
       </div>
     </PageTransition>
   );
 };
+
+const Row = ({ label, value, highlight }: { label: string; value: React.ReactNode; highlight?: boolean }) => (
+  <div className={`flex items-center justify-between px-3 py-2.5 text-sm ${highlight ? "bg-primary/5" : ""}`}>
+    <span className="text-muted-foreground text-xs">{label}</span>
+    <div>{value}</div>
+  </div>
+);
 
 export default WalletPage;

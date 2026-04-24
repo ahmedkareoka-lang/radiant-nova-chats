@@ -1499,6 +1499,10 @@ export type Database = {
           cycle_start: string
         }[]
       }
+      gift_diamonds_as_coins_to_user: {
+        Args: { _diamond_amount: number; _recipient_user_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
