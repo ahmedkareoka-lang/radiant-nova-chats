@@ -11,8 +11,10 @@ import PageTransition from "@/components/PageTransition";
 import FramedAvatar from "@/components/FramedAvatar";
 import LoveBadge from "@/components/LoveBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import BDBadge from "@/components/BDBadge";
 import AgentTransferModal from "@/components/AgentTransferModal";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
+import { useIsBD } from "@/hooks/useIsBD";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
@@ -29,6 +31,7 @@ const UserProfile = () => {
   const { startConversation } = useConversations();
   const { couple: loveCouple } = useLoveCouple(userId);
   const targetIsAgent = useIsRechargeAgent(userId);
+  const targetIsBD = useIsBD(userId);
   const meIsAgent = useIsRechargeAgent(currentUserId);
   const [transferOpen, setTransferOpen] = useState(false);
 
@@ -97,6 +100,7 @@ const UserProfile = () => {
                   avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
                   equippedFrame={frameKey}
                   isRechargeAgent={targetIsAgent}
+                  isBD={targetIsBD}
                   size={120}
                 />
               </div>
@@ -132,6 +136,7 @@ const UserProfile = () => {
               ) : null}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {targetIsAgent && <RechargeAgentBadge size="md" />}
+              {targetIsBD && <BDBadge size="md" />}
             </div>
 
             {/* Wealth & Charm tier badges */}
