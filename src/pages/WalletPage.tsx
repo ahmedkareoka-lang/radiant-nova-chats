@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRightLeft, Send } from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Send, User, Users, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,12 +7,66 @@ import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
 
+type FoundUser = { id: string; user_id: string; display_name: string; avatar_url: string | null };
+
 const WalletPage = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [exchangeAmount, setExchangeAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState(100);
   const [loading, setLoading] = useState(false);
+
+  // Tabs: 'self' = exchange diamonds → coins for me, 'other' = transfer diamonds to another user
+  const [mode, setMode] = useState<"self" | "other">("self");
+
+  // Transfer-to-other state
+  const [recipientCode, setRecipientCode] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [found, setFound] = useState<FoundUser | null>(null);
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferring, setTransferring] = useState(false);
+
+  const searchRecipient = async () => {
+    const code = recipientCode.trim();
+    if (!code) { toast.error("أدخل ID المستخدم"); return; }
+    setSearching(true);
+    setFound(null);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id,user_id,display_name,avatar_url")
+      .eq("user_id", code)
+      .maybeSingle();
+    setSearching(false);
+    if (error || !data) {
+      toast.error("لم يتم العثور على مستخدم بهذا المعرف");
+      return;
+    }
+    if (data.id === profile?.id) {
+      toast.error("لا يمكنك التحويل إلى نفسك");
+      return;
+    }
+    setFound(data as FoundUser);
+  };
+
+  const handleTransferToUser = async () => {
+    if (!profile || !found) return;
+    const amount = parseInt(transferAmount);
+    if (isNaN(amount) || amount <= 0) { toast.error("أدخل كمية صحيحة"); return; }
+    if (profile.diamonds < amount) { toast.error("رصيد الماس غير كافٍ!"); return; }
+    setTransferring(true);
+    const { data, error } = await supabase.rpc("transfer_diamonds_to_user", {
+      _recipient_user_id: found.user_id,
+      _amount: amount,
+    });
+    setTransferring(false);
+    if (error) {
+      toast.error(error.message || "فشل في التحويل");
+      return;
+    }
+    setProfile({ ...profile, diamonds: profile.diamonds - amount });
+    setTransferAmount("");
+    toast.success(`💎 تم تحويل ${amount.toLocaleString()} ماسة إلى ${found.display_name}!`);
+  };
 
   useEffect(() => {
     const load = async () => {
