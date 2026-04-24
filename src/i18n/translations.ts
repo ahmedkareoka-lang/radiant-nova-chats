@@ -96,6 +96,9 @@ const translations = {
   "general.error": { ar: "حدث خطأ", en: "Error" },
   "general.success": { ar: "تم بنجاح", en: "Success" },
   "general.language": { ar: "English", en: "العربية" },
+
+  // Room system messages
+  "room.system.joined": { ar: "انضم إلى الغرفة", en: "joined the room" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

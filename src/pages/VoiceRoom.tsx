@@ -33,6 +33,7 @@ import FramedAvatar from "@/components/FramedAvatar";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -93,6 +94,7 @@ const VoiceRoom = () => {
   const roomId = searchParams.get("id");
   const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
+  const { t, locale } = useLanguage();
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
@@ -200,6 +202,8 @@ const VoiceRoom = () => {
   // Shows for ALL newly-joined members (not just self) so everyone in the room sees joins.
   // The first sync after mount only marks existing members as "seen" — we don't replay
   // entrances for people who were already in the room when we joined.
+  // We sort newcomers by joined_at to keep queue ordering deterministic across clients
+  // (so two users joining simultaneously appear in the same order on every device).
   useEffect(() => {
     if (members.length === 0) return;
 
@@ -210,19 +214,29 @@ const VoiceRoom = () => {
       return;
     }
 
-    for (const m of members) {
-      if (seenMemberIds.current.has(m.user_id)) continue;
-      seenMemberIds.current.add(m.user_id);
-      if (!m.profile) continue;
+    // Collect newcomers, then sort by joined_at to enforce a stable global order
+    const newcomers = members
+      .filter(m => !seenMemberIds.current.has(m.user_id) && m.profile)
+      .sort((a, b) => {
+        const ta = (a as any).joined_at ? new Date((a as any).joined_at).getTime() : 0;
+        const tb = (b as any).joined_at ? new Date((b as any).joined_at).getTime() : 0;
+        return ta - tb;
+      });
 
-      const wealthLvl = m.profile.wealth_level || 1;
-      const charismaLvl = m.profile.charisma_level || 1;
+    if (newcomers.length === 0) return;
+
+    const additions: typeof entranceQueue = [];
+    for (const m of newcomers) {
+      seenMemberIds.current.add(m.user_id);
+
+      const wealthLvl = m.profile!.wealth_level || 1;
+      const charismaLvl = m.profile!.charisma_level || 1;
       const effect = getEntranceEffect(wealthLvl, charismaLvl);
 
       // Top entrance banner — only for SELF (so it doesn't spam others)
       if (m.user_id === currentUserId) {
         setEntranceBanner({
-          name: m.profile.display_name,
+          name: m.profile!.display_name,
           wealthLevel: wealthLvl,
           charismaLevel: charismaLvl,
           effect,
@@ -230,37 +244,59 @@ const VoiceRoom = () => {
         setTimeout(() => setEntranceBanner(null), 4000);
       }
 
-      // Fullscreen entrance effect — for EVERY new member, visible to all in the room
       const p = m.profile as any;
       const novaLvl = p.nova_p_level || 0;
       const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
-      setEntranceQueue(prev => [...prev, {
-        id: m.user_id + "-" + Date.now(),
+      // Stable, deterministic id: same member = same id across clients (no Date.now())
+      additions.push({
+        id: `entrance-${m.user_id}-${(m as any).joined_at || ""}`,
         displayName: m.profile!.display_name,
         avatarUrl: m.profile!.avatar_url,
         videoUrl: entranceMedia,
         audioUrl: p.entrance_audio_url || null,
         novaLevel: novaLvl,
         vipLevel: m.profile!.vip_level || 0,
-      }]);
+      });
+    }
+
+    if (additions.length > 0) {
+      setEntranceQueue(prev => {
+        // De-dup by id to guard against React StrictMode double-effects / reconnects
+        const existingIds = new Set(prev.map(e => e.id));
+        const fresh = additions.filter(a => !existingIds.has(a.id));
+        return [...prev, ...fresh];
+      });
     }
   }, [members, currentUserId]);
 
   // Announce SELF joining via a system chat message — broadcast to every room member via realtime.
-  // This way every user sees "🚪 Name joined" in the chat regardless of entrance media.
+  // Idempotent: we tag the content with a hidden marker `[[JOIN:<uid>]]` so even if the effect
+  // re-runs (StrictMode / reconnects), we won't insert a duplicate row for the same user/room.
   useEffect(() => {
     if (didAnnounceJoin.current) return;
     if (!roomId || !currentUserId) return;
     const me = members.find(m => m.user_id === currentUserId);
     if (!me?.profile) return;
 
+    const joinMarker = `[[JOIN:${currentUserId}]]`;
+
+    // If a join message for me already exists in the loaded chat, don't insert again
+    const alreadyAnnounced = messages.some(
+      msg => msg.sender_id === currentUserId && msg.content.includes(joinMarker)
+    );
+    if (alreadyAnnounced) {
+      didAnnounceJoin.current = true;
+      return;
+    }
+
     didAnnounceJoin.current = true;
     supabase.from("messages").insert({
       sender_id: currentUserId,
       room_id: roomId,
-      content: `🚪 ${me.profile.display_name} انضم إلى الغرفة`,
+      // Marker is stripped on render; visible text is built from sender display_name + locale
+      content: `${joinMarker} ${me.profile.display_name}`,
     });
-  }, [members, currentUserId, roomId]);
+  }, [members, currentUserId, roomId, messages]);
 
   const handleEntranceComplete = useCallback((id: string) => {
     setEntranceQueue(prev => prev.filter(e => e.id !== id));
@@ -1199,18 +1235,34 @@ const VoiceRoom = () => {
 
           <div className="space-y-2 max-h-40 overflow-auto mb-3">
             {messages.map((msg) => {
-              const isSystemMsg = msg.content.startsWith("🚪");
+              // System "join" message detection.
+              // New format: "[[JOIN:<uid>]] DisplayName"
+              // Legacy format: "🚪 Name انضم إلى الغرفة"
+              const joinMatch = msg.content.match(/^\[\[JOIN:[^\]]+\]\]\s*(.+)$/);
+              const isLegacyJoin = !joinMatch && msg.content.startsWith("🚪");
+              const isSystemMsg = !!joinMatch || isLegacyJoin;
+              const joinedName = joinMatch
+                ? joinMatch[1].trim()
+                : (msg.sender?.display_name || "");
               const isBossMsg = msg.sender?.is_boss;
               return (
-                <div key={msg.id} className={`text-xs ${isSystemMsg ? "text-center" : ""} group relative`}>
+                <div key={msg.id} className={`text-xs ${isSystemMsg ? "flex justify-center" : ""} group relative`}>
                   {isSystemMsg ? (
-                    <motion.span
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-accent/80 font-medium italic"
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-accent/15 via-primary/10 to-accent/15 border border-accent/30 shadow-[0_0_12px_hsl(var(--accent)/0.25)] select-none"
+                      // System messages are NOT editable: no admin pin/delete affordances rendered
                     >
-                      {msg.content}
-                    </motion.span>
+                      <span className="text-accent text-sm leading-none" aria-hidden>🚪</span>
+                      <span className="text-accent font-semibold text-[11px] tracking-wide">
+                        {joinedName || msg.sender?.display_name}
+                      </span>
+                      <span className="text-accent/80 font-medium text-[11px]">
+                        {t("room.system.joined")}
+                      </span>
+                    </motion.div>
                   ) : (
                     <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
                       <span className="inline-flex items-center gap-1 align-middle mr-1">
@@ -1223,8 +1275,8 @@ const VoiceRoom = () => {
                       <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
                       {/* AI live translation */}
                       <TranslatedMessage text={msg.content} enabled={translationsEnabled} />
-                      {/* Admin actions: Pin & Delete */}
-                      {isAdmin && !isSystemMsg && (
+                      {/* Admin actions: Pin & Delete (system messages excluded above) */}
+                      {isAdmin && (
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 inline-flex gap-1">
                           <button onClick={() => handlePinMessage(msg.content)} title="تثبيت">
                             <Pin className="w-3 h-3 text-muted-foreground hover:text-accent" />

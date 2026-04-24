@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playNovaEntranceSound } from "@/lib/novaEntranceSounds";
+import { logAgora } from "@/lib/agoraDebugLog";
 
 interface EntranceEntry {
   id: string;
@@ -27,10 +28,12 @@ const MAX_DURATION_MS = 12000;
 
 const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEntrance }: CustomEntranceEffectProps) => {
   const [current, setCurrent] = useState<EntranceEntry | null>(null);
+  const [videoDurationMs, setVideoDurationMs] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startedAtRef = useRef<number>(0);
 
-  const finish = useCallback((entryId: string) => {
+  const finish = useCallback((entryId: string, reason: "video-ended" | "fallback-timeout" | "safety-cap" | "video-error") => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -39,12 +42,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       audioRef.current.pause();
       audioRef.current = null;
     }
+    const elapsed = Date.now() - startedAtRef.current;
+    logAgora("info", "entrance", `finish [${reason}] id=${entryId} elapsed=${elapsed}ms`);
+    setVideoDurationMs(null);
     setCurrent(null);
     onComplete(entryId);
   }, [onComplete]);
 
   const playNext = useCallback((entry: EntranceEntry) => {
     setCurrent(entry);
+    setVideoDurationMs(null);
+    startedAtRef.current = Date.now();
 
     // Tier-based NOVA P entrance sound
     if (!muteEntrance && entry.novaLevel && entry.novaLevel >= 4) {
@@ -65,12 +73,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       !!entry.videoUrl &&
       !/\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(entry.videoUrl);
 
+    logAgora("info", "entrance", `start id=${entry.id} user="${entry.displayName}" type=${isVideo ? "video" : entry.videoUrl ? "image" : "name"} url=${entry.videoUrl || "(none)"}`);
+
     // For videos, the <video onEnded> handler will call finish().
     // We still set a hard safety cap so a broken video can't freeze the queue.
     const duration = isVideo ? MAX_DURATION_MS : FALLBACK_DURATION_MS;
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => finish(entry.id), duration);
+    timerRef.current = setTimeout(
+      () => finish(entry.id, isVideo ? "safety-cap" : "fallback-timeout"),
+      duration
+    );
   }, [muteEntrance, finish]);
 
   useEffect(() => {
@@ -89,6 +102,11 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
   const activeEntry = current;
   const mediaUrl = activeEntry?.videoUrl || null;
   const isImageMedia = !!mediaUrl && /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(mediaUrl);
+  const isVideoMedia = !!mediaUrl && !isImageMedia;
+  const debugMode =
+    typeof window !== "undefined" &&
+    (new URLSearchParams(window.location.search).get("debug") === "1" ||
+      localStorage.getItem("agora-debug") === "1");
 
   return (
     <AnimatePresence>
@@ -101,6 +119,17 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
           transition={{ duration: 0.4 }}
           className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none bg-transparent"
         >
+          {/* Debug HUD: confirms entrance media duration matches actual playback */}
+          {debugMode && (
+            <div className="absolute top-4 right-4 z-[71] px-2 py-1 rounded-md bg-background/80 backdrop-blur border border-accent/40 text-[10px] font-mono text-accent pointer-events-none">
+              <div>id: {activeEntry.id.slice(-12)}</div>
+              <div>type: {isVideoMedia ? "video" : isImageMedia ? "image" : "name"}</div>
+              <div>
+                dur: {videoDurationMs !== null ? `${videoDurationMs}ms` : isVideoMedia ? "loading…" : `${FALLBACK_DURATION_MS}ms`}
+              </div>
+            </div>
+          )}
+
           {mediaUrl ? (
             isImageMedia ? (
               <motion.img
@@ -119,8 +148,16 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
                 autoPlay
                 muted={muteEntrance}
                 playsInline
-                onEnded={() => finish(activeEntry.id)}
-                onError={() => finish(activeEntry.id)}
+                onLoadedMetadata={(e) => {
+                  const v = e.currentTarget;
+                  const ms = isFinite(v.duration) ? Math.round(v.duration * 1000) : null;
+                  if (ms) {
+                    setVideoDurationMs(ms);
+                    logAgora("info", "entrance", `video metadata id=${activeEntry.id} duration=${ms}ms`);
+                  }
+                }}
+                onEnded={() => finish(activeEntry.id, "video-ended")}
+                onError={() => finish(activeEntry.id, "video-error")}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
