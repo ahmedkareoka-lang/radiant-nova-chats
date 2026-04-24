@@ -81,14 +81,18 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const fetchMessages = useCallback(async () => {
     if (!roomId) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("messages")
       .select("*")
       .eq("room_id", roomId)
       .order("created_at", { ascending: true })
       .limit(100);
 
-    if (data && data.length > 0) {
+    // If RLS blocked us (not yet a room member), keep existing state to avoid wiping the chat.
+    if (error) return;
+    if (!data) return;
+
+    if (data.length > 0) {
       const senderIds = [...new Set(data.map((m) => m.sender_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -103,7 +107,9 @@ export const useVoiceRoom = (roomId: string | null) => {
         sender: profileMap[m.sender_id] || null,
       })));
     } else {
-      setMessages([]);
+      // Empty result: only clear if we had no messages before, otherwise preserve cache
+      // (a returning user may briefly see [] before their join completes)
+      setMessages((prev) => (prev.length === 0 ? [] : prev));
     }
   }, [roomId]);
 
@@ -244,7 +250,7 @@ export const useVoiceRoom = (roomId: string | null) => {
   const joinRoom = async () => {
     if (!roomId || !currentUserId) return;
     // Upsert ensures one entry per user per room (unique constraint)
-    await supabase.from("room_members").upsert(
+    const { error } = await supabase.from("room_members").upsert(
       {
         room_id: roomId,
         user_id: currentUserId,
@@ -253,6 +259,12 @@ export const useVoiceRoom = (roomId: string | null) => {
       },
       { onConflict: "room_id,user_id" }
     );
+    // After membership is confirmed, RLS now allows reading messages.
+    // Re-fetch so returning users see the existing chat history.
+    if (!error) {
+      await fetchMessages();
+      await fetchMembers();
+    }
   };
 
   const leaveRoom = async () => {
