@@ -5,6 +5,7 @@ import AgoraRTC, {
   IMicrophoneAudioTrack,
   ClientRole,
 } from "agora-rtc-sdk-ng";
+import { logAgora } from "@/lib/agoraDebugLog";
 
 interface UseAgoraVoiceOptions {
   roomId: string | null;
@@ -20,6 +21,8 @@ const SPEAKING_THRESHOLD = 5;
 try {
   AgoraRTC.setLogLevel(2);
 } catch { /* noop */ }
+
+logAgora("info", "env", `AGORA_APP_ID ${AGORA_APP_ID ? "loaded (" + AGORA_APP_ID.slice(0, 4) + "...)" : "MISSING"}`);
 
 /**
  * Drop-in replacement for useWebRTC using Agora RTC SDK (App ID Only mode).
@@ -49,7 +52,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       try {
         user.audioTrack?.play();
       } catch (e: any) {
-        console.warn("[Agora] play() failed:", e?.message || e);
+        logAgora("warn", "play", `play() failed: ${e?.message || e}`);
         blocked = true;
       }
     });
@@ -58,25 +61,23 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
 
   const unlockAudio = useCallback(async () => {
     try {
-      // Resume any suspended audio context
       const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
       if (AC) {
         const ctx = new AC();
-        if (ctx.state === "suspended") {
-          await ctx.resume();
-        }
-        // Play a tiny silent buffer to unlock iOS
+        if (ctx.state === "suspended") await ctx.resume();
         const buffer = ctx.createBuffer(1, 1, 22050);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
         source.connect(ctx.destination);
         source.start(0);
+        logAgora("info", "unlock", `AudioContext state=${ctx.state}`);
       }
-    } catch (e) {
-      console.warn("[Agora] unlockAudio AC failed:", e);
+    } catch (e: any) {
+      logAgora("warn", "unlock", `AudioContext failed: ${e?.message || e}`);
     }
     playAllRemote();
     setAudioBlocked(false);
+    logAgora("success", "unlock", "Audio unlocked by user gesture");
   }, [playAllRemote]);
 
   // Lazily create one shared client
@@ -85,24 +86,27 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 
       client.on("user-published", async (user: IAgoraRTCRemoteUser, mediaType) => {
+        logAgora("info", "user-published", `uid=${user.uid} type=${mediaType}`);
         try {
           await client.subscribe(user, mediaType);
           if (mediaType === "audio") {
             remoteUsersRef.current.set(String(user.uid), user);
             try {
               user.audioTrack?.play();
+              logAgora("success", "subscribe", `Playing audio from uid=${user.uid}`);
             } catch (e: any) {
-              console.warn("[Agora] autoplay blocked:", e?.message || e);
+              logAgora("error", "autoplay", `Blocked by browser: ${e?.message || e}`);
               setAudioBlocked(true);
             }
             setConnectedPeers((prev) => new Set(prev).add(String(user.uid)));
           }
-        } catch (e) {
-          console.error("[Agora] subscribe failed:", e);
+        } catch (e: any) {
+          logAgora("error", "subscribe", `Failed: ${e?.message || e}`);
         }
       });
 
       client.on("user-unpublished", (user) => {
+        logAgora("info", "user-unpublished", `uid=${user.uid}`);
         remoteUsersRef.current.delete(String(user.uid));
         setConnectedPeers((prev) => {
           const next = new Set(prev);
@@ -117,6 +121,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       });
 
       client.on("user-left", (user) => {
+        logAgora("info", "user-left", `uid=${user.uid}`);
         remoteUsersRef.current.delete(String(user.uid));
         setConnectedPeers((prev) => {
           const next = new Set(prev);
@@ -130,10 +135,23 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         });
       });
 
-      // Detect autoplay being blocked by the browser
+      client.on("user-joined", (user) => {
+        logAgora("info", "user-joined", `uid=${user.uid}`);
+      });
+
+      // @ts-ignore
+      client.on("connection-state-change", (curState: string, prevState: string, reason?: string) => {
+        logAgora("info", "connection", `${prevState} → ${curState}${reason ? " (" + reason + ")" : ""}`);
+      });
+
+      // @ts-ignore
+      client.on("exception", (event: any) => {
+        logAgora("warn", "exception", `code=${event?.code} msg=${event?.msg} uid=${event?.uid}`);
+      });
+
       // @ts-ignore - event exists on Agora client
       client.on("autoplay-failed", () => {
-        console.warn("[Agora] autoplay-failed event fired");
+        logAgora("error", "autoplay-failed", "Browser blocked audio autoplay — tap to enable");
         setAudioBlocked(true);
       });
 
@@ -162,17 +180,18 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   const startLocalStream = useCallback(async () => {
     if (localTrackRef.current) return;
     try {
-      // Proactively check microphone permissions where supported
       try {
         if ((navigator as any).permissions?.query) {
           const status = await (navigator as any).permissions.query({ name: "microphone" as PermissionName });
+          logAgora("info", "mic-permission", `state=${status.state}`);
           if (status.state === "denied") {
-            console.error("[Agora] Microphone permission denied by user/browser settings");
+            logAgora("error", "mic-permission", "Microphone permission DENIED in browser settings");
             return;
           }
         }
       } catch { /* not all browsers support this */ }
 
+      logAgora("info", "mic", "Requesting microphone…");
       const track = await AgoraRTC.createMicrophoneAudioTrack({
         encoderConfig: "music_standard",
         AEC: true,
@@ -180,19 +199,23 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         AGC: true,
       });
       localTrackRef.current = track;
+      logAgora("success", "mic", "Microphone acquired");
 
       const client = getClient();
       if (currentRoleRef.current !== "host") {
         await client.setClientRole("host");
         currentRoleRef.current = "host";
+        logAgora("info", "role", "Switched to host");
       }
       if (joinedRef.current) {
         await client.publish([track]);
+        logAgora("success", "publish", "Local mic published to channel");
+      } else {
+        logAgora("warn", "publish", "Mic ready but channel not joined yet");
       }
     } catch (e: any) {
       const name = e?.name || e?.code || "Unknown";
-      console.error("[Agora] startLocalStream failed:", name, e?.message || e);
-      // Common errors: NotAllowedError (permission), NotFoundError (no mic), NotReadableError (in use)
+      logAgora("error", "startLocalStream", `${name}: ${e?.message || e}`);
     }
   }, [getClient]);
 
@@ -222,7 +245,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   useEffect(() => {
     if (!roomId || !currentUserId) return;
     if (!AGORA_APP_ID) {
-      console.error("[Agora] VITE_AGORA_APP_ID is not set — voice will not work. Add it in Vercel env vars and redeploy.");
+      logAgora("error", "config", "VITE_AGORA_APP_ID is missing — voice disabled. Add it to Vercel env vars and redeploy.");
       return;
     }
 
@@ -233,18 +256,19 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       try {
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
+        logAgora("info", "join", `Joining channel "${roomId}" as ${currentUserId}…`);
         await client.join(AGORA_APP_ID, roomId, null, currentUserId);
         if (cancelled) {
           await client.leave();
           return;
         }
         joinedRef.current = true;
-        console.log("[Agora] joined channel", roomId, "as", currentUserId);
+        logAgora("success", "join", `Joined channel "${roomId}"`);
       } catch (e: any) {
         const code = e?.code || e?.name || "Unknown";
-        console.error("[Agora] join failed:", code, e?.message || e);
+        logAgora("error", "join", `${code}: ${e?.message || e}`);
         if (String(code).includes("CAN_NOT_GET_GATEWAY_SERVER") || String(code).includes("INVALID_VENDOR_KEY")) {
-          console.error("[Agora] Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
+          logAgora("error", "join", "Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
         }
       }
     })();
