@@ -487,10 +487,19 @@ const AdminDashboard = () => {
     { id: "store", label: "المتجر", icon: Image },
     { id: "banners", label: "البانرات", icon: Image },
     { id: "agencies", label: "الوكالات", icon: Building2 },
+    { id: "payroll", label: "رواتب الوكالات", icon: DollarSign },
     { id: "recharge_agents", label: "وكلاء الشحن", icon: Phone },
     { id: "pricing", label: "الأسعار", icon: Globe },
     { id: "settings", label: "الإعدادات", icon: Settings },
   ];
+
+  const fetchPayrollReport = async () => {
+    setPayrollLoading(true);
+    const { data, error } = await supabase.rpc("get_boss_monthly_payroll" as any);
+    if (error) { toast.error("فشل تحميل تقرير الرواتب"); setPayrollLoading(false); return; }
+    setPayrollReport(data);
+    setPayrollLoading(false);
+  };
 
   // Reusable tier item form (used by NOVA P / VIP / generic store tabs)
   const renderTierItemForm = (defaultTierType: "none" | "nova_p" | "vip", title: string, accentColor: string) => {
