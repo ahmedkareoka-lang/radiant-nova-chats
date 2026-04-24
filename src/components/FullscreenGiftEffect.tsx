@@ -67,36 +67,26 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none overflow-hidden bg-transparent"
         >
-          {/* MAIN GIFT — no backdrop, no ring, just the gift itself */}
-          <div className="relative z-10 flex flex-col items-center gap-3 px-4 w-full">
+          {/* MAIN GIFT — only the gift shape, no backdrop, no ring, no clouds */}
+          <div className="relative z-10 flex flex-col items-center gap-2 px-4 w-full">
             <motion.div
-              initial={{ scale: 0.2, rotate: -15, opacity: 0 }}
-              animate={{ scale: [0.2, 1.15, 1], rotate: [0, 5, 0], opacity: 1 }}
-              transition={{ duration: 0.8, type: "spring", damping: 14, stiffness: 100 }}
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0 }}
+              transition={{ duration: 0.45, type: "spring", damping: 16, stiffness: 140 }}
               className="relative flex items-center justify-center"
-              style={{ width: "min(85vw, 480px)", height: "min(85vw, 480px)" }}
+              style={{ width: "min(80vw, 460px)", height: "min(80vw, 460px)" }}
             >
-              {/* Pulsing aura behind */}
-              <motion.div
-                animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0.2, 0.6] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "radial-gradient(circle, rgba(255,200,80,0.5), transparent 65%)",
-                  filter: "blur(40px)",
-                }}
-              />
-
               {gift.imageUrl ? (
                 <img
                   src={gift.imageUrl}
                   alt={gift.giftName}
-                  className="relative w-full h-full object-contain drop-shadow-[0_0_60px_rgba(255,200,80,0.9)]"
+                  className="relative w-full h-full object-contain"
                   style={{ background: "transparent" }}
                 />
               ) : (
                 <span
-                  className="relative drop-shadow-[0_0_50px_rgba(255,200,80,0.8)]"
+                  className="relative"
                   style={{ fontSize: "min(60vw, 360px)", lineHeight: 1 }}
                 >
                   {gift.emoji}
@@ -104,86 +94,19 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
               )}
             </motion.div>
 
-            {/* Gift name */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-2xl sm:text-3xl font-black text-foreground glow-neon-text text-center"
-            >
-              {gift.giftName}
-            </motion.p>
-
-            {/* Sender → Receiver */}
+            {/* Sender → Receiver (small text, no background) */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55 }}
-              className="flex items-center gap-3 text-base sm:text-lg"
+              exit={{ opacity: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center gap-2 text-sm sm:text-base"
             >
               <span className="text-primary font-bold drop-shadow-md">{gift.senderName}</span>
               <span className="text-muted-foreground">→</span>
               <span className="text-accent font-bold drop-shadow-md">{gift.recipientName}</span>
             </motion.div>
-
-            {/* Amount badge */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.7, type: "spring" }}
-              className="px-5 py-2 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-black text-base sm:text-lg shadow-[0_0_30px_rgba(255,200,0,0.6)]"
-            >
-              💰 {gift.amount.toLocaleString()} Gold
-            </motion.div>
           </div>
-
-          {/* Particle explosion */}
-          <div className="absolute inset-0 pointer-events-none">
-            {Array.from({ length: isLegendary ? 50 : 25 }).map((_, i) => {
-              const total = isLegendary ? 50 : 25;
-              const angle = (i / total) * Math.PI * 2;
-              const dist = 180 + Math.random() * 250;
-              const color = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
-              return (
-                <motion.div
-                  key={i}
-                  className="absolute rounded-full"
-                  style={{
-                    width: 6 + Math.random() * 10,
-                    height: 6 + Math.random() * 10,
-                    background: color,
-                    left: "50%",
-                    top: "50%",
-                    boxShadow: `0 0 12px ${color}`,
-                  }}
-                  initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
-                  animate={{
-                    x: Math.cos(angle) * dist,
-                    y: Math.sin(angle) * dist,
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.6, 0],
-                  }}
-                  transition={{ duration: 1.4, delay: 0.2 + i * 0.02, repeat: isMega ? 2 : 1, repeatDelay: 0.4 }}
-                />
-              );
-            })}
-          </div>
-
-          {/* Rising sparkles */}
-          {Array.from({ length: 18 }).map((_, i) => (
-            <motion.div
-              key={`sparkle-${i}`}
-              className="absolute w-1.5 h-1.5 rounded-full bg-yellow-300"
-              style={{
-                left: `${5 + Math.random() * 90}%`,
-                bottom: 0,
-                boxShadow: "0 0 8px rgba(255,220,100,0.9)",
-              }}
-              initial={{ y: 0, opacity: 0 }}
-              animate={{ y: -window.innerHeight, opacity: [0, 1, 1, 0] }}
-              transition={{ duration: 2.5 + Math.random() * 2, delay: Math.random() * 1.5, repeat: Infinity }}
-            />
-          ))}
         </motion.div>
       )}
     </AnimatePresence>
