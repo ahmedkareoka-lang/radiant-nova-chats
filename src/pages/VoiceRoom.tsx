@@ -1103,9 +1103,10 @@ const VoiceRoom = () => {
         }))}
         onMultiGiftSent={handleGiftBurst}
         onGiftSent={(info) => {
-          // Show fullscreen effect immediately for the sender (broadcasts don't echo back)
+          // Show fullscreen effect + top banner immediately for the sender (broadcasts don't echo back)
+          const id = Date.now().toString();
           setFullscreenGift({
-            id: Date.now().toString(),
+            id,
             emoji: info.emoji,
             giftName: info.giftName,
             imageUrl: info.imageUrl,
@@ -1114,6 +1115,17 @@ const VoiceRoom = () => {
             amount: info.amount,
             timestamp: Date.now(),
           });
+          const toastId = `toast-self-${id}`;
+          setGiftToasts(prev => [...prev, {
+            id: toastId,
+            emoji: info.emoji,
+            imageUrl: info.imageUrl,
+            senderName: info.senderName,
+            recipientName: info.recipientName,
+            giftName: info.giftName,
+            amount: info.amount,
+          }]);
+          setTimeout(() => setGiftToasts(prev => prev.filter(t => t.id !== toastId)), 4500);
         }}
         roomId={roomId || undefined}
       />
