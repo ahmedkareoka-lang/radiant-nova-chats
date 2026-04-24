@@ -50,6 +50,8 @@ export const useFollows = (profileId: string | null) => {
       await supabase.from("follows").insert({ follower_id: currentUserId, following_id: profileId });
       setIsFollowing(true);
       setFollowersCount((c) => c + 1);
+      // Track daily task: follow
+      supabase.rpc("increment_daily_task", { _user_id: currentUserId, _task_type: "follow", _amount: 1 });
     }
   };
 
