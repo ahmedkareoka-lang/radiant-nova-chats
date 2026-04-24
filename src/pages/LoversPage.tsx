@@ -196,7 +196,8 @@ const LoversPage = () => {
               <p className="text-sm text-pink-100 mb-4">اربط نفسك مع شخص من متابعَيك بشكل دائم وأظهروا للجميع حبكم</p>
               <div className="flex items-center justify-center gap-2 mb-4">
                 <span className="text-2xl font-black text-yellow-300">{LOVE_ACTIVATION_COST.toLocaleString()}</span>
-                <span className="text-yellow-300">🪙 رسوم التفعيل</span>
+                <CurrencyIcon type="gold" size="md" />
+                <span className="text-yellow-300">رسوم التفعيل</span>
               </div>
               <button
                 onClick={handleOpenPicker}
@@ -206,7 +207,7 @@ const LoversPage = () => {
               >
                 💕 اختر حبيب/ة
               </button>
-              <p className="text-[11px] text-pink-200 mt-2">رصيدك: {(myProfile?.coins ?? 0).toLocaleString()} 🪙</p>
+              <p className="text-[11px] text-pink-200 mt-2 flex items-center justify-center gap-1">رصيدك: {(myProfile?.coins ?? 0).toLocaleString()} <CurrencyIcon type="gold" size="xs" /></p>
             </div>
           )}
 
