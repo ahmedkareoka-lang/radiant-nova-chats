@@ -35,6 +35,10 @@ const AgenciesPage = () => {
   const [agencyPayroll, setAgencyPayroll] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsHost, setDetailsHost] = useState<{ id?: string; name?: string }>({});
+  const [agencyOverview, setAgencyOverview] = useState<any>(null);
+  const [hostEvents, setHostEvents] = useState<any>(null);
+  const [showOverview, setShowOverview] = useState(false);
+  const [showHostEvents, setShowHostEvents] = useState(false);
 
   useEffect(() => {
     const load = async () => {
