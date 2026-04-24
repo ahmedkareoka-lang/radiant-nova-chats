@@ -30,6 +30,18 @@ import LuckyWheelButton from "@/components/LuckyWheelButton";
 import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import { logAgora } from "@/lib/agoraDebugLog";
+import AIRoomAssistant from "@/components/AIRoomAssistant";
+import TranslatedMessage from "@/components/TranslatedMessage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserProfile {
   user_id: string;
@@ -117,6 +129,14 @@ const VoiceRoom = () => {
   const [showCouplePicker, setShowCouplePicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
+
+  // AI moderator state
+  const [translationsEnabled, setTranslationsEnabled] = useState(false);
+  // Confirmation dialog state for destructive admin actions
+  const [confirmAction, setConfirmAction] = useState<
+    | { type: "kick" | "ban" | "kickMic"; userId: string; name: string }
+    | null
+  >(null);
 
   // Current user profile
   const currentProfile = members.find(m => m.user_id === currentUserId)?.profile;
@@ -836,7 +856,7 @@ const VoiceRoom = () => {
                       </button>
                       {/* Kick */}
                       <button
-                        onClick={() => handleKickUser(selectedProfile.user_id)}
+                        onClick={() => setConfirmAction({ type: "kick", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
                         className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
                       >
                         <LogOut className="w-4 h-4 text-destructive" />
@@ -844,7 +864,7 @@ const VoiceRoom = () => {
                       </button>
                       {/* Ban */}
                       <button
-                        onClick={() => handleBanUser(selectedProfile.user_id)}
+                        onClick={() => setConfirmAction({ type: "ban", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
                         className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
                       >
                         <Ban className="w-4 h-4 text-destructive" />
@@ -855,7 +875,7 @@ const VoiceRoom = () => {
                     {members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
                      members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined && (
                       <button
-                        onClick={() => handleKickFromMic(selectedProfile.user_id)}
+                        onClick={() => setConfirmAction({ type: "kickMic", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
                         className="w-full mt-2 py-2 rounded-xl bg-destructive/10 text-destructive font-bold text-xs flex items-center justify-center gap-2"
                       >
                         <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
@@ -1183,6 +1203,8 @@ const VoiceRoom = () => {
                         {msg.sender?.display_name || "User"}:{" "}
                       </span>
                       <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
+                      {/* AI live translation */}
+                      <TranslatedMessage text={msg.content} enabled={translationsEnabled} />
                       {/* Admin actions: Pin & Delete */}
                       {isAdmin && !isSystemMsg && (
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 inline-flex gap-1">
@@ -1279,6 +1301,53 @@ const VoiceRoom = () => {
           members={members}
         />
       )}
+
+      {/* AI Room Moderator (summary + auto-translate) */}
+      <AIRoomAssistant
+        messages={messages}
+        translationsEnabled={translationsEnabled}
+        onToggleTranslations={(v) => {
+          setTranslationsEnabled(v);
+          toast.success(v ? "الترجمة الفورية شغّالة 🌐" : "تم إيقاف الترجمة");
+        }}
+      />
+
+      {/* Confirmation dialog for destructive admin actions */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <AlertDialogContent className="card-glass">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.type === "kick" && "تأكيد الطرد"}
+              {confirmAction?.type === "ban" && "تأكيد الحظر"}
+              {confirmAction?.type === "kickMic" && "إنزال من المايك"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.type === "kick" &&
+                `هتطرد "${confirmAction.name}" من الروم. يقدر يرجع تاني لو حب.`}
+              {confirmAction?.type === "ban" &&
+                `هتحظر "${confirmAction?.name}" نهائياً من الروم. مش هيقدر يدخل تاني.`}
+              {confirmAction?.type === "kickMic" &&
+                `هتنزل "${confirmAction?.name}" من المايك. يقدر يطلب يرجع.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!confirmAction) return;
+                const { type, userId } = confirmAction;
+                setConfirmAction(null);
+                if (type === "kick") await handleKickUser(userId);
+                else if (type === "ban") await handleBanUser(userId);
+                else if (type === "kickMic") await handleKickFromMic(userId);
+              }}
+            >
+              تأكيد
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
