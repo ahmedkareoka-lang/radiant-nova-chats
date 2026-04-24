@@ -856,7 +856,7 @@ const VoiceRoom = () => {
                       </button>
                       {/* Kick */}
                       <button
-                        onClick={() => handleKickUser(selectedProfile.user_id)}
+                        onClick={() => setConfirmAction({ type: "kick", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
                         className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
                       >
                         <LogOut className="w-4 h-4 text-destructive" />
@@ -864,7 +864,7 @@ const VoiceRoom = () => {
                       </button>
                       {/* Ban */}
                       <button
-                        onClick={() => handleBanUser(selectedProfile.user_id)}
+                        onClick={() => setConfirmAction({ type: "ban", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
                         className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
                       >
                         <Ban className="w-4 h-4 text-destructive" />
@@ -875,7 +875,7 @@ const VoiceRoom = () => {
                     {members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
                      members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined && (
                       <button
-                        onClick={() => handleKickFromMic(selectedProfile.user_id)}
+                        onClick={() => setConfirmAction({ type: "kickMic", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
                         className="w-full mt-2 py-2 rounded-xl bg-destructive/10 text-destructive font-bold text-xs flex items-center justify-center gap-2"
                       >
                         <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
