@@ -1203,6 +1203,8 @@ const VoiceRoom = () => {
                         {msg.sender?.display_name || "User"}:{" "}
                       </span>
                       <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
+                      {/* AI live translation */}
+                      <TranslatedMessage text={msg.content} enabled={translationsEnabled} />
                       {/* Admin actions: Pin & Delete */}
                       {isAdmin && !isSystemMsg && (
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 inline-flex gap-1">
@@ -1299,6 +1301,53 @@ const VoiceRoom = () => {
           members={members}
         />
       )}
+
+      {/* AI Room Moderator (summary + auto-translate) */}
+      <AIRoomAssistant
+        messages={messages}
+        translationsEnabled={translationsEnabled}
+        onToggleTranslations={(v) => {
+          setTranslationsEnabled(v);
+          toast.success(v ? "الترجمة الفورية شغّالة 🌐" : "تم إيقاف الترجمة");
+        }}
+      />
+
+      {/* Confirmation dialog for destructive admin actions */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
+        <AlertDialogContent className="card-glass">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.type === "kick" && "تأكيد الطرد"}
+              {confirmAction?.type === "ban" && "تأكيد الحظر"}
+              {confirmAction?.type === "kickMic" && "إنزال من المايك"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.type === "kick" &&
+                `هتطرد "${confirmAction.name}" من الروم. يقدر يرجع تاني لو حب.`}
+              {confirmAction?.type === "ban" &&
+                `هتحظر "${confirmAction?.name}" نهائياً من الروم. مش هيقدر يدخل تاني.`}
+              {confirmAction?.type === "kickMic" &&
+                `هتنزل "${confirmAction?.name}" من المايك. يقدر يطلب يرجع.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!confirmAction) return;
+                const { type, userId } = confirmAction;
+                setConfirmAction(null);
+                if (type === "kick") await handleKickUser(userId);
+                else if (type === "ban") await handleBanUser(userId);
+                else if (type === "kickMic") await handleKickFromMic(userId);
+              }}
+            >
+              تأكيد
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
