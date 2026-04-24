@@ -590,6 +590,18 @@ const Profile = () => {
             />
           )}
 
+          {/* === BD DASHBOARD ENTRY — visible only for BD accounts === */}
+          {meIsBD && (
+            <button
+              onClick={() => navigate("/bd")}
+              className="w-full mt-3 py-3 rounded-2xl font-black text-white flex items-center justify-center gap-2 text-sm
+                bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400
+                shadow-[0_0_20px_hsl(25_100%_55%/0.55)] border border-amber-200/60"
+            >
+              🟠 لوحة Business Developer
+            </button>
+          )}
+
 
           {/* Hint to redirect to home for actions */}
           <button
