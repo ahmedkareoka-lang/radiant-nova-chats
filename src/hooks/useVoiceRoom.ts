@@ -34,9 +34,12 @@ export interface RoomMessage {
   };
 }
 
-const HEARTBEAT_INTERVAL = 25000; // 25 seconds — server cleanup runs at 90s/3min thresholds
-const STALE_MIC_MS = 90_000; // hide from mic if no heartbeat for 90s
-const STALE_MEMBER_MS = 180_000; // hide from room if no heartbeat for 3min
+// 🚀 Tighter cycle for sub-second responsiveness without overloading the DB.
+// Server cleanup still runs at 90s/3min — we just refresh more often locally.
+const HEARTBEAT_INTERVAL = 15_000; // 15s heartbeat (was 25s)
+const STALE_MIC_MS = 60_000;       // drop from mic after 60s of silence (was 90s)
+const STALE_MEMBER_MS = 150_000;   // hide member after 2.5min (was 3min)
+const STALE_SWEEP_INTERVAL = 15_000; // re-evaluate stale members every 15s (was 30s)
 
 export const useVoiceRoom = (roomId: string | null) => {
   const [members, setMembers] = useState<RoomMember[]>([]);
@@ -209,9 +212,24 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     };
 
+    // 🚀 Smart visibility handling: when the tab becomes visible again,
+    // immediately push a heartbeat + refetch so the user reappears instantly.
+    const sendHeartbeat = async () => {
+      const uid = currentUserIdRef.current;
+      const rid = roomIdRef.current;
+      if (!uid || !rid) return;
+      await supabase
+        .from("room_members")
+        .update({ joined_at: new Date().toISOString() })
+        .eq("room_id", rid)
+        .eq("user_id", uid);
+    };
+
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // Don't remove immediately on visibility change, heartbeat will handle stale users
+      if (document.visibilityState === 'visible') {
+        // Re-establish presence the moment the user returns
+        sendHeartbeat();
+        fetchMembers();
       }
     };
 
@@ -231,9 +249,9 @@ export const useVoiceRoom = (roomId: string | null) => {
           .eq("room_id", rid)
           .eq("user_id", uid);
 
-        // Daily task: increment room_minutes every 2 ticks (= 1 minute)
+        // Daily task: increment room_minutes every 4 ticks (= 1 minute at 15s/tick)
         heartbeatTickCount += 1;
-        if (heartbeatTickCount % 2 === 0) {
+        if (heartbeatTickCount % 4 === 0) {
           supabase.rpc("increment_daily_task", {
             _user_id: uid,
             _task_type: "room",
@@ -260,10 +278,10 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     }, HEARTBEAT_INTERVAL);
 
-    // Periodic re-filter to drop stale users from UI even without DB changes
+    // 🚀 Periodic re-filter to drop stale users from UI even without DB changes
     const staleSweepRef = setInterval(() => {
       fetchMembers();
-    }, 30_000);
+    }, STALE_SWEEP_INTERVAL);
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
