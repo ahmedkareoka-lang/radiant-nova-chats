@@ -9,6 +9,7 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import NovaSpinner from "@/components/NovaSpinner";
 import EmptyState from "@/components/EmptyState";
 import PayrollStructureBanner from "@/components/PayrollStructureBanner";
+import SalaryDetailsModal from "@/components/SalaryDetailsModal";
 
 const AgenciesPage = () => {
   const navigate = useNavigate();
