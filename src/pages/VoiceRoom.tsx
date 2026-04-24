@@ -30,6 +30,18 @@ import LuckyWheelButton from "@/components/LuckyWheelButton";
 import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import { logAgora } from "@/lib/agoraDebugLog";
+import AIRoomAssistant from "@/components/AIRoomAssistant";
+import TranslatedMessage from "@/components/TranslatedMessage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserProfile {
   user_id: string;
@@ -117,6 +129,14 @@ const VoiceRoom = () => {
   const [showCouplePicker, setShowCouplePicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
+
+  // AI moderator state
+  const [translationsEnabled, setTranslationsEnabled] = useState(false);
+  // Confirmation dialog state for destructive admin actions
+  const [confirmAction, setConfirmAction] = useState<
+    | { type: "kick" | "ban" | "kickMic"; userId: string; name: string }
+    | null
+  >(null);
 
   // Current user profile
   const currentProfile = members.find(m => m.user_id === currentUserId)?.profile;
