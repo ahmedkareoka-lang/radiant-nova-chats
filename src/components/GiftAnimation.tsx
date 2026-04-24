@@ -199,7 +199,17 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (allSuccess) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
-        broadcastGift(giftEmoji, gift.name, senderName, giftCost * selectedRecipients.size, undefined, giftImageUrl);
+        // Trigger fullscreen effect locally for the SENDER (broadcasts don't echo back to self)
+        const totalAmount = giftCost * selectedRecipients.size;
+        onGiftSent?.({
+          emoji: giftEmoji,
+          giftName: gift.name,
+          imageUrl: giftImageUrl,
+          senderName,
+          recipientName: `${selectedRecipients.size} أشخاص`,
+          amount: totalAmount,
+        });
+        broadcastGift(giftEmoji, gift.name, senderName, totalAmount, undefined, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
     } else if (receiverId) {
@@ -207,6 +217,15 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
       if (success) {
         setBurst(true);
         onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
+        // Trigger fullscreen effect locally for the SENDER (broadcasts don't echo back to self)
+        onGiftSent?.({
+          emoji: giftEmoji,
+          giftName: gift.name,
+          imageUrl: giftImageUrl,
+          senderName,
+          recipientName: receiverName || "مستخدم",
+          amount: giftCost,
+        });
         broadcastGift(giftEmoji, gift.name, senderName, giftCost, receiverName, giftImageUrl);
         setTimeout(() => { setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1); onClose(); }, 800);
       } else { setSending(false); }
