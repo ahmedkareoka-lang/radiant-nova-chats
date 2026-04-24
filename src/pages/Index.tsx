@@ -210,63 +210,63 @@ const Index = () => {
 
           {/* Quick action tiles row (Yalla-style) — 6 tiles in 2 rows */}
           <div className="grid grid-cols-4 gap-2 mb-2">
-            <button onClick={() => navigate("/leaderboard")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/leaderboard")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-gold">
               <div className="w-9 h-9 rounded-xl gradient-gold flex items-center justify-center">
                 <Trophy className="w-5 h-5 text-accent-foreground" />
               </div>
-              <span className="text-[9px] font-bold text-muted-foreground">الترتيب</span>
+              <span className="text-[9px] font-bold text-foreground/90">الترتيب</span>
             </button>
-            <button onClick={() => navigate("/games")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/games")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-purple">
               <div className="w-9 h-9 rounded-xl gradient-neon flex items-center justify-center text-base">🎮</div>
-              <span className="text-[9px] font-bold text-muted-foreground">الألعاب</span>
+              <span className="text-[9px] font-bold text-foreground/90">الألعاب</span>
             </button>
-            <button onClick={() => navigate("/store")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/store")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-pink">
               <div className="w-9 h-9 rounded-xl gradient-vip flex items-center justify-center">
                 <Gift className="w-5 h-5 text-foreground" />
               </div>
-              <span className="text-[9px] font-bold text-muted-foreground">المتجر</span>
+              <span className="text-[9px] font-bold text-foreground/90">المتجر</span>
             </button>
-            <button onClick={() => navigate("/agencies")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/agencies")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-white">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-base">🏰</div>
-              <span className="text-[9px] font-bold text-muted-foreground">الوكالات</span>
+              <span className="text-[9px] font-bold text-foreground/90">الوكالات</span>
             </button>
           </div>
           <div className="grid grid-cols-4 gap-2 mb-4">
-            <button onClick={() => navigate("/vip")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/vip")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-orange">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center">
                 <Crown className="w-5 h-5 text-foreground" />
               </div>
-              <span className="text-[9px] font-bold text-muted-foreground">VIP</span>
+              <span className="text-[9px] font-bold text-foreground/90">VIP</span>
             </button>
-            <button onClick={() => navigate("/nova-pass")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/nova-pass")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-pink">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-base">✨</div>
-              <span className="text-[9px] font-bold text-muted-foreground">NOVA Pass</span>
+              <span className="text-[9px] font-bold text-foreground/90">NOVA Pass</span>
             </button>
-            <button onClick={() => navigate("/daily-tasks")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/daily-tasks")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-mint">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-base">🎯</div>
-              <span className="text-[9px] font-bold text-muted-foreground">المهام</span>
+              <span className="text-[9px] font-bold text-foreground/90">المهام</span>
             </button>
-            <button onClick={() => navigate("/lucky-box")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/lucky-box")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-gold">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-base">🎰</div>
-              <span className="text-[9px] font-bold text-muted-foreground">صندوق الحظ</span>
+              <span className="text-[9px] font-bold text-foreground/90">صندوق الحظ</span>
             </button>
           </div>
           <div className="grid grid-cols-4 gap-2 mb-4">
-            <button onClick={() => navigate("/streak")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/streak")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-fire">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-base">🔥</div>
-              <span className="text-[9px] font-bold text-muted-foreground">الستريك</span>
+              <span className="text-[9px] font-bold text-foreground/90">الستريك</span>
             </button>
-            <button onClick={() => navigate("/invite-friends")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/invite-friends")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-purple">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-base">👥</div>
-              <span className="text-[9px] font-bold text-muted-foreground">ادعُ صديق</span>
+              <span className="text-[9px] font-bold text-foreground/90">ادعُ صديق</span>
             </button>
-            <button onClick={() => navigate("/posts")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/posts")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-cyan">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-base">📸</div>
-              <span className="text-[9px] font-bold text-muted-foreground">المنشورات</span>
+              <span className="text-[9px] font-bold text-foreground/90">المنشورات</span>
             </button>
-            <button onClick={() => navigate("/nova-p")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5">
+            <button onClick={() => navigate("/nova-p")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-white">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-base">⭐</div>
-              <span className="text-[9px] font-bold text-muted-foreground">NOVA P</span>
+              <span className="text-[9px] font-bold text-foreground/90">NOVA P</span>
             </button>
           </div>
 
