@@ -357,9 +357,16 @@ export const useVoiceRoom = (roomId: string | null) => {
 
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       clearInterval(staleSweepRef);
+      // 🚀 Abort any pending fetch + clear caches/queues so a re-mount starts clean
+      membersAbortRef.current?.abort();
+      membersAbortRef.current = null;
+      membersInflightRef.current = null;
+      membersCacheRef.current = null;
+      heartbeatInflightRef.current = null;
       supabase.removeChannel(channel);
     };
   }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);
