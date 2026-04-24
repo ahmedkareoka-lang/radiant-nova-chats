@@ -13,8 +13,10 @@ import FramedAvatar from "@/components/FramedAvatar";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import BDBadge from "@/components/BDBadge";
 import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
+import { useIsBD } from "@/hooks/useIsBD";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
@@ -68,6 +70,7 @@ const Profile = () => {
   const { unreadCount } = useNotifications();
   const { couple: loveCouple } = useLoveCouple(myId);
   const meIsAgent = useIsRechargeAgent(myId);
+  const meIsBD = useIsBD(myId);
 
   useEffect(() => {
     const fetchProfile = async () => {
