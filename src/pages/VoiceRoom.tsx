@@ -1154,43 +1154,52 @@ const VoiceRoom = () => {
           </div>
         )}
 
-        {/* Mic Grid */}
-        <div className={`grid ${gridCols} gap-3 mb-6`}>
+        {/* Mic Grid — adaptive size & spacing, stable seats (no shake) */}
+        <div className={`grid ${gridCols} ${micGapClass} mb-6 justify-items-center`}>
           {micSlots.map((slot, i) => {
             const isSlotLocked = lockedSlots.includes(i);
             const slotIsSpeaking = slot?.is_on_mic && (
               slot.user_id === currentUserId ? localSpeaking : speakingPeers.has(slot.user_id)
             );
             const isUserMuted = slot ? mutedUsers.includes(slot.user_id) : false;
+            const emptySize = Math.round(micAvatarPx * 0.86);
 
             return (
-              <div key={i} className="flex flex-col items-center gap-1">
+              <div
+                key={i}
+                className="flex flex-col items-center gap-1.5"
+                style={{ width: micAvatarPx + 12 }}
+              >
                 {slot ? (
-                  <div className="cursor-pointer relative" onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}>
-                    <div className="relative">
+                  <div
+                    className="cursor-pointer relative flex flex-col items-center"
+                    onClick={() => handleAvatarClick({ user_id: slot.user_id, profile: slot.profile })}
+                  >
+                    {/* Stable seat: NO transform / scale / shake on the avatar wrapper */}
+                    <div className="relative" style={{ width: micAvatarPx, height: micAvatarPx }}>
                       {renderAvatarWithFrame(
                         slot.profile?.avatar_url || null,
                         (slot.profile as any)?.equipped_frame || null,
                         slot.profile?.is_boss || false,
-                        "sm",
+                        micAvatarPx,
                         !!slotIsSpeaking && !isUserMuted,
-                        rechargeAgentSet.has(slot.user_id)
+                        rechargeAgentSet.has(slot.user_id),
+                        bdSet.has(slot.user_id),
                       )}
                       {isUserMuted && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center z-20">
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center z-20 ring-2 ring-background">
                           <VolumeX className="w-3 h-3 text-destructive-foreground" />
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-semibold truncate max-w-[56px] block text-center mt-1">
+                    <span
+                      className="text-[10px] font-semibold truncate block text-center mt-1"
+                      style={{ maxWidth: micAvatarPx + 8 }}
+                    >
                       {slot.profile?.display_name || "User"}
                     </span>
-                    <div className="flex justify-center mt-0.5">
-                      <DualBadge novaLevel={(slot.profile as any)?.nova_p_level || 0} vipLevel={slot.profile?.vip_level || 0} />
-                    </div>
-                    {/* Support Counter for everyone */}
+                    {/* Compact diamond support icon — clean, won't bleed onto next row */}
                     <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
-                    {(slot.profile?.vip_level || 0) > 0 && !((slot.profile as any)?.nova_p_level) && <VipBadge level={slot.profile!.vip_level} />}
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
                         hostId={slot.user_id}
@@ -1203,11 +1212,12 @@ const VoiceRoom = () => {
                 ) : (
                   <>
                     <div
-                      className={`w-14 h-14 rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all ${
+                      className={`rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-colors ${
                         isSlotLocked
                           ? "bg-destructive/10 border-destructive/40"
                           : "bg-secondary border-border hover:border-primary hover:bg-secondary/80"
                       }`}
+                      style={{ width: emptySize, height: emptySize }}
                       onClick={() => isAdmin && isSlotLocked ? handleToggleLockSlot(i) : handleSitOnMic(i)}
                       onContextMenu={(e) => { e.preventDefault(); if (isAdmin) handleToggleLockSlot(i); }}
                     >
@@ -1220,7 +1230,6 @@ const VoiceRoom = () => {
                     <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
                       {isSlotLocked ? "🔒" : ""} مايك {i + 1}
                     </span>
-                    {/* Lock/unlock button for admin */}
                     {isAdmin && (
                       <button onClick={() => handleToggleLockSlot(i)} className="text-[8px] text-muted-foreground hover:text-primary">
                         {isSlotLocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
