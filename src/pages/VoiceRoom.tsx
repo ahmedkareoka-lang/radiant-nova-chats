@@ -200,6 +200,8 @@ const VoiceRoom = () => {
   // Shows for ALL newly-joined members (not just self) so everyone in the room sees joins.
   // The first sync after mount only marks existing members as "seen" — we don't replay
   // entrances for people who were already in the room when we joined.
+  // We sort newcomers by joined_at to keep queue ordering deterministic across clients
+  // (so two users joining simultaneously appear in the same order on every device).
   useEffect(() => {
     if (members.length === 0) return;
 
@@ -210,19 +212,29 @@ const VoiceRoom = () => {
       return;
     }
 
-    for (const m of members) {
-      if (seenMemberIds.current.has(m.user_id)) continue;
-      seenMemberIds.current.add(m.user_id);
-      if (!m.profile) continue;
+    // Collect newcomers, then sort by joined_at to enforce a stable global order
+    const newcomers = members
+      .filter(m => !seenMemberIds.current.has(m.user_id) && m.profile)
+      .sort((a, b) => {
+        const ta = a.joined_at ? new Date(a.joined_at).getTime() : 0;
+        const tb = b.joined_at ? new Date(b.joined_at).getTime() : 0;
+        return ta - tb;
+      });
 
-      const wealthLvl = m.profile.wealth_level || 1;
-      const charismaLvl = m.profile.charisma_level || 1;
+    if (newcomers.length === 0) return;
+
+    const additions: typeof entranceQueue = [];
+    for (const m of newcomers) {
+      seenMemberIds.current.add(m.user_id);
+
+      const wealthLvl = m.profile!.wealth_level || 1;
+      const charismaLvl = m.profile!.charisma_level || 1;
       const effect = getEntranceEffect(wealthLvl, charismaLvl);
 
       // Top entrance banner — only for SELF (so it doesn't spam others)
       if (m.user_id === currentUserId) {
         setEntranceBanner({
-          name: m.profile.display_name,
+          name: m.profile!.display_name,
           wealthLevel: wealthLvl,
           charismaLevel: charismaLvl,
           effect,
@@ -230,37 +242,59 @@ const VoiceRoom = () => {
         setTimeout(() => setEntranceBanner(null), 4000);
       }
 
-      // Fullscreen entrance effect — for EVERY new member, visible to all in the room
       const p = m.profile as any;
       const novaLvl = p.nova_p_level || 0;
       const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
-      setEntranceQueue(prev => [...prev, {
-        id: m.user_id + "-" + Date.now(),
+      // Stable, deterministic id: same member = same id across clients (no Date.now())
+      additions.push({
+        id: `entrance-${m.user_id}-${m.joined_at || ""}`,
         displayName: m.profile!.display_name,
         avatarUrl: m.profile!.avatar_url,
         videoUrl: entranceMedia,
         audioUrl: p.entrance_audio_url || null,
         novaLevel: novaLvl,
         vipLevel: m.profile!.vip_level || 0,
-      }]);
+      });
+    }
+
+    if (additions.length > 0) {
+      setEntranceQueue(prev => {
+        // De-dup by id to guard against React StrictMode double-effects / reconnects
+        const existingIds = new Set(prev.map(e => e.id));
+        const fresh = additions.filter(a => !existingIds.has(a.id));
+        return [...prev, ...fresh];
+      });
     }
   }, [members, currentUserId]);
 
   // Announce SELF joining via a system chat message — broadcast to every room member via realtime.
-  // This way every user sees "🚪 Name joined" in the chat regardless of entrance media.
+  // Idempotent: we tag the content with a hidden marker `[[JOIN:<uid>]]` so even if the effect
+  // re-runs (StrictMode / reconnects), we won't insert a duplicate row for the same user/room.
   useEffect(() => {
     if (didAnnounceJoin.current) return;
     if (!roomId || !currentUserId) return;
     const me = members.find(m => m.user_id === currentUserId);
     if (!me?.profile) return;
 
+    const joinMarker = `[[JOIN:${currentUserId}]]`;
+
+    // If a join message for me already exists in the loaded chat, don't insert again
+    const alreadyAnnounced = messages.some(
+      msg => msg.sender_id === currentUserId && msg.content.includes(joinMarker)
+    );
+    if (alreadyAnnounced) {
+      didAnnounceJoin.current = true;
+      return;
+    }
+
     didAnnounceJoin.current = true;
     supabase.from("messages").insert({
       sender_id: currentUserId,
       room_id: roomId,
-      content: `🚪 ${me.profile.display_name} انضم إلى الغرفة`,
+      // Marker is stripped on render; visible text is built from sender display_name + locale
+      content: `${joinMarker} ${me.profile.display_name}`,
     });
-  }, [members, currentUserId, roomId]);
+  }, [members, currentUserId, roomId, messages]);
 
   const handleEntranceComplete = useCallback((id: string) => {
     setEntranceQueue(prev => prev.filter(e => e.id !== id));
