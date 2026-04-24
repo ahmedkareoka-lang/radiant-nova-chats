@@ -212,6 +212,48 @@ export type Database = {
         }
         Relationships: []
       }
+      bd_activity_log: {
+        Row: {
+          action_type: string
+          agency_id: string | null
+          bd_user_id: string
+          created_at: string
+          details: Json
+          id: string
+          message: string | null
+          status: string
+          target_display_name: string | null
+          target_public_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          agency_id?: string | null
+          bd_user_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          message?: string | null
+          status?: string
+          target_display_name?: string | null
+          target_public_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          agency_id?: string | null
+          bd_user_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          message?: string | null
+          status?: string
+          target_display_name?: string | null
+          target_public_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       bd_agencies: {
         Row: {
           activated_by: string
@@ -1592,6 +1634,19 @@ export type Database = {
         Returns: undefined
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
+      log_bd_activity: {
+        Args: {
+          _action_type: string
+          _agency_id?: string
+          _details?: Json
+          _message?: string
+          _status?: string
+          _target_display_name?: string
+          _target_public_id?: string
+          _target_user_id?: string
+        }
+        Returns: string
+      }
       log_payroll_audit: {
         Args: {
           _action_type: string
