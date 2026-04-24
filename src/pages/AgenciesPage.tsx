@@ -83,6 +83,16 @@ const AgenciesPage = () => {
 
           const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
           if (dash) setHostDashboard(dash);
+
+          // Monthly salary report (current month, day 1 to last)
+          const { data: salary } = await supabase.rpc("get_host_monthly_salary" as any, {});
+          if (salary) setHostSalary(salary);
+        }
+
+        // Agent: load monthly payroll for their agency (their hosts + 15% commission)
+        if (membership.badge === "agent" || ag?.owner_id === user.id) {
+          const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
+          if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
         }
       }
 
