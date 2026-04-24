@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
@@ -101,13 +102,19 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  // Cache sender display name so handleSend doesn't have to await a profile fetch.
+  const cachedSenderNameRef = useRef<string>("مستخدم");
+
   useEffect(() => {
     if (!senderId || !isOpen) return;
-    const fetchBalance = async () => {
-      const { data } = await supabase.from("profiles").select("coins").eq("id", senderId).single();
-      if (data) setBalance(data.coins);
+    const fetchSenderData = async () => {
+      const { data } = await supabase.from("profiles").select("coins, display_name").eq("id", senderId).single();
+      if (data) {
+        setBalance(data.coins);
+        cachedSenderNameRef.current = data.display_name || "مستخدم";
+      }
     };
-    fetchBalance();
+    fetchSenderData();
   }, [senderId, isOpen]);
 
   // Broadcast channel — keep one stable channel subscribed for the modal lifetime so sends are reliable
