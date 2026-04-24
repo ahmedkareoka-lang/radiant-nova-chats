@@ -32,6 +32,8 @@ const AdminDashboard = () => {
   const [newAgentId, setNewAgentId] = useState("");
   const [newAgentName, setNewAgentName] = useState("");
   const [newAgentWhatsapp, setNewAgentWhatsapp] = useState("");
+  const [payrollReport, setPayrollReport] = useState<any>(null);
+  const [payrollLoading, setPayrollLoading] = useState(false);
 
   // Gift & Store management
   const [giftsList, setGiftsList] = useState<any[]>([]);
