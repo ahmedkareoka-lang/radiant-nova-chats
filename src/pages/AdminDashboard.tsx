@@ -828,6 +828,24 @@ const AdminDashboard = () => {
                         {g.video_url && " · فيديو"}
                       </p>
                     </div>
+                    {g.video_url && (
+                      <button
+                        onClick={async () => {
+                          // Stop any other gift audio currently playing.
+                          const { stopGiftAudio, registerGiftAudio } = await import("@/lib/giftAudioManager");
+                          stopGiftAudio();
+                          const audio = new Audio(g.video_url);
+                          audio.volume = 1;
+                          registerGiftAudio(audio);
+                          audio.play().catch(() => toast.error("تعذّر تشغيل صوت الهدية"));
+                          toast.success(`🔊 يعزف صوت: ${g.name}`);
+                        }}
+                        title="اختبار صوت الهدية فقط"
+                        className="text-xs px-2 py-1 rounded-lg bg-primary/20 text-primary font-bold hover:bg-primary/30 transition"
+                      >
+                        🔊 اختبر الصوت
+                      </button>
+                    )}
                     <button onClick={() => deleteGift(g.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
