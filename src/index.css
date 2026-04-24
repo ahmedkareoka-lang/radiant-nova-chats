@@ -419,38 +419,96 @@
   animation: mic-burn 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Premium VIP Frame Animations */
+/* Premium VIP Frame Animations
+   Tuned to look equally vivid on small (≈60px mic) and large (≈160px profile)
+   sizes by combining a transform pulse with multi-layer drop-shadows. */
 .frame-animate-fire {
-  animation: frame-fire-pulse 1.5s ease-in-out infinite;
+  animation: frame-fire-pulse 1.4s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
 }
 @keyframes frame-fire-pulse {
-  0%, 100% { filter: drop-shadow(0 0 8px hsl(15 100% 50% / 0.6)) brightness(1); }
-  50% { filter: drop-shadow(0 0 20px hsl(30 100% 55% / 0.9)) drop-shadow(0 0 40px hsl(0 100% 50% / 0.4)) brightness(1.15); }
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 6px hsl(15 100% 55% / 0.85))
+            drop-shadow(0 0 14px hsl(30 100% 55% / 0.55))
+            brightness(1.05) saturate(1.1);
+  }
+  50% {
+    transform: scale(1.06) rotate(-1deg);
+    filter: drop-shadow(0 0 14px hsl(30 100% 60% / 1))
+            drop-shadow(0 0 28px hsl(0 100% 55% / 0.7))
+            drop-shadow(0 0 44px hsl(15 100% 50% / 0.4))
+            brightness(1.25) saturate(1.3);
+  }
 }
 
 .frame-animate-ice {
-  animation: frame-ice-glow 2s ease-in-out infinite;
+  animation: frame-ice-glow 1.8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
 }
 @keyframes frame-ice-glow {
-  0%, 100% { filter: drop-shadow(0 0 6px hsl(200 100% 70% / 0.5)) brightness(1); }
-  50% { filter: drop-shadow(0 0 18px hsl(200 100% 80% / 0.8)) drop-shadow(0 0 35px hsl(220 80% 60% / 0.3)) brightness(1.1); }
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 6px hsl(200 100% 75% / 0.85))
+            drop-shadow(0 0 14px hsl(210 100% 70% / 0.5))
+            brightness(1.05);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 14px hsl(200 100% 85% / 1))
+            drop-shadow(0 0 26px hsl(220 90% 65% / 0.7))
+            drop-shadow(0 0 42px hsl(195 100% 70% / 0.4))
+            brightness(1.2) saturate(1.2);
+  }
 }
 
 .frame-animate-rainbow {
-  animation: frame-rainbow-spin 3s linear infinite;
+  animation: frame-rainbow-spin 2.6s linear infinite;
+  transform-origin: center;
+  will-change: transform, filter;
 }
 @keyframes frame-rainbow-spin {
-  0% { filter: drop-shadow(0 0 10px hsl(0 100% 60% / 0.6)) hue-rotate(0deg); }
-  50% { filter: drop-shadow(0 0 16px hsl(180 100% 60% / 0.6)) hue-rotate(180deg); }
-  100% { filter: drop-shadow(0 0 10px hsl(0 100% 60% / 0.6)) hue-rotate(360deg); }
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px hsl(0 100% 65% / 0.85))
+            drop-shadow(0 0 22px hsl(0 100% 60% / 0.45))
+            hue-rotate(0deg) saturate(1.3);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 14px hsl(180 100% 65% / 0.95))
+            drop-shadow(0 0 28px hsl(180 100% 55% / 0.5))
+            hue-rotate(180deg) saturate(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px hsl(360 100% 65% / 0.85))
+            drop-shadow(0 0 22px hsl(360 100% 60% / 0.45))
+            hue-rotate(360deg) saturate(1.3);
+  }
 }
 
 .frame-animate-dragon {
-  animation: frame-dragon-glow 2s ease-in-out infinite;
+  animation: frame-dragon-glow 1.8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
 }
 @keyframes frame-dragon-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px hsl(45 100% 50% / 0.6)) brightness(1); }
-  50% { filter: drop-shadow(0 0 22px hsl(45 100% 60% / 0.9)) drop-shadow(0 0 40px hsl(30 100% 45% / 0.4)) brightness(1.2); }
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 8px hsl(45 100% 55% / 0.9))
+            drop-shadow(0 0 18px hsl(40 100% 50% / 0.5))
+            brightness(1.05) saturate(1.15);
+  }
+  50% {
+    transform: scale(1.07) rotate(1deg);
+    filter: drop-shadow(0 0 16px hsl(45 100% 65% / 1))
+            drop-shadow(0 0 32px hsl(35 100% 50% / 0.7))
+            drop-shadow(0 0 50px hsl(30 100% 45% / 0.45))
+            brightness(1.3) saturate(1.4);
+  }
 }
 
 /* Scrollbar styling */
