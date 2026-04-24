@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Briefcase, TrendingUp, Target, DollarSign, Users } from "lucide-react";
+import { ArrowRight, Briefcase, TrendingUp, Target, DollarSign, Users, Search, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import BDBadge from "@/components/BDBadge";
+
+type FoundUser = { id: string; user_id: string; display_name: string; avatar_url: string | null };
 
 type BDStats = {
   agency_count: number;
