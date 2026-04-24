@@ -216,8 +216,8 @@ const VoiceRoom = () => {
     const newcomers = members
       .filter(m => !seenMemberIds.current.has(m.user_id) && m.profile)
       .sort((a, b) => {
-        const ta = a.joined_at ? new Date(a.joined_at).getTime() : 0;
-        const tb = b.joined_at ? new Date(b.joined_at).getTime() : 0;
+        const ta = (a as any).joined_at ? new Date((a as any).joined_at).getTime() : 0;
+        const tb = (b as any).joined_at ? new Date((b as any).joined_at).getTime() : 0;
         return ta - tb;
       });
 
