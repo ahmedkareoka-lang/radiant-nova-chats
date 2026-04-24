@@ -226,9 +226,6 @@ const AgenciesPage = () => {
             <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></button>
             <Building2 className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-lg">الوكالات</h1>
-            <div className="ml-auto">
-              <PayrollStructureBanner />
-            </div>
           </div>
         </header>
 
