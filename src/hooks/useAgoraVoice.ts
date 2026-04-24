@@ -6,6 +6,7 @@ import AgoraRTC, {
   ClientRole,
 } from "agora-rtc-sdk-ng";
 import { logAgora } from "@/lib/agoraDebugLog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseAgoraVoiceOptions {
   roomId: string | null;
@@ -14,15 +15,41 @@ interface UseAgoraVoiceOptions {
   isMuted: boolean;
 }
 
-const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID as string | undefined;
 const SPEAKING_THRESHOLD = 5;
+const TOKEN_TTL_SECONDS = 3600; // 1 hour
+const TOKEN_RENEW_BEFORE_MS = 5 * 60 * 1000; // renew 5 min before expiry
 
 // Set Agora log level (0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR, 4=NONE)
 try {
   AgoraRTC.setLogLevel(2);
 } catch { /* noop */ }
 
-logAgora("info", "env", `AGORA_APP_ID ${AGORA_APP_ID ? "loaded (" + AGORA_APP_ID.slice(0, 4) + "...)" : "MISSING"}`);
+logAgora("info", "env", "Token-based auth enabled (App ID + Certificate)");
+
+// Fetch a fresh RTC token from our edge function
+async function fetchAgoraToken(
+  channelName: string,
+  role: "host" | "audience",
+): Promise<{ token: string; appId: string; uid: string } | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("agora-token", {
+      body: { channelName, role, expireSeconds: TOKEN_TTL_SECONDS },
+    });
+    if (error) {
+      logAgora("error", "token", `Edge function error: ${error.message}`);
+      return null;
+    }
+    if (!data?.token || !data?.appId) {
+      logAgora("error", "token", "Invalid token response");
+      return null;
+    }
+    logAgora("success", "token", `Got ${role} token for "${channelName}"`);
+    return { token: data.token, appId: data.appId, uid: String(data.uid) };
+  } catch (e: any) {
+    logAgora("error", "token", `Fetch failed: ${e?.message || e}`);
+    return null;
+  }
+}
 
 /**
  * Drop-in replacement for useWebRTC using Agora RTC SDK (App ID Only mode).
