@@ -70,8 +70,33 @@ const InventoryPage = () => {
     { id: "special", label: "مميزات" },
   ];
 
-  const filtered = activeTab === "all" ? items : items.filter((i) => i.item_type === activeTab);
-  const badgeItems = useMemo(() => items.filter((i) => i.item_type === "badge"), [items]);
+  // Inject role-based virtual frames (BD / Recharge Agent) so they appear
+  // in the bag and the user can choose to wear them or any other frame.
+  const allItems = useMemo(() => {
+    const virtuals: any[] = [];
+    if (isBD) {
+      virtuals.push({
+        id: "virtual-frame-bd",
+        item_type: "frame",
+        item_name: "إطار BD",
+        acquired_at: new Date().toISOString(),
+        item_data: { frame_url: "frame-bd", special: "bd" },
+      });
+    }
+    if (isAgent) {
+      virtuals.push({
+        id: "virtual-frame-recharge-agent",
+        item_type: "frame",
+        item_name: "إطار وكيل شحن",
+        acquired_at: new Date().toISOString(),
+        item_data: { frame_url: "frame-recharge-agent", special: "agent" },
+      });
+    }
+    return [...virtuals, ...items];
+  }, [items, isBD, isAgent]);
+
+  const filtered = activeTab === "all" ? allItems : allItems.filter((i) => i.item_type === activeTab);
+  const badgeItems = useMemo(() => allItems.filter((i) => i.item_type === "badge"), [allItems]);
 
   return (
     <PageTransition>
