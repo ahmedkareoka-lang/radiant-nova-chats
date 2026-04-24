@@ -214,6 +214,13 @@ const VoiceRoom = () => {
     setEntranceQueue(prev => prev.filter(e => e.id !== id));
   }, []);
 
+  // Auto-dismiss the "last gift delivered" panel after 8s of inactivity.
+  useEffect(() => {
+    if (!lastGift) return;
+    const t = setTimeout(() => setLastGift(null), 8000);
+    return () => clearTimeout(t);
+  }, [lastGift]);
+
   const handleSend = async () => {
     if (!chatInput.trim()) return;
     await sendMessage(chatInput);
