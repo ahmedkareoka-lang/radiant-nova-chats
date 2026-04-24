@@ -277,6 +277,14 @@ const UserProfile = () => {
             </div>
           </div>
         </main>
+        {meIsAgent && userId && (
+          <AgentTransferModal
+            open={transferOpen}
+            onClose={() => setTransferOpen(false)}
+            recipientId={userId}
+            recipientName={profile?.display_name}
+          />
+        )}
       </div>
     </PageTransition>
   );
