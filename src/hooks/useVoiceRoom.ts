@@ -260,10 +260,16 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     }, HEARTBEAT_INTERVAL);
 
+    // Periodic re-filter to drop stale users from UI even without DB changes
+    const staleSweepRef = setInterval(() => {
+      fetchMembers();
+    }, 30_000);
+
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+      clearInterval(staleSweepRef);
       supabase.removeChannel(channel);
     };
   }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);
