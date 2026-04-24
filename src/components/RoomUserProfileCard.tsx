@@ -94,76 +94,91 @@ export default function RoomUserProfileCard({
   onKickFromMic,
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [badgePage, setBadgePage] = useState(0);
-
-  // Short numeric id (last 8 hex chars converted to decimal-ish display)
-  const shortId = useMemo(() => {
-    const hex = profile.user_id.replace(/-/g, "").slice(-8);
-    return parseInt(hex, 16).toString().slice(0, 8);
-  }, [profile.user_id]);
+  const [registeredId, setRegisteredId] = useState<string>("");
 
   const isMe = profile.user_id === currentUserId;
 
+  // Fetch the REAL registered numeric account ID from profiles.user_id (text field, 6 digits)
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data } = await supabase
-        .from("inventory" as any)
-        .select("item_type, item_name, item_data")
-        .eq("user_id", profile.user_id);
-      if (!cancelled) setItems((data as any) || []);
+        .from("profiles")
+        .select("user_id")
+        .eq("id", profile.user_id)
+        .maybeSingle();
+      if (!cancelled && data?.user_id) {
+        setRegisteredId(String(data.user_id));
+      }
     })();
     return () => {
       cancelled = true;
     };
   }, [profile.user_id]);
 
-  const badgeItems = useMemo(() => {
-    const list: { key: string; img?: string | null; label: string; gradient?: string }[] = [];
-    if (isHostOfRoom) list.push({ key: "host", label: "مضيف", gradient: "from-pink-500 to-rose-500" });
-    if (isBD) list.push({ key: "bd", label: "BD", gradient: "from-fuchsia-500 to-purple-600" });
-    if (isRechargeAgent) list.push({ key: "agent", label: "وكيل", gradient: "from-amber-400 to-orange-500" });
+  // Premium showcase badges – only VIP, Recharge Agent, BD, NOVA P (per request)
+  const showcaseBadges = useMemo(() => {
+    const list: {
+      key: string;
+      label: string;
+      sublabel?: string;
+      icon: string;
+      gradient: string;
+      shadow: string;
+      ring: string;
+    }[] = [];
+
     if ((profile.vip_level || 0) > 0) {
-      const lv = profile.vip_level!;
-      list.push({ key: `vip${lv}`, label: `VIP${lv}`, gradient: "from-yellow-400 via-orange-400 to-rose-500" });
+      list.push({
+        key: "vip",
+        label: "VIP",
+        sublabel: `LV ${profile.vip_level}`,
+        icon: "👑",
+        gradient: "from-yellow-300 via-amber-400 to-orange-500",
+        shadow: "shadow-[0_8px_28px_-6px_hsl(38_95%_55%/0.7)]",
+        ring: "ring-yellow-300/60",
+      });
+    }
+    if (isRechargeAgent) {
+      list.push({
+        key: "agent",
+        label: "وكيل",
+        sublabel: "شحن",
+        icon: "🏛️",
+        gradient: "from-amber-400 via-orange-500 to-red-500",
+        shadow: "shadow-[0_8px_28px_-6px_hsl(20_90%_55%/0.7)]",
+        ring: "ring-orange-300/60",
+      });
+    }
+    if (isBD) {
+      list.push({
+        key: "bd",
+        label: "BD",
+        sublabel: "مدير",
+        icon: "💼",
+        gradient: "from-fuchsia-500 via-purple-600 to-indigo-700",
+        shadow: "shadow-[0_8px_28px_-6px_hsl(280_85%_55%/0.7)]",
+        ring: "ring-fuchsia-300/60",
+      });
     }
     if ((profile.nova_p_level || 0) > 0) {
-      list.push({ key: "novap", label: `NOVA P${profile.nova_p_level}`, gradient: "from-cyan-400 to-blue-600" });
+      list.push({
+        key: "novap",
+        label: "NOVA P",
+        sublabel: `P${profile.nova_p_level}`,
+        icon: "✨",
+        gradient: "from-cyan-300 via-sky-400 to-blue-600",
+        shadow: "shadow-[0_8px_28px_-6px_hsl(210_90%_55%/0.7)]",
+        ring: "ring-cyan-300/60",
+      });
     }
-    items
-      .filter((i) => i.item_type === "badge")
-      .forEach((i) =>
-        list.push({
-          key: `b-${i.item_name}`,
-          label: i.item_name,
-          img: i.item_data?.image_url || null,
-          gradient: "from-violet-500 to-fuchsia-500",
-        }),
-      );
-    items
-      .filter((i) => i.item_type === "frame")
-      .forEach((i) =>
-        list.push({
-          key: `f-${i.item_name}`,
-          label: i.item_name,
-          img: i.item_data?.image_url || null,
-          gradient: "from-emerald-500 to-teal-500",
-        }),
-      );
     return list;
-  }, [isHostOfRoom, isBD, isRechargeAgent, profile.vip_level, profile.nova_p_level, items]);
-
-  const visibleBadges = useMemo(() => {
-    const start = badgePage * 6;
-    return badgeItems.slice(start, start + 6);
-  }, [badgeItems, badgePage]);
-
-  const totalPages = Math.max(1, Math.ceil(badgeItems.length / 6));
+  }, [isRechargeAgent, isBD, profile.vip_level, profile.nova_p_level]);
 
   const copyId = async () => {
+    if (!registeredId) return;
     try {
-      await navigator.clipboard.writeText(shortId);
+      await navigator.clipboard.writeText(registeredId);
       setCopied(true);
       toast.success("تم نسخ الـ ID ✅");
       setTimeout(() => setCopied(false), 1500);
