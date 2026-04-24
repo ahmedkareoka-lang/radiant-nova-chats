@@ -34,7 +34,9 @@ export interface RoomMessage {
   };
 }
 
-const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+const HEARTBEAT_INTERVAL = 25000; // 25 seconds — server cleanup runs at 90s/3min thresholds
+const STALE_MIC_MS = 90_000; // hide from mic if no heartbeat for 90s
+const STALE_MEMBER_MS = 180_000; // hide from room if no heartbeat for 3min
 
 export const useVoiceRoom = (roomId: string | null) => {
   const [members, setMembers] = useState<RoomMember[]>([]);
