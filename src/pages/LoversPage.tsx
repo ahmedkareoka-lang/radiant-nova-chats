@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, Sparkles, X, Users } from "lucide-react";
+import { ArrowLeft, Heart, Sparkles, X, Users, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,17 +37,15 @@ const LoversPage = () => {
 
   const loadMutuals = async () => {
     if (!myId) return;
-    // mutual = both follow each other
+    // Choose partner from people I FOLLOW (المتابَعون)
     const { data: iFollow } = await supabase.from("follows").select("following_id").eq("follower_id", myId);
-    const { data: followsMe } = await supabase.from("follows").select("follower_id").eq("following_id", myId);
-    if (!iFollow || !followsMe) return;
-    const setA = new Set(iFollow.map((r) => r.following_id));
-    const mutualIds = followsMe.map((r) => r.follower_id).filter((id) => setA.has(id));
-    if (mutualIds.length === 0) { setMutuals([]); return; }
+    if (!iFollow) return;
+    const followingIds = iFollow.map((r) => r.following_id);
+    if (followingIds.length === 0) { setMutuals([]); return; }
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, display_name, avatar_url, user_id")
-      .in("id", mutualIds);
+      .in("id", followingIds);
     setMutuals((profiles as any) || []);
   };
 
@@ -117,6 +115,13 @@ const LoversPage = () => {
 
           <button onClick={() => navigate(-1)} className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-background/30 backdrop-blur-md flex items-center justify-center border border-pink-400/30">
             <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <button
+            onClick={() => navigate("/love-history")}
+            className="absolute top-4 left-4 z-20 h-10 px-3 rounded-full bg-background/30 backdrop-blur-md flex items-center gap-1.5 border border-pink-400/30 text-xs font-bold text-foreground"
+          >
+            <History className="w-4 h-4" />
+            السجل
           </button>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
@@ -247,7 +252,7 @@ const LoversPage = () => {
               <li>التفعيل بـ <span className="text-yellow-300 font-bold">10,000 عملة</span> ويبدأ من المستوى 1</li>
               <li>تزداد النقاط عند تبادل الهدايا بينكم في أي غرفة</li>
               <li>كل مستوى جديد يكشف ميزة بصرية أفخم</li>
-              <li>الاختيار من <span className="text-pink-300 font-bold">المتابعَين المشتركين فقط</span></li>
+              <li>الاختيار من <span className="text-pink-300 font-bold">قائمة المتابَعين (الأصدقاء الذين تتابعهم)</span></li>
               <li>كل شخص يمكنه أن يكون حبيباً لشخص واحد فقط</li>
             </ul>
           </div>
@@ -277,8 +282,8 @@ const LoversPage = () => {
                 {mutuals.length === 0 ? (
                   <div className="text-center py-10">
                     <Users className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">لا يوجد متابعَين مشتركين بعد</p>
-                    <p className="text-xs text-muted-foreground mt-1">يجب أن تتابع الشخص ويتابعك أيضاً</p>
+                    <p className="text-sm text-muted-foreground">لا يوجد أحد في قائمة المتابَعين</p>
+                    <p className="text-xs text-muted-foreground mt-1">تابع أصدقاءك أولاً ثم اختر منهم</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
