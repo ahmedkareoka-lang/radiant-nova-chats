@@ -100,6 +100,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           video_url: g.video_url,
           tier: g.tier,
           duration_ms: g.duration_ms,
+          category: g.category || "general",
+          created_at: g.created_at,
           emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
         })) || [];
       // Use ONLY gifts from database (BOSS-managed). No fallback or static catalog.
