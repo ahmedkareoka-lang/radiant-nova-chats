@@ -317,9 +317,9 @@ const BDDashboard = () => {
             <Briefcase size={16} className="text-orange-500" /> كيف يعمل النظام؟
           </h4>
           <ul className="text-xs text-muted-foreground space-y-1 leading-relaxed">
-            <li>• تحصل على <strong className="text-orange-500">20%</strong> من إجمالي دعم كل وكالة تحت إشرافك.</li>
+            <li>• تحصل على <strong className="text-orange-500">10%</strong> من إجمالي دعم كل وكالة تحت إشرافك.</li>
             <li>• شرط الأهلية: تحقيق الوكالة لـ <strong>{formatNum(target)} ماسة</strong> دعم كحد أدنى.</li>
-            <li>• الإدارة و BOSS هم من يربطون الوكلاء بحسابك.</li>
+            <li>• يمكنك تفعيل وكالة لأي مستخدم مباشرة من خلال البحث أعلاه.</li>
           </ul>
         </Card>
       </main>
