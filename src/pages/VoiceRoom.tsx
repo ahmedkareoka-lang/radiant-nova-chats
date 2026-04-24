@@ -833,6 +833,18 @@ const VoiceRoom = () => {
           </div>
         )}
 
+        {/* Couple Seats — heart-shaped pairing */}
+        {roomId && (
+          <div className="mb-4">
+            <CoupleSeats
+              roomId={roomId}
+              isHost={isHost}
+              members={members}
+              onOpenPicker={() => setShowCouplePicker(true)}
+            />
+          </div>
+        )}
+
         {/* Host Info Banner with Top 3 Senders strip */}
         {host && (
           <div className="mb-6">
