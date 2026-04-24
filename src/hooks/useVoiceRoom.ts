@@ -69,49 +69,89 @@ export const useVoiceRoom = (roomId: string | null) => {
     roomIdRef.current = roomId;
   }, [roomId]);
 
-  const fetchMembers = useCallback(async () => {
+  const fetchMembers = useCallback(async (force = false) => {
     if (!roomId) return;
-    const { data } = await supabase
-      .from("room_members")
-      .select("*")
-      .eq("room_id", roomId);
 
-    if (data && data.length > 0) {
-      // Client-side filter: hide stale users immediately (don't wait for cron)
-      const now = Date.now();
-      const fresh = data.filter((m) => {
-        const age = now - new Date(m.joined_at).getTime();
-        return age < STALE_MEMBER_MS;
-      }).map((m) => {
-        const age = now - new Date(m.joined_at).getTime();
-        // Force-drop from mic if heartbeat is stale, even before cron runs
-        if (m.is_on_mic && age >= STALE_MIC_MS) {
-          return { ...m, is_on_mic: false, mic_slot: null };
-        }
-        return m;
-      });
-
-      const userIds = fresh.map((m) => m.user_id);
-      if (userIds.length === 0) {
-        setMembers([]);
-        return;
-      }
-
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
-        .in("id", userIds);
-
-      const profileMap: Record<string, any> = {};
-      profiles?.forEach((p) => { profileMap[p.id] = p; });
-
-      setMembers(fresh.map((m) => ({
-        ...m,
-        profile: profileMap[m.user_id] || null,
-      })));
-    } else {
-      setMembers([]);
+    // 🚀 Serve from micro-cache when fresh enough (and not forced)
+    const cached = membersCacheRef.current;
+    if (!force && cached && Date.now() - cached.ts < MEMBERS_CACHE_TTL) {
+      setMembers(cached.data);
+      return;
     }
+
+    // 🚀 Dedupe concurrent calls — return the in-flight promise instead of stacking
+    if (membersInflightRef.current) {
+      return membersInflightRef.current;
+    }
+
+    // 🚀 Abort any prior pending request before starting a new one
+    membersAbortRef.current?.abort();
+    const ac = new AbortController();
+    membersAbortRef.current = ac;
+
+    const run = (async () => {
+      try {
+        const { data } = await supabase
+          .from("room_members")
+          .select("*")
+          .eq("room_id", roomId)
+          .abortSignal(ac.signal);
+
+        if (ac.signal.aborted) return;
+
+        if (data && data.length > 0) {
+          // Client-side filter: hide stale users immediately (don't wait for cron)
+          const now = Date.now();
+          const fresh = data.filter((m) => {
+            const age = now - new Date(m.joined_at).getTime();
+            return age < STALE_MEMBER_MS;
+          }).map((m) => {
+            const age = now - new Date(m.joined_at).getTime();
+            // Force-drop from mic if heartbeat is stale, even before cron runs
+            if (m.is_on_mic && age >= STALE_MIC_MS) {
+              return { ...m, is_on_mic: false, mic_slot: null };
+            }
+            return m;
+          });
+
+          const userIds = fresh.map((m) => m.user_id);
+          if (userIds.length === 0) {
+            membersCacheRef.current = { ts: Date.now(), data: [] };
+            setMembers([]);
+            return;
+          }
+
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
+            .in("id", userIds)
+            .abortSignal(ac.signal);
+
+          if (ac.signal.aborted) return;
+
+          const profileMap: Record<string, any> = {};
+          profiles?.forEach((p) => { profileMap[p.id] = p; });
+
+          const next = fresh.map((m) => ({
+            ...m,
+            profile: profileMap[m.user_id] || null,
+          }));
+          membersCacheRef.current = { ts: Date.now(), data: next };
+          setMembers(next);
+        } else {
+          membersCacheRef.current = { ts: Date.now(), data: [] };
+          setMembers([]);
+        }
+      } catch (err: any) {
+        // Swallow abort errors silently
+        if (err?.name === 'AbortError') return;
+      } finally {
+        membersInflightRef.current = null;
+      }
+    })();
+
+    membersInflightRef.current = run;
+    return run;
   }, [roomId]);
 
   const fetchMessages = useCallback(async () => {
