@@ -39,6 +39,15 @@ interface GiftItem {
   image_url?: string | null;
 }
 
+interface SentGiftInfo {
+  emoji: string;
+  giftName: string;
+  imageUrl: string | null;
+  senderName: string;
+  recipientName: string;
+  amount: number;
+}
+
 interface GiftAnimationProps {
   isOpen: boolean;
   onClose: () => void;
@@ -47,6 +56,7 @@ interface GiftAnimationProps {
   receiverName?: string;
   roomMembers?: RoomMemberInfo[];
   onMultiGiftSent?: (emoji: string, count: number, imageUrl?: string | null) => void;
+  onGiftSent?: (info: SentGiftInfo) => void;
   roomId?: string;
 }
 
