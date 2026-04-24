@@ -4,14 +4,8 @@ import {
   X,
   Copy,
   Check,
-  Crown,
-  TrendingUp,
-  Heart,
-  ChevronLeft,
-  ChevronRight,
   Gift,
   LogOut,
-  Mic,
   Shield,
   VolumeX,
   Ban,
@@ -22,10 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import FramedAvatar from "./FramedAvatar";
 import TierBadge from "./TierBadge";
-import VipBadge from "./VipBadge";
-import BDBadge from "./BDBadge";
-import RechargeAgentBadge from "./RechargeAgentBadge";
-import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 
 export interface RoomUserProfileData {
   user_id: string;
@@ -43,12 +33,6 @@ export interface RoomUserProfileData {
   gender?: string | null;
   country?: string | null;
   is_online?: boolean;
-}
-
-interface InventoryItem {
-  item_type: string;
-  item_name: string;
-  item_data: any;
 }
 
 interface Props {
