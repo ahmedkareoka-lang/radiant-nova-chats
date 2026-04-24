@@ -94,6 +94,7 @@ const VoiceRoom = () => {
   const roomId = searchParams.get("id");
   const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
+  const { t, locale } = useLanguage();
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
