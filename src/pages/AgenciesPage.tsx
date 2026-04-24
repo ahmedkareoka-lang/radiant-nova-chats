@@ -188,10 +188,29 @@ const AgenciesPage = () => {
   const inviteAsHost = async () => {
     if (!searchResult || !myAgency) return;
     if (searchResult.is_host) { toast.error("هذا المستخدم مضيف بالفعل!"); return; }
-    
-    await supabase.from("agency_invites").insert({
+    if (searchResult.is_agent) { toast.error("هذا المستخدم وكيل بالفعل ولا يمكن دعوته كمضيف!"); return; }
+    if (searchResult.id === userId) { toast.error("لا يمكن دعوة نفسك"); return; }
+
+    // Block duplicate pending invites
+    const { data: existing } = await supabase
+      .from("agency_invites")
+      .select("id")
+      .eq("agency_id", myAgency.id)
+      .eq("target_user_id", searchResult.id)
+      .eq("status", "pending")
+      .maybeSingle();
+    if (existing) { toast.error("لقد أرسلت دعوة بالفعل لهذا المستخدم — في انتظار الرد"); return; }
+
+    const ok = window.confirm(
+      `إرسال دعوة لـ "${searchResult.display_name}" (ID: ${searchResult.user_id}) للانضمام إلى وكالة "${myAgency.name}" كمضيف؟`,
+    );
+    if (!ok) return;
+
+    const { error } = await supabase.from("agency_invites").insert({
       agency_id: myAgency.id, agent_id: userId, target_user_id: searchResult.id,
     });
+    if (error) { toast.error("فشل إرسال الدعوة: " + error.message); return; }
+
     await supabase.from("notifications").insert({
       user_id: searchResult.id, title: "دعوة وكالة 🏢",
       message: `تم دعوتك للانضمام كمضيف في وكالة "${myAgency.name}"`, type: "agency_invite",
@@ -199,6 +218,30 @@ const AgenciesPage = () => {
     toast.success("تم إرسال الدعوة! 📨");
     setSearchResult(null);
     setSearchId("");
+
+    // Refresh sent-invites panel
+    const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
+    if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
+  };
+
+  const respondToInvite = async (inviteId: string, action: "accept" | "reject") => {
+    setProcessingInvite(inviteId);
+    try {
+      if (action === "accept") {
+        const { error } = await supabase.rpc("accept_agency_invite" as any, {
+          _invite_id: inviteId, _user_id: userId,
+        });
+        if (error) { toast.error("فشل قبول الدعوة: " + error.message); return; }
+        toast.success("تم قبول الدعوة! أنت الآن مضيف 🎤");
+      } else {
+        await supabase.from("agency_invites").update({ status: "rejected" }).eq("id", inviteId);
+        toast.info("تم رفض الدعوة");
+      }
+      // Refresh entire view (membership may have changed)
+      await loadAll();
+    } finally {
+      setProcessingInvite(null);
+    }
   };
 
   const removeHost = async (hostId: string) => {
