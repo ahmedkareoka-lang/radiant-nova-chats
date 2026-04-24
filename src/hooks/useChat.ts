@@ -179,6 +179,8 @@ export const useChatMessages = (conversationId: string | null) => {
       conversation_id: conversationId,
       content: content.trim(),
     });
+    // Track daily task: message (DM only)
+    supabase.rpc("increment_daily_task", { _user_id: currentUserId, _task_type: "message", _amount: 1 });
   };
 
   return { messages, currentUserId, sendMessage };
