@@ -26,6 +26,25 @@ const LoveHistoryPage = () => {
   const [gifts, setGifts] = useState<GiftRow[]>([]);
   const [loading, setLoading] = useState(true);
   const { couple } = useLoveCouple(myId);
+  const prevCoupleIdRef = useRef<string | null>(null);
+
+  // Toast when an active couple is detected (newly activated, while on this page)
+  useEffect(() => {
+    if (!couple) { prevCoupleIdRef.current = null; return; }
+    const prev = prevCoupleIdRef.current;
+    if (prev !== couple.id) {
+      // Avoid firing on the very first load when we already had a partner
+      if (prev !== null) {
+        const partnerName = couple.partner?.display_name || "شريكك";
+        toast.success(`💕 تم تفعيل علاقة حبيبين مع ${partnerName}!`, {
+          description: `أنتم الآن في المستوى ${couple.love_level} • ${couple.love_points.toLocaleString()} نقطة حب`,
+          duration: 6000,
+        });
+      }
+      prevCoupleIdRef.current = couple.id;
+    }
+  }, [couple]);
+
 
   useEffect(() => {
     (async () => {
