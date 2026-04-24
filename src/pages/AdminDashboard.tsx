@@ -36,8 +36,9 @@ const AdminDashboard = () => {
   const [giftsList, setGiftsList] = useState<any[]>([]);
   const [storeItems, setStoreItems] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
-  const [newGift, setNewGift] = useState({ name: "", price: "" });
+  const [newGift, setNewGift] = useState({ name: "", price: "", tier: "normal", duration_ms: "3500" });
   const [giftPreviewUrl, setGiftPreviewUrl] = useState<string | null>(null);
+  const [giftMediaType, setGiftMediaType] = useState<"image" | "lottie" | "video">("image");
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
   const [newBanner, setNewBanner] = useState({ title: "" });
   const [uploading, setUploading] = useState(false);
@@ -238,22 +239,38 @@ const AdminDashboard = () => {
     return urlData.publicUrl;
   };
 
-  // Gift management
+  // Gift management - now supports Lottie JSON & transparent video
   const handleAddGift = async () => {
-    if (!newGift.name || !newGift.price) return;
+    if (!newGift.name || !newGift.price) {
+      toast.error("املأ الاسم والسعر");
+      return;
+    }
     const file = giftFileRef.current?.files?.[0];
     let imageUrl: string | null = null;
-    if (file) imageUrl = await uploadFile(file, "gifts");
+    let lottieUrl: string | null = null;
+    let videoUrl: string | null = null;
+
+    if (file) {
+      const uploaded = await uploadFile(file, "gifts");
+      if (giftMediaType === "lottie") lottieUrl = uploaded;
+      else if (giftMediaType === "video") videoUrl = uploaded;
+      else imageUrl = uploaded;
+    }
 
     const { error } = await supabase.from("gifts").insert({
       name: newGift.name,
       price: parseInt(newGift.price),
       image_url: imageUrl,
-    });
-    if (error) { toast.error("فشل في إضافة الهدية"); return; }
+      lottie_url: lottieUrl,
+      video_url: videoUrl,
+      tier: newGift.tier,
+      duration_ms: parseInt(newGift.duration_ms) || 3500,
+    } as any);
+    if (error) { toast.error("فشل في إضافة الهدية: " + error.message); return; }
     toast.success("تمت إضافة الهدية ✅");
-    setNewGift({ name: "", price: "" });
+    setNewGift({ name: "", price: "", tier: "normal", duration_ms: "3500" });
     setGiftPreviewUrl(null);
+    setGiftMediaType("image");
     if (giftFileRef.current) giftFileRef.current.value = "";
     await fetchGifts();
   };
