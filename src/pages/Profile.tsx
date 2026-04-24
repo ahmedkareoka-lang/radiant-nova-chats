@@ -1,4 +1,4 @@
-import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight, Package } from "lucide-react";
+import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight, Package, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
