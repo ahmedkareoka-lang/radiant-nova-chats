@@ -204,14 +204,26 @@ const VoiceRoom = () => {
   // entrances for people who were already in the room when we joined.
   // We sort newcomers by joined_at to keep queue ordering deterministic across clients
   // (so two users joining simultaneously appear in the same order on every device).
+  // Track when this client mounted, to distinguish "already in room" vs "joined after me"
+  const mountTimeRef = useRef<number>(Date.now());
+
   useEffect(() => {
     if (members.length === 0) return;
 
-    // Initial sync: just mark everyone already present as seen (no entrance for them).
+    // Initial sync: mark members who joined BEFORE we mounted as already seen,
+    // so we don't replay their entrances. Members who joined within a small window
+    // around mount time (including ourselves) are treated as fresh joiners.
     if (!didInitialMemberSync.current) {
       didInitialMemberSync.current = true;
-      for (const m of members) seenMemberIds.current.add(m.user_id);
-      return;
+      const FRESH_WINDOW_MS = 8000; // anyone joined within 8s of our mount = fresh
+      for (const m of members) {
+        const joinedAt = (m as any).joined_at ? new Date((m as any).joined_at).getTime() : 0;
+        const isFresh = joinedAt >= mountTimeRef.current - FRESH_WINDOW_MS;
+        if (!isFresh) {
+          seenMemberIds.current.add(m.user_id);
+        }
+      }
+      // Fall through so fresh members (including self) get an entrance
     }
 
     // Collect newcomers, then sort by joined_at to enforce a stable global order
