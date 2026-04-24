@@ -1,10 +1,25 @@
 import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
 
+/** Named size presets so pages don't need to hardcode pixel values everywhere. */
+export const FRAMED_AVATAR_SIZES = {
+  xs: 36,
+  sm: 56,
+  md: 84,
+  lg: 120,
+  xl: 160,
+  "2xl": 200,
+} as const;
+
+export type FramedAvatarSize = keyof typeof FRAMED_AVATAR_SIZES;
+
 type Props = {
   avatarUrl: string | null | undefined;
   equippedFrame?: string | null;
-  /** Outer box size in pixels (frame + avatar are both sized from this) */
-  size: number;
+  /**
+   * Outer box size. Either a preset key (`sm`, `md`, `lg` …) OR a raw pixel number.
+   * Pages should prefer presets so the frame system stays consistent.
+   */
+  size: FramedAvatarSize | number;
   /** Optional class for the outer wrapper */
   className?: string;
   /** Optional ring around the inner avatar when no frame is set */
@@ -13,6 +28,9 @@ type Props = {
   behind?: React.ReactNode;
   alt?: string;
 };
+
+const resolveSize = (s: FramedAvatarSize | number): number =>
+  typeof s === "number" ? s : FRAMED_AVATAR_SIZES[s];
 
 /**
  * Renders an avatar that automatically adapts its size & position to fit
@@ -28,21 +46,22 @@ const FramedAvatar = ({
   behind,
   alt = "",
 }: Props) => {
+  const px = resolveSize(size);
   const frameKey = equippedFrame || null;
   const mapped = frameKey ? FRAME_MAP[frameKey] : null;
   const direct = !mapped && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/")) ? frameKey : null;
   const frameImg = mapped || direct;
 
   const fit = getFrameFit(frameKey);
-  const innerSize = Math.round(size * fit.innerScale);
-  const offsetPx = Math.round(size * fit.innerOffsetY);
+  const innerSize = Math.round(px * fit.innerScale);
+  const offsetPx = Math.round(px * fit.innerOffsetY);
 
   if (frameImg) {
     const animClass = frameKey ? FRAME_ANIMATION[frameKey] || "" : "";
     return (
       <div
         className={`relative ${className}`}
-        style={{ width: size, height: size }}
+        style={{ width: px, height: px }}
       >
         {behind}
         {/* Inner avatar: size & vertical offset come from frame fit metadata */}
@@ -74,7 +93,7 @@ const FramedAvatar = ({
   return (
     <div
       className={`relative rounded-full overflow-hidden ${ringClassName} ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: px, height: px }}
     >
       {behind}
       <img
