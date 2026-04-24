@@ -4,6 +4,8 @@ import NovaCup from "@/components/NovaCup";
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
 import PKChallenge from "@/components/PKChallenge";
+import CoupleSeats from "@/components/CoupleSeats";
+import CouplePickerModal from "@/components/CouplePickerModal";
 import GlobalWinTicker from "@/components/GlobalWinTicker";
 import { useActiveRoom } from "@/contexts/ActiveRoomContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
