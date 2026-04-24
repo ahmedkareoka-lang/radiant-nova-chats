@@ -346,7 +346,7 @@ const BDDashboard = () => {
                 <div className="text-[10px] text-muted-foreground">ID: {found.user_id}</div>
               </div>
               <button
-                onClick={handleActivate}
+                onClick={() => setConfirmOpen(true)}
                 disabled={activating}
                 className="px-4 py-2 rounded-full bg-gradient-to-r from-orange-600 to-amber-500 text-white text-xs font-bold shadow-[0_0_14px_hsl(25_100%_55%/0.6)] disabled:opacity-50"
               >
