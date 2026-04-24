@@ -1402,6 +1402,8 @@ export type Database = {
       }
       generate_referral_code: { Args: never; Returns: string }
       generate_user_id: { Args: never; Returns: string }
+      get_agent_transfer_stats: { Args: never; Returns: Json }
+      get_host_agency_dashboard: { Args: never; Returns: Json }
       get_love_level: { Args: { _points: number }; Returns: number }
       get_nova_p_tier: {
         Args: { gold_amount: number }
@@ -1425,6 +1427,14 @@ export type Database = {
           user_id: string
           vip_level: number
           wealth_level: number
+        }[]
+      }
+      get_target_cycle: {
+        Args: { _ref?: string }
+        Returns: {
+          cycle_end: string
+          cycle_label: string
+          cycle_start: string
         }[]
       }
       has_role: {
