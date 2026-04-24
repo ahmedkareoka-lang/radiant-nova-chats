@@ -1,8 +1,9 @@
 import { ArrowLeft, Heart, Gift, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import LoveBadge from "@/components/LoveBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
