@@ -67,6 +67,9 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   const currentRoleRef = useRef<ClientRole>("audience");
   const remoteUsersRef = useRef<Map<string, IAgoraRTCRemoteUser>>(new Map());
   const currentUserIdRef = useRef<string | null>(currentUserId);
+  const channelRef = useRef<string | null>(null);
+  const renewTimerRef = useRef<number | null>(null);
+  const agoraUidRef = useRef<string | null>(null);
 
   useEffect(() => {
     currentUserIdRef.current = currentUserId;
