@@ -9,6 +9,7 @@ import { useFollows } from "@/hooks/useFollows";
 import { useNotifications } from "@/hooks/useNotifications";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
+import FramedAvatar from "@/components/FramedAvatar";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
