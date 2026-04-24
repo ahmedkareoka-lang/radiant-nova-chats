@@ -37,6 +37,7 @@ import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
+import RoomUserProfileCard from "@/components/RoomUserProfileCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
@@ -891,119 +892,26 @@ const VoiceRoom = () => {
 
       {/* Profile Stats Modal with Admin Menu */}
       {selectedProfile && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center" onClick={() => setSelectedProfile(null)}>
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="card-nova p-5 max-w-xs w-full space-y-4" onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm">بطاقة اللاعب</h3>
-              <button onClick={() => setSelectedProfile(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              {renderAvatarWithFrame(
-                selectedProfile.avatar_url,
-                selectedProfile.equipped_frame,
-                selectedProfile.is_boss,
-                "lg",
-                false,
-                rechargeAgentSet.has(selectedProfile.user_id),
-                bdSet.has(selectedProfile.user_id),
-              )}
-              <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>
-                {selectedProfile.display_name}
-              </span>
-              {/* Full badges row — only visible inside profile card */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
-                {bdSet.has(selectedProfile.user_id) && <BDBadge size="sm" />}
-                {rechargeAgentSet.has(selectedProfile.user_id) && <RechargeAgentBadge size="sm" />}
-                <DualBadge
-                  novaLevel={(selectedProfile as any)?.nova_p_level || 0}
-                  vipLevel={selectedProfile.vip_level || 0}
-                />
-                {(selectedProfile.vip_level || 0) > 0 && !((selectedProfile as any)?.nova_p_level) && (
-                  <VipBadge level={selectedProfile.vip_level} size="sm" />
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="card-nova p-3 text-center">
-                <TrendingUp className="w-4 h-4 text-accent mx-auto mb-1" />
-                <p className="text-xs font-bold">الثروة Lv.{selectedProfile.wealth_level || 1}</p>
-                <p className="text-[9px] text-muted-foreground">{(selectedProfile.wealth_xp || 0).toLocaleString()} XP</p>
-              </div>
-              <div className="card-nova p-3 text-center">
-                <Heart className="w-4 h-4 text-primary mx-auto mb-1" />
-                <p className="text-xs font-bold">الكاريزما Lv.{selectedProfile.charisma_level || 1}</p>
-                <p className="text-[9px] text-muted-foreground">{(selectedProfile.charisma_xp || 0).toLocaleString()} XP</p>
-              </div>
-            </div>
-
-            {/* User actions */}
-            {selectedProfile.user_id !== currentUserId && (
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setSelectedProfile(null); openGiftFor(selectedProfile.user_id, selectedProfile.display_name); }}
-                    className="flex-1 py-2.5 rounded-full gradient-gold text-accent-foreground font-bold text-sm btn-nova"
-                  >
-                    🎁 هدية
-                  </button>
-                  <button
-                    onClick={() => { setSelectedProfile(null); navigate(`/user?id=${selectedProfile.user_id}`); }}
-                    className="flex-1 py-2.5 rounded-full bg-secondary text-foreground font-bold text-sm"
-                  >
-                    👤 بروفايل
-                  </button>
-                </div>
-
-                {/* Admin Menu */}
-                {isAdmin && (
-                  <div className="border-t border-border/30 pt-2 mt-1">
-                    <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1"><Shield className="w-3 h-3" /> أدوات المشرف</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {/* Mute */}
-                      <button
-                        onClick={() => handleMuteUser(selectedProfile.user_id)}
-                        className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-secondary/80 transition-all"
-                      >
-                        <VolumeX className="w-4 h-4 text-muted-foreground" />
-                        <span>{mutedUsers.includes(selectedProfile.user_id) ? "إلغاء الكتم" : "كتم"}</span>
-                      </button>
-                      {/* Kick */}
-                      <button
-                        onClick={() => setConfirmAction({ type: "kick", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
-                        className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
-                      >
-                        <LogOut className="w-4 h-4 text-destructive" />
-                        <span className="text-destructive">طرد</span>
-                      </button>
-                      {/* Ban */}
-                      <button
-                        onClick={() => setConfirmAction({ type: "ban", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
-                        className="py-2 rounded-xl bg-secondary text-xs font-bold flex flex-col items-center gap-1 hover:bg-destructive/20 transition-all"
-                      >
-                        <Ban className="w-4 h-4 text-destructive" />
-                        <span className="text-destructive">حظر</span>
-                      </button>
-                    </div>
-                    {/* Kick from mic if on mic */}
-                    {members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
-                     members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined && (
-                      <button
-                        onClick={() => setConfirmAction({ type: "kickMic", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
-                        className="w-full mt-2 py-2 rounded-xl bg-destructive/10 text-destructive font-bold text-xs flex items-center justify-center gap-2"
-                      >
-                        <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </motion.div>
-        </div>
+        <RoomUserProfileCard
+          profile={selectedProfile as any}
+          isHostOfRoom={selectedProfile.user_id === roomData?.host_id}
+          isBD={bdSet.has(selectedProfile.user_id)}
+          isRechargeAgent={rechargeAgentSet.has(selectedProfile.user_id)}
+          currentUserId={currentUserId}
+          isAdmin={isAdmin}
+          isOnMic={
+            members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
+            members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined
+          }
+          muted={mutedUsers.includes(selectedProfile.user_id)}
+          onClose={() => setSelectedProfile(null)}
+          onSendGift={() => { setSelectedProfile(null); openGiftFor(selectedProfile.user_id, selectedProfile.display_name); }}
+          onOpenFullProfile={() => { setSelectedProfile(null); navigate(`/user?id=${selectedProfile.user_id}`); }}
+          onMute={() => handleMuteUser(selectedProfile.user_id)}
+          onKick={() => setConfirmAction({ type: "kick", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
+          onBan={() => setConfirmAction({ type: "ban", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
+          onKickFromMic={() => setConfirmAction({ type: "kickMic", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
+        />
       )}
 
       {/* Settings Modal */}

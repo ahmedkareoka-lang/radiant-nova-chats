@@ -1,0 +1,390 @@
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  X,
+  Copy,
+  Check,
+  Crown,
+  TrendingUp,
+  Heart,
+  ChevronLeft,
+  ChevronRight,
+  Gift,
+  LogOut,
+  Mic,
+  Shield,
+  VolumeX,
+  Ban,
+  UserMinus,
+  Gamepad2,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import FramedAvatar from "./FramedAvatar";
+import TierBadge from "./TierBadge";
+import VipBadge from "./VipBadge";
+import BDBadge from "./BDBadge";
+import RechargeAgentBadge from "./RechargeAgentBadge";
+import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
+
+export interface RoomUserProfileData {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  vip_level?: number;
+  is_boss?: boolean;
+  wealth_level?: number;
+  wealth_xp?: number;
+  charisma_level?: number;
+  charisma_xp?: number;
+  equipped_frame?: string | null;
+  equipped_badge?: string | null;
+  nova_p_level?: number;
+  gender?: string | null;
+  country?: string | null;
+  is_online?: boolean;
+}
+
+interface InventoryItem {
+  item_type: string;
+  item_name: string;
+  item_data: any;
+}
+
+interface Props {
+  profile: RoomUserProfileData;
+  isHostOfRoom?: boolean;
+  isBD?: boolean;
+  isRechargeAgent?: boolean;
+  currentUserId?: string | null;
+  isAdmin?: boolean;
+  isOnMic?: boolean;
+  muted?: boolean;
+  onClose: () => void;
+  onSendGift: () => void;
+  onOpenFullProfile: () => void;
+  onMute?: () => void;
+  onKick?: () => void;
+  onBan?: () => void;
+  onKickFromMic?: () => void;
+}
+
+const GAMES = [
+  { id: "lucky", emoji: "🎰", label: "الحظ" },
+  { id: "olympus", emoji: "⚡", label: "Olympus" },
+  { id: "football", emoji: "⚽", label: "Football" },
+  { id: "lion", emoji: "🐯", label: "Lion & Tiger" },
+];
+
+export default function RoomUserProfileCard({
+  profile,
+  isHostOfRoom,
+  isBD,
+  isRechargeAgent,
+  currentUserId,
+  isAdmin,
+  isOnMic,
+  muted,
+  onClose,
+  onSendGift,
+  onOpenFullProfile,
+  onMute,
+  onKick,
+  onBan,
+  onKickFromMic,
+}: Props) {
+  const [copied, setCopied] = useState(false);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [badgePage, setBadgePage] = useState(0);
+
+  // Short numeric id (last 8 hex chars converted to decimal-ish display)
+  const shortId = useMemo(() => {
+    const hex = profile.user_id.replace(/-/g, "").slice(-8);
+    return parseInt(hex, 16).toString().slice(0, 8);
+  }, [profile.user_id]);
+
+  const isMe = profile.user_id === currentUserId;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("inventory" as any)
+        .select("item_type, item_name, item_data")
+        .eq("user_id", profile.user_id);
+      if (!cancelled) setItems((data as any) || []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile.user_id]);
+
+  const badgeItems = useMemo(() => {
+    const list: { key: string; img?: string | null; label: string; gradient?: string }[] = [];
+    if (isHostOfRoom) list.push({ key: "host", label: "مضيف", gradient: "from-pink-500 to-rose-500" });
+    if (isBD) list.push({ key: "bd", label: "BD", gradient: "from-fuchsia-500 to-purple-600" });
+    if (isRechargeAgent) list.push({ key: "agent", label: "وكيل", gradient: "from-amber-400 to-orange-500" });
+    if ((profile.vip_level || 0) > 0) {
+      const lv = profile.vip_level!;
+      list.push({ key: `vip${lv}`, label: `VIP${lv}`, gradient: "from-yellow-400 via-orange-400 to-rose-500" });
+    }
+    if ((profile.nova_p_level || 0) > 0) {
+      list.push({ key: "novap", label: `NOVA P${profile.nova_p_level}`, gradient: "from-cyan-400 to-blue-600" });
+    }
+    items
+      .filter((i) => i.item_type === "badge")
+      .forEach((i) =>
+        list.push({
+          key: `b-${i.item_name}`,
+          label: i.item_name,
+          img: i.item_data?.image_url || null,
+          gradient: "from-violet-500 to-fuchsia-500",
+        }),
+      );
+    items
+      .filter((i) => i.item_type === "frame")
+      .forEach((i) =>
+        list.push({
+          key: `f-${i.item_name}`,
+          label: i.item_name,
+          img: i.item_data?.image_url || null,
+          gradient: "from-emerald-500 to-teal-500",
+        }),
+      );
+    return list;
+  }, [isHostOfRoom, isBD, isRechargeAgent, profile.vip_level, profile.nova_p_level, items]);
+
+  const visibleBadges = useMemo(() => {
+    const start = badgePage * 6;
+    return badgeItems.slice(start, start + 6);
+  }, [badgeItems, badgePage]);
+
+  const totalPages = Math.max(1, Math.ceil(badgeItems.length / 6));
+
+  const copyId = async () => {
+    try {
+      await navigator.clipboard.writeText(shortId);
+      setCopied(true);
+      toast.success("تم نسخ الـ ID ✅");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("تعذّر النسخ");
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] bg-background/85 backdrop-blur-md flex items-end sm:items-center justify-center p-2"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: 40, opacity: 0, scale: 0.96 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 40, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 240, damping: 26 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-3xl bg-gradient-to-b from-[#1a1230] via-[#0f0a1f] to-[#0a0816] border border-purple-500/20 shadow-[0_0_60px_-10px_hsl(280_80%_45%/0.5)] p-4 space-y-4"
+        dir="rtl"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Avatar */}
+        <div className="flex flex-col items-center pt-2">
+          <FramedAvatar
+            avatarUrl={profile.avatar_url}
+            equippedFrame={profile.equipped_frame || null}
+            size={120}
+            isBD={!!isBD}
+            isRechargeAgent={!!isRechargeAgent}
+          />
+        </div>
+
+        {/* Name + status */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <span className="font-black text-lg bg-gradient-to-r from-fuchsia-300 to-purple-300 bg-clip-text text-transparent">
+            {profile.display_name}
+          </span>
+          {profile.gender && (
+            <span
+              className={`text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold ${
+                profile.gender === "female" ? "bg-pink-500/30 text-pink-300" : "bg-blue-500/30 text-blue-300"
+              }`}
+            >
+              {profile.gender === "female" ? "♀" : "♂"}
+            </span>
+          )}
+          {profile.country && <span className="text-base">{profile.country}</span>}
+          <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            متصل
+          </span>
+        </div>
+
+        {/* Levels & ID row */}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-1.5">
+            <TierBadge level={profile.charisma_level || 1} type="charm" size="sm" />
+            <TierBadge level={profile.wealth_level || 1} type="wealth" size="sm" />
+          </div>
+          <button
+            onClick={copyId}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-[11px] font-bold hover:bg-purple-500/30 transition-all"
+          >
+            <span className="tabular-nums">{shortId}</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-purple-500 text-white text-[9px]">ID</span>
+            {copied ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+          </button>
+        </div>
+
+        {/* Role chips: مضيف / وكيل / BD */}
+        {(isHostOfRoom || isBD || isRechargeAgent) && (
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {isHostOfRoom && (
+              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/80 to-rose-500/80 text-white text-[11px] font-black flex items-center gap-1 shadow-[0_0_14px_hsl(330_85%_55%/0.5)]">
+                <Crown className="w-3 h-3" /> مضيف
+              </div>
+            )}
+            {isRechargeAgent && (
+              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[11px] font-black flex items-center gap-1 shadow-[0_0_14px_hsl(35_95%_55%/0.5)]">
+                🏛️ وكيل
+              </div>
+            )}
+            {isBD && <BDBadge size="sm" />}
+          </div>
+        )}
+
+        {/* Badges section */}
+        <div className="rounded-2xl bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border border-purple-400/20 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-right">
+              <p className="font-black text-sm text-fuchsia-200">الشارات</p>
+              <p className="text-[10px] text-fuchsia-100/70">
+                <span className="text-yellow-400 font-bold">{badgeItems.length}</span> الشارات
+              </p>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                disabled={badgePage === 0}
+                onClick={() => setBadgePage((p) => Math.max(0, p - 1))}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                disabled={badgePage >= totalPages - 1}
+                onClick={() => setBadgePage((p) => Math.min(totalPages - 1, p + 1))}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          {badgeItems.length === 0 ? (
+            <p className="text-center text-[11px] text-muted-foreground py-3">لا توجد شارات بعد</p>
+          ) : (
+            <div className="grid grid-cols-6 gap-1.5">
+              {visibleBadges.map((b) => (
+                <div
+                  key={b.key}
+                  className={`aspect-square rounded-lg bg-gradient-to-br ${b.gradient} border border-white/20 flex items-center justify-center overflow-hidden shadow-md`}
+                  title={b.label}
+                >
+                  {b.img ? (
+                    <img src={b.img} alt={b.label} className="w-full h-full object-contain" loading="lazy" />
+                  ) : (
+                    <span className="text-[9px] font-black text-white text-center leading-tight px-1">
+                      {b.label}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Games section */}
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-600/25 to-cyan-600/25 border border-cyan-400/20 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="font-black text-sm text-cyan-200">الألعاب</p>
+            <Gamepad2 className="w-4 h-4 text-cyan-200" />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {GAMES.map((g) => (
+              <div
+                key={g.id}
+                className="aspect-square rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-600/30 border border-amber-300/30 flex flex-col items-center justify-center"
+              >
+                <span className="text-2xl">{g.emoji}</span>
+                <span className="text-[8px] font-bold mt-0.5">{g.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        {!isMe && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={onSendGift}
+                className="py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_-4px_hsl(340_85%_55%/0.6)]"
+              >
+                <Gift className="w-4 h-4" /> إرسال هدية
+              </button>
+              <button
+                onClick={onOpenFullProfile}
+                className="py-3 rounded-2xl bg-white/10 border border-white/20 text-white font-bold text-sm"
+              >
+                👤 البروفايل الكامل
+              </button>
+            </div>
+
+            {isAdmin && (
+              <div className="border-t border-white/10 pt-2">
+                <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1">
+                  <Shield className="w-3 h-3" /> أدوات المشرف
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={onMute}
+                    className="py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold flex flex-col items-center gap-1"
+                  >
+                    <VolumeX className="w-4 h-4" />
+                    <span>{muted ? "إلغاء الكتم" : "كتم"}</span>
+                  </button>
+                  <button
+                    onClick={onKick}
+                    className="py-2 rounded-xl bg-white/5 hover:bg-destructive/20 text-xs font-bold flex flex-col items-center gap-1 text-destructive"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>طرد</span>
+                  </button>
+                  <button
+                    onClick={onBan}
+                    className="py-2 rounded-xl bg-white/5 hover:bg-destructive/20 text-xs font-bold flex flex-col items-center gap-1 text-destructive"
+                  >
+                    <Ban className="w-4 h-4" />
+                    <span>حظر</span>
+                  </button>
+                </div>
+                {isOnMic && (
+                  <button
+                    onClick={onKickFromMic}
+                    className="w-full mt-2 py-2 rounded-xl bg-destructive/15 text-destructive font-bold text-xs flex items-center justify-center gap-2"
+                  >
+                    <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
