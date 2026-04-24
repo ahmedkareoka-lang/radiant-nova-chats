@@ -49,7 +49,7 @@ const AdminDashboard = () => {
   const [giftsList, setGiftsList] = useState<any[]>([]);
   const [storeItems, setStoreItems] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
-  const [newGift, setNewGift] = useState({ name: "", price: "", tier: "normal", duration_ms: "3500" });
+  const [newGift, setNewGift] = useState({ name: "", price: "", tier: "normal", duration_ms: "3500", category: "general" });
   const [giftPreviewUrl, setGiftPreviewUrl] = useState<string | null>(null);
   const [giftMediaType, setGiftMediaType] = useState<"image" | "lottie" | "video">("image");
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
