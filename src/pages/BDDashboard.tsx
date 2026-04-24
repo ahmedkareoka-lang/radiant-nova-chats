@@ -186,7 +186,7 @@ const BDDashboard = () => {
           className="rounded-3xl p-5 bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 text-white relative overflow-hidden shadow-[0_0_40px_hsl(25_100%_55%/0.5)]"
         >
           <div className="relative z-10">
-            <div className="text-xs opacity-90 mb-1">إجمالي عمولاتك (نسبة {stats?.commission_rate || 20}%)</div>
+            <div className="text-xs opacity-90 mb-1">إجمالي عمولاتك (نسبة {stats?.commission_rate || 10}%)</div>
             <div className="text-4xl font-black tracking-tight">
               {formatNum(stats?.total_commission || 0)} <span className="text-lg">💎</span>
             </div>
