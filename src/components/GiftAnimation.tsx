@@ -4,19 +4,9 @@ import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import storeCatalog from "@/lib/storeCatalog.json";
 import { logAgora } from "@/lib/agoraDebugLog";
 
-const FALLBACK_GIFTS = [
-  { emoji: "🌹", name: "وردة", price: 10 },
-  { emoji: "❤️", name: "قلب", price: 20 },
-  { emoji: "🎁", name: "هدية", price: 50 },
-  { emoji: "💎", name: "جوهرة", price: 100 },
-  { emoji: "🔥", name: "نار", price: 200 },
-  { emoji: "🚗", name: "سيارة", price: 500 },
-  { emoji: "👑", name: "تاج", price: 1000 },
-  { emoji: "🏰", name: "قصر", price: 5000 },
-];
+
 
 const MULTIPLIERS = [1, 10, 99, 520, 1314];
 
@@ -77,7 +67,7 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
   const [showMulti, setShowMulti] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
   const [balance, setBalance] = useState(0);
-  const [gifts, setGifts] = useState<GiftItem[]>(FALLBACK_GIFTS);
+  const [gifts, setGifts] = useState<GiftItem[]>([]);
   const { sendGift } = useGifts();
 
   useEffect(() => {
@@ -93,16 +83,8 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
           duration_ms: g.duration_ms,
           emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
         })) || [];
-      const catalogGifts = storeCatalog.gifts.map((g) => ({
-        name: g.name,
-        price: Number(g.price),
-        image_url: g.image,
-        emoji: undefined,
-      }));
-      const merged = [...dbGifts, ...catalogGifts].filter(
-        (gift, index, arr) => arr.findIndex((item) => item.name === gift.name) === index,
-      );
-      setGifts(merged.length > 0 ? merged : FALLBACK_GIFTS);
+      // Use ONLY gifts from database (BOSS-managed). No fallback or static catalog.
+      setGifts(dbGifts);
     };
     fetchGifts();
     // Realtime updates for gifts catalog
