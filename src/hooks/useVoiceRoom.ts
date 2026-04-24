@@ -263,28 +263,52 @@ export const useVoiceRoom = (roomId: string | null) => {
       }
     };
 
-    // 🚀 Smart visibility handling: when the tab becomes visible again,
-    // immediately push a heartbeat + refetch so the user reappears instantly.
-    const sendHeartbeat = async () => {
+    // 🚀 Queued heartbeat: coalesces rapid triggers (visibility/focus/interval)
+    // into a single in-flight request, with a minimum gap between successful beats.
+    const sendHeartbeat = async (): Promise<void> => {
       const uid = currentUserIdRef.current;
       const rid = roomIdRef.current;
       if (!uid || !rid) return;
-      await supabase
-        .from("room_members")
-        .update({ joined_at: new Date().toISOString() })
-        .eq("room_id", rid)
-        .eq("user_id", uid);
+
+      // Reuse the in-flight beat if one is already running
+      if (heartbeatInflightRef.current) return heartbeatInflightRef.current;
+
+      // Skip if we just beat very recently (debounce against burst events)
+      if (Date.now() - heartbeatLastAtRef.current < HEARTBEAT_MIN_GAP) return;
+
+      const run = (async () => {
+        try {
+          await supabase
+            .from("room_members")
+            .update({ joined_at: new Date().toISOString() })
+            .eq("room_id", rid)
+            .eq("user_id", uid);
+          heartbeatLastAtRef.current = Date.now();
+        } catch {
+          // Silent — next interval will retry
+        } finally {
+          heartbeatInflightRef.current = null;
+        }
+      })();
+
+      heartbeatInflightRef.current = run;
+      return run;
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // Re-establish presence the moment the user returns
+        // Re-establish presence the moment the user returns (queued + cached)
         sendHeartbeat();
-        fetchMembers();
+        fetchMembers(true); // force refresh on return — bypass cache
       }
     };
 
+    const handleFocus = () => {
+      sendHeartbeat();
+    };
+
     window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Heartbeat: update joined_at periodically to show user is still active
