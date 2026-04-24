@@ -232,7 +232,39 @@ const AgenciesPage = () => {
               </div>
               <p className="font-bold text-lg">{myAgency.name}</p>
 
-              {/* Host stats */}
+              {/* Host: today + 15-day cycle banner */}
+              {myMembership?.badge === "host" && hostDashboard?.has_agency && (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-primary/10 rounded-xl p-3 text-center space-y-1">
+                      <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Gem className="w-3 h-3" />دعم اليوم</p>
+                      <p className="font-extrabold text-base text-primary">{Number(hostDashboard.today_diamonds || 0).toLocaleString()} 💎</p>
+                    </div>
+                    <div className="bg-accent/10 rounded-xl p-3 text-center space-y-1">
+                      <p className="text-[10px] text-muted-foreground flex items-center justify-center gap-1"><Mic className="w-3 h-3" />ساعات اليوم</p>
+                      <p className="font-extrabold text-base text-accent">{(Number(hostDashboard.today_minutes || 0) / 60).toFixed(1)}h</p>
+                    </div>
+                  </div>
+                  <div className="bg-secondary/40 rounded-xl p-3 space-y-2 border border-primary/20">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold flex items-center gap-1"><Target className="w-3 h-3 text-primary" />دورة التارجت</p>
+                      <p className="text-[10px] text-muted-foreground">{hostDashboard.cycle_label}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">ماس الدورة</p>
+                        <p className="text-sm font-extrabold text-primary">{Number(hostDashboard.cycle_diamonds || 0).toLocaleString()} 💎</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">ساعات الدورة</p>
+                        <p className="text-sm font-extrabold text-accent">{(Number(hostDashboard.cycle_minutes || 0) / 60).toFixed(1)}h</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Host stats (lifetime) */}
               {myMembership?.badge === "host" && hostStats && (
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-secondary/50 rounded-xl p-3 text-center">
