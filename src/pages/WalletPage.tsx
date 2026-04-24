@@ -157,21 +157,124 @@ const WalletPage = () => {
 
           <div className="card-nova p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
-              <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس بـ NOVA Coins
+              <ArrowRightLeft className="w-4 h-4 text-primary" /> تبديل الماس
             </h3>
-            <p className="text-[10px] text-muted-foreground">
-              نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} NOVA Coin
-            </p>
-            <div className="flex gap-2">
-              <input type="number" placeholder="عدد الماسات" value={exchangeAmount} onChange={(e) => setExchangeAmount(e.target.value)}
-                className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
-              <button onClick={handleExchange} disabled={loading}
-                className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تبديل</button>
+
+            {/* Two-tab switcher: لنفسي / للآخرين */}
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border">
+              <button
+                onClick={() => setMode("self")}
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-all ${
+                  mode === "self"
+                    ? "gradient-neon text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <User className="w-3.5 h-3.5" /> لنفسي (إلى Coins)
+              </button>
+              <button
+                onClick={() => setMode("other")}
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-black transition-all ${
+                  mode === "other"
+                    ? "gradient-neon text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" /> للآخرين (ماس → ماس)
+              </button>
             </div>
-            {exchangeAmount && parseInt(exchangeAmount) > 0 && (
-              <p className="text-xs text-accent text-center">
-                ستحصل على {Math.floor((parseInt(exchangeAmount) * exchangeRate) / 100).toLocaleString()} NOVA Coin
-              </p>
+
+            {mode === "self" ? (
+              <>
+                <p className="text-[10px] text-muted-foreground">
+                  نسبة التبديل: كل 1000 ماسة = {(1000 * exchangeRate / 100).toLocaleString()} NOVA Coin
+                </p>
+                <div className="flex gap-2">
+                  <input type="number" placeholder="عدد الماسات" value={exchangeAmount} onChange={(e) => setExchangeAmount(e.target.value)}
+                    className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary" />
+                  <button onClick={handleExchange} disabled={loading}
+                    className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-sm btn-nova">تبديل</button>
+                </div>
+                {exchangeAmount && parseInt(exchangeAmount) > 0 && (
+                  <p className="text-xs text-accent text-center">
+                    ستحصل على {Math.floor((parseInt(exchangeAmount) * exchangeRate) / 100).toLocaleString()} NOVA Coin
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] text-muted-foreground">
+                  أرسل الماس مباشرة إلى مستخدم آخر باستخدام ID العام (6 أرقام).
+                </p>
+
+                {/* Step 1: search recipient by ID */}
+                <div className="flex gap-2">
+                  <input
+                    value={recipientCode}
+                    onChange={(e) => setRecipientCode(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") searchRecipient(); }}
+                    placeholder="ID المستخدم (6 أرقام)"
+                    inputMode="numeric"
+                    className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <button
+                    onClick={searchRecipient}
+                    disabled={searching}
+                    className="px-3 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 gradient-neon text-primary-foreground btn-nova disabled:opacity-50"
+                  >
+                    {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {/* Step 2: confirm recipient + amount */}
+                {found && (
+                  <div className="rounded-2xl bg-background/40 border border-border/30 p-3 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        loading="lazy"
+                        decoding="async"
+                        src={found.avatar_url || "https://i.pravatar.cc/100?img=3"}
+                        alt={found.display_name}
+                        className="w-10 h-10 rounded-full object-cover border border-border/40"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-foreground truncate">{found.display_name}</p>
+                        <p className="text-[10px] text-muted-foreground">ID: {found.user_id}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={transferAmount}
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                        placeholder="عدد الماسات للتحويل"
+                        inputMode="numeric"
+                        className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button
+                        onClick={handleTransferToUser}
+                        disabled={transferring || !transferAmount}
+                        className="px-4 py-2 rounded-xl font-black text-xs text-primary-foreground flex items-center gap-1
+                          bg-gradient-to-r from-primary to-accent shadow-[0_0_12px_hsl(var(--primary)/0.5)] disabled:opacity-50"
+                      >
+                        {transferring ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        تحويل
+                      </button>
+                    </div>
+
+                    {transferAmount && parseInt(transferAmount) > 0 && (
+                      <p className="text-[11px] text-center text-muted-foreground">
+                        سيتم خصم{" "}
+                        <span className="text-primary font-black">
+                          {parseInt(transferAmount).toLocaleString()} 💎
+                        </span>{" "}
+                        من رصيدك مباشرة.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
