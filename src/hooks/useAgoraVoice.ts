@@ -183,6 +183,8 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       client.on("autoplay-failed", () => {
         logAgora("error", "autoplay-failed", "Browser blocked audio autoplay — tap to enable");
         setAudioBlocked(true);
+      });
+
       // @ts-ignore - token will expire soon
       client.on("token-privilege-will-expire", async () => {
         logAgora("warn", "token", "Token expiring soon — renewing…");
