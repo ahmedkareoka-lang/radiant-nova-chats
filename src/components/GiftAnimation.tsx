@@ -117,11 +117,14 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     const ch = supabase.channel(`room-gifts-${roomId}`, {
       config: { broadcast: { self: false, ack: true } },
     });
-    ch.subscribe();
+    ch.subscribe((status) => {
+      logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `sender channel status: ${status}`, { roomId });
+    });
     broadcastChannelRef.current = ch;
     return () => {
       supabase.removeChannel(ch);
       broadcastChannelRef.current = null;
+      logAgora("info", "Gift", "sender channel removed", { roomId });
     };
   }, [roomId, isOpen]);
 
