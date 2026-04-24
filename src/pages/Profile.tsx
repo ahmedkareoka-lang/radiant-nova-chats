@@ -271,23 +271,17 @@ const Profile = () => {
           {/* Avatar — large circular, overlapping cover */}
           <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 z-10">
             <div className="relative">
-              <div className="relative w-32 h-32">
-                {/* Outer ring */}
-                <div className="absolute inset-0 rounded-full p-1" style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 90% 60%))" }}>
-                  <div className="w-full h-full rounded-full bg-background p-0.5">
-                    <div className="w-full h-full rounded-full overflow-hidden">
-                      <img src={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"} alt="Profile" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                </div>
-                {/* Equipped frame overlay */}
-                {finalFrameImage && (
-                  <img
-                    src={finalFrameImage}
-                    alt="Frame"
-                    className={`absolute -inset-2 w-[calc(100%+1rem)] h-[calc(100%+1rem)] object-contain z-20 pointer-events-none ${equippedFrameKey ? (FRAME_ANIMATION[equippedFrameKey] || "") : ""}`}
+              <div
+                className="rounded-full p-1"
+                style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 90% 60%))" }}
+              >
+                <div className="rounded-full bg-background p-0.5">
+                  <FramedAvatar
+                    avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
+                    equippedFrame={equippedFrameKey}
+                    size={120}
                   />
-                )}
+                </div>
               </div>
 
               {/* Avatar action buttons */}
