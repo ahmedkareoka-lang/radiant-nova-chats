@@ -1004,6 +1004,36 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
+              {/* Daily / Weekly transfer report */}
+              {agentReport && (
+                <div className="card-nova p-4 space-y-3 border border-primary/30">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-primary" />
+                    <h3 className="font-bold text-sm">تقرير التحويلات</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-secondary/40 rounded-xl p-3 space-y-1">
+                      <p className="text-[10px] text-muted-foreground">اليوم</p>
+                      <div className="flex items-center gap-1">
+                        <CurrencyIcon type="gold" size="sm" />
+                        <p className="text-lg font-extrabold text-primary">{agentReport.today_total.toLocaleString()}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{agentReport.today_count} عملية</p>
+                    </div>
+                    <div className="bg-secondary/40 rounded-xl p-3 space-y-1">
+                      <p className="text-[10px] text-muted-foreground">
+                        الأسبوع (من السبت {agentReport.week_start})
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <CurrencyIcon type="gold" size="sm" />
+                        <p className="text-lg font-extrabold text-accent">{agentReport.week_total.toLocaleString()}</p>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{agentReport.week_count} عملية</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Aggregate summary */}
               {rechargeAgents.length > 0 && (
                 <div className="card-nova p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
