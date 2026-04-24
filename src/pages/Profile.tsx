@@ -158,7 +158,7 @@ const Profile = () => {
 
   const isBoss = profile?.is_boss;
   const equippedFrameKey = profile?.equipped_frame;
-  const frameImage = (equippedFrameKey && FRAME_MAP[equippedFrameKey]) ? FRAME_MAP[equippedFrameKey] : (isBoss ? bossFrame : null);
+  const frameImage = (equippedFrameKey && FRAME_MAP[equippedFrameKey]) ? FRAME_MAP[equippedFrameKey] : null;
   const directFrameImage = (!frameImage && equippedFrameKey && (equippedFrameKey.startsWith("http") || equippedFrameKey.startsWith("/"))) ? equippedFrameKey : null;
   const finalFrameImage = frameImage || directFrameImage;
 
@@ -271,7 +271,7 @@ const Profile = () => {
           {/* Avatar — large circular, overlapping cover */}
           <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 z-10">
             <div className="relative">
-              <div className={`relative w-32 h-32 ${isBoss ? "boss-god-frame" : ""}`}>
+              <div className="relative w-32 h-32">
                 {/* Outer ring */}
                 <div className="absolute inset-0 rounded-full p-1" style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 90% 60%))" }}>
                   <div className="w-full h-full rounded-full bg-background p-0.5">

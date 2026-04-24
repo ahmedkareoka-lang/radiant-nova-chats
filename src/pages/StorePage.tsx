@@ -45,14 +45,6 @@ const STORE_FRAMES = [
     data: { rarity: "mythic", frame_url: "lion-frame" },
   },
   {
-    id: "boss-frame",
-    name: "إطار البوس",
-    type: "frame",
-    price_coins: 100000,
-    image: bossFrame,
-    data: { rarity: "legendary", frame_url: "boss-frame" },
-  },
-  {
     id: "frame-fire",
     name: "إطار النار 🔥",
     type: "frame",
