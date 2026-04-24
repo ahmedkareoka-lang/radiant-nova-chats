@@ -285,7 +285,52 @@ const AgenciesPage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
-          {/* BOSS: Pending approvals */}
+          {/* HOST INBOX: pending invites with rich preview (15-day target stats) */}
+          {pendingInvites && (pendingInvites.invites || []).length > 0 && (
+            <div className="card-nova p-4 space-y-3 border border-primary/40">
+              <h3 className="font-bold text-sm flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-primary" />
+                دعوات الانضمام ({(pendingInvites.invites || []).length})
+              </h3>
+              <div className="rounded-xl bg-secondary/40 p-2.5 space-y-1">
+                <p className="text-[10px] text-muted-foreground">إحصائياتك في الدورة الحالية ({pendingInvites.cycle_label})</p>
+                <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                  <div className="bg-card/60 rounded-lg p-1.5">
+                    <p className="text-muted-foreground">ماس الدورة</p>
+                    <p className="font-bold text-primary">{Number(pendingInvites.host_cycle_diamonds).toLocaleString()}💎</p>
+                  </div>
+                  <div className={`rounded-lg p-1.5 ${(pendingInvites.host_cycle_minutes/60) >= pendingInvites.required_hours ? "bg-primary/15" : "bg-card/60"}`}>
+                    <p className="text-muted-foreground">ساعات</p>
+                    <p className="font-bold">{(pendingInvites.host_cycle_minutes/60).toFixed(1)} / {pendingInvites.required_hours}h</p>
+                  </div>
+                  <div className={`rounded-lg p-1.5 ${pendingInvites.host_cycle_active_days >= pendingInvites.required_days ? "bg-primary/15" : "bg-card/60"}`}>
+                    <p className="text-muted-foreground">أيام نشطة</p>
+                    <p className="font-bold">{pendingInvites.host_cycle_active_days} / {pendingInvites.required_days}</p>
+                  </div>
+                </div>
+              </div>
+              {(pendingInvites.invites || []).map((inv: any) => (
+                <div key={inv.invite_id} className="rounded-xl border border-border bg-secondary/40 p-3 space-y-2">
+                  <p className="font-bold text-sm flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5 text-accent" />{inv.agency_name}</p>
+                  <p className="text-[10px] text-muted-foreground">من الوكيل: {inv.agent_name || "—"} (ID: {inv.agent_friendly_id || "—"})</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    💡 ستحتاج لتحقيق <b>{pendingInvites.required_days} أيام نشطة</b> و <b>{pendingInvites.required_hours} ساعة بث</b> كل 15 يوم.
+                  </p>
+                  <div className="flex gap-2">
+                    <button onClick={() => respondToInvite(inv.invite_id, "accept")} disabled={processingInvite === inv.invite_id}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold gradient-neon text-primary-foreground flex items-center justify-center gap-1 disabled:opacity-50">
+                      <Check className="w-3.5 h-3.5" /> قبول
+                    </button>
+                    <button onClick={() => respondToInvite(inv.invite_id, "reject")} disabled={processingInvite === inv.invite_id}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold border border-destructive/30 text-destructive flex items-center justify-center gap-1 disabled:opacity-50">
+                      <X className="w-3.5 h-3.5" /> رفض
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {isBoss && pendingAgencies.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-bold text-sm text-accent">⏳ طلبات بانتظار الموافقة</h3>
