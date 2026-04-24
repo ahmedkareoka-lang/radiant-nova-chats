@@ -13,17 +13,17 @@ const PASS_PRICE = 5000;
 const REWARDS = Array.from({ length: 30 }, (_, i) => {
   const lvl = i + 1;
   const isMilestone = lvl % 5 === 0;
-  const isMega = lvl === 30;
+  const isMega = lvl % 10 === 0;
   return {
     level: lvl,
     free: isMilestone
-      ? { type: "coins", amount: 200 * lvl, icon: "🪙", label: `${200 * lvl} عملة` }
-      : { type: "coins", amount: 50 * lvl, icon: "🪙", label: `${50 * lvl} عملة` },
+      ? { type: "coins", amount: 200 * lvl, iconType: "coin", label: `${200 * lvl} عملة` }
+      : { type: "coins", amount: 50 * lvl, iconType: "coin", label: `${50 * lvl} عملة` },
     premium: isMega
       ? { type: "frame", amount: 1, icon: "👑", label: "إطار حصري شهري" }
       : isMilestone
         ? { type: "diamonds", amount: 100 * lvl, icon: "💎", label: `${100 * lvl} ماسة` }
-        : { type: "coins", amount: 200 * lvl, icon: "🪙", label: `${200 * lvl} عملة` },
+        : { type: "coins", amount: 200 * lvl, iconType: "coin", label: `${200 * lvl} عملة` },
   };
 });
 
@@ -187,7 +187,13 @@ function RewardCell({ reward, unlocked, locked, premium }: { reward: any; unlock
           : "bg-primary/10 border border-primary/30"
         : "bg-background/30 border border-border/20"
     }`}>
-      <div className="text-xl mb-0.5">{reward.icon}</div>
+      <div className="mb-0.5 flex items-center justify-center h-6">
+        {reward.iconType === "coin" ? (
+          <CurrencyIcon type="gold" size="md" />
+        ) : (
+          <span className="text-xl">{reward.icon}</span>
+        )}
+      </div>
       <div className="text-[9px] text-muted-foreground truncate">{reward.label}</div>
       {locked && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-lg">

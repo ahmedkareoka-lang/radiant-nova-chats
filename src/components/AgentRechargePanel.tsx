@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Search, Coins as CoinsIcon, Loader2, Send } from "lucide-react";
+import { Search, Loader2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AgentTransferModal from "./AgentTransferModal";
 import RechargeAgentBadge from "./RechargeAgentBadge";
+import CurrencyIcon from "./CurrencyIcon";
 
 type Props = {
   /** Current coin balance to show in the panel header (will live-update on success). */
@@ -65,7 +66,7 @@ const AgentRechargePanel = ({ myCoins, onBalanceChange }: Props) => {
             <span className="font-black text-sm text-white">شحن العملاء</span>
           </div>
           <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-background/40 border border-yellow-200/30">
-            <CoinsIcon className="w-3.5 h-3.5 text-yellow-300" />
+            <CurrencyIcon type="gold" size="sm" />
             <span className="font-black text-xs text-yellow-300">{myCoins.toLocaleString()}</span>
           </div>
         </div>

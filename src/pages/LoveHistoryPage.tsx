@@ -1,4 +1,5 @@
 import { ArrowLeft, Heart, Gift, TrendingUp, ArrowLeftRight } from "lucide-react";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -253,7 +254,7 @@ const LoveHistoryPage = () => {
                             </div>
                           </div>
                           <div className="text-left shrink-0">
-                            <p className="text-xs font-black text-yellow-300">{Number(g.gold_amount).toLocaleString()} 🪙</p>
+                            <p className="text-xs font-black text-yellow-300 flex items-center justify-end gap-1">{Number(g.gold_amount).toLocaleString()} <CurrencyIcon type="gold" size="xs" /></p>
                             <p className="text-[10px] text-blue-300">+{Number(g.diamond_amount).toLocaleString()} 💎</p>
                           </div>
                         </li>
