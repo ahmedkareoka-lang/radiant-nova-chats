@@ -105,7 +105,7 @@ const LoveHistoryPage = () => {
                 background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
                 boxShadow: "0 8px 40px hsl(330 90% 50% / 0.3)",
               }}>
-                <div className="flex justify-center mb-3">
+                <div className="flex items-center justify-center gap-3 mb-3">
                   <LoveBadge
                     user1Avatar={myAvatar}
                     user2Avatar={couple.partner?.avatar_url}
@@ -113,6 +113,15 @@ const LoveHistoryPage = () => {
                     points={couple.love_points}
                     size="md"
                   />
+                  <div className="text-right">
+                    <p className="text-[10px] text-pink-200/80">شريكك في الحب</p>
+                    <p className="text-base font-black text-white truncate max-w-[140px]" style={{ textShadow: "0 0 10px hsl(330 90% 60% / 0.6)" }}>
+                      {couple.partner?.display_name || "شريكي"}
+                    </p>
+                    {couple.partner?.user_id && (
+                      <p className="text-[10px] text-pink-200/70">ID: {couple.partner.user_id}</p>
+                    )}
+                  </div>
                 </div>
                 {progress?.nextTh !== null && (
                   <>
