@@ -555,7 +555,7 @@ const VoiceRoom = () => {
     const s = sizeMap[size];
     const mappedFrame = (equippedFrame && FRAME_MAP[equippedFrame]) ? FRAME_MAP[equippedFrame] : null;
     const directFrame = (!mappedFrame && equippedFrame && (equippedFrame.startsWith("http") || equippedFrame.startsWith("/"))) ? equippedFrame : null;
-    const frameImg = mappedFrame || directFrame || (isBossUser ? bossFrame : null);
+    const frameImg = mappedFrame || directFrame;
 
     if (frameImg) {
       const animClass = equippedFrame ? (FRAME_ANIMATION[equippedFrame] || "") : "";

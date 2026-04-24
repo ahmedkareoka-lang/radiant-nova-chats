@@ -51,7 +51,7 @@ const UserProfile = () => {
 
   const isBoss = profile?.is_boss;
   const frameKey = profile?.equipped_frame;
-  const frameImage = (frameKey && FRAME_MAP[frameKey]) ? FRAME_MAP[frameKey] : (isBoss ? bossFrame : null);
+  const frameImage = (frameKey && FRAME_MAP[frameKey]) ? FRAME_MAP[frameKey] : null;
   // For admin-store frames the equipped key may be a direct URL
   const directFrameImage = (!frameImage && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/"))) ? frameKey : null;
   const finalFrame = frameImage || directFrameImage;
@@ -81,7 +81,7 @@ const UserProfile = () => {
 
           {/* Big framed avatar overlapping cover */}
           <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 z-10">
-            <div className={`relative w-32 h-32 ${isBoss ? "boss-god-frame" : ""}`}>
+            <div className="relative w-32 h-32">
               <div className="absolute inset-0 rounded-full p-1" style={{ background: "linear-gradient(135deg, hsl(45 90% 55%), hsl(280 90% 60%))" }}>
                 <div className="w-full h-full rounded-full bg-background p-0.5">
                   <div className="w-full h-full rounded-full overflow-hidden">
