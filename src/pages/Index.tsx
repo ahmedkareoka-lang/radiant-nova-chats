@@ -52,50 +52,51 @@ const Index = () => {
     }
   };
 
+  // 🚀 Single combined fetch (profile + top rechargers + banners) in parallel
   useEffect(() => {
-    const fetchProfile = async () => {
+    let cancelled = false;
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(data);
+      if (!user || cancelled) return;
+      const [profileRes, topRes, bannersRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, wealth_xp, vip_level")
+          .order("wealth_xp", { ascending: false })
+          .limit(5),
+        supabase
+          .from("banners")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true }),
+      ]);
+      if (cancelled) return;
+      setProfile(profileRes.data);
+      setTopRechargers(topRes.data || []);
+      setBanners(bannersRes.data || []);
     };
-    fetchProfile();
-  }, []);
+    init();
 
-  useEffect(() => {
-    const fetchTopRechargers = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, wealth_xp, vip_level")
-        .order("wealth_xp", { ascending: false })
-        .limit(5);
-      setTopRechargers(data || []);
-    };
-    fetchTopRechargers();
-
-    const fetchBanners = async () => {
-      const { data } = await supabase
-        .from("banners")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      setBanners(data || []);
-    };
-    fetchBanners();
-
+    // Keep banners live without re-fetching profile/rechargers
     const channel = supabase
       .channel("banners-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, () => fetchBanners())
+      .on("postgres_changes", { event: "*", schema: "public", table: "banners" }, async () => {
+        const { data } = await supabase
+          .from("banners").select("*").eq("is_active", true).order("sort_order", { ascending: true });
+        if (!cancelled) setBanners(data || []);
+      })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return () => { cancelled = true; supabase.removeChannel(channel); };
   }, []);
 
+  // 🔔 Toast only when a NEW unread notification arrives (id-based, not length-based)
   useEffect(() => {
-    if (notifications.length > 0 && !notifications[0].is_read) {
-      const n = notifications[0];
-      toast(n.title, { description: n.message });
-    }
-  }, [notifications.length]);
+    if (notifications.length === 0) return;
+    const n = notifications[0];
+    if (!n.is_read) toast(n.title, { description: n.message });
+  }, [notifications[0]?.id]);
 
   // Filter & sort rooms based on active category (only public rooms shown on home)
   const filteredRooms = useMemo(() => {
