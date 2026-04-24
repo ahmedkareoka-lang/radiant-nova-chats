@@ -248,78 +248,75 @@ export default function RoomUserProfileCard({
           </div>
           <button
             onClick={copyId}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-[11px] font-bold hover:bg-purple-500/30 transition-all"
+            disabled={!registeredId}
+            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600/40 to-fuchsia-600/40 border border-purple-300/40 text-[12px] font-bold hover:from-purple-500/60 hover:to-fuchsia-500/60 transition-all shadow-[0_2px_10px_-2px_hsl(280_80%_55%/0.5)] disabled:opacity-50"
           >
-            <span className="tabular-nums">{shortId}</span>
-            <span className="px-1.5 py-0.5 rounded-full bg-purple-500 text-white text-[9px]">ID</span>
-            {copied ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+            <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white text-[9px] font-black tracking-wide">
+              ID
+            </span>
+            <span className="tabular-nums text-white">
+              {registeredId || "------"}
+            </span>
+            {copied ? (
+              <Check className="w-3.5 h-3.5 text-emerald-300" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+            )}
           </button>
         </div>
 
-        {/* Role chips: مضيف / وكيل / BD */}
-        {(isHostOfRoom || isBD || isRechargeAgent) && (
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            {isHostOfRoom && (
-              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/80 to-rose-500/80 text-white text-[11px] font-black flex items-center gap-1 shadow-[0_0_14px_hsl(330_85%_55%/0.5)]">
-                <Crown className="w-3 h-3" /> مضيف
+        {/* Premium Showcase Badges – VIP / Recharge Agent / BD / NOVA P only */}
+        <div className="relative rounded-3xl overflow-hidden p-[1.5px] bg-gradient-to-br from-fuchsia-400/40 via-purple-500/30 to-indigo-500/40">
+          <div className="rounded-3xl bg-gradient-to-b from-[#1c1138]/95 to-[#0f0826]/95 p-3.5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-700 flex items-center justify-center shadow-[0_0_12px_hsl(280_85%_55%/0.6)]">
+                  <span className="text-sm">🏆</span>
+                </div>
+                <div>
+                  <p className="font-black text-sm bg-gradient-to-r from-fuchsia-200 to-purple-200 bg-clip-text text-transparent">
+                    الشارات المميزة
+                  </p>
+                  <p className="text-[9px] text-fuchsia-200/60">VIP · وكيل · BD · NOVA P</p>
+                </div>
               </div>
-            )}
-            {isRechargeAgent && (
-              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[11px] font-black flex items-center gap-1 shadow-[0_0_14px_hsl(35_95%_55%/0.5)]">
-                🏛️ وكيل
-              </div>
-            )}
-            {isBD && <BDBadge size="sm" />}
-          </div>
-        )}
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30">
+                {showcaseBadges.length}
+              </span>
+            </div>
 
-        {/* Badges section */}
-        <div className="rounded-2xl bg-gradient-to-r from-indigo-600/30 to-purple-600/30 border border-purple-400/20 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-right">
-              <p className="font-black text-sm text-fuchsia-200">الشارات</p>
-              <p className="text-[10px] text-fuchsia-100/70">
-                <span className="text-yellow-400 font-bold">{badgeItems.length}</span> الشارات
-              </p>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                disabled={badgePage === 0}
-                onClick={() => setBadgePage((p) => Math.max(0, p - 1))}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center"
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                disabled={badgePage >= totalPages - 1}
-                onClick={() => setBadgePage((p) => Math.min(totalPages - 1, p + 1))}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 flex items-center justify-center"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          {badgeItems.length === 0 ? (
-            <p className="text-center text-[11px] text-muted-foreground py-3">لا توجد شارات بعد</p>
-          ) : (
-            <div className="grid grid-cols-6 gap-1.5">
-              {visibleBadges.map((b) => (
-                <div
-                  key={b.key}
-                  className={`aspect-square rounded-lg bg-gradient-to-br ${b.gradient} border border-white/20 flex items-center justify-center overflow-hidden shadow-md`}
-                  title={b.label}
-                >
-                  {b.img ? (
-                    <img src={b.img} alt={b.label} className="w-full h-full object-contain" loading="lazy" />
-                  ) : (
-                    <span className="text-[9px] font-black text-white text-center leading-tight px-1">
+            {showcaseBadges.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="text-3xl mb-1 opacity-40">🎖️</div>
+                <p className="text-[11px] text-muted-foreground">لا توجد شارات مميزة بعد</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-2.5">
+                {showcaseBadges.map((b) => (
+                  <div key={b.key} className="flex flex-col items-center gap-1.5">
+                    <div
+                      className={`relative w-full aspect-square rounded-2xl bg-gradient-to-br ${b.gradient} ${b.shadow} ring-2 ${b.ring} flex items-center justify-center overflow-hidden`}
+                    >
+                      {/* shine sweep */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent" />
+                      <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white/20 blur-md" />
+                      <div className="relative flex flex-col items-center justify-center">
+                        <span className="text-2xl drop-shadow-lg">{b.icon}</span>
+                        {b.sublabel && (
+                          <span className="text-[8px] font-black text-white/95 leading-none mt-0.5 drop-shadow">
+                            {b.sublabel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-black text-white/90 tracking-wide">
                       {b.label}
                     </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Games section */}
