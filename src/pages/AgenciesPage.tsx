@@ -67,22 +67,40 @@ const AgenciesPage = () => {
     const { data: invData } = await supabase.rpc("get_my_pending_invites" as any);
     if (invData) setPendingInvites(invData);
 
-    const { data: membership } = await supabase.from("agency_members").select("*").eq("user_id", user.id).single();
+    // Find the user's agency: either via membership OR direct ownership (owners may not have a membership row)
+    const { data: membership } = await supabase.from("agency_members").select("*").eq("user_id", user.id).maybeSingle();
+    let activeAgency: any = null;
+    let isOwnerView = false;
+
     if (membership) {
       setMyMembership(membership);
       const { data: ag } = await supabase.from("agencies").select("*").eq("id", membership.agency_id).single();
-      setMyAgency(ag);
+      activeAgency = ag;
+    } else {
+      // No membership row — check if this user owns an approved+active agency
+      const { data: ownedAg } = await supabase
+        .from("agencies").select("*")
+        .eq("owner_id", user.id).eq("status", "approved").eq("is_active", true)
+        .maybeSingle();
+      if (ownedAg) { activeAgency = ownedAg; isOwnerView = true; }
+    }
 
-      if (membership.badge === "agent" || ag?.owner_id === user.id) {
-        const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", membership.agency_id);
+    if (activeAgency) {
+      setMyAgency(activeAgency);
+      const isAgentView = membership?.badge === "agent" || activeAgency.owner_id === user.id;
+
+      if (isAgentView) {
+        const { data: hosts } = await supabase.from("agency_members").select("*").eq("agency_id", activeAgency.id);
         if (hosts) {
           const ids = hosts.map(h => h.user_id);
-          const { data: profiles } = await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids);
+          const { data: profiles } = ids.length
+            ? await supabase.from("profiles").select("id, display_name, user_id, diamonds").in("id", ids)
+            : { data: [] as any[] };
           setAgencyHosts(hosts.map(h => ({ ...h, profile: profiles?.find(p => p.id === h.user_id) })));
         }
 
         // Load pending resignations
-        const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", membership.agency_id).eq("status", "pending");
+        const { data: resignations } = await supabase.from("agency_resignations").select("*").eq("agency_id", activeAgency.id).eq("status", "pending");
         if (resignations && resignations.length > 0) {
           const rIds = resignations.map(r => r.host_id);
           const { data: rProfiles } = await supabase.from("profiles").select("id, display_name, user_id").in("id", rIds);
@@ -92,10 +110,17 @@ const AgenciesPage = () => {
         // Sent invites status (for agent panel)
         const { data: sent } = await supabase.rpc("get_my_sent_invites" as any);
         if (sent && (sent as any).invites) setSentInvites((sent as any).invites);
+
+        // Agent: monthly payroll + 15-day overview
+        const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
+        if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
+
+        const { data: ov } = await supabase.rpc("get_my_agency_overview" as any);
+        if (ov && (ov as any).has_agency) setAgencyOverview(ov);
       }
 
       // Host stats + cycle dashboard (today/cycle 15-day)
-      if (membership.badge === "host") {
+      if (membership?.badge === "host") {
         const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
         const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
         const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
