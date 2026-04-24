@@ -132,8 +132,16 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
                 autoPlay
                 muted={muteEntrance}
                 playsInline
-                onEnded={() => finish(activeEntry.id)}
-                onError={() => finish(activeEntry.id)}
+                onLoadedMetadata={(e) => {
+                  const v = e.currentTarget;
+                  const ms = isFinite(v.duration) ? Math.round(v.duration * 1000) : null;
+                  if (ms) {
+                    setVideoDurationMs(ms);
+                    logAgora("info", "entrance", `video metadata id=${activeEntry.id} duration=${ms}ms`);
+                  }
+                }}
+                onEnded={() => finish(activeEntry.id, "video-ended")}
+                onError={() => finish(activeEntry.id, "video-error")}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
