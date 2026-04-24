@@ -886,9 +886,30 @@ const VoiceRoom = () => {
               <button onClick={() => setSelectedProfile(null)}><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="flex flex-col items-center gap-2">
-              {renderAvatarWithFrame(selectedProfile.avatar_url, selectedProfile.equipped_frame, selectedProfile.is_boss, "lg", false, rechargeAgentSet.has(selectedProfile.user_id))}
-              <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{selectedProfile.display_name}</span>
-              <VipBadge level={selectedProfile.vip_level} size="md" />
+              {renderAvatarWithFrame(
+                selectedProfile.avatar_url,
+                selectedProfile.equipped_frame,
+                selectedProfile.is_boss,
+                "lg",
+                false,
+                rechargeAgentSet.has(selectedProfile.user_id),
+                bdSet.has(selectedProfile.user_id),
+              )}
+              <span className={`font-bold ${selectedProfile.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>
+                {selectedProfile.display_name}
+              </span>
+              {/* Full badges row — only visible inside profile card */}
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {bdSet.has(selectedProfile.user_id) && <BDBadge size="sm" />}
+                {rechargeAgentSet.has(selectedProfile.user_id) && <RechargeAgentBadge size="sm" />}
+                <DualBadge
+                  novaLevel={(selectedProfile as any)?.nova_p_level || 0}
+                  vipLevel={selectedProfile.vip_level || 0}
+                />
+                {(selectedProfile.vip_level || 0) > 0 && !((selectedProfile as any)?.nova_p_level) && (
+                  <VipBadge level={selectedProfile.vip_level} size="sm" />
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="card-nova p-3 text-center">
