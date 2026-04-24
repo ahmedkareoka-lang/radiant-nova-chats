@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import bdFrameImg from "@/assets/bd-frame.gif";
 
 type Props = {
   size: number;
@@ -6,58 +6,41 @@ type Props = {
 };
 
 /**
- * Pure-CSS frame ring for BD (Business Developer) accounts.
- * - Strong fiery orange radiant glow + rotating conic ring
- * - Bottom label "BD" baked into the frame
+ * BD (Business Developer) frame.
+ * Uses a fully transparent animated GIF overlay — the avatar is shown
+ * untouched inside the frame's central window (no filter, no tint).
  */
 const BDFrame = ({ size, children }: Props) => {
-  const padding = Math.max(4, Math.round(size * 0.05));
-  const labelFont = Math.max(9, Math.round(size * 0.1));
+  // Inner avatar window covers ~62% of the frame, slightly above center
+  // to match the wreath artwork (BD label sits at the bottom).
+  const innerScale = 0.62;
+  const innerOffsetY = -0.04; // negative = nudge up
+  const innerSize = Math.round(size * innerScale);
+  const offsetPx = Math.round(size * innerOffsetY);
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      {/* Rotating conic radiant ring */}
-      <motion.div
-        aria-hidden
-        className="absolute inset-0 rounded-full"
-        style={{
-          background:
-            "conic-gradient(from 0deg, hsl(20 100% 55%), hsl(35 100% 60%), hsl(45 100% 70%), hsl(25 100% 55%), hsl(15 100% 50%), hsl(20 100% 55%))",
-          filter: "blur(2px)",
-        }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-      />
-      {/* Pulsing fiery aura */}
-      <motion.div
-        aria-hidden
-        className="absolute -inset-1.5 rounded-full pointer-events-none"
-        animate={{
-          boxShadow: [
-            "0 0 18px hsl(25 100% 55% / 0.85), 0 0 36px hsl(35 100% 60% / 0.55), 0 0 60px hsl(20 100% 50% / 0.3)",
-            "0 0 28px hsl(20 100% 60% / 1), 0 0 56px hsl(30 100% 55% / 0.8), 0 0 92px hsl(15 100% 50% / 0.5)",
-            "0 0 18px hsl(25 100% 55% / 0.85), 0 0 36px hsl(35 100% 60% / 0.55), 0 0 60px hsl(20 100% 50% / 0.3)",
-          ],
-        }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-      />
-      {/* Inner mask */}
+      {/* Avatar (untouched) sits inside the transparent center of the frame */}
       <div
-        className="absolute rounded-full overflow-hidden bg-background"
-        style={{ inset: padding }}
+        className="absolute left-1/2 rounded-full overflow-hidden bg-background"
+        style={{
+          width: innerSize,
+          height: innerSize,
+          top: `calc(50% + ${offsetPx}px)`,
+          transform: "translate(-50%, -50%)",
+        }}
       >
         {children}
       </div>
 
-      {/* Bottom BD label */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 -bottom-1 px-2.5 py-0.5 rounded-full font-black text-white whitespace-nowrap tracking-wider
-                   bg-gradient-to-r from-orange-600 via-orange-400 to-amber-400
-                   border border-amber-100/90 shadow-[0_0_12px_hsl(25_100%_55%/0.95)]"
-        style={{ fontSize: labelFont, lineHeight: 1 }}
-      >
-        BD
-      </div>
+      {/* Transparent animated frame overlay on top */}
+      <img
+        src={bdFrameImg}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-10"
+      />
     </div>
   );
 };
