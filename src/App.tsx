@@ -4,7 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
 import { LanguageProvider } from "@/i18n/LanguageContext";
@@ -19,35 +19,54 @@ import { Analytics } from "@vercel/analytics/react";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import TopUpPage from "./pages/TopUpPage";
-import CreateRoom from "./pages/CreateRoom";
-import VoiceRoom from "./pages/VoiceRoom";
-import Profile from "./pages/Profile";
-import SearchPage from "./pages/SearchPage";
-import ChatPage from "./pages/ChatPage";
-import AdminDashboard from "./pages/AdminDashboard";
-import StorePage from "./pages/StorePage";
-import WalletPage from "./pages/WalletPage";
-import InventoryPage from "./pages/InventoryPage";
-import AgenciesPage from "./pages/AgenciesPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import UserProfile from "./pages/UserProfile";
-import EditProfile from "./pages/EditProfile";
-import LeaderboardPage from "./pages/LeaderboardPage";
-import DailyTasksPage from "./pages/DailyTasksPage";
-import PostsFeedPage from "./pages/PostsFeedPage";
-import GamesPage from "./pages/GamesPage";
-import NovaPPage from "./pages/NovaPPage";
-import VipPrivilegePage from "./pages/VipPrivilegePage";
-import NovaPassPage from "./pages/NovaPassPage";
-import LuckyBoxPage from "./pages/LuckyBoxPage";
-import StreakPage from "./pages/StreakPage";
-import InvitePage from "./pages/InvitePage";
-import LoversPage from "./pages/LoversPage";
-import LoveHistoryPage from "./pages/LoveHistoryPage";
 
-const queryClient = new QueryClient();
+// 🚀 Code-splitting: routes load only when visited (smaller initial bundle, faster TTI)
+const NotFound = lazy(() => import("./pages/NotFound"));
+const TopUpPage = lazy(() => import("./pages/TopUpPage"));
+const CreateRoom = lazy(() => import("./pages/CreateRoom"));
+const VoiceRoom = lazy(() => import("./pages/VoiceRoom"));
+const Profile = lazy(() => import("./pages/Profile"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const StorePage = lazy(() => import("./pages/StorePage"));
+const WalletPage = lazy(() => import("./pages/WalletPage"));
+const InventoryPage = lazy(() => import("./pages/InventoryPage"));
+const AgenciesPage = lazy(() => import("./pages/AgenciesPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const EditProfile = lazy(() => import("./pages/EditProfile"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const DailyTasksPage = lazy(() => import("./pages/DailyTasksPage"));
+const PostsFeedPage = lazy(() => import("./pages/PostsFeedPage"));
+const GamesPage = lazy(() => import("./pages/GamesPage"));
+const NovaPPage = lazy(() => import("./pages/NovaPPage"));
+const VipPrivilegePage = lazy(() => import("./pages/VipPrivilegePage"));
+const NovaPassPage = lazy(() => import("./pages/NovaPassPage"));
+const LuckyBoxPage = lazy(() => import("./pages/LuckyBoxPage"));
+const StreakPage = lazy(() => import("./pages/StreakPage"));
+const InvitePage = lazy(() => import("./pages/InvitePage"));
+const LoversPage = lazy(() => import("./pages/LoversPage"));
+const LoveHistoryPage = lazy(() => import("./pages/LoveHistoryPage"));
+
+// 🚀 Optimized cache: prevents redundant re-fetches & retries on focus
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,           // data stays fresh for 1 min → no auto refetch
+      gcTime: 5 * 60_000,          // keep cache 5 min after unmount
+      refetchOnWindowFocus: false, // stop the constant refetch storm on tab switch
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+  </div>
+);
 
 /** Save the current URL so we can redirect back after login */
 const REDIRECT_KEY = "nova-redirect-after-login";
@@ -100,6 +119,7 @@ const AnimatedRoutes = () => {
   const location = useLocation();
   return (
     <AnimatePresence mode="wait">
+      <Suspense fallback={<RouteFallback />}>
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<AuthGate><DeepLinkRedirector /><Index /></AuthGate>} />
@@ -134,6 +154,7 @@ const AnimatedRoutes = () => {
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </AnimatePresence>
   );
 };
