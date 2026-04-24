@@ -114,6 +114,8 @@ const PostsFeedPage = () => {
         image_url: imageUrl,
       });
       if (error) throw error;
+      // Track daily task: post
+      supabase.rpc("increment_daily_task", { _user_id: userId, _task_type: "post", _amount: 1 });
       setContent("");
       setImageFile(null);
       setImagePreview(null);
@@ -132,6 +134,8 @@ const PostsFeedPage = () => {
       await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", userId);
     } else {
       await supabase.from("post_likes").insert({ post_id: post.id, user_id: userId });
+      // Track daily task: like
+      supabase.rpc("increment_daily_task", { _user_id: userId, _task_type: "like", _amount: 1 });
     }
     setPosts((prev) => prev.map((p) => p.id === post.id
       ? { ...p, liked_by_me: !p.liked_by_me, likes_count: (p.likes_count || 0) + (p.liked_by_me ? -1 : 1) }
