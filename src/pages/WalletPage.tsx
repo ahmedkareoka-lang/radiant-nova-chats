@@ -49,7 +49,7 @@ const WalletPage = () => {
 
   const parsedAmount = parseInt(amount) || 0;
   const goldReceived = Math.floor((parsedAmount * exchangeRate) / 100);
-  const fee = 0; // No platform fee for now — surface in UI for transparency
+  const fee: number = 0; // No platform fee for now — surface in UI for transparency
   const netGold = goldReceived - fee;
 
   const searchRecipient = async () => {
