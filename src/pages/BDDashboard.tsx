@@ -121,6 +121,45 @@ const BDDashboard = () => {
     })();
   }, [navigate]);
 
+  const loadActivity = async (uid: string) => {
+    setActivityLoading(true);
+    try {
+      let q = supabase
+        .from("bd_activity_log" as any)
+        .select("id, action_type, status, message, target_public_id, target_display_name, agency_id, created_at")
+        .eq("bd_user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (filterDate) {
+        const start = new Date(filterDate + "T00:00:00").toISOString();
+        const end = new Date(filterDate + "T23:59:59.999").toISOString();
+        q = q.gte("created_at", start).lte("created_at", end);
+      }
+      if (filterType !== "all") {
+        q = q.eq("action_type", filterType);
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      setActivity((data as any[] as ActivityRow[]) || []);
+    } catch (e: any) {
+      toast.error(e.message || "خطأ في تحميل السجل");
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  // Reload activity whenever tab opens or filters change
+  useEffect(() => {
+    if (tab !== "activity") return;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await loadActivity(user.id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, filterDate, filterType]);
+
   const handleSearch = async () => {
     const id = searchId.trim();
     if (!id) { toast.error("أدخل ID المستخدم"); return; }
@@ -133,6 +172,17 @@ const BDDashboard = () => {
         .eq("user_id", id)
         .maybeSingle();
       if (error) throw error;
+
+      // Log the search attempt regardless of outcome
+      await supabase.rpc("log_bd_activity" as any, {
+        _action_type: "search",
+        _target_user_id: data?.id || null,
+        _target_public_id: id,
+        _target_display_name: data?.display_name || null,
+        _status: data ? "success" : "error",
+        _message: data ? "User found" : "User not found",
+      });
+
       if (!data) { toast.error("لم يتم العثور على المستخدم"); return; }
       setFound(data as FoundUser);
     } catch (e: any) {
@@ -144,13 +194,20 @@ const BDDashboard = () => {
 
   const handleActivate = async () => {
     if (!found) return;
+    setConfirmOpen(false);
     setActivating(true);
     try {
-      const { error } = await supabase.rpc("bd_activate_agency_for_user" as any, {
+      const { data, error } = await supabase.rpc("bd_activate_agency_for_user" as any, {
         _target_public_id: found.user_id,
       });
       if (error) throw error;
-      toast.success(`تم تفعيل وكالة ${found.display_name} ✅`);
+
+      const result = (data as any) || {};
+      if (result.duplicate) {
+        toast.warning(result.message || "هذه الوكالة مفعّلة لديك بالفعل");
+      } else {
+        toast.success(`تم تفعيل وكالة ${found.display_name} ✅`);
+      }
       setFound(null);
       setSearchId("");
       const { data: { user } } = await supabase.auth.getUser();
@@ -161,6 +218,7 @@ const BDDashboard = () => {
       setActivating(false);
     }
   };
+
 
   if (loading) {
     return (
