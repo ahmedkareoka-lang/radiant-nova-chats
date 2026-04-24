@@ -532,6 +532,38 @@ const VoiceRoom = () => {
         onComplete={() => setFullscreenGift(null)}
       />
 
+      {/* Top text notifications for every gift sent in the room */}
+      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-md px-3">
+        <AnimatePresence>
+          {giftToasts.map((t) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: -30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ type: "spring", damping: 18 }}
+              className="w-full rounded-2xl px-3 py-2 flex items-center gap-2 backdrop-blur-xl bg-card/85 border border-accent/40 shadow-[0_4px_20px_hsl(var(--accent)/0.35)]"
+            >
+              {t.imageUrl ? (
+                <img src={t.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
+              ) : (
+                <span className="text-2xl shrink-0">{t.emoji}</span>
+              )}
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-xs font-bold text-foreground truncate">
+                  <span className="text-primary">{t.senderName}</span>
+                  <span className="text-muted-foreground"> أهدى </span>
+                  <span className="text-accent">{t.recipientName}</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  🎁 {t.giftName} • 💰 {t.amount.toLocaleString()}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       {/* Multi-Gift Visual Burst (uses designed image when available) */}
       <AnimatePresence>
         {giftBurst && (
