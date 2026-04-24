@@ -94,6 +94,18 @@ const VoiceRoom = () => {
   const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
   const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; lottieUrl?: string | null; videoUrl?: string | null; senderName: string; recipientName: string; amount: number; timestamp: number; durationMs?: number } | null>(null);
   const [giftToasts, setGiftToasts] = useState<{ id: string; emoji: string; imageUrl: string | null; senderName: string; recipientName: string; giftName: string; amount: number }[]>([]);
+  // Last broadcasted gift (for "delivered to all" status panel)
+  const [lastGift, setLastGift] = useState<{
+    id: string;
+    emoji: string;
+    giftName: string;
+    imageUrl: string | null;
+    senderName: string;
+    recipientName: string;
+    amount: number;
+    timestamp: number;
+    delivered: boolean;
+  } | null>(null);
   const [entranceBanner, setEntranceBanner] = useState<{
     name: string;
     wealthLevel: number;
