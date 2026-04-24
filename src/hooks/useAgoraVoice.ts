@@ -5,6 +5,7 @@ import AgoraRTC, {
   IMicrophoneAudioTrack,
   ClientRole,
 } from "agora-rtc-sdk-ng";
+import { logAgora } from "@/lib/agoraDebugLog";
 
 interface UseAgoraVoiceOptions {
   roomId: string | null;
@@ -20,6 +21,8 @@ const SPEAKING_THRESHOLD = 5;
 try {
   AgoraRTC.setLogLevel(2);
 } catch { /* noop */ }
+
+logAgora("info", "env", `AGORA_APP_ID ${AGORA_APP_ID ? "loaded (" + AGORA_APP_ID.slice(0, 4) + "...)" : "MISSING"}`);
 
 /**
  * Drop-in replacement for useWebRTC using Agora RTC SDK (App ID Only mode).
