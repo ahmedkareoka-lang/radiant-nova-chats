@@ -100,6 +100,7 @@ const VoiceRoom = () => {
   const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
   const { t, locale } = useLanguage();
   const rechargeAgentSet = useRechargeAgentSet();
+  const bdSet = useBDSet();
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
