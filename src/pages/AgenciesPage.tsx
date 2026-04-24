@@ -294,7 +294,58 @@ const AgenciesPage = () => {
                 </div>
               )}
 
-              {/* Host resignation button */}
+              {/* Host: monthly salary card */}
+              {myMembership?.badge === "host" && hostSalary && (
+                <div className="rounded-2xl p-4 space-y-3 border border-primary/40 bg-gradient-to-br from-primary/10 to-accent/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-accent" />
+                      <p className="font-bold text-sm">راتب الشهر</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> {hostSalary.month_start} → {hostSalary.month_end}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-card/60 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">إجمالي الماس</p>
+                      <p className="font-extrabold text-base text-primary">{Number(hostSalary.total_diamonds || 0).toLocaleString()} 💎</p>
+                    </div>
+                    <div className="bg-card/60 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">الراتب الأساسي</p>
+                      <p className="font-extrabold text-base text-accent">${Number(hostSalary.base_salary_usd || 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={`rounded-xl p-2 text-center border ${hostSalary.meets_days ? "border-green-500/40 bg-green-500/10" : "border-destructive/40 bg-destructive/10"}`}>
+                      <p className="text-[10px] text-muted-foreground">أيام نشطة</p>
+                      <p className="font-bold text-sm">{hostSalary.active_days} / {hostSalary.required_days} {hostSalary.meets_days ? "✅" : "⚠️"}</p>
+                    </div>
+                    <div className={`rounded-xl p-2 text-center border ${hostSalary.meets_hours ? "border-green-500/40 bg-green-500/10" : "border-destructive/40 bg-destructive/10"}`}>
+                      <p className="text-[10px] text-muted-foreground">ساعات البث</p>
+                      <p className="font-bold text-sm">{Number(hostSalary.total_hours || 0).toFixed(1)} / {hostSalary.required_hours}h {hostSalary.meets_hours ? "✅" : "⚠️"}</p>
+                    </div>
+                  </div>
+
+                  {hostSalary.penalty_pct > 0 && (
+                    <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-2 flex items-center gap-2 text-[10px] text-destructive">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      <span>لم يتم استيفاء شروط الالتزام — يتم تطبيق خصم {hostSalary.penalty_pct}%</span>
+                    </div>
+                  )}
+
+                  <div className="bg-primary/20 rounded-xl p-3 text-center border border-primary/40">
+                    <p className="text-[10px] text-muted-foreground">الراتب الصافي للشهر</p>
+                    <p className="font-extrabold text-2xl text-primary">${Number(hostSalary.final_salary_usd || 0).toLocaleString()}</p>
+                  </div>
+
+                  <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
+                    💡 معدل التحويل: 100,000 ماسة = $8 • يجب تحقيق 15 يوم نشط و 40 ساعة بث
+                  </p>
+                </div>
+              )}
               {myMembership?.badge === "host" && (
                 <button onClick={requestResignation}
                   className="w-full py-2 rounded-xl border border-destructive/30 text-destructive text-xs font-bold flex items-center justify-center gap-2">
