@@ -4,19 +4,9 @@ import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import storeCatalog from "@/lib/storeCatalog.json";
 import { logAgora } from "@/lib/agoraDebugLog";
 
-const FALLBACK_GIFTS = [
-  { emoji: "🌹", name: "وردة", price: 10 },
-  { emoji: "❤️", name: "قلب", price: 20 },
-  { emoji: "🎁", name: "هدية", price: 50 },
-  { emoji: "💎", name: "جوهرة", price: 100 },
-  { emoji: "🔥", name: "نار", price: 200 },
-  { emoji: "🚗", name: "سيارة", price: 500 },
-  { emoji: "👑", name: "تاج", price: 1000 },
-  { emoji: "🏰", name: "قصر", price: 5000 },
-];
+
 
 const MULTIPLIERS = [1, 10, 99, 520, 1314];
 
