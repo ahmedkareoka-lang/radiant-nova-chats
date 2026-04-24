@@ -651,22 +651,49 @@ const AdminDashboard = () => {
           {activeTab === "gifts" && (
             <div className="space-y-4">
               <div className="card-nova p-4 space-y-3">
-                <h3 className="font-bold text-sm flex items-center gap-2"><Gift className="w-4 h-4 text-accent" /> إضافة هدية جديدة</h3>
+                <h3 className="font-bold text-sm flex items-center gap-2"><Gift className="w-4 h-4 text-accent" /> إضافة هدية جديدة (Lottie / فيديو شفاف / صورة)</h3>
                 <div className="grid grid-cols-2 gap-2">
                   <input placeholder="اسم الهدية" value={newGift.name} onChange={(e) => setNewGift({ ...newGift, name: e.target.value })}
                     className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
-                  <input placeholder="السعر" type="number" value={newGift.price} onChange={(e) => setNewGift({ ...newGift, price: e.target.value })}
+                  <input placeholder="السعر (Gold)" type="number" value={newGift.price} onChange={(e) => setNewGift({ ...newGift, price: e.target.value })}
                     className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
                 </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={newGift.tier} onChange={(e) => setNewGift({ ...newGift, tier: e.target.value })}
+                    className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none">
+                    <option value="normal">عادية</option>
+                    <option value="rare">نادرة</option>
+                    <option value="epic">ملحمية</option>
+                    <option value="legendary">أسطورية</option>
+                    <option value="mythic">خرافية</option>
+                  </select>
+                  <input placeholder="مدة العرض (ms)" type="number" value={newGift.duration_ms} onChange={(e) => setNewGift({ ...newGift, duration_ms: e.target.value })}
+                    className="bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
+                </div>
+                <div className="flex gap-1">
+                  {(["image", "lottie", "video"] as const).map((t) => (
+                    <button key={t} onClick={() => setGiftMediaType(t)}
+                      className={`flex-1 py-2 rounded-xl text-[10px] font-bold transition-all ${
+                        giftMediaType === t ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground"
+                      }`}>
+                      {t === "image" ? "🖼️ صورة" : t === "lottie" ? "✨ Lottie JSON" : "🎬 فيديو شفاف"}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {giftMediaType === "lottie" && "ملف .json من lottiefiles.com — خفيف وسريع"}
+                  {giftMediaType === "video" && "ملف .webm أو .mp4 بخلفية شفافة (alpha channel) — تأثير سينمائي"}
+                  {giftMediaType === "image" && "ملف .png / .gif — للهدايا البسيطة"}
+                </p>
                 <div className="flex gap-2 items-center">
                   <input
                     ref={giftFileRef}
                     type="file"
-                    accept="image/*,video/*"
+                    accept={giftMediaType === "lottie" ? "application/json,.json" : giftMediaType === "video" ? "video/*" : "image/*"}
                     className="text-xs flex-1"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
-                      if (f) setGiftPreviewUrl(URL.createObjectURL(f));
+                      if (f && giftMediaType === "image") setGiftPreviewUrl(URL.createObjectURL(f));
                       else setGiftPreviewUrl(null);
                     }}
                   />
@@ -678,7 +705,7 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-background/40 border border-border/30">
                     <img src={giftPreviewUrl} alt="معاينة الهدية" className="w-16 h-16 rounded-lg object-contain bg-secondary/40" />
                     <div className="flex-1">
-                      <p className="text-[10px] text-muted-foreground">معاينة الصورة</p>
+                      <p className="text-[10px] text-muted-foreground">معاينة</p>
                       <p className="text-xs font-bold">{newGift.name || "بدون اسم"}</p>
                     </div>
                     <button
