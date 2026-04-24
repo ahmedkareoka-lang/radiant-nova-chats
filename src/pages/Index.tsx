@@ -269,12 +269,6 @@ const Index = () => {
               <span className="text-[9px] font-bold text-muted-foreground">NOVA P</span>
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            <button onClick={() => navigate("/lovers")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 hover:from-pink-500/30 hover:to-rose-500/30 border border-pink-400/30 transition-all hover:-translate-y-0.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-base animate-pulse">💕</div>
-              <span className="text-[9px] font-bold text-pink-300">حبيبين</span>
-            </button>
-          </div>
 
           {/* Categories scrollable bar */}
           <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-none">
