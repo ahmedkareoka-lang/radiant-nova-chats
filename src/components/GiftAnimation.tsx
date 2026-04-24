@@ -66,7 +66,7 @@ interface GiftAnimationProps {
   roomId?: string;
 }
 
-const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, onGiftSent, roomId }: GiftAnimationProps) => {
+const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, broadcastGift, roomId }: GiftAnimationProps) => {
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [burst, setBurst] = useState(false);
   const [sending, setSending] = useState(false);
@@ -116,24 +116,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     };
     fetchSenderData();
   }, [senderId, isOpen]);
-
-  // Broadcast channel — keep one stable channel subscribed for the modal lifetime so sends are reliable
-  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  useEffect(() => {
-    if (!roomId || !isOpen) return;
-    const ch = supabase.channel(`room-gifts-${roomId}`, {
-      config: { broadcast: { self: false, ack: true } },
-    });
-    ch.subscribe((status) => {
-      logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `sender channel status: ${status}`, { roomId });
-    });
-    broadcastChannelRef.current = ch;
-    return () => {
-      supabase.removeChannel(ch);
-      broadcastChannelRef.current = null;
-      logAgora("info", "Gift", "sender channel removed", { roomId });
-    };
-  }, [roomId, isOpen]);
 
   if (!isOpen) return null;
 
