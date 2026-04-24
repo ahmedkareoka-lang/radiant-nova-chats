@@ -221,7 +221,15 @@ const PostsFeedPage = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary">
-                        <img src={p.author?.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={p.author?.avatar_url || "https://i.pravatar.cc/40"}
+                          alt={p.author?.display_name || "avatar"}
+                          loading="lazy"
+                          decoding="async"
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div>
                         <p className="text-sm font-bold">{p.author?.display_name || "مستخدم"}</p>
@@ -234,7 +242,13 @@ const PostsFeedPage = () => {
                   </div>
                   {p.content && <p className="text-sm whitespace-pre-wrap mb-3">{p.content}</p>}
                   {p.image_url && (
-                    <img src={p.image_url} alt="" className="w-full rounded-xl object-cover max-h-96 mb-3" />
+                    <img
+                      src={p.image_url}
+                      alt="post"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full rounded-xl object-cover max-h-96 mb-3"
+                    />
                   )}
                   <button
                     onClick={() => toggleLike(p)}
