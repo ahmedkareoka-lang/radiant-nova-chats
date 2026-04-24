@@ -180,17 +180,18 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   const startLocalStream = useCallback(async () => {
     if (localTrackRef.current) return;
     try {
-      // Proactively check microphone permissions where supported
       try {
         if ((navigator as any).permissions?.query) {
           const status = await (navigator as any).permissions.query({ name: "microphone" as PermissionName });
+          logAgora("info", "mic-permission", `state=${status.state}`);
           if (status.state === "denied") {
-            console.error("[Agora] Microphone permission denied by user/browser settings");
+            logAgora("error", "mic-permission", "Microphone permission DENIED in browser settings");
             return;
           }
         }
       } catch { /* not all browsers support this */ }
 
+      logAgora("info", "mic", "Requesting microphone…");
       const track = await AgoraRTC.createMicrophoneAudioTrack({
         encoderConfig: "music_standard",
         AEC: true,
@@ -198,19 +199,23 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         AGC: true,
       });
       localTrackRef.current = track;
+      logAgora("success", "mic", "Microphone acquired");
 
       const client = getClient();
       if (currentRoleRef.current !== "host") {
         await client.setClientRole("host");
         currentRoleRef.current = "host";
+        logAgora("info", "role", "Switched to host");
       }
       if (joinedRef.current) {
         await client.publish([track]);
+        logAgora("success", "publish", "Local mic published to channel");
+      } else {
+        logAgora("warn", "publish", "Mic ready but channel not joined yet");
       }
     } catch (e: any) {
       const name = e?.name || e?.code || "Unknown";
-      console.error("[Agora] startLocalStream failed:", name, e?.message || e);
-      // Common errors: NotAllowedError (permission), NotFoundError (no mic), NotReadableError (in use)
+      logAgora("error", "startLocalStream", `${name}: ${e?.message || e}`);
     }
   }, [getClient]);
 
