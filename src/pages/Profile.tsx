@@ -13,6 +13,7 @@ import FramedAvatar from "@/components/FramedAvatar";
 import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
