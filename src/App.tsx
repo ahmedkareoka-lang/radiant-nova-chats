@@ -48,6 +48,7 @@ const StreakPage = lazy(() => import("./pages/StreakPage"));
 const InvitePage = lazy(() => import("./pages/InvitePage"));
 const LoversPage = lazy(() => import("./pages/LoversPage"));
 const LoveHistoryPage = lazy(() => import("./pages/LoveHistoryPage"));
+const FramePreviewPage = lazy(() => import("./pages/FramePreviewPage"));
 
 // 🚀 Optimized cache: prevents redundant re-fetches & retries on focus
 const queryClient = new QueryClient({
@@ -153,6 +154,7 @@ const AnimatedRoutes = () => {
         <Route path="/invite-friends" element={<AuthGate><InvitePage /></AuthGate>} />
         <Route path="/lovers" element={<AuthGate><LoversPage /></AuthGate>} />
         <Route path="/love-history" element={<AuthGate><LoveHistoryPage /></AuthGate>} />
+        <Route path="/dev/frames" element={<AuthGate><FramePreviewPage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
