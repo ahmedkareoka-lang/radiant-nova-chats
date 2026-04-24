@@ -7,6 +7,8 @@ import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 import EquippedBadge from "@/components/EquippedBadge";
+import BDFrame from "@/components/BDFrame";
+import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 
 const InventoryPage = () => {
   const navigate = useNavigate();
@@ -16,6 +18,8 @@ const InventoryPage = () => {
   const [equippedFrame, setEquippedFrame] = useState<string | null>(null);
   const [equippedBadge, setEquippedBadge] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
+  const [isBD, setIsBD] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
   const [profilePreview, setProfilePreview] = useState<{ displayName: string; avatarUrl: string | null }>({ displayName: "أنت", avatarUrl: null });
 
   useEffect(() => {
@@ -23,10 +27,21 @@ const InventoryPage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const { data: prof } = await supabase.from("profiles").select("display_name, avatar_url, equipped_frame, equipped_badge").eq("id", user.id).single();
+      const { data: prof } = await supabase.from("profiles").select("display_name, avatar_url, equipped_frame, equipped_badge, is_bd").eq("id", user.id).single();
       setEquippedFrame(prof?.equipped_frame || null);
       setEquippedBadge((prof as any)?.equipped_badge || null);
+      setIsBD(!!(prof as any)?.is_bd);
       setProfilePreview({ displayName: prof?.display_name || "أنت", avatarUrl: prof?.avatar_url || null });
+
+      // Check active recharge agent status
+      const { data: agentRow } = await supabase
+        .from("recharge_agents" as any)
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+      setIsAgent(!!agentRow);
+
       const { data } = await supabase.from("inventory").select("*").eq("user_id", user.id).order("acquired_at", { ascending: false });
       setItems(data || []);
       setLoading(false);
