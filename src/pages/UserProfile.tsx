@@ -1,4 +1,4 @@
-import { ArrowLeft, TrendingUp, Heart, Users, Star, Crown, MessageCircle, UserPlus, UserMinus } from "lucide-react";
+import { ArrowLeft, TrendingUp, Heart, Users, Star, Crown, MessageCircle, UserPlus, UserMinus, Coins as CoinsIcon } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,9 @@ import TierBadge from "@/components/TierBadge";
 import PageTransition from "@/components/PageTransition";
 import FramedAvatar from "@/components/FramedAvatar";
 import LoveBadge from "@/components/LoveBadge";
+import RechargeAgentBadge from "@/components/RechargeAgentBadge";
+import AgentTransferModal from "@/components/AgentTransferModal";
+import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
@@ -25,6 +28,9 @@ const UserProfile = () => {
   const { followersCount, followingCount, isFollowing, toggleFollow, currentUserId } = useFollows(userId);
   const { startConversation } = useConversations();
   const { couple: loveCouple } = useLoveCouple(userId);
+  const targetIsAgent = useIsRechargeAgent(userId);
+  const meIsAgent = useIsRechargeAgent(currentUserId);
+  const [transferOpen, setTransferOpen] = useState(false);
 
   useEffect(() => {
     if (!userId) { navigate("/"); return; }
@@ -90,6 +96,7 @@ const UserProfile = () => {
                 <FramedAvatar
                   avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
                   equippedFrame={frameKey}
+                  isRechargeAgent={targetIsAgent}
                   size={120}
                 />
               </div>
@@ -125,6 +132,7 @@ const UserProfile = () => {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
               )}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
+              {targetIsAgent && <RechargeAgentBadge size="md" />}
             </div>
 
             {/* Wealth & Charm tier badges */}
@@ -137,14 +145,26 @@ const UserProfile = () => {
 
             {/* Action buttons */}
             {!isMe && (
-              <div className="flex gap-2 mt-4 w-full max-w-xs">
-                <button onClick={toggleFollow}
-                  className={`flex-1 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 ${isFollowing ? "bg-secondary/50 text-foreground border border-border/30" : "gradient-neon text-primary-foreground glow-neon"}`}>
-                  {isFollowing ? <><UserMinus className="w-3.5 h-3.5" /> إلغاء</> : <><UserPlus className="w-3.5 h-3.5" /> متابعة</>}
-                </button>
-                <button onClick={handleChat} className="flex-1 py-2.5 rounded-full bg-secondary/50 text-foreground font-bold text-xs flex items-center justify-center gap-1.5 border border-border/30">
-                  <MessageCircle className="w-3.5 h-3.5" /> محادثة
-                </button>
+              <div className="flex flex-col gap-2 mt-4 w-full max-w-xs">
+                <div className="flex gap-2">
+                  <button onClick={toggleFollow}
+                    className={`flex-1 py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 ${isFollowing ? "bg-secondary/50 text-foreground border border-border/30" : "gradient-neon text-primary-foreground glow-neon"}`}>
+                    {isFollowing ? <><UserMinus className="w-3.5 h-3.5" /> إلغاء</> : <><UserPlus className="w-3.5 h-3.5" /> متابعة</>}
+                  </button>
+                  <button onClick={handleChat} className="flex-1 py-2.5 rounded-full bg-secondary/50 text-foreground font-bold text-xs flex items-center justify-center gap-1.5 border border-border/30">
+                    <MessageCircle className="w-3.5 h-3.5" /> محادثة
+                  </button>
+                </div>
+                {meIsAgent && (
+                  <button
+                    onClick={() => setTransferOpen(true)}
+                    className="w-full py-2.5 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 text-white
+                      bg-gradient-to-r from-red-700 via-red-500 to-orange-500
+                      shadow-[0_0_14px_hsl(0_85%_55%/0.6)] border border-yellow-200/60"
+                  >
+                    <CoinsIcon className="w-3.5 h-3.5" /> شحن عملات لهذا المستخدم
+                  </button>
+                )}
               </div>
             )}
           </div>
