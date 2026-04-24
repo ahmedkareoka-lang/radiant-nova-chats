@@ -73,7 +73,6 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
   }, []);
 
   const activeEntry = current;
-  const novaAsset = activeEntry?.novaLevel ? getNovaAsset(activeEntry.novaLevel) : null;
   const mediaUrl = activeEntry?.videoUrl || null;
   const isImageMedia = !!mediaUrl && /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(mediaUrl);
 
@@ -82,111 +81,49 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
       {activeEntry && (
         <motion.div
           key={activeEntry.id}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none"
+          initial={{ opacity: 0, scale: 0.85, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none bg-transparent"
         >
-          <div className={`absolute inset-0 backdrop-blur-sm ${novaAsset ? `bg-gradient-to-br ${novaAsset.gradient}` : 'bg-background/60'}`} />
-
-          <div className="relative z-10 flex flex-col items-center gap-4">
-            {mediaUrl ? (
-              isImageMedia ? (
-                <img
-                  src={mediaUrl}
-                  alt="entrance-effect"
-                  className="w-80 h-80 object-contain rounded-2xl"
-                />
-              ) : (
-              <video
+          {/* Only the entrance media itself — no backdrop, no halos, no extra effects */}
+          {mediaUrl ? (
+            isImageMedia ? (
+              <motion.img
+                src={mediaUrl}
+                alt="entrance-effect"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="max-w-[80vw] max-h-[80vh] object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <motion.video
                 src={mediaUrl}
                 autoPlay
                 muted={muteEntrance}
                 playsInline
-                className="w-80 h-80 object-contain rounded-2xl"
-                onEnded={() => {}}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="max-w-[80vw] max-h-[80vh] object-contain drop-shadow-2xl"
               />
-              )
-            ) : (
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: [0, 1.3, 1], rotate: [0, 360] }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className="relative"
-              >
-                <motion.div
-                  animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className={`absolute inset-0 rounded-full ${novaAsset ? 'bg-accent/40' : 'bg-primary/30'} blur-xl`}
-                  style={{ width: 160, height: 160, margin: -20 }}
-                />
-                <motion.div
-                  animate={{ scale: [1, 2.2, 1], opacity: [0.4, 0, 0.4] }}
-                  transition={{ duration: 2.5, repeat: Infinity, delay: 0.3 }}
-                  className={`absolute inset-0 rounded-full ${novaAsset ? 'bg-primary/30' : 'bg-accent/20'} blur-2xl`}
-                  style={{ width: 180, height: 180, margin: -30 }}
-                />
-                {/* NOVA P frame around avatar */}
-                {novaAsset && (
-                  <img
-                    src={novaAsset.frame}
-                    alt="nova-frame"
-                    className="absolute -inset-6 w-[calc(100%+48px)] h-[calc(100%+48px)] object-contain z-10 pointer-events-none"
-                  />
-                )}
-                <img
-                  src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
-                  alt=""
-                  className={`w-28 h-28 rounded-full object-cover ring-4 ${novaAsset ? 'ring-accent shadow-[0_0_60px_hsl(var(--accent)/0.6)]' : 'ring-primary shadow-[0_0_40px_rgba(var(--primary),0.5)]'}`}
-                />
-              </motion.div>
-            )}
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-center"
-            >
-              {novaAsset && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3, type: "spring" }}
-                  className={`inline-block px-4 py-1 mb-2 rounded-full bg-gradient-to-r ${novaAsset.gradient} border border-white/30 ${novaAsset.borderGlow} text-xs font-black`}
-                >
-                  👑 NOVA {novaAsset.label}
-                </motion.div>
-              )}
-              <p className="text-2xl font-black glow-neon-text">{activeEntry.displayName}</p>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                className="text-sm text-muted-foreground mt-1"
-              >
-                ✨ دخل الغرفة ✨
-              </motion.p>
-            </motion.div>
-
-            <div className="absolute inset-0 pointer-events-none">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <motion.div
-                  key={i}
-                  className={`absolute w-2 h-2 rounded-full ${novaAsset ? 'bg-accent' : 'bg-accent'}`}
-                  initial={{ x: 0, y: 0, opacity: 0 }}
-                  animate={{
-                    x: Math.cos((i / 12) * Math.PI * 2) * 120,
-                    y: Math.sin((i / 12) * Math.PI * 2) * 120,
-                    opacity: [0, 1, 0],
-                  }}
-                  transition={{ duration: 1.5, delay: 0.3 + i * 0.08, repeat: 1 }}
-                  style={{ left: "50%", top: "40%", marginLeft: -4, marginTop: -4 }}
-                />
-              ))}
-            </div>
-          </div>
+            )
+          ) : (
+            // Fallback when user has no custom entrance media: just an animated avatar pop, no halos
+            <motion.img
+              src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
+              alt=""
+              initial={{ scale: 0, rotate: -90, opacity: 0 }}
+              animate={{ scale: [0, 1.15, 1], rotate: [-90, 0], opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+              className="w-32 h-32 rounded-full object-cover drop-shadow-2xl"
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>
