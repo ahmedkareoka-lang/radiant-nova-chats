@@ -356,6 +356,58 @@ const AgenciesPage = () => {
               {/* Agent: Search & Invite */}
               {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && (
                 <>
+                  {/* Agent: monthly payroll panel for the whole agency */}
+                  {agencyPayroll && (
+                    <div className="rounded-2xl p-4 space-y-3 border border-accent/40 bg-gradient-to-br from-accent/10 to-primary/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-5 h-5 text-accent" />
+                          <p className="font-bold text-sm">رواتب الوكالة الشهرية</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> {agencyPayroll.month_start} → {agencyPayroll.month_end}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-card/60 rounded-xl p-2">
+                          <p className="text-[10px] text-muted-foreground">رواتب المضيفين</p>
+                          <p className="font-bold text-sm text-primary">${Number(agencyPayroll.total_salaries_usd).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-card/60 rounded-xl p-2">
+                          <p className="text-[10px] text-muted-foreground">عمولتك (15%)</p>
+                          <p className="font-bold text-sm text-accent">${Number(agencyPayroll.agent_commission_usd).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-primary/20 rounded-xl p-2 border border-primary/40">
+                          <p className="text-[10px] text-muted-foreground">المجموع</p>
+                          <p className="font-bold text-sm text-primary">${Number(agencyPayroll.grand_total_usd).toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      {(agencyPayroll.hosts || []).length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold text-muted-foreground">رواتب المضيفين</p>
+                          {(agencyPayroll.hosts || []).map((h: any) => (
+                            <div key={h.host_id} className="bg-card/60 rounded-xl p-2 flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold">{h.display_name || "—"}</span>
+                                {h.meets_target ? <span>✅</span> : <span title="لم يستوفِ الشروط">⚠️</span>}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">{Number(h.diamonds).toLocaleString()}💎</span>
+                                <span className="font-bold text-primary">${Number(h.final_salary_usd).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
+                        💡 100,000 ماس = $8 • شرط: 15 يوم + 40 ساعة • خصم 20% عند المخالفة
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-muted-foreground">دعوة مضيف جديد</h4>
                     <div className="flex gap-2">
