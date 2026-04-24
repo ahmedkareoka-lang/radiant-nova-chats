@@ -244,7 +244,7 @@ export const useVoiceRoom = (roomId: string | null) => {
   const joinRoom = async () => {
     if (!roomId || !currentUserId) return;
     // Upsert ensures one entry per user per room (unique constraint)
-    await supabase.from("room_members").upsert(
+    const { error } = await supabase.from("room_members").upsert(
       {
         room_id: roomId,
         user_id: currentUserId,
@@ -253,6 +253,12 @@ export const useVoiceRoom = (roomId: string | null) => {
       },
       { onConflict: "room_id,user_id" }
     );
+    // After membership is confirmed, RLS now allows reading messages.
+    // Re-fetch so returning users see the existing chat history.
+    if (!error) {
+      await fetchMessages();
+      await fetchMembers();
+    }
   };
 
   const leaveRoom = async () => {
