@@ -266,6 +266,27 @@ const BDDashboard = () => {
       </header>
 
       <main className="p-4 space-y-4 max-w-2xl mx-auto">
+        {/* Tabs */}
+        <div className="flex gap-2 p-1 rounded-2xl bg-muted/50 border border-border">
+          <button
+            onClick={() => setTab("overview")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+              tab === "overview" ? "bg-background shadow text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <Briefcase size={14} /> النظرة العامة
+          </button>
+          <button
+            onClick={() => setTab("activity")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+              tab === "activity" ? "bg-background shadow text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <History size={14} /> سجل النشاط
+          </button>
+        </div>
+
+        {tab === "overview" && (<>
         {/* Hero stats */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
