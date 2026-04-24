@@ -236,11 +236,19 @@ export type Database = {
       daily_tasks: {
         Row: {
           created_at: string
+          follow_reward_claimed: boolean
+          follows_made: number
           games_played: number
           games_reward_claimed: boolean
           gift_reward_claimed: boolean
           gifts_sent: number
           id: string
+          like_reward_claimed: boolean
+          likes_given: number
+          message_reward_claimed: boolean
+          messages_sent: number
+          post_reward_claimed: boolean
+          posts_made: number
           room_minutes: number
           room_reward_claimed: boolean
           task_date: string
@@ -248,11 +256,19 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          follow_reward_claimed?: boolean
+          follows_made?: number
           games_played?: number
           games_reward_claimed?: boolean
           gift_reward_claimed?: boolean
           gifts_sent?: number
           id?: string
+          like_reward_claimed?: boolean
+          likes_given?: number
+          message_reward_claimed?: boolean
+          messages_sent?: number
+          post_reward_claimed?: boolean
+          posts_made?: number
           room_minutes?: number
           room_reward_claimed?: boolean
           task_date?: string
@@ -260,11 +276,19 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          follow_reward_claimed?: boolean
+          follows_made?: number
           games_played?: number
           games_reward_claimed?: boolean
           gift_reward_claimed?: boolean
           gifts_sent?: number
           id?: string
+          like_reward_claimed?: boolean
+          likes_given?: number
+          message_reward_claimed?: boolean
+          messages_sent?: number
+          post_reward_claimed?: boolean
+          posts_made?: number
           room_minutes?: number
           room_reward_claimed?: boolean
           task_date?: string
