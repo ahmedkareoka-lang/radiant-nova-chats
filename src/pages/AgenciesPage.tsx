@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock, Target, Mic, Gem } from "lucide-react";
+import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock, Target, Mic, Gem, DollarSign, Calendar, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -29,6 +29,8 @@ const AgenciesPage = () => {
   const [hostStats, setHostStats] = useState<any>(null);
   const [hostDashboard, setHostDashboard] = useState<any>(null);
   const [hasOwnedAgency, setHasOwnedAgency] = useState(false);
+  const [hostSalary, setHostSalary] = useState<any>(null);
+  const [agencyPayroll, setAgencyPayroll] = useState<any>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -81,6 +83,16 @@ const AgenciesPage = () => {
 
           const { data: dash } = await supabase.rpc("get_host_agency_dashboard" as any);
           if (dash) setHostDashboard(dash);
+
+          // Monthly salary report (current month, day 1 to last)
+          const { data: salary } = await supabase.rpc("get_host_monthly_salary" as any, {});
+          if (salary) setHostSalary(salary);
+        }
+
+        // Agent: load monthly payroll for their agency (their hosts + 15% commission)
+        if (membership.badge === "agent" || ag?.owner_id === user.id) {
+          const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
+          if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
         }
       }
 
@@ -282,7 +294,58 @@ const AgenciesPage = () => {
                 </div>
               )}
 
-              {/* Host resignation button */}
+              {/* Host: monthly salary card */}
+              {myMembership?.badge === "host" && hostSalary && (
+                <div className="rounded-2xl p-4 space-y-3 border border-primary/40 bg-gradient-to-br from-primary/10 to-accent/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-accent" />
+                      <p className="font-bold text-sm">راتب الشهر</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> {hostSalary.month_start} → {hostSalary.month_end}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-card/60 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">إجمالي الماس</p>
+                      <p className="font-extrabold text-base text-primary">{Number(hostSalary.total_diamonds || 0).toLocaleString()} 💎</p>
+                    </div>
+                    <div className="bg-card/60 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">الراتب الأساسي</p>
+                      <p className="font-extrabold text-base text-accent">${Number(hostSalary.base_salary_usd || 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={`rounded-xl p-2 text-center border ${hostSalary.meets_days ? "border-green-500/40 bg-green-500/10" : "border-destructive/40 bg-destructive/10"}`}>
+                      <p className="text-[10px] text-muted-foreground">أيام نشطة</p>
+                      <p className="font-bold text-sm">{hostSalary.active_days} / {hostSalary.required_days} {hostSalary.meets_days ? "✅" : "⚠️"}</p>
+                    </div>
+                    <div className={`rounded-xl p-2 text-center border ${hostSalary.meets_hours ? "border-green-500/40 bg-green-500/10" : "border-destructive/40 bg-destructive/10"}`}>
+                      <p className="text-[10px] text-muted-foreground">ساعات البث</p>
+                      <p className="font-bold text-sm">{Number(hostSalary.total_hours || 0).toFixed(1)} / {hostSalary.required_hours}h {hostSalary.meets_hours ? "✅" : "⚠️"}</p>
+                    </div>
+                  </div>
+
+                  {hostSalary.penalty_pct > 0 && (
+                    <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-2 flex items-center gap-2 text-[10px] text-destructive">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      <span>لم يتم استيفاء شروط الالتزام — يتم تطبيق خصم {hostSalary.penalty_pct}%</span>
+                    </div>
+                  )}
+
+                  <div className="bg-primary/20 rounded-xl p-3 text-center border border-primary/40">
+                    <p className="text-[10px] text-muted-foreground">الراتب الصافي للشهر</p>
+                    <p className="font-extrabold text-2xl text-primary">${Number(hostSalary.final_salary_usd || 0).toLocaleString()}</p>
+                  </div>
+
+                  <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
+                    💡 معدل التحويل: 100,000 ماسة = $8 • يجب تحقيق 15 يوم نشط و 40 ساعة بث
+                  </p>
+                </div>
+              )}
               {myMembership?.badge === "host" && (
                 <button onClick={requestResignation}
                   className="w-full py-2 rounded-xl border border-destructive/30 text-destructive text-xs font-bold flex items-center justify-center gap-2">
@@ -293,6 +356,58 @@ const AgenciesPage = () => {
               {/* Agent: Search & Invite */}
               {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && (
                 <>
+                  {/* Agent: monthly payroll panel for the whole agency */}
+                  {agencyPayroll && (
+                    <div className="rounded-2xl p-4 space-y-3 border border-accent/40 bg-gradient-to-br from-accent/10 to-primary/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-5 h-5 text-accent" />
+                          <p className="font-bold text-sm">رواتب الوكالة الشهرية</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> {agencyPayroll.month_start} → {agencyPayroll.month_end}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-card/60 rounded-xl p-2">
+                          <p className="text-[10px] text-muted-foreground">رواتب المضيفين</p>
+                          <p className="font-bold text-sm text-primary">${Number(agencyPayroll.total_salaries_usd).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-card/60 rounded-xl p-2">
+                          <p className="text-[10px] text-muted-foreground">عمولتك (15%)</p>
+                          <p className="font-bold text-sm text-accent">${Number(agencyPayroll.agent_commission_usd).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-primary/20 rounded-xl p-2 border border-primary/40">
+                          <p className="text-[10px] text-muted-foreground">المجموع</p>
+                          <p className="font-bold text-sm text-primary">${Number(agencyPayroll.grand_total_usd).toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      {(agencyPayroll.hosts || []).length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-bold text-muted-foreground">رواتب المضيفين</p>
+                          {(agencyPayroll.hosts || []).map((h: any) => (
+                            <div key={h.host_id} className="bg-card/60 rounded-xl p-2 flex items-center justify-between text-[11px]">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold">{h.display_name || "—"}</span>
+                                {h.meets_target ? <span>✅</span> : <span title="لم يستوفِ الشروط">⚠️</span>}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">{Number(h.diamonds).toLocaleString()}💎</span>
+                                <span className="font-bold text-primary">${Number(h.final_salary_usd).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
+                        💡 100,000 ماس = $8 • شرط: 15 يوم + 40 ساعة • خصم 20% عند المخالفة
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-muted-foreground">دعوة مضيف جديد</h4>
                     <div className="flex gap-2">
