@@ -183,6 +183,38 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       client.on("autoplay-failed", () => {
         logAgora("error", "autoplay-failed", "Browser blocked audio autoplay — tap to enable");
         setAudioBlocked(true);
+      // @ts-ignore - token will expire soon
+      client.on("token-privilege-will-expire", async () => {
+        logAgora("warn", "token", "Token expiring soon — renewing…");
+        const channel = channelRef.current;
+        if (!channel) return;
+        const role = currentRoleRef.current === "host" ? "host" : "audience";
+        const fresh = await fetchAgoraToken(channel, role);
+        if (fresh?.token) {
+          try {
+            await client.renewToken(fresh.token);
+            logAgora("success", "token", "Token renewed");
+          } catch (e: any) {
+            logAgora("error", "token", `Renew failed: ${e?.message || e}`);
+          }
+        }
+      });
+
+      // @ts-ignore - token already expired
+      client.on("token-privilege-did-expire", async () => {
+        logAgora("error", "token", "Token expired — re-fetching…");
+        const channel = channelRef.current;
+        if (!channel) return;
+        const role = currentRoleRef.current === "host" ? "host" : "audience";
+        const fresh = await fetchAgoraToken(channel, role);
+        if (fresh?.token) {
+          try {
+            await client.renewToken(fresh.token);
+            logAgora("success", "token", "Token re-fetched after expiry");
+          } catch (e: any) {
+            logAgora("error", "token", `Re-fetch failed: ${e?.message || e}`);
+          }
+        }
       });
 
       // Voice activity detection
