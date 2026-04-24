@@ -988,6 +988,85 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {/* PAYROLL TAB — Monthly salary report for all agencies */}
+          {activeTab === "payroll" && (
+            <div className="space-y-4">
+              <div className="card-nova p-4 space-y-2 border border-primary/30">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm flex items-center gap-2 text-primary">
+                    <DollarSign className="w-4 h-4" /> تقرير الرواتب الشهري
+                  </h3>
+                  <button onClick={fetchPayrollReport} className="text-[10px] px-3 py-1 rounded-lg bg-primary/20 text-primary font-bold">
+                    تحديث 🔄
+                  </button>
+                </div>
+                {payrollReport && (
+                  <p className="text-[10px] text-muted-foreground">
+                    الفترة: {payrollReport.month_start} إلى {payrollReport.month_end}
+                  </p>
+                )}
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  💰 معدل التحويل: 100,000 ماس = $8 • شرط: 15 يوم نشط + 40 ساعة • خصم 20% عند عدم الالتزام • عمولة الوكيل: 15%
+                </p>
+              </div>
+
+              {payrollLoading && <p className="text-center text-muted-foreground text-sm py-8">جارٍ التحميل...</p>}
+
+              {payrollReport && !payrollLoading && (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="card-nova p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">إجمالي الرواتب</p>
+                      <p className="font-extrabold text-base text-primary">${Number(payrollReport.grand_total_salaries_usd || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="card-nova p-3 text-center">
+                      <p className="text-[10px] text-muted-foreground">إجمالي العمولات</p>
+                      <p className="font-extrabold text-base text-accent">${Number(payrollReport.grand_total_commissions_usd || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="card-nova p-3 text-center border border-primary/30">
+                      <p className="text-[10px] text-muted-foreground">المجموع الكلي</p>
+                      <p className="font-extrabold text-base text-primary">${Number(payrollReport.grand_total_usd || 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-xs text-muted-foreground">الوكالات ({(payrollReport.agencies || []).length})</h4>
+                    {(payrollReport.agencies || []).map((ag: any) => (
+                      <div key={ag.agency_id} className="card-nova p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-bold text-sm">{ag.agency_name}</p>
+                            <p className="text-[10px] text-muted-foreground">وكيل: {ag.owner_name || "—"} • {ag.host_count} مضيف</p>
+                          </div>
+                          <p className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">
+                            {Number(ag.total_diamonds || 0).toLocaleString()} 💎
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                          <div className="bg-secondary/50 rounded-lg p-2">
+                            <p className="text-muted-foreground">رواتب المضيفين</p>
+                            <p className="font-bold text-sm text-primary">${Number(ag.total_salaries_usd).toLocaleString()}</p>
+                          </div>
+                          <div className="bg-secondary/50 rounded-lg p-2">
+                            <p className="text-muted-foreground">عمولة (15%)</p>
+                            <p className="font-bold text-sm text-accent">${Number(ag.agent_commission_usd).toLocaleString()}</p>
+                          </div>
+                          <div className="bg-primary/10 rounded-lg p-2 border border-primary/30">
+                            <p className="text-muted-foreground">المجموع</p>
+                            <p className="font-bold text-sm text-primary">${Number(ag.grand_total_usd).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {(payrollReport.agencies || []).length === 0 && (
+                      <p className="text-center text-muted-foreground text-sm py-8">لا توجد وكالات معتمدة</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* RECHARGE AGENTS TAB */}
           {activeTab === "recharge_agents" && (
             <div className="space-y-4">
