@@ -535,6 +535,13 @@ const AgenciesPage = () => {
         </main>
 
         <BottomNav />
+
+        <SalaryDetailsModal
+          open={detailsOpen}
+          onClose={() => setDetailsOpen(false)}
+          hostId={detailsHost.id}
+          hostName={detailsHost.name}
+        />
       </div>
     </PageTransition>
   );
