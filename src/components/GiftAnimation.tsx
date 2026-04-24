@@ -109,6 +109,21 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
     fetchBalance();
   }, [senderId, isOpen]);
 
+  // Broadcast channel — keep one stable channel subscribed for the modal lifetime so sends are reliable
+  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  useEffect(() => {
+    if (!roomId || !isOpen) return;
+    const ch = supabase.channel(`room-gifts-${roomId}`, {
+      config: { broadcast: { self: false, ack: true } },
+    });
+    ch.subscribe();
+    broadcastChannelRef.current = ch;
+    return () => {
+      supabase.removeChannel(ch);
+      broadcastChannelRef.current = null;
+    };
+  }, [roomId, isOpen]);
+
   if (!isOpen) return null;
 
   const isMultiMode = showMulti && roomMembers && roomMembers.length > 0;
@@ -133,21 +148,6 @@ const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, ro
 
   const recipientCount = isMultiMode ? Math.max(selectedRecipients.size, 1) : 1;
   const totalCost = selectedGift !== null ? gifts[selectedGift].price * multiplier * recipientCount : 0;
-
-  // Broadcast gift to all room members via Realtime (use a stable shared channel that stays subscribed for the lifetime of the modal)
-  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  useEffect(() => {
-    if (!roomId || !isOpen) return;
-    const ch = supabase.channel(`room-gifts-${roomId}`, {
-      config: { broadcast: { self: false, ack: true } },
-    });
-    ch.subscribe();
-    broadcastChannelRef.current = ch;
-    return () => {
-      supabase.removeChannel(ch);
-      broadcastChannelRef.current = null;
-    };
-  }, [roomId, isOpen]);
 
   const broadcastGift = async (giftEmoji: string, giftName: string, senderName: string, amount: number, recipientName?: string, imageUrl?: string | null) => {
     if (!roomId) return;
