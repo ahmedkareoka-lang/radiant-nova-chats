@@ -130,6 +130,8 @@ const VoiceRoom = () => {
   const [showCouplePicker, setShowCouplePicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const seenMemberIds = useRef<Set<string>>(new Set());
+  const didInitialMemberSync = useRef(false);
+  const didAnnounceJoin = useRef(false);
 
   // AI moderator state
   const [translationsEnabled, setTranslationsEnabled] = useState(false);
