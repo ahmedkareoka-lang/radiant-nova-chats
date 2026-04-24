@@ -215,9 +215,9 @@ export default function InventorySheet({ open, onClose }: Props) {
                       {/* Preview */}
                       <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
                         {isFrame && virtual === "bd" ? (
-                          <BDFrame size={48} />
+                          <BDFrame size={48}><div className="w-full h-full rounded-full bg-purple-500/40" /></BDFrame>
                         ) : isFrame && virtual === "agent" ? (
-                          <RechargeAgentFrame size={48} />
+                          <RechargeAgentFrame size={48}><div className="w-full h-full rounded-full bg-amber-500/40" /></RechargeAgentFrame>
                         ) : isFrame && frameUrl ? (
                           <img src={frameUrl} alt={it.item_name} className="w-full h-full object-contain" loading="lazy" />
                         ) : isBadge ? (
