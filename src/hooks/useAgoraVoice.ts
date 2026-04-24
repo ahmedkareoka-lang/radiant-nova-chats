@@ -14,23 +14,70 @@ interface UseAgoraVoiceOptions {
 }
 
 const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID as string | undefined;
-const SPEAKING_THRESHOLD = 5; // 0-100 (Agora volume)
+const SPEAKING_THRESHOLD = 5;
+
+// Set Agora log level (0=DEBUG, 1=INFO, 2=WARNING, 3=ERROR, 4=NONE)
+try {
+  AgoraRTC.setLogLevel(2);
+} catch { /* noop */ }
 
 /**
  * Drop-in replacement for useWebRTC using Agora RTC SDK (App ID Only mode).
- * Same return shape: { connectedPeers, speakingPeers, localSpeaking, startLocalStream, stopLocalStream }
- *
- * Production note: App ID Only is INSECURE. For production, deploy a token server.
+ * Returns: { connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio, startLocalStream, stopLocalStream }
  */
 export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAgoraVoiceOptions) => {
   const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
   const [speakingPeers, setSpeakingPeers] = useState<Set<string>>(new Set());
   const [localSpeaking, setLocalSpeaking] = useState(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   const clientRef = useRef<IAgoraRTCClient | null>(null);
   const localTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
   const joinedRef = useRef(false);
   const currentRoleRef = useRef<ClientRole>("audience");
+  const remoteUsersRef = useRef<Map<string, IAgoraRTCRemoteUser>>(new Map());
+  const currentUserIdRef = useRef<string | null>(currentUserId);
+
+  useEffect(() => {
+    currentUserIdRef.current = currentUserId;
+  }, [currentUserId]);
+
+  // Try to play all remote audio tracks (used for unlock-after-gesture on iOS)
+  const playAllRemote = useCallback(() => {
+    let blocked = false;
+    remoteUsersRef.current.forEach((user) => {
+      try {
+        user.audioTrack?.play();
+      } catch (e: any) {
+        console.warn("[Agora] play() failed:", e?.message || e);
+        blocked = true;
+      }
+    });
+    return blocked;
+  }, []);
+
+  const unlockAudio = useCallback(async () => {
+    try {
+      // Resume any suspended audio context
+      const AC = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (AC) {
+        const ctx = new AC();
+        if (ctx.state === "suspended") {
+          await ctx.resume();
+        }
+        // Play a tiny silent buffer to unlock iOS
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      }
+    } catch (e) {
+      console.warn("[Agora] unlockAudio AC failed:", e);
+    }
+    playAllRemote();
+    setAudioBlocked(false);
+  }, [playAllRemote]);
 
   // Lazily create one shared client
   const getClient = useCallback(() => {
@@ -41,7 +88,13 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         try {
           await client.subscribe(user, mediaType);
           if (mediaType === "audio") {
-            user.audioTrack?.play();
+            remoteUsersRef.current.set(String(user.uid), user);
+            try {
+              user.audioTrack?.play();
+            } catch (e: any) {
+              console.warn("[Agora] autoplay blocked:", e?.message || e);
+              setAudioBlocked(true);
+            }
             setConnectedPeers((prev) => new Set(prev).add(String(user.uid)));
           }
         } catch (e) {
@@ -50,6 +103,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       });
 
       client.on("user-unpublished", (user) => {
+        remoteUsersRef.current.delete(String(user.uid));
         setConnectedPeers((prev) => {
           const next = new Set(prev);
           next.delete(String(user.uid));
@@ -63,6 +117,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       });
 
       client.on("user-left", (user) => {
+        remoteUsersRef.current.delete(String(user.uid));
         setConnectedPeers((prev) => {
           const next = new Set(prev);
           next.delete(String(user.uid));
@@ -75,12 +130,19 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
         });
       });
 
+      // Detect autoplay being blocked by the browser
+      // @ts-ignore - event exists on Agora client
+      client.on("autoplay-failed", () => {
+        console.warn("[Agora] autoplay-failed event fired");
+        setAudioBlocked(true);
+      });
+
       // Voice activity detection
       client.enableAudioVolumeIndicator();
       client.on("volume-indicator", (volumes) => {
         const speakingNow = new Set<string>();
         let mySpeaking = false;
-        const localUid = currentUserId;
+        const localUid = currentUserIdRef.current;
         for (const v of volumes) {
           if (v.level >= SPEAKING_THRESHOLD) {
             const uid = String(v.uid);
@@ -95,11 +157,22 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       clientRef.current = client;
     }
     return clientRef.current;
-  }, [currentUserId]);
+  }, []);
 
   const startLocalStream = useCallback(async () => {
     if (localTrackRef.current) return;
     try {
+      // Proactively check microphone permissions where supported
+      try {
+        if ((navigator as any).permissions?.query) {
+          const status = await (navigator as any).permissions.query({ name: "microphone" as PermissionName });
+          if (status.state === "denied") {
+            console.error("[Agora] Microphone permission denied by user/browser settings");
+            return;
+          }
+        }
+      } catch { /* not all browsers support this */ }
+
       const track = await AgoraRTC.createMicrophoneAudioTrack({
         encoderConfig: "music_standard",
         AEC: true,
@@ -116,8 +189,10 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       if (joinedRef.current) {
         await client.publish([track]);
       }
-    } catch (e) {
-      console.error("[Agora] startLocalStream failed:", e);
+    } catch (e: any) {
+      const name = e?.name || e?.code || "Unknown";
+      console.error("[Agora] startLocalStream failed:", name, e?.message || e);
+      // Common errors: NotAllowedError (permission), NotFoundError (no mic), NotReadableError (in use)
     }
   }, [getClient]);
 
@@ -147,7 +222,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   useEffect(() => {
     if (!roomId || !currentUserId) return;
     if (!AGORA_APP_ID) {
-      console.error("[Agora] VITE_AGORA_APP_ID is not set");
+      console.error("[Agora] VITE_AGORA_APP_ID is not set — voice will not work. Add it in Vercel env vars and redeploy.");
       return;
     }
 
@@ -156,20 +231,21 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
     (async () => {
       const client = getClient();
       try {
-        // Use audience by default; will switch to host when mic is enabled
         await client.setClientRole("audience");
         currentRoleRef.current = "audience";
-        // Use string UID via numeric hash to satisfy Agora UID requirements,
-        // but keep currentUserId as the canonical id for matching peers.
-        // We pass the user's id directly as a string UID (Agora supports string UIDs in App-ID-only mode if account-based join is used).
         await client.join(AGORA_APP_ID, roomId, null, currentUserId);
         if (cancelled) {
           await client.leave();
           return;
         }
         joinedRef.current = true;
-      } catch (e) {
-        console.error("[Agora] join failed:", e);
+        console.log("[Agora] joined channel", roomId, "as", currentUserId);
+      } catch (e: any) {
+        const code = e?.code || e?.name || "Unknown";
+        console.error("[Agora] join failed:", code, e?.message || e);
+        if (String(code).includes("CAN_NOT_GET_GATEWAY_SERVER") || String(code).includes("INVALID_VENDOR_KEY")) {
+          console.error("[Agora] Likely invalid App ID. Check VITE_AGORA_APP_ID in Vercel.");
+        }
       }
     })();
 
@@ -192,9 +268,11 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
           console.error("[Agora] leave failed:", e);
         } finally {
           joinedRef.current = false;
+          remoteUsersRef.current.clear();
           setConnectedPeers(new Set());
           setSpeakingPeers(new Set());
           setLocalSpeaking(false);
+          setAudioBlocked(false);
         }
       })();
     };
@@ -210,9 +288,6 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
 
   // React to mic on/off
   useEffect(() => {
-    if (!joinedRef.current) {
-      // Will be applied after join
-    }
     if (isOnMic) {
       startLocalStream();
     } else {
@@ -220,10 +295,26 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
     }
   }, [isOnMic, startLocalStream, stopLocalStream]);
 
+  // Auto-attempt unlock on first user interaction anywhere on the page (iOS/Android)
+  useEffect(() => {
+    if (!audioBlocked) return;
+    const handler = () => {
+      unlockAudio();
+    };
+    window.addEventListener("touchend", handler, { once: true, passive: true });
+    window.addEventListener("click", handler, { once: true });
+    return () => {
+      window.removeEventListener("touchend", handler);
+      window.removeEventListener("click", handler);
+    };
+  }, [audioBlocked, unlockAudio]);
+
   return {
     connectedPeers,
     speakingPeers,
     localSpeaking,
+    audioBlocked,
+    unlockAudio,
     startLocalStream,
     stopLocalStream,
   };

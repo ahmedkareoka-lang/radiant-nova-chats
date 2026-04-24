@@ -116,7 +116,7 @@ const VoiceRoom = () => {
   const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
   // Voice (Agora)
-  const { connectedPeers, speakingPeers, localSpeaking } = useAgoraVoice({
+  const { connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoice({
     roomId,
     currentUserId,
     isOnMic,
@@ -467,6 +467,28 @@ const VoiceRoom = () => {
       <VoiceRoomBackdrop />
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
+
+      {/* Tap-to-enable audio overlay (iOS / Android autoplay policy) */}
+      {audioBlocked && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          onClick={unlockAudio}
+          onTouchEnd={unlockAudio}
+        >
+          <div className="flex flex-col items-center gap-4 px-6 py-8 rounded-3xl bg-card/90 border border-primary/30 shadow-2xl max-w-xs text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+              <Volume2 className="w-8 h-8 text-primary animate-pulse" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">اضغط لتفعيل الصوت</h3>
+            <p className="text-sm text-muted-foreground">
+              المتصفح يحتاج إلى لمسة منك لتشغيل الصوت
+            </p>
+            <button className="mt-2 px-6 py-2 rounded-full bg-primary text-primary-foreground font-semibold">
+              تفعيل الصوت
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Room Name Watermark */}
       {roomData?.name && (
