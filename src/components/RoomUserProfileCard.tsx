@@ -197,9 +197,10 @@ export default function RoomUserProfileCard({
         <div className="flex flex-col items-center pt-2">
           <FramedAvatar
             avatarUrl={profile.avatar_url}
-            frameUrl={profile.equipped_frame ? FRAME_MAP[profile.equipped_frame] || profile.equipped_frame : null}
+            equippedFrame={profile.equipped_frame || null}
             size={120}
-            animated={!!profile.equipped_frame && (FRAME_ANIMATION as any)[profile.equipped_frame] === true}
+            isBD={!!isBD}
+            isRechargeAgent={!!isRechargeAgent}
           />
         </div>
 
