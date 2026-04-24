@@ -1451,6 +1451,8 @@ export type Database = {
         Returns: Json
       }
       get_love_level: { Args: { _points: number }; Returns: number }
+      get_my_agency_overview: { Args: never; Returns: Json }
+      get_my_host_events: { Args: never; Returns: Json }
       get_nova_p_tier: {
         Args: { gold_amount: number }
         Returns: {

@@ -35,6 +35,10 @@ const AgenciesPage = () => {
   const [agencyPayroll, setAgencyPayroll] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsHost, setDetailsHost] = useState<{ id?: string; name?: string }>({});
+  const [agencyOverview, setAgencyOverview] = useState<any>(null);
+  const [hostEvents, setHostEvents] = useState<any>(null);
+  const [showOverview, setShowOverview] = useState(false);
+  const [showHostEvents, setShowHostEvents] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -97,6 +101,16 @@ const AgenciesPage = () => {
         if (membership.badge === "agent" || ag?.owner_id === user.id) {
           const { data: payroll } = await supabase.rpc("get_agency_payroll_report" as any, {});
           if (payroll && (payroll as any).has_agency) setAgencyPayroll(payroll);
+
+          // Full agency overview (hosts + 15-day cycle stats)
+          const { data: ov } = await supabase.rpc("get_my_agency_overview" as any);
+          if (ov && (ov as any).has_agency) setAgencyOverview(ov);
+        }
+
+        // Host: full event log within the 15-day cycle
+        if (membership.badge === "host") {
+          const { data: ev } = await supabase.rpc("get_my_host_events" as any);
+          if (ev && (ev as any).has_agency) setHostEvents(ev);
         }
       }
 
@@ -212,9 +226,6 @@ const AgenciesPage = () => {
             <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></button>
             <Building2 className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-lg">الوكالات</h1>
-            <div className="ml-auto">
-              <PayrollStructureBanner />
-            </div>
           </div>
         </header>
 
@@ -250,6 +261,101 @@ const AgenciesPage = () => {
                 </span>
               </div>
               <p className="font-bold text-lg">{myAgency.name}</p>
+
+              {/* Inline payroll-policy banner — appears INSIDE the agency system for hosts and agents */}
+              <PayrollStructureBanner />
+
+              {/* Agent: button to open agency overview */}
+              {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && agencyOverview && (
+                <button
+                  onClick={() => setShowOverview(!showOverview)}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/40 text-primary text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  {showOverview ? "إخفاء" : "عرض"} وكالتي ({agencyOverview.host_count} مضيف)
+                </button>
+              )}
+
+              {/* Host: button to open agency events log */}
+              {myMembership?.badge === "host" && hostEvents && (
+                <button
+                  onClick={() => setShowHostEvents(!showHostEvents)}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/40 text-primary text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  <Calendar className="w-4 h-4" />
+                  وكالتي: {hostEvents.agency_name} — {showHostEvents ? "إخفاء" : "عرض"} أحداث الـ15 يوم
+                </button>
+              )}
+
+              {/* Agent: full agency overview drawer */}
+              {showOverview && agencyOverview && (
+                <div className="rounded-2xl border border-primary/30 bg-secondary/30 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold flex items-center gap-1"><Building2 className="w-3 h-3 text-primary" />{agencyOverview.agency_name}</p>
+                    <p className="text-[10px] text-muted-foreground">دورة: {agencyOverview.cycle_label}</p>
+                  </div>
+                  {(agencyOverview.hosts || []).length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground text-center py-3">لا يوجد مضيفون بعد — قم بدعوة مضيف من خانة البحث.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {(agencyOverview.hosts || []).map((h: any) => {
+                        const meetsTarget = h.cycle_active_days >= 8 && (h.cycle_minutes / 60) >= 20;
+                        return (
+                          <button
+                            key={h.host_id}
+                            onClick={() => { setDetailsHost({ id: h.host_id, name: h.display_name }); setDetailsOpen(true); }}
+                            className="w-full bg-card/70 hover:bg-card rounded-xl p-2.5 flex items-center gap-2 text-right transition-colors"
+                          >
+                            <img src={h.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold truncate flex items-center gap-1">
+                                {h.display_name || "—"} {meetsTarget ? "✅" : "⚠️"}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground">ID: {h.friendly_id}</p>
+                            </div>
+                            <div className="text-left flex-shrink-0">
+                              <p className="text-[10px] text-primary font-bold">{Number(h.cycle_diamonds).toLocaleString()} 💎</p>
+                              <p className="text-[9px] text-muted-foreground">{(h.cycle_minutes/60).toFixed(1)}h • {h.cycle_active_days}/8 يوم</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Host: events log drawer */}
+              {showHostEvents && hostEvents && (
+                <div className="rounded-2xl border border-primary/30 bg-secondary/30 p-3 space-y-3">
+                  <p className="text-[10px] text-muted-foreground text-center">دورة: {hostEvents.cycle_label}</p>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-bold text-muted-foreground">📅 سجل اليومي</p>
+                    {(hostEvents.daily_log || []).map((d: any) => (
+                      <div key={d.date} className="bg-card/60 rounded-lg px-2.5 py-1.5 flex items-center justify-between text-[11px]">
+                        <span className="font-bold">{new Date(d.date).toLocaleDateString("ar-EG", { day: "numeric", month: "short" })}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-primary">{Number(d.diamonds).toLocaleString()}💎</span>
+                          <span className="text-accent">{(d.minutes/60).toFixed(1)}h</span>
+                          <span>{d.is_active ? "✅" : "—"}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {(hostEvents.recent_gifts || []).length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-bold text-muted-foreground">🎁 آخر الهدايا</p>
+                      {(hostEvents.recent_gifts || []).slice(0, 8).map((g: any, i: number) => (
+                        <div key={i} className="bg-card/60 rounded-lg px-2.5 py-1.5 flex items-center justify-between text-[11px]">
+                          <span className="truncate flex-1">{g.gift_name} • <span className="text-muted-foreground">{g.sender_name || "—"}</span></span>
+                          <span className="text-primary font-bold flex-shrink-0">+{g.diamond_amount}💎</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
 
               {/* Host: today + 15-day cycle banner */}
               {myMembership?.badge === "host" && hostDashboard?.has_agency && (
