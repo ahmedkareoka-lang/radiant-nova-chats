@@ -1344,6 +1344,7 @@ const VoiceRoom = () => {
         broadcastGift={broadcastGiftToRoom}
         roomId={roomId || undefined}
       />
+      <InventorySheet open={showInventory} onClose={() => setShowInventory(false)} />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />
