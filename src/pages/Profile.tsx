@@ -9,6 +9,7 @@ import { useFollows } from "@/hooks/useFollows";
 import { useNotifications } from "@/hooks/useNotifications";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import PageTransition from "@/components/PageTransition";
+import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
@@ -152,7 +153,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>;
+    return <PageTransition><ProfileSkeleton /></PageTransition>;
   }
 
   const isBoss = profile?.is_boss;
