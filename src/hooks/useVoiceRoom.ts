@@ -483,6 +483,12 @@ export const useVoiceRoom = (roomId: string | null) => {
         m.user_id === currentUserId ? { ...m, is_on_mic: on } : m
       )
     );
+    // 🚀 Broadcast instantly to everyone else in the room (sub-100ms)
+    presenceChannelRef.current?.send({
+      type: "broadcast",
+      event: "mic-update",
+      payload: { user_id: currentUserId, mic_slot: null, is_on_mic: on },
+    });
     await supabase
       .from("room_members")
       .update({ is_on_mic: on })
@@ -496,6 +502,12 @@ export const useVoiceRoom = (roomId: string | null) => {
     setMembers(prev => prev.map(m =>
       m.user_id === currentUserId ? { ...m, mic_slot: slot, is_on_mic: isOnMic } : m
     ));
+    // 🚀 Broadcast to all other room members for sub-100ms updates
+    presenceChannelRef.current?.send({
+      type: "broadcast",
+      event: "mic-update",
+      payload: { user_id: currentUserId, mic_slot: slot, is_on_mic: isOnMic },
+    });
     const { error } = await supabase
       .from("room_members")
       .update({ mic_slot: slot, is_on_mic: isOnMic })
