@@ -123,7 +123,7 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
       // Configure for low-latency interactive audio (saves battery + CPU)
       try {
-        AgoraRTC.setParameter?.("AUDIO_VOLUME_INDICATION_INTERVAL", 200);
+        (AgoraRTC as any).setParameter?.("AUDIO_VOLUME_INDICATION_INTERVAL", 200);
       } catch { /* ignore */ }
 
       client.on("user-published", async (user: IAgoraRTCRemoteUser, mediaType) => {
