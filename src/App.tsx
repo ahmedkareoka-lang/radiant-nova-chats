@@ -237,12 +237,9 @@ const LevelUpRoot = () => {
  */
 const CatalogPrefetcher = () => {
   useEffect(() => {
-    const { fetchGifts, fetchStoreItems, subscribeRealtime } =
-      require("@/stores/catalogStore").useCatalogStore.getState();
-    // Hydrate immediately (uses cache; revalidates in background)
+    const { fetchGifts, fetchStoreItems, subscribeRealtime } = useCatalogStore.getState();
     fetchGifts();
     fetchStoreItems();
-    // Subscribe to realtime updates so BOSS changes appear instantly for everyone
     const unsub = subscribeRealtime();
     return () => unsub();
   }, []);
