@@ -406,6 +406,10 @@ export const useVoiceRoom = (roomId: string | null) => {
       membersCacheRef.current = null;
       heartbeatInflightRef.current = null;
       supabase.removeChannel(channel);
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+        presenceChannelRef.current = null;
+      }
     };
   }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);
 
