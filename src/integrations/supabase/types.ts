@@ -1028,6 +1028,107 @@ export type Database = {
         }
         Relationships: []
       }
+      recharge_settings: {
+        Row: {
+          id: string
+          notes: string | null
+          updated_at: string
+          usdt_network: string
+          usdt_qr_url: string | null
+          usdt_wallet_address: string
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          usdt_network?: string
+          usdt_qr_url?: string | null
+          usdt_wallet_address?: string
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          usdt_network?: string
+          usdt_qr_url?: string | null
+          usdt_wallet_address?: string
+        }
+        Relationships: []
+      }
+      redeem_code_uses: {
+        Row: {
+          code_id: string
+          coins_awarded: number
+          created_at: string
+          diamonds_awarded: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code_id: string
+          coins_awarded?: number
+          created_at?: string
+          diamonds_awarded?: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code_id?: string
+          coins_awarded?: number
+          created_at?: string
+          diamonds_awarded?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redeem_code_uses_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "redeem_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      redeem_codes: {
+        Row: {
+          code: string
+          coins_amount: number
+          created_at: string
+          created_by: string | null
+          diamonds_amount: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number
+          uses_count: number
+        }
+        Insert: {
+          code: string
+          coins_amount?: number
+          created_at?: string
+          created_by?: string | null
+          diamonds_amount?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number
+          uses_count?: number
+        }
+        Update: {
+          code?: string
+          coins_amount?: number
+          created_at?: string
+          created_by?: string | null
+          diamonds_amount?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number
+          uses_count?: number
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string
@@ -1377,6 +1478,51 @@ export type Database = {
         }
         Relationships: []
       }
+      usdt_recharge_requests: {
+        Row: {
+          admin_notes: string | null
+          amount_usdt: number
+          coins_amount: number
+          created_at: string
+          diamonds_amount: number
+          id: string
+          network: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_usdt: number
+          coins_amount?: number
+          created_at?: string
+          diamonds_amount?: number
+          id?: string
+          network?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_usdt?: number
+          coins_amount?: number
+          created_at?: string
+          diamonds_amount?: number
+          id?: string
+          network?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           country_code: string | null
@@ -1574,6 +1720,10 @@ export type Database = {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
       }
+      approve_usdt_recharge: {
+        Args: { _approve: boolean; _notes?: string; _request_id: string }
+        Returns: Json
+      }
       assign_agency_to_bd: {
         Args: { _agency_id: string; _bd_user_id: string }
         Returns: Json
@@ -1724,6 +1874,7 @@ export type Database = {
       }
       recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
+      redeem_code: { Args: { _code: string }; Returns: Json }
       reject_relationship_request: {
         Args: { _request_id: string }
         Returns: undefined
@@ -1749,6 +1900,16 @@ export type Database = {
           _user2_id: string
         }
         Returns: string
+      }
+      submit_usdt_recharge: {
+        Args: {
+          _amount_usdt: number
+          _coins?: number
+          _diamonds?: number
+          _network?: string
+          _transaction_id: string
+        }
+        Returns: Json
       }
       sweep_expired_perks: { Args: never; Returns: undefined }
       transfer_diamonds_to_user: {
