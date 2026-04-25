@@ -237,13 +237,52 @@ const LevelUpRoot = () => {
  */
 const CatalogPrefetcher = () => {
   useEffect(() => {
-    const { fetchGifts, fetchStoreItems, subscribeRealtime } = useCatalogStore.getState();
-    fetchGifts();
-    fetchStoreItems();
-    const unsub = subscribeRealtime();
-    return () => unsub();
+    let unsub: (() => void) | undefined;
+    const run = () => {
+      const { fetchGifts, fetchStoreItems, subscribeRealtime } = useCatalogStore.getState();
+      fetchGifts();
+      fetchStoreItems();
+      unsub = subscribeRealtime();
+    };
+    // 🚀 Defer to idle — never compete with first paint / route transition
+    let idleId: any;
+    if ("requestIdleCallback" in window) {
+      idleId = (window as any).requestIdleCallback(run, { timeout: 2000 });
+    } else {
+      idleId = setTimeout(run, 300);
+    }
+    return () => {
+      if (typeof unsub === "function") unsub();
+      if ("cancelIdleCallback" in window) (window as any).cancelIdleCallback?.(idleId);
+      else clearTimeout(idleId);
+    };
   }, []);
   return null;
+};
+
+/** 🚀 Defer Vercel telemetry to idle so it doesn't block FCP/TTI */
+const DeferredTelemetry = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const cb = () => setShow(true);
+    let id: any;
+    if ("requestIdleCallback" in window) {
+      id = (window as any).requestIdleCallback(cb, { timeout: 5000 });
+    } else {
+      id = setTimeout(cb, 3000);
+    }
+    return () => {
+      if ("cancelIdleCallback" in window) (window as any).cancelIdleCallback?.(id);
+      else clearTimeout(id);
+    };
+  }, []);
+  if (!show) return null;
+  return (
+    <>
+      <SpeedInsights />
+      <Analytics />
+    </>
+  );
 };
 
 const App = () => {
@@ -256,8 +295,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <SpeedInsights />
-          <Analytics />
+          <DeferredTelemetry />
           {showSplash ? (
             <SplashScreen onFinish={handleSplashFinish} />
           ) : (

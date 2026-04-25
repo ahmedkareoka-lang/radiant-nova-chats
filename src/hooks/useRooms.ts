@@ -35,50 +35,50 @@ export const useRooms = () => {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      // Get host profiles separately
       const hostIds = [...new Set(data.map((r) => r.host_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url, vip_level, is_boss")
-        .in("id", hostIds.length > 0 ? hostIds : ["00000000-0000-0000-0000-000000000000"]);
+      const roomIds = data.map((r) => r.id);
+      const safeHostIds = hostIds.length > 0 ? hostIds : ["00000000-0000-0000-0000-000000000000"];
+      const safeRoomIds = roomIds.length > 0 ? roomIds : ["00000000-0000-0000-0000-000000000000"];
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+      // 🚀 PARALLEL fetch — 4 queries at once instead of waterfall (4x faster)
+      const [profilesRes, membersRes, micMembersRes, hotGiftsRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, vip_level, is_boss")
+          .in("id", safeHostIds),
+        supabase
+          .from("room_members")
+          .select("room_id")
+          .in("room_id", safeRoomIds),
+        supabase
+          .from("room_members")
+          .select("room_id, user_id, mic_slot, profiles:user_id(avatar_url, display_name)")
+          .in("room_id", safeRoomIds)
+          .eq("is_on_mic", true)
+          .order("mic_slot", { ascending: true }),
+        supabase
+          .from("gift_transactions")
+          .select("receiver_id, gold_amount")
+          .gte("created_at", oneHourAgo),
+      ]);
 
       const profileMap: Record<string, any> = {};
-      profiles?.forEach((p) => { profileMap[p.id] = p; });
-
-      // Get member counts
-      const roomIds = data.map((r) => r.id);
-      const { data: members } = await supabase
-        .from("room_members")
-        .select("room_id")
-        .in("room_id", roomIds.length > 0 ? roomIds : ["00000000-0000-0000-0000-000000000000"]);
+      profilesRes.data?.forEach((p) => { profileMap[p.id] = p; });
 
       const counts: Record<string, number> = {};
-      members?.forEach((m) => {
+      membersRes.data?.forEach((m) => {
         counts[m.room_id] = (counts[m.room_id] || 0) + 1;
       });
 
-      // Fetch up to 3 mic members per room for preview avatars (Soulmatch-style)
-      const { data: micMembers } = await supabase
-        .from("room_members")
-        .select("room_id, user_id, mic_slot, profiles:user_id(avatar_url, display_name)")
-        .in("room_id", roomIds.length > 0 ? roomIds : ["00000000-0000-0000-0000-000000000000"])
-        .eq("is_on_mic", true)
-        .order("mic_slot", { ascending: true });
-
       const micMap: Record<string, any[]> = {};
-      micMembers?.forEach((m: any) => {
+      micMembersRes.data?.forEach((m: any) => {
         if (!micMap[m.room_id]) micMap[m.room_id] = [];
         if (micMap[m.room_id].length < 3) micMap[m.room_id].push(m);
       });
 
-      // Fetch hot rooms based on last hour gifts received by host
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { data: hotGifts } = await supabase
-        .from("gift_transactions")
-        .select("receiver_id, gold_amount")
-        .gte("created_at", oneHourAgo);
       const hotMap: Record<string, number> = {};
-      hotGifts?.forEach((g: any) => {
+      hotGiftsRes.data?.forEach((g: any) => {
         hotMap[g.receiver_id] = (hotMap[g.receiver_id] || 0) + Number(g.gold_amount || 0);
       });
 
@@ -98,17 +98,26 @@ export const useRooms = () => {
   useEffect(() => {
     fetchRooms();
 
+    // 🚀 Debounced refetch — coalesce rapid realtime events (max 1 fetch / 800ms)
+    let timer: any = null;
+    const scheduleRefetch = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        fetchRooms();
+      }, 800);
+    };
+
     const channel = supabase
       .channel(`rooms-realtime-${Date.now()}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "rooms" }, () => {
-        fetchRooms();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "room_members" }, () => {
-        fetchRooms();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "rooms" }, scheduleRefetch)
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_members" }, scheduleRefetch)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const createRoom = async (name: string, type: string, isPrivate: boolean, password: string, micCount: number) => {
