@@ -1580,6 +1580,7 @@ export type Database = {
       get_my_agency_overview: { Args: never; Returns: Json }
       get_my_host_events: { Args: never; Returns: Json }
       get_my_pending_invites: { Args: never; Returns: Json }
+      get_my_phone: { Args: never; Returns: string }
       get_my_sent_invites: { Args: never; Returns: Json }
       get_nova_p_tier: {
         Args: { gold_amount: number }
