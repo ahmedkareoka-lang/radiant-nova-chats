@@ -21,6 +21,7 @@ self.onmessage = (e) => {
   const msg = e.data;
   if (!msg || msg.type !== "process") return;
 
+  const _id = msg._id;
   const now = msg.now || Date.now();
   const incoming = Array.isArray(msg.gifts) ? msg.gifts : [];
 
@@ -58,5 +59,5 @@ self.onmessage = (e) => {
     legendary: queue.filter((g) => g.tier === "legendary").length,
   };
 
-  self.postMessage({ type: "processed", queue, stats });
+  self.postMessage({ type: "processed", queue, stats, _id });
 };
