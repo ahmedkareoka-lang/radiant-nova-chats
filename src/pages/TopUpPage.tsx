@@ -426,6 +426,19 @@ const TopUpPage = () => {
           </div>
         </main>
 
+        {/* Binance Pay modal — locked amount, deep links, order id */}
+        <BinancePayModal
+          open={payOpen}
+          onClose={() => setPayOpen(false)}
+          pkg={selectedPackage}
+          walletAddress={settings?.usdt_wallet_address || ""}
+          network={settings?.usdt_network || "TRC20"}
+          qrUrl={settings?.usdt_qr_url || null}
+          payUrl={null /* plug Binance Pay API order URL here when available */}
+          submitting={submitting}
+          onSubmit={submitUsdt}
+        />
+
         <BottomNav />
       </div>
     </PageTransition>
