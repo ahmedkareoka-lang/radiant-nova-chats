@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createQueryClient } from "@/lib/react-query";
 import { BrowserRouter, Route, Routes, useLocation, Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -80,38 +80,17 @@ const LoveHistoryPage = lazyWithRetry(() => import("./pages/LoveHistoryPage"));
 const FramePreviewPage = lazyWithRetry(() => import("./pages/FramePreviewPage"));
 const BDDashboard = lazyWithRetry(() => import("./pages/BDDashboard"));
 
-// 🚀 World-class cache: aggressive freshness, no wasteful refetches
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 2 * 60_000,        // 2 min fresh — fewer round trips
-      gcTime: 10 * 60_000,          // keep 10 min in memory for instant back-nav
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: "always", // re-sync once after reconnect (lightweight)
-      refetchOnMount: false,        // trust the cache; manual invalidate when needed
-      retry: (failureCount, error: any) => {
-        // Don't retry auth errors — they won't fix themselves
-        const status = error?.status ?? error?.statusCode;
-        if (status === 401 || status === 403) return false;
-        return failureCount < 1;
-      },
-      retryDelay: (i) => Math.min(1000 * 2 ** i, 8000),
-      networkMode: "online",
-    },
-    mutations: {
-      retry: 0,
-      networkMode: "online",
-      onError: (error: any) => {
-        if (import.meta.env.DEV) console.error("❌ Mutation error:", error);
-        const msg = error?.message || error?.error_description;
-        // Skip generic toasts for auth/permission — handled by UI flows
-        const status = error?.status ?? error?.statusCode;
-        if (status === 401 || status === 403) return;
-        if (msg) toast.error(msg);
-      },
-    },
-  },
-});
+// 🚀 Singleton QueryClient — full config lives in `@/lib/react-query`
+const queryClient = createQueryClient();
+
+// 🛠️ Devtools — lazy-loaded so they're stripped from production bundles
+const ReactQueryDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import("@tanstack/react-query-devtools").then((m) => ({
+        default: m.ReactQueryDevtools,
+      })),
+    )
+  : null;
 
 const RouteFallback = () => (
   <div className="min-h-screen flex flex-col items-center justify-center bg-transparent gap-3 animate-fade-in">
@@ -329,6 +308,11 @@ const App = () => {
           )}
         </TooltipProvider>
       </LanguageProvider>
+      {ReactQueryDevtools && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+        </Suspense>
+      )}
     </QueryClientProvider>
   );
 };
