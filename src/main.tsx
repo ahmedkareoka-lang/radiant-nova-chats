@@ -3,6 +3,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { Capacitor } from "@capacitor/core";
 import { registerServiceWorker } from "./lib/registerServiceWorker";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // 🛡️ Global recovery for stale chunk imports after redeploys.
 // When a dynamic import fails (old hash no longer on CDN), reload once.
@@ -39,7 +40,11 @@ if (Capacitor.isNativePlatform()) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>,
+);
 
 // 🚀 Activate Edge asset caching after app boot (web only — Capacitor uses native cache)
 if (!Capacitor.isNativePlatform()) {
