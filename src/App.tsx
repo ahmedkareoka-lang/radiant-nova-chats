@@ -295,8 +295,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <SpeedInsights />
-          <Analytics />
+          <DeferredTelemetry />
           {showSplash ? (
             <SplashScreen onFinish={handleSplashFinish} />
           ) : (
