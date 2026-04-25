@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GiftMediaPlayer from "@/components/GiftMediaPlayer";
 
@@ -37,7 +37,7 @@ const getFallbackDuration = (amount: number, explicit?: number) => {
 const MIN_VISIBLE_MS = 2200;  // never disappear too fast
 const MAX_VISIBLE_MS = 15000; // hard cap to avoid runaway animations
 
-const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
+const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [mediaReady, setMediaReady] = useState(false);
@@ -146,5 +146,15 @@ const FullscreenGiftEffect = ({ gift, onComplete, muted }: FullscreenGiftEffectP
     </AnimatePresence>
   );
 };
+
+// 🚀 React.memo with custom comparator: re-render only when the gift identity
+// changes (id) — protects audio thread from UI re-render pressure.
+const FullscreenGiftEffect = memo(
+  FullscreenGiftEffectInner,
+  (prev, next) =>
+    prev.gift?.id === next.gift?.id &&
+    prev.muted === next.muted &&
+    prev.onComplete === next.onComplete,
+);
 
 export default FullscreenGiftEffect;

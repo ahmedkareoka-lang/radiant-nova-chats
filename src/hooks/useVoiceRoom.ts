@@ -210,6 +210,11 @@ export const useVoiceRoom = (roomId: string | null) => {
     }
   }, [roomId]);
 
+  // 🚀 Persistent presence/broadcast channel for SUB-100ms mic & typing updates.
+  // We still keep postgres_changes as the source of truth (RLS-protected),
+  // but Broadcast bypasses the DB round-trip for instant UI feedback.
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   useEffect(() => {
     if (!roomId) return;
 
@@ -222,6 +227,24 @@ export const useVoiceRoom = (roomId: string | null) => {
     };
 
     init();
+
+    // 🚀 Lightweight Broadcast channel for instant mic-slot updates.
+    // Updates the local members array immediately on receipt — postgres_changes
+    // listener will then reconcile with the canonical row from the DB.
+    const presenceChannel = supabase.channel(`room-presence-${roomId}`, {
+      config: { broadcast: { self: false, ack: false } },
+    })
+      .on("broadcast", { event: "mic-update" }, (payload) => {
+        const { user_id, mic_slot, is_on_mic } = payload.payload || {};
+        if (!user_id) return;
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.user_id === user_id ? { ...m, mic_slot, is_on_mic } : m
+          )
+        );
+      })
+      .subscribe();
+    presenceChannelRef.current = presenceChannel;
 
     const channel = supabase
       .channel(`room-${roomId}-${Date.now()}`)
@@ -383,6 +406,10 @@ export const useVoiceRoom = (roomId: string | null) => {
       membersCacheRef.current = null;
       heartbeatInflightRef.current = null;
       supabase.removeChannel(channel);
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+        presenceChannelRef.current = null;
+      }
     };
   }, [roomId, fetchMembers, fetchMessages, fetchRoomData]);
 
@@ -415,24 +442,72 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const sendMessage = async (content: string) => {
     if (!roomId || !currentUserId || !content.trim()) return;
-    await supabase.from("messages").insert({
+    const trimmed = content.trim();
+
+    // 🚀 Optimistic UI: show the message instantly to the sender (latency
+    // compensation). The realtime listener will replace this temp entry with
+    // the real one on echo. If the insert fails, we roll back.
+    const tempId = `optimistic-${Date.now()}-${Math.random()}`;
+    const optimisticMsg: RoomMessage = {
+      id: tempId,
+      sender_id: currentUserId,
+      content: trimmed,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    const { error } = await supabase.from("messages").insert({
       sender_id: currentUserId,
       room_id: roomId,
-      content: content.trim(),
+      content: trimmed,
     });
+
+    if (error) {
+      // Rollback: remove the optimistic entry
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    } else {
+      // Drop the optimistic temp; realtime fetch will bring the real row.
+      // We keep it in place momentarily so the user doesn't see a flicker —
+      // fetchMessages will replace the whole list shortly.
+      setTimeout(() => {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      }, 1500);
+    }
   };
 
   const toggleMic = async (on: boolean) => {
     if (!roomId || !currentUserId) return;
-    await supabase.from("room_members").update({ is_on_mic: on }).eq("room_id", roomId).eq("user_id", currentUserId);
+    // Optimistic local update
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.user_id === currentUserId ? { ...m, is_on_mic: on } : m
+      )
+    );
+    // 🚀 Broadcast instantly to everyone else in the room (sub-100ms)
+    presenceChannelRef.current?.send({
+      type: "broadcast",
+      event: "mic-update",
+      payload: { user_id: currentUserId, mic_slot: null, is_on_mic: on },
+    });
+    await supabase
+      .from("room_members")
+      .update({ is_on_mic: on })
+      .eq("room_id", roomId)
+      .eq("user_id", currentUserId);
   };
 
   const updateMicSlot = async (slot: number | null, isOnMic: boolean) => {
     if (!roomId || !currentUserId) return;
-    // Optimistic update
+    // Optimistic update — UI reflects the change instantly.
     setMembers(prev => prev.map(m =>
       m.user_id === currentUserId ? { ...m, mic_slot: slot, is_on_mic: isOnMic } : m
     ));
+    // 🚀 Broadcast to all other room members for sub-100ms updates
+    presenceChannelRef.current?.send({
+      type: "broadcast",
+      event: "mic-update",
+      payload: { user_id: currentUserId, mic_slot: slot, is_on_mic: isOnMic },
+    });
     const { error } = await supabase
       .from("room_members")
       .update({ mic_slot: slot, is_on_mic: isOnMic })
@@ -440,7 +515,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       .eq("user_id", currentUserId);
     if (error) {
       // Revert on error
-      fetchMembers();
+      fetchMembers(true);
     }
   };
 
