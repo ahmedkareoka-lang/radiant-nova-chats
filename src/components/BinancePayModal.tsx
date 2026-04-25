@@ -86,12 +86,17 @@ const BinancePayModal = ({
   };
 
   const openBinance = () => {
-    if (!links) return;
-    // Prefer real Binance Pay link if backend provided one
+    // Prefer real Binance Pay link if provided (per-package)
     if (payUrl) {
-      window.open(payUrl, "_blank", "noopener,noreferrer");
+      // Use location.href on mobile for better deep-link handoff to Binance app
+      if (isMobile()) {
+        window.location.href = payUrl;
+      } else {
+        window.open(payUrl, "_blank", "noopener,noreferrer");
+      }
       return;
     }
+    if (!links) return;
     if (isMobile()) {
       // Try universal (opens app if installed). Fallback to native after timeout.
       const t = Date.now();
@@ -170,46 +175,58 @@ const BinancePayModal = ({
                 </button>
               </div>
 
-              {/* Wallet card */}
-              <div className="rounded-2xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-purple-200/80 font-bold">عنوان المحفظة · شبكة {network}</p>
-                  <span className="text-[9px] text-emerald-300 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" /> رسمي
-                  </span>
-                </div>
-                <p className="font-mono text-[11px] break-all text-purple-100 bg-background/60 rounded-xl p-2.5 border border-purple-500/20" dir="ltr">
-                  {walletAddress || "—"}
-                </p>
-                <button
-                  onClick={() => copyTo(walletAddress, "address")}
-                  disabled={!walletAddress}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold hover:bg-purple-500/30 disabled:opacity-40 transition"
-                >
-                  {copiedField === "address" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copiedField === "address" ? "تم النسخ ✓" : "نسخ العنوان"}
-                </button>
+              {/* Wallet card — only when no direct payUrl is available */}
+              {!payUrl && (
+                <div className="rounded-2xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] text-purple-200/80 font-bold">عنوان المحفظة · شبكة {network}</p>
+                    <span className="text-[9px] text-emerald-300 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> رسمي
+                    </span>
+                  </div>
+                  <p className="font-mono text-[11px] break-all text-purple-100 bg-background/60 rounded-xl p-2.5 border border-purple-500/20" dir="ltr">
+                    {walletAddress || "—"}
+                  </p>
+                  <button
+                    onClick={() => copyTo(walletAddress, "address")}
+                    disabled={!walletAddress}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold hover:bg-purple-500/30 disabled:opacity-40 transition"
+                  >
+                    {copiedField === "address" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedField === "address" ? "تم النسخ ✓" : "نسخ العنوان"}
+                  </button>
 
-                {qrUrl && (
-                  <details className="group">
-                    <summary className="cursor-pointer text-[10px] text-purple-300/80 flex items-center gap-1 list-none">
-                      <QrCode className="w-3 h-3" />
-                      عرض QR Code
-                    </summary>
-                    <div className="mt-2 flex justify-center">
-                      <div className="p-2 rounded-xl bg-white">
-                        <img src={qrUrl} alt="USDT QR" loading="lazy" className="w-36 h-36 object-contain" />
+                  {qrUrl && (
+                    <details className="group">
+                      <summary className="cursor-pointer text-[10px] text-purple-300/80 flex items-center gap-1 list-none">
+                        <QrCode className="w-3 h-3" />
+                        عرض QR Code
+                      </summary>
+                      <div className="mt-2 flex justify-center">
+                        <div className="p-2 rounded-xl bg-white">
+                          <img src={qrUrl} alt="USDT QR" loading="lazy" className="w-36 h-36 object-contain" />
+                        </div>
                       </div>
-                    </div>
-                  </details>
-                )}
-              </div>
+                    </details>
+                  )}
+                </div>
+              )}
+
+              {/* Direct Binance Pay link badge */}
+              {payUrl && (
+                <div className="rounded-2xl p-3 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <p className="text-[11px] text-emerald-100/90 leading-relaxed">
+                    رابط دفع مباشر مع <b>Binance Pay</b> · المبلغ مُقفل تلقائياً عند فتح التطبيق.
+                  </p>
+                </div>
+              )}
 
               {/* Open Binance buttons */}
               <div className="space-y-2">
                 <button
                   onClick={openBinance}
-                  disabled={!walletAddress}
+                  disabled={!payUrl && !walletAddress}
                   className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 text-black
                     bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400
                     shadow-[0_8px_30px_hsl(45_95%_55%/0.4)] disabled:opacity-40 disabled:shadow-none active:scale-[0.98] transition"
