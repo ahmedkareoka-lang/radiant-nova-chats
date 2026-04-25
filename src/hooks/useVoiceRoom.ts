@@ -372,6 +372,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     return () => {
       window.removeEventListener("beforeunload", handleUnload);
       window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("profile-cosmetics-changed", handleLocalEquip);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       clearInterval(staleSweepRef);
