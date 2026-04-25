@@ -210,6 +210,11 @@ export const useVoiceRoom = (roomId: string | null) => {
     }
   }, [roomId]);
 
+  // 🚀 Persistent presence/broadcast channel for SUB-100ms mic & typing updates.
+  // We still keep postgres_changes as the source of truth (RLS-protected),
+  // but Broadcast bypasses the DB round-trip for instant UI feedback.
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
   useEffect(() => {
     if (!roomId) return;
 
@@ -222,6 +227,24 @@ export const useVoiceRoom = (roomId: string | null) => {
     };
 
     init();
+
+    // 🚀 Lightweight Broadcast channel for instant mic-slot updates.
+    // Updates the local members array immediately on receipt — postgres_changes
+    // listener will then reconcile with the canonical row from the DB.
+    const presenceChannel = supabase.channel(`room-presence-${roomId}`, {
+      config: { broadcast: { self: false, ack: false } },
+    })
+      .on("broadcast", { event: "mic-update" }, (payload) => {
+        const { user_id, mic_slot, is_on_mic } = payload.payload || {};
+        if (!user_id) return;
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.user_id === user_id ? { ...m, mic_slot, is_on_mic } : m
+          )
+        );
+      })
+      .subscribe();
+    presenceChannelRef.current = presenceChannel;
 
     const channel = supabase
       .channel(`room-${roomId}-${Date.now()}`)
