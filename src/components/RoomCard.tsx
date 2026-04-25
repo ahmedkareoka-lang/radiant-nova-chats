@@ -1,5 +1,6 @@
 import { Users, Flame } from "lucide-react";
 import DualBadge from "./DualBadge";
+import SmartImage from "./SmartImage";
 
 interface MicPreview {
   user_id: string;
@@ -80,7 +81,13 @@ const RoomCard = ({
       {/* Host avatar centered */}
       <div className="absolute top-[34%] left-1/2 -translate-x-1/2 -translate-y-1/2">
         <div className={`w-14 h-14 rounded-full overflow-hidden ${isVip ? "ring-2 ring-accent glow-gold" : "ring-2 ring-primary/60"}`}>
-          <img src={hostImage} alt={hostName} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+          <SmartImage
+            src={hostImage}
+            alt={hostName}
+            width={56}
+            variant="avatar"
+            className="w-full h-full"
+          />
         </div>
         {isVip && <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-base">👑</div>}
       </div>
@@ -94,11 +101,13 @@ const RoomCard = ({
               className="w-5 h-5 rounded-full ring-1 ring-background overflow-hidden bg-secondary"
               style={{ zIndex: 3 - i }}
             >
-              {m.profiles?.avatar_url ? (
-                <img src={m.profiles.avatar_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/40 to-accent/40" />
-              )}
+              <SmartImage
+                src={m.profiles?.avatar_url}
+                alt=""
+                width={20}
+                variant="thumb"
+                className="w-full h-full"
+              />
             </div>
           ))}
         </div>
