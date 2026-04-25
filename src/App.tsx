@@ -263,6 +263,7 @@ const App = () => {
           ) : (
             <BrowserRouter>
               <ActiveRoomProvider>
+                <CatalogPrefetcher />
                 <AnimatedRoutes />
                 <FloatingRoomBubble />
                 <GlobalGiftTicker />
