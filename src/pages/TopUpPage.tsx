@@ -44,7 +44,7 @@ const TopUpPage = () => {
   // Binance state
   const [settings, setSettings] = useState<{ usdt_wallet_address: string; usdt_network: string; usdt_qr_url: string | null } | null>(null);
   const [selectedPkg, setSelectedPkg] = useState<number | null>(null);
-  const [txId, setTxId] = useState("");
+  const [payOpen, setPayOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Agents
