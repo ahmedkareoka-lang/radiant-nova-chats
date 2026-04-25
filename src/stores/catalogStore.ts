@@ -42,10 +42,14 @@ interface CatalogState {
   storeItems: CatalogStoreItem[];
   giftsLoaded: boolean;
   storeLoaded: boolean;
+  lastFetchedAt: number;
   fetchGifts: (force?: boolean) => Promise<void>;
   fetchStoreItems: (force?: boolean) => Promise<void>;
   subscribeRealtime: () => () => void;
 }
+
+// 1 hour TTL for persisted cache; realtime keeps it fresh while session is active
+const CATALOG_TTL_MS = 60 * 60 * 1000;
 
 export const useCatalogStore = create<CatalogState>()(
   persist(
@@ -54,9 +58,11 @@ export const useCatalogStore = create<CatalogState>()(
       storeItems: [],
       giftsLoaded: false,
       storeLoaded: false,
+      lastFetchedAt: 0,
 
       async fetchGifts(force = false) {
-        if (!force && get().giftsLoaded && get().gifts.length > 0) return;
+        const fresh = Date.now() - get().lastFetchedAt < CATALOG_TTL_MS;
+        if (!force && fresh && get().gifts.length > 0) return;
         const { data } = await supabase
           .from("gifts")
           .select("*")
@@ -76,18 +82,20 @@ export const useCatalogStore = create<CatalogState>()(
               created_at: g.created_at,
             })),
             giftsLoaded: true,
+            lastFetchedAt: Date.now(),
           });
         }
       },
 
       async fetchStoreItems(force = false) {
-        if (!force && get().storeLoaded && get().storeItems.length > 0) return;
+        const fresh = Date.now() - get().lastFetchedAt < CATALOG_TTL_MS;
+        if (!force && fresh && get().storeItems.length > 0) return;
         const { data } = await supabase
           .from("store_items")
           .select("*")
           .eq("is_active", true);
         if (data) {
-          set({ storeItems: data as any, storeLoaded: true });
+          set({ storeItems: data as any, storeLoaded: true, lastFetchedAt: Date.now() });
         }
       },
 
@@ -118,7 +126,7 @@ export const useCatalogStore = create<CatalogState>()(
       name: "nova-catalog-cache",
       storage: createJSONStorage(() => localStorage),
       // Only persist data, not loading flags (so we always re-validate in background)
-      partialize: (s) => ({ gifts: s.gifts, storeItems: s.storeItems }),
+      partialize: (s) => ({ gifts: s.gifts, storeItems: s.storeItems, lastFetchedAt: s.lastFetchedAt }),
     },
   ),
 );
