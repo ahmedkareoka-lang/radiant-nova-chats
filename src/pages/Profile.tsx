@@ -52,6 +52,16 @@ const charmThreshold = (lvl: number) => {
   return 90_000_000;
 };
 
+const PROFILE_PUBLIC_FIELDS = `
+  id, user_id, display_name, avatar_url, cover_url, gender, age, country_code,
+  coins, diamonds, level, vip_level, vip_expiry, nova_p_level, nova_p_expiry,
+  wealth_level, wealth_xp, charisma_level, charisma_xp, total_spend_gold,
+  is_boss, is_agent, is_host, is_bd, agency_eligible, agency_id,
+  equipped_frame, equipped_badge, equipped_chat_bubble,
+  equipped_entrance_effect, equipped_name_style,
+  entrance_video_url, entrance_audio_url, created_at
+`;
+
 const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
@@ -61,6 +71,7 @@ const Profile = () => {
   const [newItemsCount, setNewItemsCount] = useState(0);
   const [showFramePicker, setShowFramePicker] = useState(false);
   const [genderPicking, setGenderPicking] = useState(false);
+  const [genderSaving, setGenderSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
@@ -77,7 +88,12 @@ const Profile = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/login"); return; }
       setMyId(user.id);
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select(PROFILE_PUBLIC_FIELDS).eq("id", user.id).single();
+      if (error) {
+        toast.error("تعذر تحميل الملف الشخصي");
+        setLoading(false);
+        return;
+      }
       setProfile(data);
       const { count: sentCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("sender_id", user.id);
       const { count: receivedCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
@@ -118,11 +134,22 @@ const Profile = () => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
   };
 
-  const setGender = async (gender: string) => {
-    await supabase.from("profiles").update({ gender }).eq("id", profile.id);
+  const setGender = async (gender: "male" | "female") => {
+    if (!profile?.id || genderSaving) return;
+    setGenderSaving(true);
+    const previousProfile = profile;
     setProfile({ ...profile, gender });
-    setGenderPicking(false);
-    toast.success("تم تحديد الجنس! ✅");
+    try {
+      const { error } = await supabase.from("profiles").update({ gender }).eq("id", profile.id);
+      if (error) throw error;
+      setGenderPicking(false);
+      toast.success("تم تحديد الجنس! ✅");
+    } catch (err: any) {
+      setProfile(previousProfile);
+      toast.error("فشل تحديد الجنس: " + (err.message || "خطأ"));
+    } finally {
+      setGenderSaving(false);
+    }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,10 +213,10 @@ const Profile = () => {
               <h3 className="font-bold text-lg">حدد جنسك</h3>
               <p className="text-xs text-muted-foreground">يتم تحديده مرة واحدة فقط</p>
               <div className="flex gap-3">
-                <button onClick={() => setGender("male")} className="flex-1 py-4 rounded-2xl bg-blue-500/20 border border-blue-500/30 text-center">
+                <button disabled={genderSaving} onClick={() => setGender("male")} className="flex-1 py-4 rounded-2xl bg-primary/20 border border-primary/30 text-center disabled:opacity-60">
                   <span className="text-3xl">👨</span><p className="text-xs font-bold mt-1">ذكر</p>
                 </button>
-                <button onClick={() => setGender("female")} className="flex-1 py-4 rounded-2xl bg-pink-500/20 border border-pink-500/30 text-center">
+                <button disabled={genderSaving} onClick={() => setGender("female")} className="flex-1 py-4 rounded-2xl bg-accent/20 border border-accent/30 text-center disabled:opacity-60">
                   <span className="text-3xl">👩</span><p className="text-xs font-bold mt-1">أنثى</p>
                 </button>
               </div>
