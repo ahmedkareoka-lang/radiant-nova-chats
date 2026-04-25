@@ -19,6 +19,7 @@ import { Analytics } from "@vercel/analytics/react";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
+import { useCatalogStore } from "@/stores/catalogStore";
 
 /**
  * 🛡️ Resilient lazy import — auto-recovers from "Importing a module script failed"
@@ -228,6 +229,23 @@ const LevelUpRoot = () => {
   );
 };
 
+/**
+ * 🚀 Pre-fetch & cache catalog data once at app start.
+ * Gifts/store items are loaded into Zustand (persisted to localStorage),
+ * so opening the gift sheet later is instant — no spinners, no waiting.
+ * Realtime channels keep the cache fresh in the background.
+ */
+const CatalogPrefetcher = () => {
+  useEffect(() => {
+    const { fetchGifts, fetchStoreItems, subscribeRealtime } = useCatalogStore.getState();
+    fetchGifts();
+    fetchStoreItems();
+    const unsub = subscribeRealtime();
+    return () => unsub();
+  }, []);
+  return null;
+};
+
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
@@ -245,6 +263,7 @@ const App = () => {
           ) : (
             <BrowserRouter>
               <ActiveRoomProvider>
+                <CatalogPrefetcher />
                 <AnimatedRoutes />
                 <FloatingRoomBubble />
                 <GlobalGiftTicker />
