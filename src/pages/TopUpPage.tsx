@@ -436,7 +436,7 @@ const TopUpPage = () => {
           walletAddress={settings?.usdt_wallet_address || ""}
           network={settings?.usdt_network || "TRC20"}
           qrUrl={settings?.usdt_qr_url || null}
-          payUrl={null /* plug Binance Pay API order URL here when available */}
+          payUrl={selectedPackage?.payUrl || null}
           submitting={submitting}
           onSubmit={submitUsdt}
         />
