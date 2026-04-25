@@ -44,10 +44,18 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [mediaReady, setMediaReady] = useState(false);
 
-  // Reset on every new gift
+  // Reset on every new gift + record gift event for rate tracking
   useEffect(() => {
     setMediaReady(false);
     if (!gift) return;
+    recordGiftEvent();
+
+    // 🚀 Under heavy load (>8 gifts/sec), skip the heavy fullscreen effect —
+    // the global ticker/banner still shows the gift, but Agora keeps priority.
+    if (!shouldRenderHeavyEffect()) {
+      onComplete();
+      return;
+    }
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
