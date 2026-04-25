@@ -10,6 +10,7 @@ import NovaSpinner from "@/components/NovaSpinner";
 import EmptyState from "@/components/EmptyState";
 import DualBadge from "@/components/DualBadge";
 import ReactMarkdown from "react-markdown";
+import VirtualizedMessageList from "@/components/VirtualizedMessageList";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
@@ -306,24 +307,10 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto px-4 py-4 max-w-lg mx-auto w-full space-y-3">
-        {messages.map((msg) => {
-          const isMine = msg.sender_id === currentUserId;
-          return (
-            <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                isMine ? "gradient-neon text-primary-foreground rounded-br-sm" : "bg-secondary text-foreground rounded-bl-sm"
-              }`}>
-                {!isMine && <p className="text-[10px] font-bold text-primary mb-0.5">{msg.sender?.display_name}</p>}
-                <p>{msg.content}</p>
-                <p className="text-[8px] opacity-60 mt-1 text-right">
-                  {new Date(msg.created_at).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <VirtualizedMessageList
+        messages={messages as any}
+        currentUserId={currentUserId}
+      />
 
       <div className="border-t border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)" }}>
         <div className="flex gap-2 max-w-lg mx-auto">
