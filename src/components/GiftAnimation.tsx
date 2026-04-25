@@ -79,58 +79,60 @@ interface GiftAnimationProps {
   roomId?: string;
 }
 
-const GiftAnimation = ({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, broadcastGift, roomId }: GiftAnimationProps) => {
+const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverName, roomMembers, onMultiGiftSent, broadcastGift, roomId }: GiftAnimationProps) => {
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [burst, setBurst] = useState(false);
   const [sending, setSending] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
   const [showMulti, setShowMulti] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
-  const [balance, setBalance] = useState(0);
-  const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [activeTab, setActiveTab] = useState<string>("general");
   const { sendGift } = useGifts();
 
+  // 🚀 Read gifts from cached Zustand store (instant — no network wait)
+  const cachedGifts = useCatalogStore((s) => s.gifts);
+  const fetchGifts = useCatalogStore((s) => s.fetchGifts);
+
+  // Adapt cached gifts to local GiftItem shape (memoized — no re-compute on every render)
+  const gifts: GiftItem[] = useMemo(
+    () =>
+      cachedGifts.map((g) => ({
+        name: g.name,
+        price: g.price,
+        image_url: g.image_url,
+        lottie_url: g.lottie_url,
+        video_url: g.video_url,
+        tier: g.tier,
+        duration_ms: g.duration_ms || undefined,
+        category: g.category,
+        created_at: g.created_at,
+        emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
+      })),
+    [cachedGifts],
+  );
+
+  // Ensure catalog is hydrated (instant if persisted)
   useEffect(() => {
-    const fetchGifts = async () => {
-      const { data } = await supabase.from("gifts").select("*").order("price", { ascending: true });
-      const dbGifts = (data as any[])?.map(g => ({
-          name: g.name,
-          price: Number(g.price),
-          image_url: g.image_url,
-          lottie_url: g.lottie_url,
-          video_url: g.video_url,
-          tier: g.tier,
-          duration_ms: g.duration_ms,
-          category: g.category || "general",
-          created_at: g.created_at,
-          emoji: g.image_url || g.lottie_url || g.video_url ? undefined : "🎁",
-        })) || [];
-      // Use ONLY gifts from database (BOSS-managed). No fallback or static catalog.
-      setGifts(dbGifts);
-    };
-    fetchGifts();
-    // Realtime updates for gifts catalog
-    const channel = supabase
-      .channel("gifts-catalog-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "gifts" }, () => fetchGifts())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+    if (cachedGifts.length === 0) fetchGifts();
+  }, [cachedGifts.length, fetchGifts]);
+
+  // 🚀 Read balance from profile store (instant) — sync to local state for UX
+  const cachedProfile = useProfileStore((s) => s.profile);
+  const balance = cachedProfile?.coins ?? 0;
 
   // Cache sender display name so handleSend doesn't have to await a profile fetch.
   const cachedSenderNameRef = useRef<string>("مستخدم");
 
   useEffect(() => {
+    if (cachedProfile?.display_name) {
+      cachedSenderNameRef.current = cachedProfile.display_name;
+    }
+  }, [cachedProfile?.display_name]);
+
+  useEffect(() => {
     if (!senderId || !isOpen) return;
-    const fetchSenderData = async () => {
-      const { data } = await supabase.from("profiles").select("coins, display_name").eq("id", senderId).single();
-      if (data) {
-        setBalance(data.coins);
-        cachedSenderNameRef.current = data.display_name || "مستخدم";
-      }
-    };
-    fetchSenderData();
+    // Background SWR refresh — keeps balance fresh without blocking UI
+    useProfileStore.getState().fetchProfile(senderId);
   }, [senderId, isOpen]);
 
   if (!isOpen) return null;
