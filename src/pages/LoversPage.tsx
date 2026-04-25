@@ -1,14 +1,20 @@
-import { ArrowLeft, Heart, Sparkles, X, Users, History } from "lucide-react";
+import { ArrowLeft, Heart, Sparkles, History, Inbox, Send } from "lucide-react";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PageTransition from "@/components/PageTransition";
 import LoveBadge from "@/components/LoveBadge";
-import { LOVE_PERKS, LOVE_THRESHOLDS, LOVE_ACTIVATION_COST, getLoveProgress } from "@/lib/loveLevels";
+import { LOVE_PERKS, LOVE_THRESHOLDS, getLoveProgress } from "@/lib/loveLevels";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
+import { useRelationshipRequests } from "@/hooks/useRelationshipRequests";
+import { RELATIONSHIP_TYPES, type RelationshipType } from "@/lib/relationshipTypes";
+import RelationshipRequestModal from "@/components/RelationshipRequestModal";
+import RelationshipRequestCard from "@/components/RelationshipRequestCard";
+import GiftMemoryWall from "@/components/GiftMemoryWall";
+import { differenceInDays } from "date-fns";
 
 interface Mutual {
   id: string;
@@ -17,14 +23,23 @@ interface Mutual {
   user_id: string;
 }
 
+type Tab = "couple" | "requests" | "memories";
+
 const LoversPage = () => {
   const navigate = useNavigate();
   const [myId, setMyId] = useState<string | null>(null);
   const [myProfile, setMyProfile] = useState<{ avatar_url: string | null; display_name: string; coins: number } | null>(null);
   const [mutuals, setMutuals] = useState<Mutual[]>([]);
   const [showPicker, setShowPicker] = useState(false);
-  const [activating, setActivating] = useState(false);
+  const [tab, setTab] = useState<Tab>("couple");
+
   const { couple, refetch } = useLoveCouple(myId);
+  const { incoming, outgoing, refetch: refetchRequests } = useRelationshipRequests(myId);
+
+  const relType = (couple as any)?.relationship_type as RelationshipType | undefined ?? "lover";
+  const meta = RELATIONSHIP_TYPES[relType];
+  const anniversaryDate = (couple as any)?.anniversary_date ?? (couple as any)?.activated_at;
+  const daysTogether = anniversaryDate ? differenceInDays(new Date(), new Date(anniversaryDate)) : 0;
 
   useEffect(() => {
     (async () => {
@@ -38,7 +53,6 @@ const LoversPage = () => {
 
   const loadMutuals = async () => {
     if (!myId) return;
-    // Choose partner from people I FOLLOW (المتابَعون)
     const { data: iFollow } = await supabase.from("follows").select("following_id").eq("follower_id", myId);
     if (!iFollow) return;
     const followingIds = iFollow.map((r) => r.following_id);
@@ -51,37 +65,31 @@ const LoversPage = () => {
   };
 
   const handleOpenPicker = async () => {
-    if (couple) { toast.info("لديك حبيب/ة بالفعل"); return; }
-    if ((myProfile?.coins ?? 0) < LOVE_ACTIVATION_COST) {
-      toast.error(`تحتاج ${LOVE_ACTIVATION_COST.toLocaleString()} عملة للتفعيل`);
-      return;
-    }
+    if (couple) { toast.info("لديك علاقة نشطة بالفعل"); return; }
     await loadMutuals();
     setShowPicker(true);
   };
 
-  const handleActivate = async (partnerId: string) => {
-    setActivating(true);
-    const { error } = await supabase.rpc("activate_love_couple", { _partner_id: partnerId });
-    setActivating(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("💕 تم تفعيل علاقة حبيبين!");
-    setShowPicker(false);
-    refetch();
-    // refresh balance
-    const { data: p } = await supabase.from("profiles").select("avatar_url, display_name, coins").eq("id", myId!).single();
-    setMyProfile(p as any);
-  };
-
   const handleBreakup = async () => {
-    if (!confirm("هل أنت متأكد من إلغاء علاقة حبيبين؟")) return;
+    if (!confirm("هل أنت متأكد من إنهاء العلاقة؟")) return;
     const { error } = await supabase.rpc("deactivate_love_couple");
     if (error) { toast.error(error.message); return; }
     toast.success("تم الإلغاء");
     refetch();
   };
 
+  const refreshAll = async () => {
+    await Promise.all([
+      refetch(),
+      refetchRequests(),
+      myId ? supabase.from("profiles").select("avatar_url, display_name, coins").eq("id", myId).single().then(({ data }) => setMyProfile(data as any)) : Promise.resolve(),
+    ]);
+  };
+
   const progress = couple ? getLoveProgress(couple.love_points) : null;
+  const totalRequests = incoming.length + outgoing.length;
+
+  const headerGradient = useMemo(() => couple ? meta.gradient : "linear-gradient(135deg, hsl(330 80% 35%), hsl(280 70% 30%))", [couple, meta]);
 
   return (
     <PageTransition>
@@ -90,9 +98,7 @@ const LoversPage = () => {
       }}>
         {/* Romantic Banner */}
         <div className="relative h-56 overflow-hidden">
-          <div className="absolute inset-0" style={{
-            background: "linear-gradient(135deg, hsl(330 80% 35%) 0%, hsl(280 70% 30%) 50%, hsl(340 80% 40%) 100%)",
-          }} />
+          <div className="absolute inset-0" style={{ background: headerGradient }} />
           {/* Floating hearts */}
           {[...Array(15)].map((_, i) => (
             <motion.div
@@ -107,7 +113,7 @@ const LoversPage = () => {
               animate={{ y: -40 }}
               transition={{ duration: 6 + (i % 4), repeat: Infinity, delay: i * 0.4, ease: "linear" }}
             >
-              {i % 3 === 0 ? "💖" : i % 3 === 1 ? "💕" : "🌸"}
+              {i % 3 === 0 ? meta.emoji : i % 3 === 1 ? "💕" : "🌸"}
             </motion.div>
           ))}
           <div className="absolute inset-0" style={{
@@ -127,192 +133,242 @@ const LoversPage = () => {
 
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 z-10">
             <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-              <Heart className="w-14 h-14 text-pink-300 fill-pink-400" style={{ filter: "drop-shadow(0 0 20px hsl(330 90% 60%))" }} />
+              <Heart className="w-14 h-14 text-pink-300 fill-pink-400" style={{ filter: `drop-shadow(0 0 20px ${meta.glow})` }} />
             </motion.div>
-            <h1 className="text-3xl font-black text-white" style={{ textShadow: "0 0 16px hsl(330 90% 60%)" }}>
-              حبيبين 💕
+            <h1 className="text-3xl font-black text-white" style={{ textShadow: `0 0 16px ${meta.glow}` }}>
+              العلاقات {meta.emoji}
             </h1>
-            <p className="text-pink-100 text-sm">رابطة الحب الأبدي</p>
+            <p className="text-pink-100 text-sm">
+              {couple ? `${meta.label} منذ ${daysTogether} يوم` : "اختر نوع علاقتك مع شخص مميز"}
+            </p>
           </div>
         </div>
 
         <main className="px-4 max-w-lg mx-auto -mt-4 relative z-20 space-y-4">
-          {/* Current couple card OR activation CTA */}
-          {couple ? (
-            <div className="rounded-3xl p-6 border-2 border-pink-400/40 backdrop-blur-md" style={{
-              background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
-              boxShadow: "0 8px 40px hsl(330 90% 50% / 0.3)",
-            }}>
-              <div className="flex justify-center mb-4">
-                <LoveBadge
-                  user1Avatar={myProfile?.avatar_url}
-                  user2Avatar={couple.partner?.avatar_url}
-                  level={couple.love_level}
-                  points={couple.love_points}
-                  size="lg"
-                />
-              </div>
-
-              {/* Progress to next level */}
-              {progress?.nextTh !== null && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-pink-200 mb-1">
-                    <span>Lv.{couple.love_level}</span>
-                    <span>{couple.love_points.toLocaleString()} / {progress?.nextTh?.toLocaleString()}</span>
-                    <span>Lv.{couple.love_level + 1}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-background/30 overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ background: "linear-gradient(90deg, hsl(330 90% 55%), hsl(45 95% 60%))" }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress?.pct ?? 0}%` }}
-                      transition={{ duration: 1 }}
-                    />
-                  </div>
-                  <p className="text-center text-[11px] text-pink-200 mt-1">
-                    تبقى {progress?.remaining.toLocaleString()} نقطة للمستوى {couple.love_level + 1}
-                  </p>
-                </div>
-              )}
-
-              <p className="text-center text-xs text-pink-100 mt-3 leading-relaxed">
-                💡 أرسلوا الهدايا لبعض في أي غرفة لزيادة نقاط الحب
-              </p>
-
-              <button
-                onClick={handleBreakup}
-                className="mt-4 w-full py-2 rounded-full bg-destructive/20 border border-destructive/40 text-destructive font-bold text-xs"
-              >
-                إلغاء العلاقة
-              </button>
-            </div>
-          ) : (
-            <div className="rounded-3xl p-6 border-2 border-pink-400/40 backdrop-blur-md text-center" style={{
-              background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
-            }}>
-              <Sparkles className="w-12 h-12 mx-auto text-pink-300 mb-2" />
-              <h2 className="text-xl font-black text-white mb-2">فعّل علاقة حبيبين</h2>
-              <p className="text-sm text-pink-100 mb-4">اربط نفسك مع شخص من متابعَيك بشكل دائم وأظهروا للجميع حبكم</p>
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <span className="text-2xl font-black text-yellow-300">{LOVE_ACTIVATION_COST.toLocaleString()}</span>
-                <CurrencyIcon type="gold" size="md" />
-                <span className="text-yellow-300">رسوم التفعيل</span>
-              </div>
-              <button
-                onClick={handleOpenPicker}
-                disabled={(myProfile?.coins ?? 0) < LOVE_ACTIVATION_COST}
-                className="w-full py-3 rounded-full font-black text-white disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg, hsl(330 90% 55%), hsl(280 90% 55%))" }}
-              >
-                💕 اختر حبيب/ة
-              </button>
-              <p className="text-[11px] text-pink-200 mt-2 flex items-center justify-center gap-1">رصيدك: {(myProfile?.coins ?? 0).toLocaleString()} <CurrencyIcon type="gold" size="xs" /></p>
-            </div>
-          )}
-
-          {/* Levels & Perks */}
-          <div className="rounded-2xl p-4 border border-pink-400/20 bg-background/30 backdrop-blur-sm">
-            <h3 className="font-black text-foreground mb-3 flex items-center gap-2">
-              <Heart className="w-4 h-4 text-pink-400" /> المستويات والمكافآت
-            </h3>
-            <div className="space-y-2">
-              {LOVE_THRESHOLDS.map((threshold, idx) => {
-                const lvl = idx + 1;
-                const reached = couple ? couple.love_level >= lvl : false;
-                return (
-                  <div
-                    key={lvl}
-                    className={`flex items-start gap-3 p-2.5 rounded-xl border ${
-                      reached ? "border-pink-400/50 bg-pink-500/10" : "border-border/20 bg-background/20"
-                    }`}
-                  >
-                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-black text-xs ${
-                      reached ? "bg-gradient-to-br from-pink-400 to-rose-500 text-white" : "bg-secondary text-muted-foreground"
-                    }`}>
-                      {lvl}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-bold ${reached ? "text-pink-200" : "text-foreground"}`}>
-                        {LOVE_PERKS[lvl]}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {threshold === 0 ? "بداية الرحلة" : `يتطلب ${threshold.toLocaleString()} نقطة`}
-                      </p>
-                    </div>
-                    {reached && <span className="text-pink-300">✓</span>}
-                  </div>
-                );
-              })}
-            </div>
+          {/* Tabs */}
+          <div className="flex gap-1 p-1 rounded-2xl bg-background/40 backdrop-blur-md border border-pink-400/20">
+            <TabBtn icon={<Heart className="w-4 h-4" />} label="علاقتي" active={tab === "couple"} onClick={() => setTab("couple")} />
+            <TabBtn
+              icon={<Inbox className="w-4 h-4" />}
+              label="الطلبات"
+              badge={totalRequests > 0 ? totalRequests : undefined}
+              active={tab === "requests"}
+              onClick={() => setTab("requests")}
+            />
+            <TabBtn icon={<Sparkles className="w-4 h-4" />} label="الذكريات" active={tab === "memories"} onClick={() => setTab("memories")} disabled={!couple} />
           </div>
 
-          {/* How it works */}
-          <div className="rounded-2xl p-4 border border-pink-400/20 bg-background/30 backdrop-blur-sm">
-            <h3 className="font-black text-foreground mb-2">كيف يعمل النظام؟</h3>
-            <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside leading-relaxed">
-              <li>التفعيل بـ <span className="text-yellow-300 font-bold">10,000 عملة</span> ويبدأ من المستوى 1</li>
-              <li>تزداد النقاط عند تبادل الهدايا بينكم في أي غرفة</li>
-              <li>كل مستوى جديد يكشف ميزة بصرية أفخم</li>
-              <li>الاختيار من <span className="text-pink-300 font-bold">قائمة المتابَعين (الأصدقاء الذين تتابعهم)</span></li>
-              <li>كل شخص يمكنه أن يكون حبيباً لشخص واحد فقط</li>
-            </ul>
-          </div>
-        </main>
-
-        {/* Picker Modal */}
-        <AnimatePresence>
-          {showPicker && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end justify-center"
-              onClick={() => setShowPicker(false)}
-            >
-              <motion.div
-                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-                transition={{ type: "spring", damping: 30 }}
-                className="w-full max-w-lg bg-card rounded-t-3xl p-5 max-h-[75vh] overflow-y-auto border-t-2 border-pink-400/40"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-black text-foreground">اختر حبيب/ة 💕</h3>
-                  <button onClick={() => setShowPicker(false)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                    <X className="w-4 h-4" />
-                  </button>
+          {/* TAB: Couple */}
+          {tab === "couple" && (
+            couple ? (
+              <div className="rounded-3xl p-6 border-2 backdrop-blur-md" style={{
+                borderColor: meta.glow + "60",
+                background: `linear-gradient(135deg, ${meta.glow}1f, hsl(280 60% 20% / 0.5))`,
+                boxShadow: `0 8px 40px ${meta.glow}50`,
+              }}>
+                <div className="flex justify-center mb-4">
+                  <LoveBadge
+                    user1Avatar={myProfile?.avatar_url}
+                    user2Avatar={couple.partner?.avatar_url}
+                    level={couple.love_level}
+                    points={couple.love_points}
+                    size="lg"
+                  />
                 </div>
 
-                {mutuals.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Users className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">لا يوجد أحد في قائمة المتابَعين</p>
-                    <p className="text-xs text-muted-foreground mt-1">تابع أصدقاءك أولاً ثم اختر منهم</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {mutuals.map((m) => (
-                      <button
-                        key={m.id}
-                        disabled={activating}
-                        onClick={() => handleActivate(m.id)}
-                        className="w-full flex items-center gap-3 p-3 rounded-2xl border border-pink-400/20 bg-secondary/30 hover:bg-pink-500/20 transition-colors disabled:opacity-50"
-                      >
-                        <img loading="lazy" decoding="async" src={m.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-pink-400/40" />
-                        <div className="flex-1 text-right">
-                          <p className="font-bold text-sm text-foreground">{m.display_name}</p>
-                          <p className="text-[10px] text-muted-foreground">ID: {m.user_id}</p>
-                        </div>
-                        <Heart className="w-5 h-5 text-pink-400" />
-                      </button>
-                    ))}
+                {/* Type label */}
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span className="px-3 py-1 rounded-full text-xs font-black text-white" style={{ background: meta.gradient }}>
+                    {meta.emoji} {meta.label}
+                  </span>
+                  <span className="text-xs text-pink-200">• {daysTogether} يوم معاً</span>
+                </div>
+
+                {/* Progress */}
+                {progress?.nextTh !== null && (
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs text-pink-200 mb-1">
+                      <span>Lv.{couple.love_level}</span>
+                      <span>{couple.love_points.toLocaleString()} / {progress?.nextTh?.toLocaleString()}</span>
+                      <span>Lv.{couple.love_level + 1}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-background/30 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: "linear-gradient(90deg, hsl(330 90% 55%), hsl(45 95% 60%))" }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress?.pct ?? 0}%` }}
+                        transition={{ duration: 1 }}
+                      />
+                    </div>
+                    <p className="text-center text-[11px] text-pink-200 mt-1">
+                      تبقى {progress?.remaining.toLocaleString()} نقطة للمستوى {couple.love_level + 1}
+                    </p>
                   </div>
                 )}
-              </motion.div>
-            </motion.div>
+
+                <p className="text-center text-xs text-pink-100 mt-3 leading-relaxed">
+                  💡 أرسلوا الهدايا لبعض في أي غرفة لزيادة نقاط الحب
+                </p>
+
+                <button
+                  onClick={handleBreakup}
+                  className="mt-4 w-full py-2 rounded-full bg-destructive/20 border border-destructive/40 text-destructive font-bold text-xs"
+                >
+                  إنهاء العلاقة
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-3xl p-6 border-2 border-pink-400/40 backdrop-blur-md text-center" style={{
+                background: "linear-gradient(135deg, hsl(330 70% 25% / 0.5), hsl(280 60% 20% / 0.5))",
+              }}>
+                <Sparkles className="w-12 h-12 mx-auto text-pink-300 mb-2" />
+                <h2 className="text-xl font-black text-white mb-2">ابدأ علاقتك</h2>
+                <p className="text-sm text-pink-100 mb-4">اختر بين 3 أنواع علاقات وأرسل طلباً لشخص تتابعه. الطلب يتطلب موافقته.</p>
+                <button
+                  onClick={handleOpenPicker}
+                  className="w-full py-3 rounded-full font-black text-white flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(135deg, hsl(330 90% 55%), hsl(280 90% 55%))" }}
+                >
+                  <Send className="w-4 h-4" /> إرسال طلب علاقة
+                </button>
+                <p className="text-[11px] text-pink-200 mt-2 flex items-center justify-center gap-1">
+                  رصيدك: {(myProfile?.coins ?? 0).toLocaleString()} <CurrencyIcon type="gold" size="xs" />
+                </p>
+              </div>
+            )
           )}
-        </AnimatePresence>
+
+          {/* TAB: Requests */}
+          {tab === "requests" && (
+            <div className="space-y-3">
+              <section>
+                <h3 className="text-sm font-black text-foreground mb-2 flex items-center gap-1.5">
+                  <Inbox className="w-4 h-4 text-pink-300" /> طلبات واردة ({incoming.length})
+                </h3>
+                {incoming.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4 rounded-xl border border-border/20 bg-background/20">
+                    لا توجد طلبات واردة
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <AnimatePresence>
+                      {incoming.map((r) => <RelationshipRequestCard key={r.id} request={r} onChanged={refreshAll} />)}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </section>
+
+              <section>
+                <h3 className="text-sm font-black text-foreground mb-2 flex items-center gap-1.5">
+                  <Send className="w-4 h-4 text-purple-300" /> طلبات مُرسَلة ({outgoing.length})
+                </h3>
+                {outgoing.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4 rounded-xl border border-border/20 bg-background/20">
+                    لم ترسل أي طلبات
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <AnimatePresence>
+                      {outgoing.map((r) => <RelationshipRequestCard key={r.id} request={r} onChanged={refreshAll} />)}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </section>
+
+              {!couple && (
+                <button
+                  onClick={handleOpenPicker}
+                  className="w-full py-3 rounded-full font-black text-white flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(135deg, hsl(330 90% 55%), hsl(280 90% 55%))" }}
+                >
+                  <Send className="w-4 h-4" /> طلب علاقة جديدة
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* TAB: Memories */}
+          {tab === "memories" && couple && (
+            <GiftMemoryWall myId={myId} partnerId={couple.partner?.id ?? null} partnerName={couple.partner?.display_name} />
+          )}
+
+          {/* Levels & Perks (always visible) */}
+          {tab === "couple" && (
+            <div className="rounded-2xl p-4 border border-pink-400/20 bg-background/30 backdrop-blur-sm">
+              <h3 className="font-black text-foreground mb-3 flex items-center gap-2">
+                <Heart className="w-4 h-4 text-pink-400" /> المستويات والمكافآت
+              </h3>
+              <div className="space-y-2">
+                {LOVE_THRESHOLDS.map((threshold, idx) => {
+                  const lvl = idx + 1;
+                  const reached = couple ? couple.love_level >= lvl : false;
+                  return (
+                    <div
+                      key={lvl}
+                      className={`flex items-start gap-3 p-2.5 rounded-xl border ${
+                        reached ? "border-pink-400/50 bg-pink-500/10" : "border-border/20 bg-background/20"
+                      }`}
+                    >
+                      <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-black text-xs ${
+                        reached ? "bg-gradient-to-br from-pink-400 to-rose-500 text-white" : "bg-secondary text-muted-foreground"
+                      }`}>
+                        {lvl}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-bold ${reached ? "text-pink-200" : "text-foreground"}`}>
+                          {LOVE_PERKS[lvl]}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {threshold === 0 ? "بداية الرحلة" : `يتطلب ${threshold.toLocaleString()} نقطة`}
+                        </p>
+                      </div>
+                      {reached && <span className="text-pink-300">✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </main>
+
+        <RelationshipRequestModal
+          open={showPicker}
+          onClose={() => setShowPicker(false)}
+          mutuals={mutuals}
+          myCoins={myProfile?.coins ?? 0}
+          onSent={refreshAll}
+        />
       </div>
     </PageTransition>
   );
 };
+
+interface TabBtnProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  badge?: number;
+  disabled?: boolean;
+}
+
+const TabBtn = ({ icon, label, active, onClick, badge, disabled }: TabBtnProps) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`relative flex-1 py-2 px-2 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${
+      active ? "bg-gradient-to-br from-pink-500 to-purple-600 text-white shadow-md" : "text-muted-foreground"
+    } ${disabled ? "opacity-40" : ""}`}
+  >
+    {icon}
+    <span>{label}</span>
+    {badge !== undefined && (
+      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center px-1">
+        {badge}
+      </span>
+    )}
+  </button>
+);
 
 export default LoversPage;
