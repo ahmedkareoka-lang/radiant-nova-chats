@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => ({
           "supabase-vendor": ["@supabase/supabase-js"],
           "query-vendor": ["@tanstack/react-query", "@tanstack/query-core"],
           "motion-vendor": ["framer-motion"],
+          "icons-vendor": ["lucide-react"],
           "agora-vendor": ["agora-rtc-sdk-ng"],
           "lottie-vendor": ["lottie-react"],
         },
