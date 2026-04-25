@@ -19,6 +19,7 @@ import { Analytics } from "@vercel/analytics/react";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
 import Index from "./pages/Index";
+import { useCatalogStore } from "@/stores/catalogStore";
 
 /**
  * 🛡️ Resilient lazy import — auto-recovers from "Importing a module script failed"
