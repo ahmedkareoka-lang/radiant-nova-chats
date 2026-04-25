@@ -434,6 +434,8 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
       </div>
     </div>
   );
-};
+});
+
+GiftAnimation.displayName = "GiftAnimation";
 
 export default GiftAnimation;
