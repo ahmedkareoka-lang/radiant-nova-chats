@@ -231,7 +231,8 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
       });
 
       // Voice activity detection
-      client.enableAudioVolumeIndicator();
+      // Voice activity — 200ms interval saves CPU/battery vs default 2s
+      (client as any).enableAudioVolumeIndicator(200, 3);
       client.on("volume-indicator", (volumes) => {
         const speakingNow = new Set<string>();
         let mySpeaking = false;
