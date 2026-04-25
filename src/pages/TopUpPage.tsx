@@ -337,7 +337,7 @@ const TopUpPage = () => {
                     className="rounded-2xl p-3 border border-yellow-500/20 bg-gradient-to-r from-secondary/60 to-purple-950/20 flex items-center gap-3"
                   >
                     <button
-                      onClick={() => navigate(`/u/${a.user_id}`)}
+                      onClick={() => navigate(`/user?id=${a.user_id}`)}
                       className="shrink-0"
                     >
                       {a.avatar_url ? (
@@ -354,7 +354,7 @@ const TopUpPage = () => {
                     </button>
 
                     <button
-                      onClick={() => navigate(`/u/${a.user_id}`)}
+                      onClick={() => navigate(`/user?id=${a.user_id}`)}
                       className="flex-1 min-w-0 text-left"
                     >
                       <p className="font-extrabold text-sm truncate text-foreground">{a.agent_name}</p>
