@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, memo } from "react";
 import { toast } from "sonner";
 import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import { Check, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { logAgora } from "@/lib/agoraDebugLog";
+import { useCatalogStore } from "@/stores/catalogStore";
+import { useProfileStore } from "@/stores/profileStore";
 
 
 
