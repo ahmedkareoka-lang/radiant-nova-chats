@@ -249,10 +249,6 @@ const TopUpPage = () => {
                     <button
                       key={i}
                       onClick={() => {
-                        if (!settings?.usdt_wallet_address) {
-                          toast.error("لم يتم تعيين عنوان USDT بعد، تواصل مع الإدارة");
-                          return;
-                        }
                         setSelectedPkg(i);
                         setPayOpen(true);
                       }}
