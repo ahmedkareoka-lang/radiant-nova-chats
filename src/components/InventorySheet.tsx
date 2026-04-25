@@ -98,15 +98,21 @@ export default function InventorySheet({ open, onClose }: Props) {
   }, [allItems, activeTab]);
 
   const equipFrame = async (frameUrl: string | null) => {
-    await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", userId);
+    // Optimistic UI: update local state instantly so the inventory grid
+    // reflects the change before the network round-trip completes.
     setEquippedFrame(frameUrl);
+    // Tell the rest of the app (voice room, profile views) to refresh
+    // their copy of this user's profile right away — no waiting for realtime.
+    window.dispatchEvent(new CustomEvent("profile-cosmetics-changed", { detail: { userId, equipped_frame: frameUrl } }));
     toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+    await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", userId);
   };
 
   const equipBadge = async (name: string | null) => {
-    await supabase.from("profiles").update({ equipped_badge: name } as any).eq("id", userId);
     setEquippedBadge(name);
+    window.dispatchEvent(new CustomEvent("profile-cosmetics-changed", { detail: { userId, equipped_badge: name } }));
     toast.success(name ? "تم تفعيل الشارة! 🏅" : "تم إزالة الشارة");
+    await supabase.from("profiles").update({ equipped_badge: name } as any).eq("id", userId);
   };
 
   const counts = useMemo(() => {
