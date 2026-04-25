@@ -23,15 +23,17 @@ import BinancePayModal from "@/components/BinancePayModal";
 
 type Method = "binance" | "agents" | "redeem";
 
+// Each package now ships with its own dedicated Binance Pay link
+// so the user is redirected directly to the locked-amount checkout.
 const packages = [
-  { usdt: 5,    coins: 7000,    diamonds: 5000,   bonus: 0 },
-  { usdt: 10,   coins: 14000,   diamonds: 10000,  bonus: 0 },
-  { usdt: 20,   coins: 28000,   diamonds: 20000,  bonus: 5 },
-  { usdt: 50,   coins: 70000,   diamonds: 50000,  bonus: 10 },
-  { usdt: 100,  coins: 140000,  diamonds: 100000, bonus: 15, popular: true },
-  { usdt: 200,  coins: 280000,  diamonds: 200000, bonus: 20 },
-  { usdt: 500,  coins: 700000,  diamonds: 500000, bonus: 25 },
-  { usdt: 700,  coins: 980000,  diamonds: 700000, bonus: 30 },
+  { usdt: 1,   coins: 1400,    diamonds: 1000,   bonus: 0,  payUrl: "https://s.binance.com/vfZvdFse" },
+  { usdt: 2,   coins: 2800,    diamonds: 2000,   bonus: 0,  payUrl: "https://s.binance.com/0v9WkEP2" },
+  { usdt: 4,   coins: 5600,    diamonds: 4000,   bonus: 0,  payUrl: "https://s.binance.com/08dvPCYg" },
+  { usdt: 7,   coins: 9800,    diamonds: 7000,   bonus: 5,  payUrl: "https://s.binance.com/V3FFZBnR" },
+  { usdt: 14,  coins: 19600,   diamonds: 14000,  bonus: 10, payUrl: "https://s.binance.com/oplr3iAB" },
+  { usdt: 28,  coins: 39200,   diamonds: 28000,  bonus: 15, popular: true, payUrl: "https://s.binance.com/Rz9IhCSk" },
+  { usdt: 100, coins: 140000,  diamonds: 100000, bonus: 20, payUrl: "https://s.binance.com/iZZDvYpU" },
+  { usdt: 128, coins: 179200,  diamonds: 128000, bonus: 25, payUrl: "https://s.binance.com/3alyDtOe" },
 ];
 
 const formatNum = (n: number) => n.toLocaleString();
