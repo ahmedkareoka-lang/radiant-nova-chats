@@ -228,6 +228,26 @@ const LevelUpRoot = () => {
   );
 };
 
+/**
+ * 🚀 Pre-fetch & cache catalog data once at app start.
+ * Gifts/store items are loaded into Zustand (persisted to localStorage),
+ * so opening the gift sheet later is instant — no spinners, no waiting.
+ * Realtime channels keep the cache fresh in the background.
+ */
+const CatalogPrefetcher = () => {
+  useEffect(() => {
+    const { fetchGifts, fetchStoreItems, subscribeRealtime } =
+      require("@/stores/catalogStore").useCatalogStore.getState();
+    // Hydrate immediately (uses cache; revalidates in background)
+    fetchGifts();
+    fetchStoreItems();
+    // Subscribe to realtime updates so BOSS changes appear instantly for everyone
+    const unsub = subscribeRealtime();
+    return () => unsub();
+  }, []);
+  return null;
+};
+
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
