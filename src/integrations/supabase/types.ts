@@ -566,33 +566,39 @@ export type Database = {
       love_couples: {
         Row: {
           activated_at: string
+          anniversary_date: string
           created_at: string
           id: string
           is_active: boolean
           love_level: number
           love_points: number
+          relationship_type: string
           updated_at: string
           user1_id: string
           user2_id: string
         }
         Insert: {
           activated_at?: string
+          anniversary_date?: string
           created_at?: string
           id?: string
           is_active?: boolean
           love_level?: number
           love_points?: number
+          relationship_type?: string
           updated_at?: string
           user1_id: string
           user2_id: string
         }
         Update: {
           activated_at?: string
+          anniversary_date?: string
           created_at?: string
           id?: string
           is_active?: boolean
           love_level?: number
           love_points?: number
+          relationship_type?: string
           updated_at?: string
           user1_id?: string
           user2_id?: string
@@ -1103,6 +1109,42 @@ export type Database = {
         }
         Relationships: []
       }
+      relationship_requests: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          message: string | null
+          receiver_id: string
+          relationship_type: string
+          responded_at: string | null
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          receiver_id: string
+          relationship_type: string
+          responded_at?: string | null
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          receiver_id?: string
+          relationship_type?: string
+          responded_at?: string | null
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       room_bans: {
         Row: {
           banned_by: string
@@ -1495,6 +1537,10 @@ export type Database = {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
       }
+      accept_relationship_request: {
+        Args: { _request_id: string }
+        Returns: string
+      }
       activate_bd_account: { Args: { _user_id: string }; Returns: Json }
       activate_love_couple: { Args: { _partner_id: string }; Returns: Json }
       add_coins: {
@@ -1535,6 +1581,10 @@ export type Database = {
       bd_activate_agency_for_user: {
         Args: { _target_public_id: string }
         Returns: Json
+      }
+      cancel_relationship_request: {
+        Args: { _request_id: string }
+        Returns: undefined
       }
       claim_daily_reward: {
         Args: { _task_type: string; _user_id: string }
@@ -1606,6 +1656,7 @@ export type Database = {
           wealth_level: number
         }[]
       }
+      get_relationship_cost: { Args: { _type: string }; Returns: number }
       get_target_cycle: {
         Args: { _ref?: string }
         Returns: {
@@ -1673,9 +1724,17 @@ export type Database = {
       }
       recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
+      reject_relationship_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       remove_agency_host: {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
+      }
+      send_relationship_request: {
+        Args: { _message?: string; _receiver_id: string; _type: string }
+        Returns: string
       }
       set_agency_eligibility: {
         Args: { _eligible: boolean; _user_id: string }
