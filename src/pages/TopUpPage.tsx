@@ -10,6 +10,7 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import BinancePayModal from "@/components/BinancePayModal";
 
 /**
  * NOVA Recharge — 3 ways only:
@@ -43,7 +44,7 @@ const TopUpPage = () => {
   // Binance state
   const [settings, setSettings] = useState<{ usdt_wallet_address: string; usdt_network: string; usdt_qr_url: string | null } | null>(null);
   const [selectedPkg, setSelectedPkg] = useState<number | null>(null);
-  const [txId, setTxId] = useState("");
+  const [payOpen, setPayOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Agents
@@ -96,13 +97,13 @@ const TopUpPage = () => {
     }
   };
 
-  const submitUsdt = async () => {
+  const submitUsdt = async (orderId: string) => {
     if (!selectedPackage) { toast.error("اختر باقة أولاً"); return; }
-    if (txId.trim().length < 6) { toast.error("أدخل Transaction ID صحيح"); return; }
+    if (orderId.trim().length < 6) { toast.error("أدخل Order ID صحيح"); return; }
     setSubmitting(true);
     const { data, error } = await supabase.rpc("submit_usdt_recharge" as any, {
       _amount_usdt: selectedPackage.usdt,
-      _transaction_id: txId.trim(),
+      _transaction_id: orderId.trim(),
       _coins: selectedPackage.coins,
       _diamonds: selectedPackage.diamonds,
       _network: settings?.usdt_network || "TRC20",
@@ -112,15 +113,15 @@ const TopUpPage = () => {
     if (error || !res.success) {
       const code = res.error || error?.message;
       const map: Record<string,string> = {
-        duplicate_txid: "هذا الـ Transaction ID مُستخدم من قبل",
-        invalid_txid: "Transaction ID غير صحيح",
+        duplicate_txid: "هذا الـ Order ID مُستخدم من قبل",
+        invalid_txid: "Order ID غير صحيح",
         invalid_amount: "مبلغ غير صحيح",
       };
       toast.error(map[code as string] || "فشل إرسال الطلب");
       return;
     }
     toast.success("تم إرسال طلبك! سيتم اعتماده وإضافة الرصيد قريباً ⏳");
-    setTxId("");
+    setPayOpen(false);
     setSelectedPkg(null);
   };
 
@@ -245,7 +246,14 @@ const TopUpPage = () => {
                   {packages.map((pkg, i) => (
                     <button
                       key={i}
-                      onClick={() => setSelectedPkg(i)}
+                      onClick={() => {
+                        if (!settings?.usdt_wallet_address) {
+                          toast.error("لم يتم تعيين عنوان USDT بعد، تواصل مع الإدارة");
+                          return;
+                        }
+                        setSelectedPkg(i);
+                        setPayOpen(true);
+                      }}
                       className={`relative rounded-2xl p-3 text-left border transition-all ${
                         selectedPkg === i
                           ? "border-yellow-400 bg-gradient-to-br from-yellow-500/20 to-purple-500/20 shadow-[0_0_20px_hsl(45_95%_55%/0.4)] scale-[1.02]"
@@ -281,32 +289,13 @@ const TopUpPage = () => {
                 </div>
               </div>
 
-              {/* TX-ID + submit */}
-              <div className="rounded-3xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-yellow-500/5 space-y-3">
-                <label className="block text-xs font-bold text-purple-200">
-                  Transaction ID (Hash)
-                </label>
-                <input
-                  value={txId}
-                  onChange={(e) => setTxId(e.target.value)}
-                  placeholder="ألصق Transaction ID من Binance"
-                  className="w-full rounded-xl bg-background/70 border border-purple-500/30 px-3 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
-                  dir="ltr"
-                />
-                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  سيتم اعتماد طلبك وإضافة الرصيد تلقائياً بعد التأكيد من الإدارة.
-                </p>
-                <button
-                  onClick={submitUsdt}
-                  disabled={submitting || !selectedPackage || txId.trim().length < 6}
-                  className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 text-black
-                    bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400
-                    shadow-[0_8px_30px_hsl(45_95%_55%/0.4)] disabled:opacity-40 disabled:shadow-none"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                  {selectedPackage ? `تأكيد التحويل · $${selectedPackage.usdt}` : "اختر باقة أولاً"}
-                </button>
+              {/* Hint */}
+              <div className="rounded-2xl p-3 border border-emerald-500/20 bg-emerald-500/5 text-[11px] text-emerald-200/90 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  اختر باقة أعلاه لفتح صفحة الدفع المؤمّنة. المبلغ يُقفل تلقائياً
+                  ويُفتح تطبيق Binance مباشرة من زر <b>"ادفع الآن"</b>.
+                </span>
               </div>
             </div>
           )}
@@ -436,6 +425,19 @@ const TopUpPage = () => {
             </div>
           </div>
         </main>
+
+        {/* Binance Pay modal — locked amount, deep links, order id */}
+        <BinancePayModal
+          open={payOpen}
+          onClose={() => setPayOpen(false)}
+          pkg={selectedPackage}
+          walletAddress={settings?.usdt_wallet_address || ""}
+          network={settings?.usdt_network || "TRC20"}
+          qrUrl={settings?.usdt_qr_url || null}
+          payUrl={null /* plug Binance Pay API order URL here when available */}
+          submitting={submitting}
+          onSubmit={submitUsdt}
+        />
 
         <BottomNav />
       </div>
