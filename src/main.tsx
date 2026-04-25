@@ -53,9 +53,11 @@ if (Capacitor.isNativePlatform()) {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>,
+  <StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </StrictMode>,
 );
 
 // 🚀 Activate Edge asset caching after app boot (web only — Capacitor uses native cache)
