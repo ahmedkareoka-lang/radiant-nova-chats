@@ -246,7 +246,14 @@ const TopUpPage = () => {
                   {packages.map((pkg, i) => (
                     <button
                       key={i}
-                      onClick={() => setSelectedPkg(i)}
+                      onClick={() => {
+                        if (!settings?.usdt_wallet_address) {
+                          toast.error("لم يتم تعيين عنوان USDT بعد، تواصل مع الإدارة");
+                          return;
+                        }
+                        setSelectedPkg(i);
+                        setPayOpen(true);
+                      }}
                       className={`relative rounded-2xl p-3 text-left border transition-all ${
                         selectedPkg === i
                           ? "border-yellow-400 bg-gradient-to-br from-yellow-500/20 to-purple-500/20 shadow-[0_0_20px_hsl(45_95%_55%/0.4)] scale-[1.02]"
