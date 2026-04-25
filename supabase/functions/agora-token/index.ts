@@ -1,7 +1,7 @@
 // Agora RTC Token generator (App ID + Certificate auth)
 // Pure-Deno implementation of the AccessToken2 spec — no external deps.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import AgoraToken from "npm:agora-token@2.0.5";
+import AgoraToken from "https://esm.sh/agora-token@2.0.5";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
