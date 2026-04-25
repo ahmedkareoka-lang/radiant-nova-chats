@@ -17,7 +17,7 @@
 import { recordRealtimeBatch } from "./perfMetrics";
 
 type Channel = {
-  send: (msg: { type: string; event: string; payload: any }) => any;
+  send: (msg: any, ...rest: any[]) => any;
 };
 
 interface BatcherOptions {
