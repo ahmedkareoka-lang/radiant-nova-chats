@@ -97,13 +97,13 @@ const TopUpPage = () => {
     }
   };
 
-  const submitUsdt = async () => {
+  const submitUsdt = async (orderId: string) => {
     if (!selectedPackage) { toast.error("اختر باقة أولاً"); return; }
-    if (txId.trim().length < 6) { toast.error("أدخل Transaction ID صحيح"); return; }
+    if (orderId.trim().length < 6) { toast.error("أدخل Order ID صحيح"); return; }
     setSubmitting(true);
     const { data, error } = await supabase.rpc("submit_usdt_recharge" as any, {
       _amount_usdt: selectedPackage.usdt,
-      _transaction_id: txId.trim(),
+      _transaction_id: orderId.trim(),
       _coins: selectedPackage.coins,
       _diamonds: selectedPackage.diamonds,
       _network: settings?.usdt_network || "TRC20",
@@ -113,15 +113,15 @@ const TopUpPage = () => {
     if (error || !res.success) {
       const code = res.error || error?.message;
       const map: Record<string,string> = {
-        duplicate_txid: "هذا الـ Transaction ID مُستخدم من قبل",
-        invalid_txid: "Transaction ID غير صحيح",
+        duplicate_txid: "هذا الـ Order ID مُستخدم من قبل",
+        invalid_txid: "Order ID غير صحيح",
         invalid_amount: "مبلغ غير صحيح",
       };
       toast.error(map[code as string] || "فشل إرسال الطلب");
       return;
     }
     toast.success("تم إرسال طلبك! سيتم اعتماده وإضافة الرصيد قريباً ⏳");
-    setTxId("");
+    setPayOpen(false);
     setSelectedPkg(null);
   };
 
