@@ -10,6 +10,7 @@ import CurrencyIcon from "@/components/CurrencyIcon";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import BinancePayModal from "@/components/BinancePayModal";
 
 /**
  * NOVA Recharge — 3 ways only:
