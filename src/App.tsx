@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { BrowserRouter, Route, Routes, useLocation, Navigate, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -88,13 +89,26 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnReconnect: "always", // re-sync once after reconnect (lightweight)
       refetchOnMount: false,        // trust the cache; manual invalidate when needed
-      retry: 1,
+      retry: (failureCount, error: any) => {
+        // Don't retry auth errors — they won't fix themselves
+        const status = error?.status ?? error?.statusCode;
+        if (status === 401 || status === 403) return false;
+        return failureCount < 1;
+      },
       retryDelay: (i) => Math.min(1000 * 2 ** i, 8000),
       networkMode: "online",
     },
     mutations: {
       retry: 0,
       networkMode: "online",
+      onError: (error: any) => {
+        if (import.meta.env.DEV) console.error("❌ Mutation error:", error);
+        const msg = error?.message || error?.error_description;
+        // Skip generic toasts for auth/permission — handled by UI flows
+        const status = error?.status ?? error?.statusCode;
+        if (status === 401 || status === 403) return;
+        if (msg) toast.error(msg);
+      },
     },
   },
 });
