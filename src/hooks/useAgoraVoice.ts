@@ -119,7 +119,12 @@ export const useAgoraVoice = ({ roomId, currentUserId, isOnMic, isMuted }: UseAg
   // Lazily create one shared client
   const getClient = useCallback(() => {
     if (!clientRef.current) {
+      // 🚀 Low-latency live mode + audio-only optimization
       const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+      // Configure for low-latency interactive audio (saves battery + CPU)
+      try {
+        AgoraRTC.setParameter?.("AUDIO_VOLUME_INDICATION_INTERVAL", 200);
+      } catch { /* ignore */ }
 
       client.on("user-published", async (user: IAgoraRTCRemoteUser, mediaType) => {
         logAgora("info", "user-published", `uid=${user.uid} type=${mediaType}`);
