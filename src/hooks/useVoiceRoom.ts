@@ -415,21 +415,57 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const sendMessage = async (content: string) => {
     if (!roomId || !currentUserId || !content.trim()) return;
-    await supabase.from("messages").insert({
+    const trimmed = content.trim();
+
+    // 🚀 Optimistic UI: show the message instantly to the sender (latency
+    // compensation). The realtime listener will replace this temp entry with
+    // the real one on echo. If the insert fails, we roll back.
+    const tempId = `optimistic-${Date.now()}-${Math.random()}`;
+    const optimisticMsg: RoomMessage = {
+      id: tempId,
+      sender_id: currentUserId,
+      content: trimmed,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    const { error } = await supabase.from("messages").insert({
       sender_id: currentUserId,
       room_id: roomId,
-      content: content.trim(),
+      content: trimmed,
     });
+
+    if (error) {
+      // Rollback: remove the optimistic entry
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+    } else {
+      // Drop the optimistic temp; realtime fetch will bring the real row.
+      // We keep it in place momentarily so the user doesn't see a flicker —
+      // fetchMessages will replace the whole list shortly.
+      setTimeout(() => {
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      }, 1500);
+    }
   };
 
   const toggleMic = async (on: boolean) => {
     if (!roomId || !currentUserId) return;
-    await supabase.from("room_members").update({ is_on_mic: on }).eq("room_id", roomId).eq("user_id", currentUserId);
+    // Optimistic local update
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.user_id === currentUserId ? { ...m, is_on_mic: on } : m
+      )
+    );
+    await supabase
+      .from("room_members")
+      .update({ is_on_mic: on })
+      .eq("room_id", roomId)
+      .eq("user_id", currentUserId);
   };
 
   const updateMicSlot = async (slot: number | null, isOnMic: boolean) => {
     if (!roomId || !currentUserId) return;
-    // Optimistic update
+    // Optimistic update — UI reflects the change instantly.
     setMembers(prev => prev.map(m =>
       m.user_id === currentUserId ? { ...m, mic_slot: slot, is_on_mic: isOnMic } : m
     ));
@@ -440,7 +476,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       .eq("user_id", currentUserId);
     if (error) {
       // Revert on error
-      fetchMembers();
+      fetchMembers(true);
     }
   };
 
