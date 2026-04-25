@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GiftMediaPlayer from "@/components/GiftMediaPlayer";
+import { recordGiftEvent } from "@/lib/perfMetrics";
+import { shouldRenderHeavyEffect } from "@/lib/perfPriority";
 
 interface GiftPayload {
   id: string;
