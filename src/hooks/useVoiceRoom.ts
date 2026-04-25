@@ -234,7 +234,21 @@ export const useVoiceRoom = (roomId: string | null) => {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` }, () => {
         fetchRoomData();
       })
+      // 🔄 React instantly when ANY profile updates equipped frame/badge etc.
+      // We refetch members so the new look (frame, name, avatar) appears in real time.
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, () => {
+        fetchMembers(true);
+        fetchRoomData();
+      })
       .subscribe();
+
+    // Same-tab instant refresh: when the user equips a frame/badge in the
+    // inventory sheet, we don't want to wait for the realtime round-trip.
+    const handleLocalEquip = () => {
+      fetchMembers(true);
+      fetchRoomData();
+    };
+    window.addEventListener("profile-cosmetics-changed", handleLocalEquip);
 
     // Cleanup function using refs to avoid stale closures
     const cleanupMember = async () => {
