@@ -55,7 +55,31 @@
     }
     </script>
 
-    <script async defer src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1996189454134436" crossorigin="anonymous"></script>
+    <!-- AdSense: deferred until idle/first-interaction to protect FCP & TTI -->
+    <script>
+      (function () {
+        var loaded = false;
+        function loadAds() {
+          if (loaded) return;
+          loaded = true;
+          var s = document.createElement("script");
+          s.async = true;
+          s.crossOrigin = "anonymous";
+          s.src =
+            "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1996189454134436";
+          document.head.appendChild(s);
+        }
+        // Whichever comes first: idle browser, 4s ceiling, or first user interaction.
+        if ("requestIdleCallback" in window) {
+          requestIdleCallback(loadAds, { timeout: 4000 });
+        } else {
+          setTimeout(loadAds, 3500);
+        }
+        ["pointerdown", "keydown", "scroll"].forEach(function (ev) {
+          window.addEventListener(ev, loadAds, { once: true, passive: true });
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
