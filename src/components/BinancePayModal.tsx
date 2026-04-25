@@ -86,12 +86,17 @@ const BinancePayModal = ({
   };
 
   const openBinance = () => {
-    if (!links) return;
-    // Prefer real Binance Pay link if backend provided one
+    // Prefer real Binance Pay link if provided (per-package)
     if (payUrl) {
-      window.open(payUrl, "_blank", "noopener,noreferrer");
+      // Use location.href on mobile for better deep-link handoff to Binance app
+      if (isMobile()) {
+        window.location.href = payUrl;
+      } else {
+        window.open(payUrl, "_blank", "noopener,noreferrer");
+      }
       return;
     }
+    if (!links) return;
     if (isMobile()) {
       // Try universal (opens app if installed). Fallback to native after timeout.
       const t = Date.now();
