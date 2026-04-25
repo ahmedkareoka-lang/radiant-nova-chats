@@ -308,6 +308,11 @@ const App = () => {
           )}
         </TooltipProvider>
       </LanguageProvider>
+      {ReactQueryDevtools && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+        </Suspense>
+      )}
     </QueryClientProvider>
   );
 };
