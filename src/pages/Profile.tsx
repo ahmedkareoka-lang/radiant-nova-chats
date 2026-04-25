@@ -109,10 +109,13 @@ const Profile = () => {
   };
 
   const equipFrame = async (frameUrl: string | null) => {
-    await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
+    // Optimistic local update + cross-component broadcast so the new frame
+    // appears instantly in profile, voice rooms, and chat.
     setProfile({ ...profile, equipped_frame: frameUrl });
     setShowFramePicker(false);
+    window.dispatchEvent(new CustomEvent("profile-cosmetics-changed", { detail: { userId: profile.id, equipped_frame: frameUrl } }));
     toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+    await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", profile.id);
   };
 
   const setGender = async (gender: string) => {
