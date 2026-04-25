@@ -216,6 +216,7 @@ export const useVoiceRoom = (roomId: string | null) => {
   // We still keep postgres_changes as the source of truth (RLS-protected),
   // but Broadcast bypasses the DB round-trip for instant UI feedback.
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const batcherRef = useRef<RealtimeBatcher | null>(null);
 
   useEffect(() => {
     if (!roomId) return;
@@ -230,23 +231,43 @@ export const useVoiceRoom = (roomId: string | null) => {
 
     init();
 
-    // 🚀 Lightweight Broadcast channel for instant mic-slot updates.
-    // Updates the local members array immediately on receipt — postgres_changes
-    // listener will then reconcile with the canonical row from the DB.
+    // 🚀 Apply a single mic-update payload to the local members array.
+    const applyMicUpdate = (payload: any) => {
+      const { user_id, mic_slot, is_on_mic, sentAt } = payload || {};
+      if (!user_id) return;
+      // Latency = receive time − send time (when batcher includes sentAt)
+      if (typeof sentAt === "number") {
+        recordLatency("mic", Math.max(0, Date.now() - sentAt));
+      }
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.user_id === user_id ? { ...m, mic_slot, is_on_mic } : m
+        )
+      );
+    };
+
     const presenceChannel = supabase.channel(`room-presence-${roomId}`, {
       config: { broadcast: { self: false, ack: false } },
     })
+      // Single-event path (legacy / immediate)
       .on("broadcast", { event: "mic-update" }, (payload) => {
-        const { user_id, mic_slot, is_on_mic } = payload.payload || {};
-        if (!user_id) return;
-        setMembers((prev) =>
-          prev.map((m) =>
-            m.user_id === user_id ? { ...m, mic_slot, is_on_mic } : m
-          )
-        );
+        applyMicUpdate(payload.payload);
+      })
+      // 🚀 Batched path: a single message can carry many events sent within
+      // a 100–150ms window — drastically reduces channel chatter.
+      .on("broadcast", { event: "batch" }, (payload) => {
+        const events = payload.payload?.events as Array<{ event: string; payload: any }> | undefined;
+        const sentAt = payload.payload?.sentAt as number | undefined;
+        if (!events) return;
+        for (const e of events) {
+          if (e.event === "mic-update") {
+            applyMicUpdate({ ...e.payload, sentAt });
+          }
+        }
       })
       .subscribe();
     presenceChannelRef.current = presenceChannel;
+    batcherRef.current = createRealtimeBatcher(presenceChannel, { intervalMs: 120 });
 
     const channel = supabase
       .channel(`room-${roomId}-${Date.now()}`)
