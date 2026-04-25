@@ -289,32 +289,13 @@ const TopUpPage = () => {
                 </div>
               </div>
 
-              {/* TX-ID + submit */}
-              <div className="rounded-3xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-yellow-500/5 space-y-3">
-                <label className="block text-xs font-bold text-purple-200">
-                  Transaction ID (Hash)
-                </label>
-                <input
-                  value={txId}
-                  onChange={(e) => setTxId(e.target.value)}
-                  placeholder="ألصق Transaction ID من Binance"
-                  className="w-full rounded-xl bg-background/70 border border-purple-500/30 px-3 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
-                  dir="ltr"
-                />
-                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  سيتم اعتماد طلبك وإضافة الرصيد تلقائياً بعد التأكيد من الإدارة.
-                </p>
-                <button
-                  onClick={submitUsdt}
-                  disabled={submitting || !selectedPackage || txId.trim().length < 6}
-                  className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 text-black
-                    bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400
-                    shadow-[0_8px_30px_hsl(45_95%_55%/0.4)] disabled:opacity-40 disabled:shadow-none"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                  {selectedPackage ? `تأكيد التحويل · $${selectedPackage.usdt}` : "اختر باقة أولاً"}
-                </button>
+              {/* Hint */}
+              <div className="rounded-2xl p-3 border border-emerald-500/20 bg-emerald-500/5 text-[11px] text-emerald-200/90 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  اختر باقة أعلاه لفتح صفحة الدفع المؤمّنة. المبلغ يُقفل تلقائياً
+                  ويُفتح تطبيق Binance مباشرة من زر <b>"ادفع الآن"</b>.
+                </span>
               </div>
             </div>
           )}
