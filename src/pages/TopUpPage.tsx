@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Check, Sparkles, Phone, MessageCircle, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import {
+  ArrowLeft, Check, Sparkles, Phone, MessageCircle, Copy, Loader2,
+  Wallet, Users, Ticket, ShieldCheck, Clock, X
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,278 +11,458 @@ import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
+/**
+ * NOVA Recharge — 3 ways only:
+ *  1) Binance Pay (USDT TRC20) — show wallet + QR, user submits TX-ID for admin approval
+ *  2) Official Agents — list of recharge agents, jump to WhatsApp / agent profile
+ *  3) Redeem Codes — instant top-up on valid code
+ *
+ * Visa / cards intentionally REMOVED.
+ */
+
+type Method = "binance" | "agents" | "redeem";
+
 const packages = [
-  { price: 50, coins: 7000, diamonds: 5000, bonus: 0 },
-  { price: 100, coins: 14000, diamonds: 10000, bonus: 0 },
-  { price: 200, coins: 28000, diamonds: 20000, bonus: 5 },
-  { price: 500, coins: 70000, diamonds: 50000, bonus: 10 },
-  { price: 1000, coins: 140000, diamonds: 100000, bonus: 15, popular: true },
-  { price: 2000, coins: 280000, diamonds: 200000, bonus: 20 },
-  { price: 5000, coins: 700000, diamonds: 500000, bonus: 25 },
-  { price: 7000, coins: 980000, diamonds: 700000, bonus: 30 },
+  { usdt: 5,    coins: 7000,    diamonds: 5000,   bonus: 0 },
+  { usdt: 10,   coins: 14000,   diamonds: 10000,  bonus: 0 },
+  { usdt: 20,   coins: 28000,   diamonds: 20000,  bonus: 5 },
+  { usdt: 50,   coins: 70000,   diamonds: 50000,  bonus: 10 },
+  { usdt: 100,  coins: 140000,  diamonds: 100000, bonus: 15, popular: true },
+  { usdt: 200,  coins: 280000,  diamonds: 200000, bonus: 20 },
+  { usdt: 500,  coins: 700000,  diamonds: 500000, bonus: 25 },
+  { usdt: 700,  coins: 980000,  diamonds: 700000, bonus: 30 },
 ];
 
-const paymentMethods = [
-  { id: "vodafone", name: "Vodafone Cash", icon: "📱", color: "bg-red-500/20 text-red-400 border-red-500/30" },
-  { id: "etisalat", name: "Etisalat Cash", icon: "📱", color: "bg-green-500/20 text-green-400 border-green-500/30" },
-  { id: "orange", name: "Orange Cash", icon: "📱", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-  { id: "visa", name: "Visa / Card", icon: "💳", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-  { id: "usdt", name: "USDT", icon: "💲", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" },
-];
+const formatNum = (n: number) => n.toLocaleString();
 
 const TopUpPage = () => {
   const navigate = useNavigate();
-  const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [method, setMethod] = useState<Method>("binance");
   const [profile, setProfile] = useState<any>(null);
-  const [agents, setAgents] = useState<any[]>([]);
-  const [agentsOpen, setAgentsOpen] = useState(false);
 
-  useEffect(() => {
-    const loadAgents = async () => {
-      const { data } = await supabase.from("recharge_agents" as any).select("*").eq("is_active", true).order("created_at", { ascending: false });
-      setAgents((data as any) || []);
-    };
-    loadAgents();
-  }, []);
+  // Binance state
+  const [settings, setSettings] = useState<{ usdt_wallet_address: string; usdt_network: string; usdt_qr_url: string | null } | null>(null);
+  const [selectedPkg, setSelectedPkg] = useState<number | null>(null);
+  const [txId, setTxId] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Agents
+  const [agents, setAgents] = useState<any[]>([]);
+
+  // Redeem
+  const [code, setCode] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase.from("profiles").select("coins, diamonds, user_id, display_name").eq("id", user.id).single();
+        const { data } = await supabase
+          .from("profiles")
+          .select("coins, diamonds, user_id, display_name")
+          .eq("id", user.id).single();
         setProfile(data);
       }
+
+      const [{ data: s }, { data: a }] = await Promise.all([
+        supabase.from("recharge_settings" as any).select("usdt_wallet_address, usdt_network, usdt_qr_url").limit(1).maybeSingle(),
+        supabase.from("recharge_agents" as any).select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      ]);
+      setSettings((s as any) || { usdt_wallet_address: "", usdt_network: "TRC20", usdt_qr_url: null });
+      setAgents((a as any) || []);
     };
     load();
   }, []);
 
-  const formatNum = (n: number) => n.toLocaleString();
+  const selectedPackage = useMemo(
+    () => (selectedPkg !== null ? packages[selectedPkg] : null),
+    [selectedPkg]
+  );
 
-  const handlePurchase = async () => {
-    if (selectedPackage === null || !selectedPayment || !profile) return;
-    const pkg = packages[selectedPackage];
+  const refreshBalance = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from("profiles").select("coins, diamonds, user_id, display_name").eq("id", user.id).single();
+    setProfile(data);
+  };
 
-    // Find the BOSS user to send message
-    const { data: bossProfiles } = await supabase.from("profiles").select("id").eq("is_boss", true).limit(1);
-    if (bossProfiles && bossProfiles.length > 0) {
-      const bossId = bossProfiles[0].id;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Create or find conversation with BOSS
-        const { data: existing } = await supabase
-          .from("conversations")
-          .select("id")
-          .or(`and(user1_id.eq.${user.id},user2_id.eq.${bossId}),and(user1_id.eq.${bossId},user2_id.eq.${user.id})`)
-          .limit(1);
-
-        let convId: string;
-        if (existing && existing.length > 0) {
-          convId = existing[0].id;
-        } else {
-          const { data: newConv } = await supabase.from("conversations").insert({ user1_id: user.id, user2_id: bossId }).select("id").single();
-          convId = newConv!.id;
-        }
-
-        // Send purchase request message
-        const msg = `📦 طلب شحن NOVA\n👤 المستخدم: ${profile.display_name} (${profile.user_id})\n💰 الباقة: ${formatNum(pkg.price)} EGP\n🪙 NOVA Coins: ${formatNum(pkg.coins)}\n💎 ماسات: ${formatNum(pkg.diamonds)}\n💳 طريقة الدفع: ${selectedPayment}`;
-        await supabase.from("messages").insert({ sender_id: user.id, conversation_id: convId, content: msg });
-
-        toast.success("تم إرسال طلب الشحن إلى الإدارة! ✨");
-        navigate(`/chat?id=${convId}`);
-      }
-    } else {
-      toast.error("لا يوجد مدير متاح حالياً");
+  const copyWallet = async () => {
+    if (!settings?.usdt_wallet_address) return;
+    try {
+      await navigator.clipboard.writeText(settings.usdt_wallet_address);
+      toast.success("تم نسخ عنوان المحفظة ✨");
+    } catch {
+      toast.error("تعذر النسخ");
     }
+  };
+
+  const submitUsdt = async () => {
+    if (!selectedPackage) { toast.error("اختر باقة أولاً"); return; }
+    if (txId.trim().length < 6) { toast.error("أدخل Transaction ID صحيح"); return; }
+    setSubmitting(true);
+    const { data, error } = await supabase.rpc("submit_usdt_recharge" as any, {
+      _amount_usdt: selectedPackage.usdt,
+      _transaction_id: txId.trim(),
+      _coins: selectedPackage.coins,
+      _diamonds: selectedPackage.diamonds,
+      _network: settings?.usdt_network || "TRC20",
+    });
+    setSubmitting(false);
+    const res = (data as any) || {};
+    if (error || !res.success) {
+      const code = res.error || error?.message;
+      const map: Record<string,string> = {
+        duplicate_txid: "هذا الـ Transaction ID مُستخدم من قبل",
+        invalid_txid: "Transaction ID غير صحيح",
+        invalid_amount: "مبلغ غير صحيح",
+      };
+      toast.error(map[code as string] || "فشل إرسال الطلب");
+      return;
+    }
+    toast.success("تم إرسال طلبك! سيتم اعتماده وإضافة الرصيد قريباً ⏳");
+    setTxId("");
+    setSelectedPkg(null);
+  };
+
+  const redeemNow = async () => {
+    if (code.trim().length < 3) { toast.error("أدخل كود صحيح"); return; }
+    setRedeeming(true);
+    const { data, error } = await supabase.rpc("redeem_code" as any, { _code: code.trim() });
+    setRedeeming(false);
+    const res = (data as any) || {};
+    if (error || !res.success) {
+      const map: Record<string,string> = {
+        invalid_code: "الكود غير صحيح",
+        inactive: "الكود غير مفعّل",
+        expired: "انتهت صلاحية الكود",
+        exhausted: "تم استخدام الكود بالكامل",
+        already_used: "لقد استخدمت هذا الكود من قبل",
+        unauthorized: "يجب تسجيل الدخول",
+      };
+      toast.error(map[res.error as string] || "فشل تفعيل الكود");
+      return;
+    }
+    toast.success(`🎉 تم! +${formatNum(res.coins || 0)} كوينز · +${formatNum(res.diamonds || 0)} ماسة`);
+    setCode("");
+    refreshBalance();
   };
 
   return (
     <PageTransition>
-      <div className="min-h-screen pb-24">
-        <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border">
+      <div className="min-h-screen pb-24 bg-gradient-to-b from-background via-background to-purple-950/20">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-yellow-500/10">
           <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
-            <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground">
+            <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-accent transition">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="font-bold text-lg glow-gold-text">⚡ شحن NOVA</h1>
-            <div className="ml-auto flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1">
+            <h1 className="font-extrabold text-lg bg-gradient-to-r from-yellow-300 via-amber-200 to-purple-300 bg-clip-text text-transparent">
+              ⚡ شحن NOVA
+            </h1>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-secondary/70 rounded-full px-2.5 py-1 border border-yellow-500/20">
                 <CurrencyIcon type="gold" size="xs" />
-                <span className="text-xs font-bold text-accent">{profile ? formatNum(profile.coins) : "..."}</span>
+                <span className="text-xs font-bold text-yellow-300">{profile ? formatNum(profile.coins) : "..."}</span>
               </div>
-              <div className="flex items-center gap-1 bg-secondary rounded-full px-2.5 py-1">
+              <div className="flex items-center gap-1 bg-secondary/70 rounded-full px-2.5 py-1 border border-purple-500/20">
                 <CurrencyIcon type="diamond" size="xs" />
-                <span className="text-xs font-bold text-primary">{profile ? formatNum(profile.diamonds) : "..."}</span>
+                <span className="text-xs font-bold text-purple-300">{profile ? formatNum(profile.diamonds) : "..."}</span>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="px-4 py-4 max-w-lg mx-auto space-y-6">
-          {/* Conversion Info */}
-          <div className="card-nova p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">سعر الصرف</p>
-            <div className="flex items-center justify-center gap-3">
+        <main className="px-4 py-4 max-w-lg mx-auto space-y-5">
+          {/* Method Tabs */}
+          <div className="grid grid-cols-3 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+            <MethodTab
+              active={method === "binance"}
+              onClick={() => setMethod("binance")}
+              icon={<Wallet className="w-4 h-4" />} label="USDT" sub="Binance"
+              gradient="from-yellow-400 to-amber-500"
+            />
+            <MethodTab
+              active={method === "agents"}
+              onClick={() => setMethod("agents")}
+              icon={<Users className="w-4 h-4" />} label="وكلاء" sub={`${agents.length} متاح`}
+              gradient="from-purple-500 to-fuchsia-500"
+            />
+            <MethodTab
+              active={method === "redeem"}
+              onClick={() => setMethod("redeem")}
+              icon={<Ticket className="w-4 h-4" />} label="كود" sub="فوري"
+              gradient="from-pink-500 to-purple-500"
+            />
+          </div>
+
+          {/* === BINANCE === */}
+          {method === "binance" && (
+            <div className="space-y-4">
+              {/* Wallet card */}
+              <div className="rounded-3xl p-4 border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 via-amber-500/5 to-purple-500/10 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-yellow-400/10 blur-3xl" />
+                <div className="relative space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-black" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-sm text-yellow-200">Binance Pay · USDT</p>
+                      <p className="text-[10px] text-muted-foreground">شبكة {settings?.usdt_network || "TRC20"} فقط</p>
+                    </div>
+                  </div>
+
+                  {settings?.usdt_qr_url && (
+                    <div className="flex justify-center">
+                      <div className="p-2 rounded-2xl bg-white">
+                        <img loading="lazy" decoding="async" src={settings.usdt_qr_url} alt="USDT QR" className="w-40 h-40 object-contain" />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl bg-background/60 border border-yellow-500/20 p-3 space-y-2">
+                    <p className="text-[10px] text-muted-foreground">عنوان المحفظة</p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 font-mono text-[11px] break-all text-yellow-100" dir="ltr">
+                        {settings?.usdt_wallet_address || "لم يتم تعيين عنوان بعد — تواصل مع الإدارة"}
+                      </p>
+                      <button
+                        onClick={copyWallet}
+                        disabled={!settings?.usdt_wallet_address}
+                        className="p-2 rounded-xl bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/30 disabled:opacity-40"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Packages */}
+              <div>
+                <h2 className="text-sm font-bold mb-2 text-yellow-200">اختر باقتك</h2>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {packages.map((pkg, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedPkg(i)}
+                      className={`relative rounded-2xl p-3 text-left border transition-all ${
+                        selectedPkg === i
+                          ? "border-yellow-400 bg-gradient-to-br from-yellow-500/20 to-purple-500/20 shadow-[0_0_20px_hsl(45_95%_55%/0.4)] scale-[1.02]"
+                          : "border-border/40 bg-secondary/30 hover:border-yellow-500/40"
+                      } ${pkg.popular ? "ring-1 ring-purple-400/40" : ""}`}
+                    >
+                      {pkg.popular && (
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-[9px] font-black text-black flex items-center gap-0.5 whitespace-nowrap">
+                          <Sparkles className="w-2.5 h-2.5" /> الأكثر شعبية
+                        </div>
+                      )}
+                      {pkg.bonus > 0 && (
+                        <div className="absolute -top-2 -right-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-[9px] font-black text-white">
+                          +{pkg.bonus}%
+                        </div>
+                      )}
+                      <p className="font-black text-lg text-yellow-200">${pkg.usdt}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <CurrencyIcon type="gold" size="xs" />
+                        <span className="text-[11px] font-bold text-yellow-300">{formatNum(pkg.coins)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <CurrencyIcon type="diamond" size="xs" />
+                        <span className="text-[10px] text-purple-300">{formatNum(pkg.diamonds)}</span>
+                      </div>
+                      {selectedPkg === i && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="w-4 h-4 text-yellow-300" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* TX-ID + submit */}
+              <div className="rounded-3xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-yellow-500/5 space-y-3">
+                <label className="block text-xs font-bold text-purple-200">
+                  Transaction ID (Hash)
+                </label>
+                <input
+                  value={txId}
+                  onChange={(e) => setTxId(e.target.value)}
+                  placeholder="ألصق Transaction ID من Binance"
+                  className="w-full rounded-xl bg-background/70 border border-purple-500/30 px-3 py-2.5 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
+                  dir="ltr"
+                />
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  سيتم اعتماد طلبك وإضافة الرصيد تلقائياً بعد التأكيد من الإدارة.
+                </p>
+                <button
+                  onClick={submitUsdt}
+                  disabled={submitting || !selectedPackage || txId.trim().length < 6}
+                  className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 text-black
+                    bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-400
+                    shadow-[0_8px_30px_hsl(45_95%_55%/0.4)] disabled:opacity-40 disabled:shadow-none"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  {selectedPackage ? `تأكيد التحويل · $${selectedPackage.usdt}` : "اختر باقة أولاً"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* === AGENTS === */}
+          {method === "agents" && (
+            <div className="space-y-3">
+              <div className="rounded-3xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/15 to-fuchsia-500/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <Users className="w-5 h-5 text-purple-300" />
+                  <p className="font-extrabold text-purple-200">الوكلاء المعتمدون</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  اختر وكيلاً وسيتم توجيهك مباشرة لمحادثة واتساب لإتمام الشحن يدوياً.
+                </p>
+              </div>
+
+              {agents.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground text-sm rounded-2xl border border-dashed border-border/40">
+                  لا يوجد وكلاء شحن متاحون حالياً
+                </div>
+              )}
+
+              <div className="space-y-2.5">
+                {agents.map((a) => (
+                  <div
+                    key={a.id}
+                    className="rounded-2xl p-3 border border-yellow-500/20 bg-gradient-to-r from-secondary/60 to-purple-950/20 flex items-center gap-3"
+                  >
+                    <button
+                      onClick={() => navigate(`/u/${a.user_id}`)}
+                      className="shrink-0"
+                    >
+                      {a.avatar_url ? (
+                        <img
+                          loading="lazy" decoding="async"
+                          src={a.avatar_url} alt={a.agent_name}
+                          className="w-14 h-14 rounded-full object-cover ring-2 ring-yellow-400/50"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-500/30 to-purple-500/30 flex items-center justify-center ring-2 ring-yellow-400/50">
+                          <Users className="w-6 h-6 text-yellow-300" />
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/u/${a.user_id}`)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <p className="font-extrabold text-sm truncate text-foreground">{a.agent_name}</p>
+                      <p className="text-[10px] text-muted-foreground" dir="ltr">📱 {a.whatsapp_number}</p>
+                      <p className="text-[10px] text-yellow-300/80">عرض الملف الشخصي</p>
+                    </button>
+
+                    <a
+                      href={`https://wa.me/${a.whatsapp_number.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                        `مرحباً، أريد شحن رصيد NOVA — ID: ${profile?.user_id || ""}`
+                      )}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="shrink-0 px-4 py-2.5 rounded-xl bg-emerald-500 text-white text-xs font-black flex items-center gap-1.5 shadow-[0_4px_20px_hsl(140_70%_45%/0.5)] hover:bg-emerald-400 transition"
+                    >
+                      <MessageCircle className="w-4 h-4" /> واتساب
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* === REDEEM === */}
+          {method === "redeem" && (
+            <div className="space-y-4">
+              <div className="rounded-3xl p-5 border border-pink-500/30 bg-gradient-to-br from-pink-500/15 via-purple-500/10 to-yellow-500/10 relative overflow-hidden">
+                <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-pink-400/20 blur-3xl" />
+                <div className="relative space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center">
+                      <Ticket className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-pink-200">كود شحن (Redeem)</p>
+                      <p className="text-[10px] text-muted-foreground">الرصيد يُضاف فوراً عند التفعيل</p>
+                    </div>
+                  </div>
+
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="NOVA-XXXX-XXXX"
+                    className="w-full rounded-xl bg-background/70 border border-pink-500/30 px-4 py-3 text-center text-base font-mono font-bold tracking-widest text-yellow-200 placeholder:text-muted-foreground/50 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
+                    dir="ltr"
+                  />
+
+                  <button
+                    onClick={redeemNow}
+                    disabled={redeeming || code.trim().length < 3}
+                    className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 text-white
+                      bg-gradient-to-r from-pink-500 via-purple-500 to-yellow-400
+                      shadow-[0_8px_30px_hsl(280_85%_60%/0.5)] disabled:opacity-40 disabled:shadow-none"
+                  >
+                    {redeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    تفعيل الكود
+                  </button>
+
+                  <p className="text-[10px] text-center text-muted-foreground">
+                    احصل على أكواد شحن من العروض والمسابقات الرسمية لـ NOVA.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Conversion footer */}
+          <div className="rounded-2xl p-3 text-center border border-border/30 bg-secondary/30">
+            <p className="text-[10px] text-muted-foreground mb-1">سعر الصرف</p>
+            <div className="flex items-center justify-center gap-3 text-xs">
               <div className="flex items-center gap-1">
-                <CurrencyIcon type="gold" size="sm" />
-                <span className="font-bold text-accent">10,000</span>
+                <CurrencyIcon type="gold" size="xs" />
+                <span className="font-bold text-yellow-300">10,000</span>
               </div>
               <span className="text-muted-foreground">=</span>
               <div className="flex items-center gap-1">
-                <CurrencyIcon type="diamond" size="sm" />
-                <span className="font-bold text-primary">5,000</span>
+                <CurrencyIcon type="diamond" size="xs" />
+                <span className="font-bold text-purple-300">5,000</span>
               </div>
             </div>
           </div>
-
-          {/* Packages */}
-          <div>
-            <h2 className="text-sm font-bold mb-3">اختر الباقة</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {packages.map((pkg, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedPackage(i)}
-                  className={`relative card-nova p-3 text-left transition-all duration-200 ${
-                    selectedPackage === i ? "border-primary glow-neon scale-[1.02]" : "hover:border-primary/30"
-                  } ${pkg.popular ? "border-accent/40" : ""}`}
-                >
-                  {pkg.popular && (
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full gradient-gold text-[9px] font-bold text-accent-foreground flex items-center gap-0.5">
-                      <Sparkles className="w-2.5 h-2.5" /> الأكثر شيوعاً
-                    </div>
-                  )}
-                  {pkg.bonus > 0 && (
-                    <div className="absolute -top-2 -right-1 px-1.5 py-0.5 rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
-                      +{pkg.bonus}%
-                    </div>
-                  )}
-                  <p className="font-extrabold text-lg">{formatNum(pkg.price)} <span className="text-xs font-normal text-muted-foreground">EGP</span></p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <CurrencyIcon type="gold" size="xs" />
-                    <span className="text-xs font-semibold text-accent">{formatNum(pkg.coins)} NOVA</span>
-                  </div>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <CurrencyIcon type="diamond" size="xs" />
-                    <span className="text-[10px] text-muted-foreground">{formatNum(pkg.diamonds)} ماسة</span>
-                  </div>
-                  {selectedPackage === i && (
-                    <div className="absolute top-2 right-2">
-                      <Check className="w-4 h-4 text-primary" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment Methods */}
-          <div>
-            <h2 className="text-sm font-bold mb-3">طريقة الدفع</h2>
-            <div className="space-y-2">
-              {paymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  onClick={() => setSelectedPayment(method.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 ${
-                    selectedPayment === method.id
-                      ? `${method.color} border glow-neon`
-                      : "bg-secondary border-transparent hover:border-border"
-                  }`}
-                >
-                  <span className="text-xl">{method.icon}</span>
-                  <span className="font-semibold text-sm flex-1 text-left">{method.name}</span>
-                  {selectedPayment === method.id && <Check className="w-4 h-4" />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Purchase Button */}
-          <button
-            onClick={handlePurchase}
-            disabled={selectedPackage === null || !selectedPayment}
-            className="w-full py-4 rounded-full gradient-neon font-extrabold text-lg text-primary-foreground btn-nova glow-neon disabled:opacity-40 disabled:shadow-none"
-          >
-            {selectedPackage !== null
-              ? `ادفع ${formatNum(packages[selectedPackage].price)} EGP ⚡`
-              : "اختر باقة"}
-          </button>
-
-          {/* Recharge from Agent */}
-          <button
-            onClick={() => setAgentsOpen(true)}
-            className="w-full py-3 rounded-full border-2 border-emerald-500/50 bg-emerald-500/10 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-500/20 transition"
-          >
-            <Phone className="w-4 h-4" /> شحن من وكيل شحن ({agents.length})
-          </button>
-
-          {/* Withdrawal Info */}
-          <div className="card-nova p-4 text-center space-y-1">
-            <p className="text-xs font-bold text-accent">💎 سحب الماسات</p>
-            <p className="text-[11px] text-muted-foreground">أول سحب: حد أدنى $10</p>
-            <p className="text-[11px] text-muted-foreground">السحب يتم عبر الوكالة فقط</p>
-          </div>
         </main>
-
-        {/* Agents Modal */}
-        <Dialog open={agentsOpen} onOpenChange={setAgentsOpen}>
-          <DialogContent className="max-w-sm bg-card/95 backdrop-blur-xl border-border max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-center flex items-center justify-center gap-2">
-                <Phone className="w-5 h-5 text-emerald-400" /> وكلاء الشحن
-              </DialogTitle>
-              <DialogDescription className="text-center text-xs">
-                اختر وكيل واتواصل معه عبر واتساب أو الرسائل المباشرة
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-3 mt-2">
-              {agents.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground text-sm">لا يوجد وكلاء شحن متاحون حالياً</div>
-              )}
-              {agents.map((a) => (
-                <div key={a.id} className="card-nova p-3 space-y-3">
-                  <div className="flex items-center gap-3">
-                    {a.avatar_url ? (
-                      <img loading="lazy" decoding="async" src={a.avatar_url} alt={a.agent_name} className="w-12 h-12 rounded-full object-cover ring-2 ring-emerald-400/40" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center ring-2 ring-emerald-400/40">
-                        <Phone className="w-5 h-5 text-emerald-400" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{a.agent_name}</p>
-                      <p className="text-[10px] text-muted-foreground" dir="ltr">📱 {a.whatsapp_number}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <a
-                      href={`tel:${a.whatsapp_number}`}
-                      className="py-2 rounded-xl bg-secondary border border-border text-foreground text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-secondary/80 transition"
-                    >
-                      <Phone className="w-3.5 h-3.5" /> اتصال
-                    </a>
-                    <a
-                      href={`https://wa.me/${a.whatsapp_number.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("مرحباً، أريد شحن رصيد NOVA")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-600 transition"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" /> واتساب
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         <BottomNav />
       </div>
     </PageTransition>
   );
 };
+
+const MethodTab = ({
+  active, onClick, icon, label, sub, gradient,
+}: {
+  active: boolean; onClick: () => void; icon: React.ReactNode;
+  label: string; sub: string; gradient: string;
+}) => (
+  <button
+    onClick={onClick}
+    className={`relative rounded-xl px-2 py-2.5 transition-all ${
+      active
+        ? `bg-gradient-to-br ${gradient} text-black shadow-lg`
+        : "bg-transparent text-muted-foreground hover:text-foreground"
+    }`}
+  >
+    <div className="flex items-center justify-center gap-1.5">
+      {icon}
+      <span className="text-xs font-extrabold">{label}</span>
+    </div>
+    <p className={`text-[9px] mt-0.5 ${active ? "text-black/70" : "text-muted-foreground"}`}>{sub}</p>
+  </button>
+);
 
 export default TopUpPage;
