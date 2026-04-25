@@ -1,9 +1,21 @@
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { Capacitor } from "@capacitor/core";
 import { registerServiceWorker } from "./lib/registerServiceWorker";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+
+// 🌐 Respect user's data-saving preferences before doing any preloading work
+const shouldPreload = () => {
+  const conn = (navigator as any).connection;
+  if (!conn) return true;
+  if (conn.saveData) return false;
+  if (conn.effectiveType === "2g" || conn.effectiveType === "slow-2g") return false;
+  return true;
+};
+// Exposed for future preload helpers (images, routes, etc.)
+(window as any).__shouldPreload = shouldPreload;
 
 // 🛡️ Global recovery for stale chunk imports after redeploys.
 // When a dynamic import fails (old hash no longer on CDN), reload once.
