@@ -39,6 +39,45 @@ const getFallbackDuration = (amount: number, explicit?: number) => {
 const MIN_VISIBLE_MS = 2200;  // never disappear too fast
 const MAX_VISIBLE_MS = 60000; // hard cap (60s) — only as runaway safety
 
+/**
+ * Dynamic exit buffer per media type — guarantees the asset reaches its
+ * natural end (last frame fully painted, audio tail fully heard) before the
+ * overlay starts its fade-out animation.
+ */
+const EXIT_BUFFER_MS = {
+  video: 350,   // small buffer; the `ended` event also short-circuits the timer
+  lottie: 450,  // last frame paint + fade
+  image: 600,   // static asset has no intrinsic end → keep it on screen longer
+  emoji: 600,
+} as const;
+
+/**
+ * Lazy fetch + tiny in-memory cache for Lottie JSON metadata.
+ * We only need (op - ip) / fr to compute the animation's true duration,
+ * so we don't keep the whole JSON around — just the resolved ms.
+ */
+const lottieDurationCache = new Map<string, number>();
+
+const readLottieDurationMs = async (url: string): Promise<number | null> => {
+  if (lottieDurationCache.has(url)) return lottieDurationCache.get(url)!;
+  try {
+    const res = await fetch(url, { cache: "force-cache" });
+    if (!res.ok) return null;
+    const json: any = await res.json();
+    const fr = Number(json?.fr) || 0;
+    const ip = Number(json?.ip) || 0;
+    const op = Number(json?.op) || 0;
+    if (fr > 0 && op > ip) {
+      const ms = ((op - ip) / fr) * 1000;
+      lottieDurationCache.set(url, ms);
+      return ms;
+    }
+  } catch {
+    /* ignore — fallback path will handle it */
+  }
+  return null;
+};
+
 const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -59,12 +98,34 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
-    // Initial safety fallback timer (used if media never loads metadata).
+    // Determine media type to pick the right exit buffer.
+    const mediaType: keyof typeof EXIT_BUFFER_MS = gift.videoUrl
+      ? "video"
+      : gift.lottieUrl
+        ? "lottie"
+        : gift.imageUrl
+          ? "image"
+          : "emoji";
+    const buffer = EXIT_BUFFER_MS[mediaType];
+
+    // Initial safety fallback timer (used until real media duration is known).
     const fallback = getFallbackDuration(gift.amount, gift.durationMs);
-    const safetyMs = Math.min(MAX_VISIBLE_MS, Math.max(MIN_VISIBLE_MS, fallback));
+    const safetyMs = Math.min(MAX_VISIBLE_MS, Math.max(MIN_VISIBLE_MS, fallback + buffer));
     timerRef.current = setTimeout(onComplete, safetyMs);
 
+    // 🎬 Lottie: if no explicit durationMs, read it from the JSON (in/out frames).
+    let cancelled = false;
+    if (mediaType === "lottie" && gift.lottieUrl && !gift.durationMs) {
+      readLottieDurationMs(gift.lottieUrl).then((ms) => {
+        if (cancelled || !ms) return;
+        if (timerRef.current) clearTimeout(timerRef.current);
+        const total = Math.max(MIN_VISIBLE_MS, Math.min(MAX_VISIBLE_MS, ms + buffer));
+        timerRef.current = setTimeout(onComplete, total);
+      });
+    }
+
     return () => {
+      cancelled = true;
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [gift, onComplete]);
@@ -78,6 +139,8 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
     if (!gift) return;
     const root = containerRef.current;
     if (!root) return;
+
+    const buffer = EXIT_BUFFER_MS.video;
 
     const scheduleClose = (ms: number, respectActualMedia = false) => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -93,10 +156,14 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
     const video = root.querySelector("video") as HTMLVideoElement | null;
     const onLoadedMeta = () => {
       if (video && isFinite(video.duration) && video.duration > 0) {
-        scheduleClose(video.duration * 1000 + 250, true); // play full duration
+        scheduleClose(video.duration * 1000 + buffer, true); // play full + buffer
       }
     };
-    const onEnded = () => onComplete();
+    const onEnded = () => {
+      // Give the last frame + audio tail a brief buffer before unmounting.
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(onComplete, buffer);
+    };
     if (video) {
       if (video.readyState >= 1) onLoadedMeta();
       video.addEventListener("loadedmetadata", onLoadedMeta);
