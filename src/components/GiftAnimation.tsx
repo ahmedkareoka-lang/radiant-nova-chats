@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, memo } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { useGifts } from "@/hooks/useGifts";
 import CurrencyIcon from "@/components/CurrencyIcon";
@@ -256,7 +257,7 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
 
   const canSend = selectedGift !== null && (isMultiMode ? selectedRecipients.size > 0 : !!receiverId);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       {burst && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -432,7 +433,8 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
           {sending ? "جارٍ الإرسال..." : totalCost > balance ? "رصيد غير كافٍ" : !canSend ? "اختر شخصاً وهدية" : isMultiMode ? `إرسال لـ ${selectedRecipients.size} أشخاص (x${multiplier})` : `إرسال الهدية (x${multiplier})`}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });
 
