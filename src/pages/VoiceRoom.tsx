@@ -116,7 +116,24 @@ const VoiceRoom = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
   const [giftBurst, setGiftBurst] = useState<{ emoji: string; count: number; imageUrl?: string | null } | null>(null);
-  const [fullscreenGift, setFullscreenGift] = useState<{ id: string; emoji: string; giftName: string; imageUrl: string | null; lottieUrl?: string | null; videoUrl?: string | null; senderName: string; recipientName: string; amount: number; timestamp: number; durationMs?: number } | null>(null);
+  type FullscreenGiftItem = { id: string; emoji: string; giftName: string; imageUrl: string | null; lottieUrl?: string | null; videoUrl?: string | null; senderName: string; recipientName: string; amount: number; timestamp: number; durationMs?: number };
+  // Currently displayed fullscreen gift + waiting queue (FIFO).
+  // Prevents overlapping/cut-short animations when multiple gifts arrive in burst.
+  const [fullscreenGift, setFullscreenGift] = useState<FullscreenGiftItem | null>(null);
+  const giftQueueRef = useRef<FullscreenGiftItem[]>([]);
+  const enqueueFullscreenGift = useCallback((g: FullscreenGiftItem) => {
+    // Cap queue to avoid unbounded growth in extreme bursts.
+    if (giftQueueRef.current.length >= 12) giftQueueRef.current.shift();
+    setFullscreenGift((cur) => {
+      if (!cur) return g;
+      giftQueueRef.current.push(g);
+      return cur;
+    });
+  }, []);
+  const advanceFullscreenGift = useCallback(() => {
+    const next = giftQueueRef.current.shift() || null;
+    setFullscreenGift(next);
+  }, []);
   const [giftToasts, setGiftToasts] = useState<{ id: string; emoji: string; imageUrl: string | null; senderName: string; recipientName: string; giftName: string; amount: number }[]>([]);
   // Last broadcasted gift (for "delivered to all" status panel)
   const [lastGift, setLastGift] = useState<{
