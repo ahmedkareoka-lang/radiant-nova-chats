@@ -79,9 +79,13 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
     const root = containerRef.current;
     if (!root) return;
 
-    const scheduleClose = (ms: number) => {
+    const scheduleClose = (ms: number, respectActualMedia = false) => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      const clamped = Math.min(MAX_VISIBLE_MS, Math.max(MIN_VISIBLE_MS, ms));
+      // For real media duration, only enforce the minimum — let it play in full.
+      // For fallback timers, also enforce the safety maximum.
+      const clamped = respectActualMedia
+        ? Math.max(MIN_VISIBLE_MS, ms)
+        : Math.min(MAX_VISIBLE_MS, Math.max(MIN_VISIBLE_MS, ms));
       timerRef.current = setTimeout(onComplete, clamped);
     };
 
@@ -89,7 +93,7 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
     const video = root.querySelector("video") as HTMLVideoElement | null;
     const onLoadedMeta = () => {
       if (video && isFinite(video.duration) && video.duration > 0) {
-        scheduleClose(video.duration * 1000 + 250); // small buffer
+        scheduleClose(video.duration * 1000 + 250, true); // play full duration
       }
     };
     const onEnded = () => onComplete();
