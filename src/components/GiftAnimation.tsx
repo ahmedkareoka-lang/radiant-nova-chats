@@ -257,7 +257,7 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
 
   const canSend = selectedGift !== null && (isMultiMode ? selectedRecipients.size > 0 : !!receiverId);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
       {burst && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
