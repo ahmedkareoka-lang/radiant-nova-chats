@@ -535,7 +535,7 @@ const VoiceRoom = () => {
         const { emoji, imageUrl, lottieUrl, videoUrl, amount, giftName, senderName, recipientName, durationMs } = payload.payload;
         logAgora("success", "Gift", `← received '${giftName}' from ${senderName}`, { amount, recipientName });
         const id = `${Date.now()}-${Math.random()}`;
-        setFullscreenGift({
+        enqueueFullscreenGift({
           id,
           emoji: emoji || "🎁",
           giftName: giftName || "هدية",
