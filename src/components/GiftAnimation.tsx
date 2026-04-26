@@ -433,7 +433,8 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
           {sending ? "جارٍ الإرسال..." : totalCost > balance ? "رصيد غير كافٍ" : !canSend ? "اختر شخصاً وهدية" : isMultiMode ? `إرسال لـ ${selectedRecipients.size} أشخاص (x${multiplier})` : `إرسال الهدية (x${multiplier})`}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });
 
