@@ -37,7 +37,7 @@ const getFallbackDuration = (amount: number, explicit?: number) => {
 };
 
 const MIN_VISIBLE_MS = 2200;  // never disappear too fast
-const MAX_VISIBLE_MS = 15000; // hard cap to avoid runaway animations
+const MAX_VISIBLE_MS = 60000; // hard cap (60s) — only as runaway safety
 
 const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
