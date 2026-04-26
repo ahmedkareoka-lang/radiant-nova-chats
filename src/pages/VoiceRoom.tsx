@@ -745,7 +745,7 @@ const VoiceRoom = () => {
       {/* Fullscreen Gift Effect */}
       <FullscreenGiftEffect
         gift={fullscreenGift}
-        onComplete={() => setFullscreenGift(null)}
+        onComplete={advanceFullscreenGift}
       />
 
       {/* Last Gift Delivered Panel — shows the most recent gift broadcasted in
