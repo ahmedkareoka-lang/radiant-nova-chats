@@ -1,4 +1,5 @@
-import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight, Package, Building2 } from "lucide-react";
+import { Settings, Shield, Camera, Bell, ChevronLeft, ImagePlus, Crown, ChevronRight, Package, Building2, User, Lock, Globe, HelpCircle, LogOut, Palette } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import CurrencyIcon from "@/components/CurrencyIcon";
@@ -75,6 +76,7 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { followersCount, followingCount } = useFollows(myId);
@@ -285,7 +287,7 @@ const Profile = () => {
                     </div>
                   )}
                 </button>
-                <button onClick={() => navigate("/edit-profile")} className="w-9 h-9 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-border/30">
+                <button onClick={() => setSettingsOpen(true)} className="w-9 h-9 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-border/30">
                   <Settings className="w-4 h-4 text-foreground" />
                 </button>
               </div>
@@ -644,6 +646,76 @@ const Profile = () => {
             </p>
           </button>
         </main>
+
+        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <SheetContent side="bottom" className="rounded-t-3xl border-border/30 bg-background/95 backdrop-blur-xl max-h-[85vh] overflow-y-auto">
+            <SheetHeader className="mb-4">
+              <SheetTitle className="text-center text-lg font-black">الإعدادات</SheetTitle>
+            </SheetHeader>
+
+            {/* User Info Summary */}
+            <div className="rounded-2xl p-4 mb-4 border border-border/30 bg-secondary/30">
+              <div className="flex items-center gap-3">
+                <FramedAvatar avatarUrl={profile?.avatar_url} equippedFrame={profile?.equipped_frame} size={56} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm truncate">{profile?.display_name || "مستخدم"}</p>
+                  <p className="text-[11px] text-muted-foreground">ID: {profile?.user_id}</p>
+                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                    <span>المستوى {profile?.level || 1}</span>
+                    <span>•</span>
+                    <span>{profile?.country_code || "—"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <div className="rounded-xl bg-background/40 p-2 text-center">
+                  <p className="text-[10px] text-muted-foreground">العملات</p>
+                  <p className="font-bold text-sm text-accent">{profile?.coins?.toLocaleString() || 0}</p>
+                </div>
+                <div className="rounded-xl bg-background/40 p-2 text-center">
+                  <p className="text-[10px] text-muted-foreground">الألماس</p>
+                  <p className="font-bold text-sm text-primary">{profile?.diamonds?.toLocaleString() || 0}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Settings list */}
+            <div className="space-y-2">
+              {[
+                { icon: User, label: "تعديل الملف الشخصي", onClick: () => { setSettingsOpen(false); navigate("/edit-profile"); } },
+                { icon: Palette, label: "الإطارات والمظهر", onClick: () => { setSettingsOpen(false); navigate("/inventory"); } },
+                { icon: Bell, label: "الإشعارات", onClick: () => { setSettingsOpen(false); navigate("/notifications"); } },
+                { icon: Globe, label: "اللغة", onClick: () => toast.info("قريباً") },
+                { icon: Lock, label: "الخصوصية والأمان", onClick: () => toast.info("قريباً") },
+                { icon: HelpCircle, label: "المساعدة والدعم", onClick: () => toast.info("قريباً") },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  onClick={item.onClick}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl border border-border/30 bg-secondary/20 hover:bg-secondary/40 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
+                    <item.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="flex-1 text-right text-sm font-bold">{item.label}</span>
+                  <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                </button>
+              ))}
+
+              <button
+                onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 transition-colors mt-4"
+              >
+                <div className="w-9 h-9 rounded-full bg-destructive/20 flex items-center justify-center">
+                  <LogOut className="w-4 h-4 text-destructive" />
+                </div>
+                <span className="flex-1 text-right text-sm font-bold text-destructive">تسجيل الخروج</span>
+              </button>
+            </div>
+
+            <p className="text-center text-[10px] text-muted-foreground mt-4">NOVA v1.0</p>
+          </SheetContent>
+        </Sheet>
 
         <BottomNav />
       </div>
