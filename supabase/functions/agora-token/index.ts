@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     // Parse body
     const body = await req.json().catch(() => ({}));
     const channelName: string = String(body.channelName || "").trim();
-    const role: "host" | "audience" = body.role === "host" ? "host" : "audience";
+    let role: "host" | "audience" = body.role === "host" ? "host" : "audience";
     const expireSeconds: number = Math.min(
       Math.max(Number(body.expireSeconds) || 3600, 60),
       24 * 3600,
@@ -90,6 +90,30 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Verify host role: only the room host or a user occupying a mic seat may publish.
+    if (role === "host") {
+      const userId = userData.user.id;
+      const { data: room } = await supabase
+        .from("rooms")
+        .select("host_id")
+        .eq("id", channelName)
+        .maybeSingle();
+      let allowed = !!room && room.host_id === userId;
+      if (!allowed && room) {
+        const { data: member } = await supabase
+          .from("room_members")
+          .select("mic_slot")
+          .eq("room_id", channelName)
+          .eq("user_id", userId)
+          .maybeSingle();
+        allowed = !!member && member.mic_slot !== null && member.mic_slot !== undefined;
+      }
+      if (!allowed) {
+        // Downgrade silently to audience instead of refusing — keeps UX smooth.
+        role = "audience";
+      }
     }
 
     const uid = 0;

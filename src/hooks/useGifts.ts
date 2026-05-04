@@ -34,23 +34,16 @@ export const useGifts = () => {
 
     const diamondAmount = Math.floor((goldAmount * rate) / 100);
 
-    // Deduct from sender via secure RPC
-    const { error: deductErr } = await supabase.rpc("deduct_coins_add_wealth", {
-      _user_id: senderId,
-      _coin_amount: goldAmount,
-      _xp_amount: goldAmount,
+    // Atomic gift send via secure RPC (validates sender = auth.uid())
+    const { error: giftErr } = await supabase.rpc("send_gift_atomic", {
+      _receiver_id: receiverId,
+      _gold_amount: goldAmount,
+      _gift_name: giftName,
     });
-    if (deductErr) {
-      toast.error("فشل في خصم الرصيد");
+    if (giftErr) {
+      toast.error("فشل في إرسال الهدية");
       return false;
     }
-
-    // Add to receiver via secure RPC
-    await supabase.rpc("add_diamonds_add_charisma", {
-      _user_id: receiverId,
-      _diamond_amount: diamondAmount,
-      _xp_amount: diamondAmount,
-    });
 
     // Log transaction
     await supabase.from("gift_transactions").insert({
