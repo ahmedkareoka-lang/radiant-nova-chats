@@ -287,7 +287,7 @@ const Profile = () => {
                     </div>
                   )}
                 </button>
-                <button onClick={() => navigate("/edit-profile")} className="w-9 h-9 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-border/30">
+                <button onClick={() => setSettingsOpen(true)} className="w-9 h-9 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-border/30">
                   <Settings className="w-4 h-4 text-foreground" />
                 </button>
               </div>
