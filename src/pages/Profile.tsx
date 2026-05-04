@@ -76,6 +76,7 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const { followersCount, followingCount } = useFollows(myId);
