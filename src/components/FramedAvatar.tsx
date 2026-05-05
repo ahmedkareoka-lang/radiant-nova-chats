@@ -178,7 +178,7 @@ const FramedAvatar = ({
   // No equipped frame, no role frame — but if user has VIP, show legendary VipFrame.
   if (vipTier) {
     const a = getVipFrameAsset(vipTier.level);
-    const outerW = a ? Math.round((px / a.holeScale) * FRAME_BOOST) : px;
+    const outerW = Math.round(px * FRAME_BOOST);
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
