@@ -11,6 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import DualBadge from "@/components/DualBadge";
 import ReactMarkdown from "react-markdown";
 import VirtualizedMessageList from "@/components/VirtualizedMessageList";
+import { supabase } from "@/integrations/supabase/client";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
