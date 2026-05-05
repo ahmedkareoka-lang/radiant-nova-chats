@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Crown, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Crown, Check, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import VipFrame from "@/components/VipFrame";
@@ -11,19 +12,37 @@ import { VIP_TIERS, getVipTier } from "@/lib/vipConfig";
 export default function VipPrivilegePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [buying, setBuying] = useState<number | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("vip_level, vip_expiry, coins, avatar_url, display_name")
-        .eq("id", user.id)
-        .single();
-      setProfile(data);
-    })();
-  }, []);
+  const reload = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("vip_level, vip_expiry, coins, avatar_url, display_name")
+      .eq("id", user.id)
+      .single();
+    setProfile(data);
+  };
+
+  useEffect(() => { reload(); }, []);
+
+  const handleBuy = async (level: number, price: number) => {
+    if ((profile?.coins || 0) < price) {
+      toast.error("رصيدك غير كافٍ — اشحن المزيد من النوفا كوين");
+      navigate("/top-up");
+      return;
+    }
+    setBuying(level);
+    const { data, error } = await supabase.rpc("purchase_vip" as any, { _level: level });
+    setBuying(null);
+    if (error) {
+      toast.error(error.message || "فشل الشراء");
+      return;
+    }
+    toast.success(`✨ تم تفعيل VIP ${level} — تحقق من حقيبتك!`);
+    await reload();
+  };
 
   const currentLevel = profile?.vip_level || 0;
   const currentTier = getVipTier(currentLevel);
