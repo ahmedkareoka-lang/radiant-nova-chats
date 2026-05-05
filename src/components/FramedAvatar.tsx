@@ -92,9 +92,7 @@ const FramedAvatar = ({
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}
         <BDFrame size={px}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </BDFrame>
       </div>
     );
@@ -105,9 +103,7 @@ const FramedAvatar = ({
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}
         <RechargeAgentFrame size={px}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </RechargeAgentFrame>
       </div>
     );
