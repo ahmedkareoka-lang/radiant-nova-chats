@@ -16,6 +16,8 @@ export type FrameDef = {
   key: string;
   name: string;
   image: string;
+  /** Actual artwork width / height. Non-square frames must keep their real ratio. */
+  aspect?: number;
   /** Inner avatar size relative to frame box (0.55 = 55%). Tune per frame artwork. */
   innerScale: number;
   /** Optional vertical nudge (-0.5..0.5) inside the frame, e.g. crowns sit higher */
@@ -35,6 +37,7 @@ export const FRAMES: FrameDef[] = [
     key: "frame-purple-wings",
     name: "إطار الأجنحة البنفسجية",
     image: framePurpleWings,
+    aspect: 1080 / 1920,
     innerScale: 0.62,
     store: { price_coins: 25000, rarity: "legendary" },
   },
@@ -50,6 +53,7 @@ export const FRAMES: FrameDef[] = [
     key: "lion-frame",
     name: "إطار الأسد",
     image: lionFrame,
+    aspect: 1638 / 1920,
     innerScale: 0.6,
     store: { price_coins: 75000, rarity: "mythic" },
   },
@@ -106,12 +110,13 @@ export const FRAME_ANIMATION: Record<string, string> = Object.fromEntries(
 export function getFrameFit(key: string | null | undefined): {
   innerScale: number;
   innerOffsetY: number;
+  aspect: number;
 } {
-  if (!key) return { innerScale: 0.7, innerOffsetY: 0 };
+  if (!key) return { innerScale: 0.7, innerOffsetY: 0, aspect: 1 };
   const def = FRAMES.find((f) => f.key === key);
-  if (def) return { innerScale: def.innerScale, innerOffsetY: def.innerOffsetY ?? 0 };
+  if (def) return { innerScale: def.innerScale, innerOffsetY: def.innerOffsetY ?? 0, aspect: def.aspect ?? 1 };
   // Unknown / admin-uploaded frame → conservative inner so the avatar fits inside
-  return { innerScale: 0.66, innerOffsetY: 0 };
+  return { innerScale: 0.66, innerOffsetY: 0, aspect: 1 };
 }
 
 export { bossFrame };

@@ -48,10 +48,9 @@ type Props = {
 const resolveSize = (s: FramedAvatarSize | number): number =>
   typeof s === "number" ? s : FRAMED_AVATAR_SIZES[s];
 
-/** Frame is the OUTER box (px). Avatar sits INSIDE its transparent hole.
- *  This boost makes the frame visually a bit bigger than the requested size
- *  so the artwork doesn't feel cramped — wings/crowns can breathe. */
-const FRAME_BOOST = 1.18;
+const BD_HOLE_SCALE = 0.62;
+const AGENT_HOLE_SCALE = 0.55;
+const INNER_AVATAR_RATIO = 0.72;
 
 /**
  * Renders an avatar that automatically adapts its size & position to fit
@@ -88,10 +87,15 @@ const FramedAvatar = ({
   const wantsAgentFrame = equipped === "frame-recharge-agent" || (!equipped && !wantsBDFrame && isRechargeAgent);
 
   if (wantsBDFrame) {
+    const innerPx = Math.round(px * INNER_AVATAR_RATIO);
+    const outerSize = Math.round(innerPx / BD_HOLE_SCALE);
     return (
-      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+      <div
+        className={`relative flex items-center justify-center ${className}`}
+        style={{ width: px, height: px, overflow: "visible" }}
+      >
         {behind}
-        <BDFrame size={px}>
+        <BDFrame size={outerSize}>
           <AvatarImg src={avatarUrl} alt={alt} />
         </BDFrame>
       </div>
@@ -99,10 +103,15 @@ const FramedAvatar = ({
   }
 
   if (wantsAgentFrame) {
+    const innerPx = Math.round(px * INNER_AVATAR_RATIO);
+    const outerSize = Math.round(innerPx / AGENT_HOLE_SCALE);
     return (
-      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+      <div
+        className={`relative flex items-center justify-center ${className}`}
+        style={{ width: px, height: px, overflow: "visible" }}
+      >
         {behind}
-        <RechargeAgentFrame size={px}>
+        <RechargeAgentFrame size={outerSize}>
           <AvatarImg src={avatarUrl} alt={alt} />
         </RechargeAgentFrame>
       </div>
@@ -112,9 +121,10 @@ const FramedAvatar = ({
   // Equipped VIP tier frame from inventory takes precedence over generic frame.
   if (equippedVipTier) {
     const a = getVipFrameAsset(equippedVipTier.level);
-    // Scale OUTER frame so the inner hole equals `px` → avatar keeps its
-    // intended size while the frame's wings/crown extend around it.
-    const outerW = a ? Math.round(px / a.holeScale) : Math.round(px * FRAME_BOOST);
+    // The requested size is the visual slot; keep the photo smaller inside
+    // the frame hole so the artwork visibly wears the avatar.
+    const innerPx = Math.round(px * INNER_AVATAR_RATIO);
+    const outerW = a ? Math.round(innerPx / a.holeScale) : px;
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
@@ -137,23 +147,23 @@ const FramedAvatar = ({
 
   if (frameImg) {
     const animClass = frameKey ? FRAME_ANIMATION[frameKey] || "" : "";
-    // Scale OUTER frame so the inner hole equals `px` → avatar keeps its
-    // intended size and the frame visually wraps around it.
-    const outerSize = Math.round(px / fit.innerScale);
-    const offsetPx = Math.round(outerSize * fit.innerOffsetY);
+    const innerPx = Math.round(px * INNER_AVATAR_RATIO);
+    const outerW = Math.round(innerPx / fit.innerScale);
+    const outerH = Math.round(outerW / fit.aspect);
+    const offsetPx = Math.round(innerPx * fit.innerOffsetY);
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
         style={{ width: px, height: px, overflow: "visible" }}
       >
         {behind}
-        <div className="relative" style={{ width: outerSize, height: outerSize }}>
-          {/* Inner avatar — exactly `px` so it fills the frame's hole */}
+        <div className="relative shrink-0" style={{ width: outerW, height: outerH }}>
+          {/* Inner avatar — smaller than the frame so the artwork wraps it */}
           <div
             className="absolute left-1/2 rounded-full overflow-hidden bg-background"
             style={{
-              width: px,
-              height: px,
+              width: innerPx,
+              height: innerPx,
               top: `calc(50% + ${offsetPx}px)`,
               transform: `translate(-50%, -50%)`,
             }}
@@ -172,7 +182,8 @@ const FramedAvatar = ({
   // No equipped frame, no role frame — but if user has VIP, show legendary VipFrame.
   if (vipTier) {
     const a = getVipFrameAsset(vipTier.level);
-    const outerW = a ? Math.round(px / a.holeScale) : Math.round(px * FRAME_BOOST);
+    const innerPx = Math.round(px * INNER_AVATAR_RATIO);
+    const outerW = a ? Math.round(innerPx / a.holeScale) : px;
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
