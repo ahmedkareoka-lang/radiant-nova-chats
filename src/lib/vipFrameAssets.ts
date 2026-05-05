@@ -27,13 +27,14 @@ export const VIP_FRAME_ASSETS: Record<number, {
   // Tuned so the avatar sits visually centered in each artwork's hole.
   // Higher tiers (3-7) have crowns / wings above, so the hole sits slightly
   // lower in the artwork and the avatar needs a small downward nudge.
-  1: { image: vip1, aspect: 1,    holeScale: 0.56, holeOffsetY: 0.02, widthMultiplier: 1.79 },
-  2: { image: vip2, aspect: 1,    holeScale: 0.50, holeOffsetY: 0.00, widthMultiplier: 2.00 },
-  3: { image: vip3, aspect: 1.5,  holeScale: 0.32, holeOffsetY: 0.06, widthMultiplier: 3.13 },
-  4: { image: vip4, aspect: 1.5,  holeScale: 0.36, holeOffsetY: 0.04, widthMultiplier: 2.78 },
-  5: { image: vip5, aspect: 1.5,  holeScale: 0.34, holeOffsetY: 0.02, widthMultiplier: 2.94 },
-  6: { image: vip6, aspect: 1.5,  holeScale: 0.30, holeOffsetY: 0.08, widthMultiplier: 3.33 },
-  7: { image: vip7, aspect: 1.5,  holeScale: 0.30, holeOffsetY: 0.05, widthMultiplier: 3.33 },
+  // Tuned so the avatar fills the frame's hole nicely (image inside frame).
+  1: { image: vip1, aspect: 1,    holeScale: 0.66, holeOffsetY: 0.02, widthMultiplier: 1.52 },
+  2: { image: vip2, aspect: 1,    holeScale: 0.62, holeOffsetY: 0.00, widthMultiplier: 1.61 },
+  3: { image: vip3, aspect: 1.5,  holeScale: 0.42, holeOffsetY: 0.06, widthMultiplier: 2.38 },
+  4: { image: vip4, aspect: 1.5,  holeScale: 0.46, holeOffsetY: 0.04, widthMultiplier: 2.17 },
+  5: { image: vip5, aspect: 1.5,  holeScale: 0.44, holeOffsetY: 0.02, widthMultiplier: 2.27 },
+  6: { image: vip6, aspect: 1.5,  holeScale: 0.40, holeOffsetY: 0.08, widthMultiplier: 2.50 },
+  7: { image: vip7, aspect: 1.5,  holeScale: 0.40, holeOffsetY: 0.05, widthMultiplier: 2.50 },
 };
 
 export const getVipFrameAsset = (level: number) => VIP_FRAME_ASSETS[level] || null;
