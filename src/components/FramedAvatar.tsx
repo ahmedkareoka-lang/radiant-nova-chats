@@ -61,9 +61,12 @@ const FramedAvatar = ({
   alt = "",
   isRechargeAgent = false,
   isBD = false,
+  vipLevel = 0,
+  reducedMotion = false,
 }: Props) => {
   const px = resolveSize(size);
   const equipped = equippedFrame || null;
+  const vipTier = getVipTier(vipLevel || 0);
 
   // Special keys: explicitly equipped BD / Recharge Agent frame from inventory.
   // If user has NOT equipped anything else, fall back to their role frame
