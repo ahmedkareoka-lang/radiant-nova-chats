@@ -37,6 +37,10 @@ type Props = {
   /** When true, wraps the avatar in the BD (Business Developer) frame.
    *  Takes precedence over both `isRechargeAgent` and `equippedFrame`. */
   isBD?: boolean;
+  /** VIP level (1-7). When > 0 and no other special frame is set, wraps in VipFrame. */
+  vipLevel?: number | null;
+  /** Disable VIP animations (e.g., in long lists for perf) */
+  reducedMotion?: boolean;
 };
 
 const resolveSize = (s: FramedAvatarSize | number): number =>
