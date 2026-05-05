@@ -45,7 +45,7 @@ const SearchPage = () => {
       setLoading(false);
     };
 
-    const timer = setTimeout(fetchUsers, 250);
+    const timer = setTimeout(fetchUsers, /^\d{6}$/.test(query.trim()) ? 0 : 250);
     return () => clearTimeout(timer);
   }, [query]);
 
