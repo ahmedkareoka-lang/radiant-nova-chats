@@ -33,14 +33,18 @@ export default function VipPrivilegePage() {
       navigate("/top-up");
       return;
     }
+    if ((profile?.vip_level || 0) === level && profile?.vip_expiry && new Date(profile.vip_expiry).getTime() > Date.now()) {
+      toast.error("VIP هذا مفعّل لديك — انتظر انتهاء الـ 30 يوماً قبل التجديد");
+      return;
+    }
     setBuying(level);
-    const { data, error } = await supabase.rpc("purchase_vip" as any, { _level: level });
+    const { error } = await supabase.rpc("purchase_vip" as any, { _level: level });
     setBuying(null);
     if (error) {
       toast.error(error.message || "فشل الشراء");
       return;
     }
-    toast.success(`✨ تم تفعيل VIP ${level} — تحقق من حقيبتك!`);
+    toast.success(`✨ تم تفعيل VIP ${level} لمدة 30 يوماً!`);
     await reload();
   };
 
@@ -119,6 +123,8 @@ export default function VipPrivilegePage() {
             {VIP_TIERS.map((tier, idx) => {
               const isActive = currentLevel === tier.level;
               const isBuying = buying === tier.level;
+              const isExpired = profile?.vip_expiry ? new Date(profile.vip_expiry).getTime() < Date.now() : true;
+              const blockedRenew = isActive && !isExpired;
 
               return (
                 <motion.div
@@ -167,17 +173,19 @@ export default function VipPrivilegePage() {
                       ))}
                     </ul>
                     <button
-                      disabled={isBuying}
-                      onClick={() => handleBuy(tier.level, tier.price)}
+                      disabled={isBuying || blockedRenew}
+                      onClick={() => navigate(`/vip/preview?level=${tier.level}`)}
                       className="w-full py-2.5 rounded-full font-bold text-sm flex items-center justify-center gap-1.5 transition-all text-foreground hover:scale-[1.02] active:scale-95 disabled:opacity-60"
                       style={{ background: tier.gradient, boxShadow: tier.shadow }}
                     >
                       {isBuying ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : blockedRenew ? (
+                        <>✓ مفعّل — ينتهي {new Date(profile!.vip_expiry).toLocaleDateString("ar-EG")}</>
                       ) : (
                         <>
                           <CurrencyIcon type="gold" size="xs" />
-                          {tier.price.toLocaleString()} {isActive ? "تجديد 30 يوماً" : currentLevel > tier.level ? "إضافة 30 يوماً" : "ترقية"}
+                          {tier.price.toLocaleString()} — معاينة وشراء (30 يوم)
                         </>
                       )}
                     </button>
@@ -188,7 +196,7 @@ export default function VipPrivilegePage() {
           </div>
 
           <p className="text-center text-[10px] text-muted-foreground mt-4 px-4">
-            * كل اشتراكات VIP تدوم 30 يوماً ويمكنك الترقية بين المستويات في أي وقت
+            * كل اشتراك VIP يدوم 30 يوماً فقط ولا يمكن تجديده قبل انتهاء صلاحيته. يمكنك ارتداء أي VIP تملكه من صفحة المعاينة.
           </p>
         </div>
       </div>

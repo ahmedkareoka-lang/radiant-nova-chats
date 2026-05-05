@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeBatcher, type RealtimeBatcher } from "@/lib/realtimeBatcher";
 import { recordLatency } from "@/lib/perfMetrics";
+import { applyDisplayedVip } from "@/lib/vipDisplay";
 
 export interface RoomMember {
   id: string;
@@ -125,14 +126,14 @@ export const useVoiceRoom = (roomId: string | null) => {
 
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
+            .select("id, display_name, avatar_url, vip_level, displayed_vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
             .in("id", userIds)
             .abortSignal(ac.signal);
 
           if (ac.signal.aborted) return;
 
           const profileMap: Record<string, any> = {};
-          profiles?.forEach((p) => { profileMap[p.id] = p; });
+          profiles?.forEach((p) => { profileMap[p.id] = applyDisplayedVip(p as any); });
 
           const next = fresh.map((m) => ({
             ...m,
@@ -173,11 +174,11 @@ export const useVoiceRoom = (roomId: string | null) => {
       const senderIds = [...new Set(data.map((m) => m.sender_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, display_name, vip_level, is_boss")
+        .select("id, display_name, vip_level, displayed_vip_level, is_boss")
         .in("id", senderIds);
 
       const profileMap: Record<string, any> = {};
-      profiles?.forEach((p) => { profileMap[p.id] = p; });
+      profiles?.forEach((p) => { profileMap[p.id] = applyDisplayedVip(p as any); });
 
       setMessages(data.map((m) => ({
         ...m,
@@ -201,13 +202,13 @@ export const useVoiceRoom = (roomId: string | null) => {
     if (room) {
       const { data: hostProfile } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
+        .select("display_name, avatar_url, vip_level, displayed_vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
         .eq("id", room.host_id)
         .single();
 
       setRoomData({
         ...room,
-        host_profile: hostProfile || null,
+        host_profile: hostProfile ? applyDisplayedVip(hostProfile as any) : null,
       });
     }
   }, [roomId]);

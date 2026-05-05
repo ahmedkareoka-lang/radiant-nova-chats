@@ -890,6 +890,7 @@ export type Database = {
           created_at: string
           diamonds: number
           display_name: string
+          displayed_vip_level: number | null
           entrance_audio_url: string | null
           entrance_video_url: string | null
           equipped_badge: string | null
@@ -927,6 +928,7 @@ export type Database = {
           created_at?: string
           diamonds?: number
           display_name?: string
+          displayed_vip_level?: number | null
           entrance_audio_url?: string | null
           entrance_video_url?: string | null
           equipped_badge?: string | null
@@ -964,6 +966,7 @@ export type Database = {
           created_at?: string
           diamonds?: number
           display_name?: string
+          displayed_vip_level?: number | null
           entrance_audio_url?: string | null
           entrance_video_url?: string | null
           equipped_badge?: string | null

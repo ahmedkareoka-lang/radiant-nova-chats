@@ -56,7 +56,7 @@ const charmThreshold = (lvl: number) => {
 
 const PROFILE_PUBLIC_FIELDS = `
   id, user_id, display_name, avatar_url, cover_url, gender, age, country_code,
-  coins, diamonds, level, vip_level, vip_expiry, nova_p_level, nova_p_expiry,
+  coins, diamonds, level, vip_level, vip_expiry, displayed_vip_level, nova_p_level, nova_p_expiry,
   wealth_level, wealth_xp, charisma_level, charisma_xp, total_spend_gold,
   is_boss, is_agent, is_host, is_bd, agency_eligible, agency_id,
   equipped_frame, equipped_badge, equipped_chat_bubble,
@@ -97,7 +97,11 @@ const Profile = () => {
         setLoading(false);
         return;
       }
-      setProfile(data);
+      // Apply displayed VIP override (capped by what user owns)
+      const eff = data
+        ? { ...data, vip_level: Math.min(Math.max(0, (data as any).displayed_vip_level || data.vip_level || 0), data.vip_level || 0) }
+        : data;
+      setProfile(eff);
       const { count: sentCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("sender_id", user.id);
       const { count: receivedCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
       setGiftStats({ sent: sentCount || 0, received: receivedCount || 0 });

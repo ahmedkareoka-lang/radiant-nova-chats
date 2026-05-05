@@ -34,11 +34,17 @@ export default function VipPreviewPage() {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("vip_level, coins, avatar_url, display_name")
+        .select("vip_level, vip_expiry, displayed_vip_level, coins, avatar_url, display_name")
         .eq("id", user.id)
         .single();
       setProfile(data);
+      // Sync the previewed level with what the user has displayed (or owned)
+      if (data) {
+        const initialLvl = data.displayed_vip_level || data.vip_level || initial;
+        if (initialLvl >= 1 && initialLvl <= 7) setLevel(initialLvl);
+      }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const next = () => setLevel((l) => (l >= 7 ? 1 : l + 1));
@@ -55,6 +61,27 @@ export default function VipPreviewPage() {
     };
   }, [level]);
 
+  const ownedLevel = profile?.vip_level || 0;
+  const displayedLevel = profile?.displayed_vip_level || ownedLevel;
+  const isOwned = ownedLevel >= tier.level;
+  const isCurrentlyDisplayed = displayedLevel === tier.level && isOwned;
+  const isActive = ownedLevel === tier.level;
+  const expiryDate = profile?.vip_expiry ? new Date(profile.vip_expiry) : null;
+  const isExpired = expiryDate ? expiryDate.getTime() < Date.now() : true;
+
+  const handleEquip = async () => {
+    if (!isOwned) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ displayed_vip_level: tier.level })
+      .eq("id", user.id);
+    if (error) return toast.error("تعذّر تبديل VIP");
+    setProfile((p: any) => ({ ...p, displayed_vip_level: tier.level }));
+    toast.success(`✨ تم ارتداء VIP ${tier.level}`);
+  };
+
   const handleBuy = async () => {
     if ((profile?.coins || 0) < tier.price) {
       toast.error("رصيدك غير كافٍ");
@@ -65,11 +92,18 @@ export default function VipPreviewPage() {
     const { error } = await supabase.rpc("purchase_vip" as any, { _level: tier.level });
     setBuying(false);
     if (error) return toast.error(error.message || "فشل الشراء");
-    toast.success(`✨ تم تفعيل VIP ${tier.level}!`);
-    navigate("/vip");
+    toast.success(`✨ تم تفعيل VIP ${tier.level} لمدة 30 يوماً!`);
+    // Reload profile in-place so UI reflects ownership instantly
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("vip_level, vip_expiry, displayed_vip_level, coins, avatar_url, display_name")
+        .eq("id", user.id)
+        .single();
+      setProfile(data);
+    }
   };
-
-  const isActive = profile?.vip_level === tier.level;
 
   return (
     <PageTransition>
@@ -310,27 +344,47 @@ export default function VipPreviewPage() {
             </ul>
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={handleBuy}
-            disabled={buying || isActive}
-            className="w-full py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 text-foreground hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
-            style={{ background: tier.gradient, boxShadow: tier.shadow }}
-          >
-            {buying ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : isActive ? (
-              <>✓ مفعّل حالياً</>
-            ) : (
-              <>
-                <CurrencyIcon type="gold" size="xs" />
-                {tier.price.toLocaleString()} — اشترِ {tier.title}
-              </>
-            )}
-          </button>
+          {/* CTA — Equip if owned, Buy otherwise */}
+          {isOwned && !isExpired ? (
+            <button
+              onClick={handleEquip}
+              disabled={isCurrentlyDisplayed}
+              className="w-full py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 text-foreground hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-70"
+              style={{ background: tier.gradient, boxShadow: tier.shadow }}
+            >
+              {isCurrentlyDisplayed ? <>✓ مرتدى حالياً</> : <>👑 ارتدِ {tier.title}</>}
+            </button>
+          ) : (
+            <button
+              onClick={handleBuy}
+              disabled={buying || (isActive && !isExpired)}
+              className="w-full py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 text-foreground hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
+              style={{ background: tier.gradient, boxShadow: tier.shadow }}
+            >
+              {buying ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isActive && !isExpired ? (
+                <>✓ مفعّل حالياً</>
+              ) : (
+                <>
+                  <CurrencyIcon type="gold" size="xs" />
+                  {tier.price.toLocaleString()} — اشترِ لمدة 30 يوم
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Expiry info */}
+          {isOwned && expiryDate && (
+            <p className="text-center text-[11px] mt-3" style={{ color: `hsl(${tier.glow})` }}>
+              {isExpired
+                ? `⏳ انتهى في ${expiryDate.toLocaleDateString("ar-EG")}`
+                : `⏳ ينتهي في ${expiryDate.toLocaleDateString("ar-EG")}`}
+            </p>
+          )}
 
           <p className="text-center text-[10px] text-muted-foreground mt-3">
-            تنقّل بين المستويات لمعاينة الإطار قبل الشراء
+            VIP يدوم 30 يوماً فقط — لا يمكن تجديده قبل انتهاء صلاحيته
           </p>
         </div>
       </div>
