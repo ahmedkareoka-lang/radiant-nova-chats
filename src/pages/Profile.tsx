@@ -355,7 +355,9 @@ const Profile = () => {
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
             <h2 className={`font-black text-2xl ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
-              {profile?.display_name || "User"}
+              {isBoss ? (profile?.display_name || "User") : (
+                <VipName name={profile?.display_name || "User"} level={profile?.vip_level || 0} size="lg" />
+              )}
             </h2>
 
             <div className="flex items-center gap-1.5 mt-2 flex-wrap justify-center">

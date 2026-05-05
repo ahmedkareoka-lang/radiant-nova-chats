@@ -152,8 +152,8 @@ export default function RoomUserProfileCard({
 
         {/* Name + status */}
         <div className="flex items-center justify-center gap-2 flex-wrap">
-          <span className="font-black text-lg bg-gradient-to-r from-fuchsia-300 to-purple-300 bg-clip-text text-transparent">
-            {profile.display_name}
+          <span className="font-black text-lg">
+            <VipName name={profile.display_name} level={(profile as any)?.vip_level || 0} size="lg" />
           </span>
           {profile.gender && (
             <span
