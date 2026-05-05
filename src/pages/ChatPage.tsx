@@ -11,6 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import DualBadge from "@/components/DualBadge";
 import ReactMarkdown from "react-markdown";
 import VirtualizedMessageList from "@/components/VirtualizedMessageList";
+import { supabase } from "@/integrations/supabase/client";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
@@ -86,12 +87,12 @@ const ChatPage = () => {
             <p className="text-sm font-bold text-right mb-3">انضم إلى الحفلة</p>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {conversations.slice(0, 6).map((conv) => (
-                <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0" onClick={() => setActiveConvId(conv.id)}>
-                  <div className="party-avatar-ring">
+                <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <button onClick={() => navigate(`/user?id=${conv.other_user.id}`)} className="party-avatar-ring">
                     <div className="w-14 h-14 rounded-full overflow-hidden bg-background">
                       <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
                     </div>
-                  </div>
+                  </button>
                   <span className="text-[9px] text-muted-foreground max-w-[60px] truncate text-center">{conv.other_user.display_name}</span>
                 </div>
               ))}
@@ -120,14 +121,17 @@ const ChatPage = () => {
           filtered.map((conv) => (
             <div
               key={conv.id}
-              onClick={() => setActiveConvId(conv.id)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors cursor-pointer border-b border-border/20"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors border-b border-border/20"
             >
-              <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border/30">
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/user?id=${conv.other_user.id}`); }}
+                className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border/30"
+                aria-label="عرض الملف الشخصي"
+              >
                 <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
                 <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
-              </div>
-              <div className="flex-1 min-w-0 text-right">
+              </button>
+              <div onClick={() => setActiveConvId(conv.id)} className="flex-1 min-w-0 text-right cursor-pointer">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] text-muted-foreground flex-shrink-0">
                     {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false }) : ""}
@@ -289,6 +293,27 @@ const AIChatView = ({ onBack }: { onBack: () => void }) => {
 const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: string; onBack: () => void; currentUserId: string | null }) => {
   const { messages, sendMessage } = useChatMessages(conversationId);
   const [input, setInput] = useState("");
+  const [other, setOther] = useState<{ id: string; display_name: string; avatar_url: string | null; vip_level: number; nova_p_level: number } | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: conv } = await supabase
+        .from("conversations").select("user1_id, user2_id").eq("id", conversationId).maybeSingle();
+      if (!conv || !currentUserId || cancelled) return;
+      const otherId = conv.user1_id === currentUserId ? conv.user2_id : conv.user1_id;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, vip_level, displayed_vip_level, nova_p_level")
+        .eq("id", otherId).maybeSingle();
+      if (prof && !cancelled) {
+        const eff: any = { ...prof, vip_level: Math.min(Math.max(0, (prof as any).displayed_vip_level || prof.vip_level || 0), prof.vip_level || 0) };
+        setOther(eff);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [conversationId, currentUserId]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -303,7 +328,26 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
           <button onClick={onBack} className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="font-bold text-sm">Chat</h1>
+          {other ? (
+            <button
+              onClick={() => navigate(`/user?id=${other.id}`)}
+              className="flex items-center gap-2.5 flex-1 min-w-0 text-right hover:bg-secondary/30 rounded-full p-1 -m-1 transition-colors"
+              aria-label="عرض الملف الشخصي"
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/40 flex-shrink-0">
+                <img loading="lazy" decoding="async" src={other.avatar_url || "https://i.pravatar.cc/60?img=3"} alt={other.display_name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 justify-end">
+                  <DualBadge novaLevel={other.nova_p_level || 0} vipLevel={other.vip_level || 0} />
+                  <p className="font-bold text-sm truncate">{other.display_name}</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground text-right">اضغط لعرض البروفايل</p>
+              </div>
+            </button>
+          ) : (
+            <h1 className="font-bold text-sm">Chat</h1>
+          )}
         </div>
       </header>
 

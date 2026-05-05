@@ -1,4 +1,4 @@
-import { ArrowLeft, TrendingUp, Heart, Users, Star, Crown, MessageCircle, UserPlus, UserMinus, Coins as CoinsIcon } from "lucide-react";
+import { ArrowLeft, TrendingUp, Heart, Users, Star, Crown, MessageCircle, UserPlus, UserMinus, Coins as CoinsIcon, ChevronRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import FramedAvatar from "@/components/FramedAvatar";
 import LoveBadge from "@/components/LoveBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import BDBadge from "@/components/BDBadge";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import AgentTransferModal from "@/components/AgentTransferModal";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import { useIsBD } from "@/hooks/useIsBD";
@@ -19,6 +20,32 @@ import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
+import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+
+const wealthThreshold = (lvl: number) => {
+  if (lvl < 10) return 100_000;
+  if (lvl < 20) return 250_000;
+  if (lvl < 30) return 600_000;
+  if (lvl < 40) return 1_500_000;
+  if (lvl < 50) return 3_500_000;
+  if (lvl < 60) return 7_000_000;
+  if (lvl < 70) return 14_000_000;
+  if (lvl < 80) return 28_000_000;
+  if (lvl < 90) return 55_000_000;
+  return 120_000_000;
+};
+const charmThreshold = (lvl: number) => {
+  if (lvl < 10) return 60_000;
+  if (lvl < 20) return 160_000;
+  if (lvl < 30) return 400_000;
+  if (lvl < 40) return 1_000_000;
+  if (lvl < 50) return 2_500_000;
+  if (lvl < 60) return 5_000_000;
+  if (lvl < 70) return 10_000_000;
+  if (lvl < 80) return 20_000_000;
+  if (lvl < 90) return 40_000_000;
+  return 90_000_000;
+};
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -236,28 +263,92 @@ const UserProfile = () => {
             <div className="mt-4 pb-10">
               {activeTab === "personal" && (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="card-nova p-3">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <TrendingUp className="w-3.5 h-3.5 text-accent" />
-                        <span className="text-[10px] font-bold">الثروة Lv.{profile?.wealth_level || 1}</span>
+                  {/* NOVA P card */}
+                  {(() => {
+                    const novaLvl = profile?.nova_p_level || 0;
+                    const totalGold = profile?.total_spend_gold || 0;
+                    const novaProgress = getNovaProgress(totalGold);
+                    const novaAsset = novaLvl > 0 ? getNovaAsset(novaLvl) : null;
+                    return (
+                      <div className="w-full text-right rounded-3xl border border-accent/30 p-4 relative overflow-hidden"
+                        style={{ background: "linear-gradient(135deg, hsl(280 60% 18% / 0.85), hsl(260 50% 14% / 0.85) 50%, hsl(45 70% 22% / 0.7))" }}>
+                        <div className="absolute inset-0 opacity-30 pointer-events-none"
+                          style={{ background: "radial-gradient(circle at 80% 20%, hsl(45 90% 55% / 0.4), transparent 60%)" }} />
+                        <div className="relative flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                              style={{ background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(280 80% 50%))" }}>
+                              <Crown className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-black text-sm text-foreground flex items-center gap-1.5">
+                                NOVA P
+                                {novaAsset && (
+                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-accent/30 text-accent font-black">{novaAsset.label}</span>
+                                )}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {novaLvl > 0 ? `إجمالي الذهب: ${totalGold.toLocaleString()}` : "لم يصل لأي مستوى بعد"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        {novaProgress.nextThreshold && (
+                          <div className="relative mt-3">
+                            <div className="h-2 rounded-full bg-background/40 overflow-hidden">
+                              <div className="h-full rounded-full transition-all"
+                                style={{ width: `${novaProgress.pct}%`, background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(280 80% 60%))" }} />
+                            </div>
+                            <p className="text-[9px] text-muted-foreground mt-1">التقدّم نحو P{novaProgress.nextLevel}: {Math.round(novaProgress.pct)}%</p>
+                          </div>
+                        )}
                       </div>
-                      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                        <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg, hsl(var(--accent)), hsl(45 100% 55%))" }}
-                          initial={{ width: 0 }} animate={{ width: `${((profile?.wealth_xp || 0) % 10000) / 100}%` }} transition={{ duration: 1 }} />
+                    );
+                  })()}
+
+                  {/* Wealth & Charm progress */}
+                  {(() => {
+                    const wXp = profile?.wealth_xp || 0;
+                    const wLvl = profile?.wealth_level || 1;
+                    const wNext = wealthThreshold(wLvl);
+                    const wRemaining = Math.max(0, wNext - wXp);
+                    const wPct = Math.min(100, (wXp / wNext) * 100);
+                    const cXp = profile?.charisma_xp || 0;
+                    const cLvl = profile?.charisma_level || 1;
+                    const cNext = charmThreshold(cLvl);
+                    const cRemaining = Math.max(0, cNext - cXp);
+                    const cPct = Math.min(100, (cXp / cNext) * 100);
+                    return (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-2xl p-3 border border-border/30 bg-secondary/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-1.5">
+                              <TierBadge level={wLvl} type="wealth" size="sm" />
+                              <span className="text-[11px] font-black text-foreground">Lv.{wLvl}</span>
+                            </div>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-background/50 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${wPct}%`, background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(20 90% 55%))" }} />
+                          </div>
+                          <p className="text-[9px] text-muted-foreground mt-1.5">باقي {wRemaining.toLocaleString()} للمستوى {wLvl + 1}</p>
+                        </div>
+                        <div className="rounded-2xl p-3 border border-border/30 bg-secondary/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-1.5">
+                              <TierBadge level={cLvl} type="charm" size="sm" />
+                              <span className="text-[11px] font-black text-foreground">Lv.{cLvl}</span>
+                            </div>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-background/50 overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${cPct}%`, background: "linear-gradient(90deg, hsl(280 90% 60%), hsl(320 90% 60%))" }} />
+                          </div>
+                          <p className="text-[9px] text-muted-foreground mt-1.5">باقي {cRemaining.toLocaleString()} للمستوى {cLvl + 1}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="card-nova p-3">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Heart className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-[10px] font-bold">الكاريزما Lv.{profile?.charisma_level || 1}</span>
-                      </div>
-                      <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                        <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(270 100% 65%))" }}
-                          initial={{ width: 0 }} animate={{ width: `${((profile?.charisma_xp || 0) % 10000) / 100}%` }} transition={{ duration: 1 }} />
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
+
+                  {/* Gift stats */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="card-nova p-3 text-center">
                       <Users className="w-4 h-4 text-primary mx-auto mb-1" />
