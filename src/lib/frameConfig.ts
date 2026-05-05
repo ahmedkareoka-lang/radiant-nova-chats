@@ -110,12 +110,13 @@ export const FRAME_ANIMATION: Record<string, string> = Object.fromEntries(
 export function getFrameFit(key: string | null | undefined): {
   innerScale: number;
   innerOffsetY: number;
+  aspect: number;
 } {
-  if (!key) return { innerScale: 0.7, innerOffsetY: 0 };
+  if (!key) return { innerScale: 0.7, innerOffsetY: 0, aspect: 1 };
   const def = FRAMES.find((f) => f.key === key);
-  if (def) return { innerScale: def.innerScale, innerOffsetY: def.innerOffsetY ?? 0 };
+  if (def) return { innerScale: def.innerScale, innerOffsetY: def.innerOffsetY ?? 0, aspect: def.aspect ?? 1 };
   // Unknown / admin-uploaded frame → conservative inner so the avatar fits inside
-  return { innerScale: 0.66, innerOffsetY: 0 };
+  return { innerScale: 0.66, innerOffsetY: 0, aspect: 1 };
 }
 
 export { bossFrame };
