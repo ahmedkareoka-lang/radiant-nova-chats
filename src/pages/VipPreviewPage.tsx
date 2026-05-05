@@ -34,11 +34,17 @@ export default function VipPreviewPage() {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("vip_level, coins, avatar_url, display_name")
+        .select("vip_level, vip_expiry, displayed_vip_level, coins, avatar_url, display_name")
         .eq("id", user.id)
         .single();
       setProfile(data);
+      // Sync the previewed level with what the user has displayed (or owned)
+      if (data) {
+        const initialLvl = data.displayed_vip_level || data.vip_level || initial;
+        if (initialLvl >= 1 && initialLvl <= 7) setLevel(initialLvl);
+      }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const next = () => setLevel((l) => (l >= 7 ? 1 : l + 1));
@@ -55,6 +61,27 @@ export default function VipPreviewPage() {
     };
   }, [level]);
 
+  const ownedLevel = profile?.vip_level || 0;
+  const displayedLevel = profile?.displayed_vip_level || ownedLevel;
+  const isOwned = ownedLevel >= tier.level;
+  const isCurrentlyDisplayed = displayedLevel === tier.level && isOwned;
+  const isActive = ownedLevel === tier.level;
+  const expiryDate = profile?.vip_expiry ? new Date(profile.vip_expiry) : null;
+  const isExpired = expiryDate ? expiryDate.getTime() < Date.now() : true;
+
+  const handleEquip = async () => {
+    if (!isOwned) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ displayed_vip_level: tier.level })
+      .eq("id", user.id);
+    if (error) return toast.error("تعذّر تبديل VIP");
+    setProfile((p: any) => ({ ...p, displayed_vip_level: tier.level }));
+    toast.success(`✨ تم ارتداء VIP ${tier.level}`);
+  };
+
   const handleBuy = async () => {
     if ((profile?.coins || 0) < tier.price) {
       toast.error("رصيدك غير كافٍ");
@@ -65,11 +92,18 @@ export default function VipPreviewPage() {
     const { error } = await supabase.rpc("purchase_vip" as any, { _level: tier.level });
     setBuying(false);
     if (error) return toast.error(error.message || "فشل الشراء");
-    toast.success(`✨ تم تفعيل VIP ${tier.level}!`);
-    navigate("/vip");
+    toast.success(`✨ تم تفعيل VIP ${tier.level} لمدة 30 يوماً!`);
+    // Reload profile in-place so UI reflects ownership instantly
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("vip_level, vip_expiry, displayed_vip_level, coins, avatar_url, display_name")
+        .eq("id", user.id)
+        .single();
+      setProfile(data);
+    }
   };
-
-  const isActive = profile?.vip_level === tier.level;
 
   return (
     <PageTransition>
