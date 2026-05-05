@@ -9,6 +9,8 @@ import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
 import EquippedBadge from "@/components/EquippedBadge";
 import BDFrame from "@/components/BDFrame";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
+import VipFrame from "@/components/VipFrame";
+import VipBadge from "@/components/VipBadge";
 
 const InventoryPage = () => {
   const navigate = useNavigate();
