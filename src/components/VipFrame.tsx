@@ -1,10 +1,11 @@
 import { memo, useMemo } from "react";
 import { getVipTier, type VipTier } from "@/lib/vipConfig";
+import { getVipFrameAsset } from "@/lib/vipFrameAssets";
 import { cn } from "@/lib/utils";
 
 interface VipFrameProps {
   level: number;
-  /** Pixel size of the inner avatar slot (frame extends ~30% beyond) */
+  /** Pixel size of the inner avatar slot (frame extends beyond) */
   size?: number;
   /** Children = the avatar to wrap (img / FramedAvatar / etc) */
   children: React.ReactNode;
@@ -14,159 +15,113 @@ interface VipFrameProps {
 }
 
 /**
- * NOVA Legendary VIP Frame
- * - Layered radial aura with counter-rotating rings
- * - Animated wings (level >= 3) drawn as pure CSS/SVG — flap continuously
- * - Live fire embers (level >= 5) rising from the base
- * - Tier-specific particle field (snow / stardust / runes)
- * 
- * Pure presentation. No deps beyond Tailwind + the keyframes in index.css.
+ * NOVA Legendary VIP Frame — uses high-fidelity AI-generated PNG art per tier
+ * with layered live animation (aura pulse, gentle wing sway, fire embers,
+ * tier-specific particles, and orbiting gold sparks).
  */
 const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, className }: VipFrameProps) => {
   const tier = getVipTier(level);
-  if (!tier) return <>{children}</>;
+  const asset = getVipFrameAsset(level);
+  if (!tier || !asset) return <>{children}</>;
 
-  const frameSize = Math.round(size * 1.45);
-  const wingSpan = Math.round(size * 1.2);
+  // Outer container width — sized so wings & ornaments fit. Height follows the asset's aspect.
+  const frameW = Math.round(size * asset.widthMultiplier);
+  const frameH = Math.round(frameW / asset.aspect);
+
+  // Inner avatar slot — its diameter is a fraction of the frame width, matching the artwork's hole.
+  const holeD = Math.round(frameW * asset.holeScale);
+  const holeOffsetPx = Math.round(frameH * asset.holeOffsetY);
 
   return (
     <div
       className={cn("relative inline-block", className)}
-      style={{ width: frameSize, height: frameSize, ["--vip-glow" as any]: `hsl(${tier.glow})` }}
+      style={{
+        width: frameW,
+        height: frameH,
+        ["--vip-glow" as any]: `hsl(${tier.glow})`,
+      }}
       aria-label={`${tier.titleEn} frame`}
     >
-      {/* ─── Outer rotating aura ─── */}
+      {/* ─── Soft aura behind the artwork ─── */}
       <div
-        className={cn("absolute inset-0 rounded-full pointer-events-none", !reducedMotion && "vip-aura-spin")}
-        style={{ background: tier.aura, filter: "blur(2px)" }}
-      />
-
-      {/* ─── Inner counter-rotating ring (gradient stroke) ─── */}
-      <div
-        className={cn("absolute rounded-full pointer-events-none", !reducedMotion && "vip-aura-spin-reverse")}
+        className={cn(
+          "absolute rounded-full pointer-events-none",
+          !reducedMotion && "vip-aura-pulse"
+        )}
         style={{
-          inset: "8%",
-          background: tier.gradient,
-          padding: "3px",
-          WebkitMask: "radial-gradient(circle, transparent 62%, black 64%)",
-          mask: "radial-gradient(circle, transparent 62%, black 64%)",
-          boxShadow: tier.shadow,
+          left: "50%",
+          top: `calc(50% + ${holeOffsetPx}px)`,
+          width: holeD * 1.6,
+          height: holeD * 1.6,
+          transform: "translate(-50%, -50%)",
+          background: tier.aura,
+          filter: "blur(8px)",
         }}
       />
 
-      {/* ─── Wings (level >= 3) ─── */}
-      {tier.hasWings && !reducedMotion && (
-        <Wings tier={tier} span={wingSpan} />
-      )}
+      {/* ─── Avatar slot ─── */}
+      <div
+        className="absolute rounded-full overflow-hidden"
+        style={{
+          left: "50%",
+          top: `calc(50% + ${holeOffsetPx}px)`,
+          width: holeD,
+          height: holeD,
+          transform: "translate(-50%, -50%)",
+          boxShadow: `inset 0 0 0 2px hsl(${tier.primary} / 0.55), 0 0 ${Math.round(holeD * 0.15)}px hsl(${tier.glow} / 0.55)`,
+          background: "hsl(var(--background))",
+        }}
+      >
+        {children}
+      </div>
 
-      {/* ─── Fire embers (level >= 5) ─── */}
+      {/* ─── Frame artwork on top ─── */}
+      <img
+        src={asset.image}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className={cn(
+          "absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-10",
+          !reducedMotion && tier.hasWings && "vip-frame-sway",
+          !reducedMotion && !tier.hasWings && "vip-frame-float"
+        )}
+        style={{ filter: `drop-shadow(0 0 ${Math.round(holeD * 0.12)}px hsl(${tier.glow} / 0.6))` }}
+      />
+
+      {/* ─── Live fire embers (level >= 5) ─── */}
       {tier.hasFire && !reducedMotion && (
-        <Embers tier={tier} />
+        <Embers tier={tier} width={frameW} height={frameH} />
       )}
 
       {/* ─── Tier-specific particle field ─── */}
       {!reducedMotion && <ParticleField tier={tier} />}
 
       {/* ─── Orbiting gold sparkles (every VIP gets these) ─── */}
-      {!reducedMotion && <GoldSparkles size={frameSize} />}
-
-      {/* ─── Avatar slot (centered) ─── */}
-      <div
-        className="absolute rounded-full overflow-hidden flex items-center justify-center"
-        style={{
-          inset: "16%",
-          boxShadow: `inset 0 0 0 2px hsl(${tier.primary} / 0.6)`,
-        }}
-      >
-        {children}
-      </div>
-
-      {/* ─── Tier crest (bottom-center badge) ─── */}
-      <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/3 px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1"
-        style={{
-          background: tier.gradient,
-          boxShadow: tier.shadow,
-          color: "hsl(0 0% 100%)",
-        }}
-      >
-        <span>{tier.crest}</span>
-        <span>VIP {tier.level}</span>
-      </div>
+      {!reducedMotion && <GoldSparkles size={Math.min(frameW, frameH)} />}
     </div>
   );
 };
 
-/* ─────────────── Wings ─────────────── */
-const Wings = ({ tier, span }: { tier: VipTier; span: number }) => {
-  const wingFill = `hsl(${tier.primary} / 0.85)`;
-  const wingStroke = `hsl(${tier.glow})`;
-
-  return (
-    <>
-      <svg
-        viewBox="0 0 100 60"
-        className="vip-wing-left absolute pointer-events-none"
-        style={{
-          width: span * 0.7,
-          height: span * 0.45,
-          left: -span * 0.55,
-          top: "30%",
-          filter: `drop-shadow(0 0 8px ${wingStroke})`,
-        }}
-        aria-hidden
-      >
-        <path
-          d="M 95 30 Q 60 5 10 15 Q 30 30 10 45 Q 60 55 95 30 Z"
-          fill={wingFill}
-          stroke={wingStroke}
-          strokeWidth="1.5"
-        />
-        <path d="M 80 30 Q 50 18 25 22" stroke={wingStroke} strokeWidth="0.8" fill="none" opacity="0.7" />
-        <path d="M 80 30 Q 50 30 25 30" stroke={wingStroke} strokeWidth="0.8" fill="none" opacity="0.7" />
-        <path d="M 80 30 Q 50 42 25 38" stroke={wingStroke} strokeWidth="0.8" fill="none" opacity="0.7" />
-      </svg>
-      <svg
-        viewBox="0 0 100 60"
-        className="vip-wing-right absolute pointer-events-none"
-        style={{
-          width: span * 0.7,
-          height: span * 0.45,
-          right: -span * 0.55,
-          top: "30%",
-          filter: `drop-shadow(0 0 8px ${wingStroke})`,
-          transform: "scaleX(-1)",
-        }}
-        aria-hidden
-      >
-        <path
-          d="M 95 30 Q 60 5 10 15 Q 30 30 10 45 Q 60 55 95 30 Z"
-          fill={wingFill}
-          stroke={wingStroke}
-          strokeWidth="1.5"
-        />
-        <path d="M 80 30 Q 50 18 25 22" stroke={wingStroke} strokeWidth="0.8" fill="none" opacity="0.7" />
-        <path d="M 80 30 Q 50 30 25 30" stroke={wingStroke} strokeWidth="0.8" fill="none" opacity="0.7" />
-        <path d="M 80 30 Q 50 42 25 38" stroke={wingStroke} strokeWidth="0.8" fill="none" opacity="0.7" />
-      </svg>
-    </>
-  );
-};
-
 /* ─────────────── Fire embers ─────────────── */
-const Embers = ({ tier }: { tier: VipTier }) => {
-  const embers = useMemo(() => Array.from({ length: 8 }, (_, i) => ({
-    left: 15 + (i * 11) % 70,
-    delay: (i * 0.27) % 2.2,
-    size: 4 + (i % 3) * 2,
-  })), []);
-
+const Embers = ({ tier, width, height }: { tier: VipTier; width: number; height: number }) => {
+  const embers = useMemo(
+    () => Array.from({ length: 10 }, (_, i) => ({
+      left: 20 + (i * 9) % 60,
+      delay: (i * 0.27) % 2.4,
+      size: 4 + (i % 3) * 2,
+    })),
+    []
+  );
   return (
-    <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
+    <div
+      className="absolute pointer-events-none z-20"
+      style={{ left: "10%", right: "10%", bottom: 0, height: height * 0.4 }}
+    >
       {embers.map((e, i) => (
         <span
           key={i}
-          className="vip-ember absolute bottom-2 rounded-full"
+          className="vip-ember absolute bottom-0 rounded-full"
           style={{
             left: `${e.left}%`,
             width: e.size,
@@ -202,7 +157,7 @@ const ParticleField = ({ tier }: { tier: VipTier }) => {
   }, [tier.particle]);
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className="absolute inset-0 pointer-events-none z-20">
       {particles.map((p, i) => (
         <span
           key={i}
@@ -224,7 +179,7 @@ const ParticleField = ({ tier }: { tier: VipTier }) => {
 
 /* ─────────────── Gold sparkles ─────────────── */
 const GoldSparkles = ({ size }: { size: number }) => {
-  const radius = Math.round(size * 0.5);
+  const radius = Math.round(size * 0.42);
   const sparks = useMemo(
     () => Array.from({ length: 6 }, (_, i) => ({
       delay: -((i * 6) / 6),
@@ -233,7 +188,7 @@ const GoldSparkles = ({ size }: { size: number }) => {
     []
   );
   return (
-    <div className="absolute inset-0 pointer-events-none" aria-hidden>
+    <div className="absolute inset-0 pointer-events-none z-20" aria-hidden>
       {sparks.map((s, i) => (
         <span
           key={i}

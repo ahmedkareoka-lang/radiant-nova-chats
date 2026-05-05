@@ -440,6 +440,27 @@
   pointer-events: none; mix-blend-mode: overlay;
 }
 
+/* Soft pulsing aura behind VIP avatar */
+@keyframes vip-aura-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.65; }
+  50%      { transform: translate(-50%, -50%) scale(1.08); opacity: 1;    }
+}
+.vip-aura-pulse { animation: vip-aura-pulse 3.2s ease-in-out infinite; }
+
+/* Gentle wing sway — for VIP frame artwork that already includes wings */
+@keyframes vip-frame-sway {
+  0%, 100% { transform: translateY(0)    scale(1);    }
+  50%      { transform: translateY(-3px) scale(1.015); }
+}
+.vip-frame-sway { animation: vip-frame-sway 2.8s ease-in-out infinite; transform-origin: 50% 60%; }
+
+/* Subtle float — for non-winged VIP frame artwork */
+@keyframes vip-frame-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+.vip-frame-float { animation: vip-frame-float 3.4s ease-in-out infinite; }
+
 /* Style-updated toast animation */
 @keyframes vip-style-updated {
   0%   { opacity: 0; transform: translateY(20px) scale(0.9); }
