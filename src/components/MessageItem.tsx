@@ -1,4 +1,5 @@
 import { memo } from "react";
+import VipName from "@/components/VipName";
 
 export interface ChatMessage {
   id: string;
@@ -9,6 +10,7 @@ export interface ChatMessage {
     id?: string;
     display_name?: string;
     avatar_url?: string | null;
+    vip_level?: number | null;
   } | null;
 }
 
@@ -32,8 +34,13 @@ export const MessageItem = memo(function MessageItem({ message, isMine }: Props)
         }`}
       >
         {!isMine && message.sender?.display_name && (
-          <p className="text-[10px] font-bold text-primary mb-0.5">
-            {message.sender.display_name}
+          <p className="text-[10px] mb-0.5">
+            <VipName
+              name={message.sender.display_name}
+              level={message.sender.vip_level}
+              size="sm"
+              className="text-primary"
+            />
           </p>
         )}
         <p className="whitespace-pre-wrap break-words">{message.content}</p>
