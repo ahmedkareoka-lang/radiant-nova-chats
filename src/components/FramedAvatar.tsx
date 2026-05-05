@@ -47,8 +47,10 @@ type Props = {
 const resolveSize = (s: FramedAvatarSize | number): number =>
   typeof s === "number" ? s : FRAMED_AVATAR_SIZES[s];
 
-/** Global boost so frames feel "premium" — they overhang the avatar by ~15%. */
-const FRAME_BOOST = 1.15;
+/** Frame is the OUTER box (px). Avatar sits INSIDE its transparent hole.
+ *  This boost makes the frame visually a bit bigger than the requested size
+ *  so the artwork doesn't feel cramped — wings/crowns can breathe. */
+const FRAME_BOOST = 1.18;
 
 /**
  * Renders an avatar that automatically adapts its size & position to fit
