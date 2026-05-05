@@ -412,6 +412,34 @@
 }
 .vip-twinkle { animation: vip-twinkle 1.8s ease-in-out infinite; }
 
+/* Gold sparkles — orbit around any VIP avatar / badge */
+@keyframes vip-gold-orbit {
+  0%   { transform: rotate(0deg) translateX(var(--vip-gold-r, 24px)) rotate(0deg); opacity: 0.9; }
+  50%  { opacity: 0.4; }
+  100% { transform: rotate(360deg) translateX(var(--vip-gold-r, 24px)) rotate(-360deg); opacity: 0.9; }
+}
+.vip-gold-spark {
+  position: absolute; left: 50%; top: 50%;
+  width: 6px; height: 6px; margin: -3px 0 0 -3px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, hsl(50 100% 75%), hsl(40 100% 55%) 60%, transparent 70%);
+  box-shadow: 0 0 8px hsl(45 100% 60% / 0.9), 0 0 16px hsl(45 100% 50% / 0.6);
+  animation: vip-gold-orbit 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes vip-badge-shine {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+.vip-badge-shine { position: relative; overflow: hidden; }
+.vip-badge-shine::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.55) 50%, transparent 70%);
+  background-size: 220% 100%;
+  animation: vip-badge-shine 3.2s linear infinite;
+  pointer-events: none; mix-blend-mode: overlay;
+}
+
 /* Style-updated toast animation */
 @keyframes vip-style-updated {
   0%   { opacity: 0; transform: translateY(20px) scale(0.9); }
