@@ -194,6 +194,16 @@ const InventoryPage = () => {
                           <img src={profilePreview.avatarUrl || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
                         </RechargeAgentFrame>
                       </div>
+                    ) : special === "vip" && item.item_data?.vip_level ? (
+                      <div className="w-20 h-20 mx-auto">
+                        <VipFrame level={item.item_data.vip_level} size={56} reducedMotion>
+                          <img src={profilePreview.avatarUrl || "/placeholder.svg"} alt="" className="w-full h-full object-cover" />
+                        </VipFrame>
+                      </div>
+                    ) : item.item_type === "vip" && item.item_data?.vip_level ? (
+                      <div className="w-16 h-16 mx-auto flex items-center justify-center">
+                        <VipBadge level={item.item_data.vip_level} size="md" />
+                      </div>
                     ) : frameImg ? (
                       <img src={frameImg} alt={item.item_name} className="w-16 h-16 mx-auto object-contain" loading="lazy" decoding="async" />
                     ) : isBadge && item.item_data?.image_url ? (
