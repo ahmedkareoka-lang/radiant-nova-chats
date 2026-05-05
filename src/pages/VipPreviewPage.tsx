@@ -266,6 +266,13 @@ export default function VipPreviewPage() {
               <p className="text-[11px] font-bold tracking-widest text-foreground/60 mb-1">
                 VIP {tier.level} · {tier.titleEn}
               </p>
+              <div className="mb-2 flex justify-center">
+                <VipName
+                  name={profile?.display_name || "اسمك هنا"}
+                  level={tier.level}
+                  size="lg"
+                />
+              </div>
               <h2
                 className="text-2xl font-black mb-1"
                 style={{
