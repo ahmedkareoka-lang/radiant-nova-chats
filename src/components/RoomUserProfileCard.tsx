@@ -19,6 +19,7 @@ import TierBadge from "./TierBadge";
 import DualBadge from "./DualBadge";
 import RechargeAgentBadge from "./RechargeAgentBadge";
 import BDBadge from "./BDBadge";
+import VipName from "./VipName";
 
 export interface RoomUserProfileData {
   user_id: string;

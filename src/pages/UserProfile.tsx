@@ -18,6 +18,7 @@ import { useIsBD } from "@/hooks/useIsBD";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
+import VipName from "@/components/VipName";
 
 const UserProfile = () => {
   const navigate = useNavigate();
