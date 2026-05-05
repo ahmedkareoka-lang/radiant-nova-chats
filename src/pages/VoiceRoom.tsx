@@ -1151,6 +1151,7 @@ const VoiceRoom = () => {
                         !!slotIsSpeaking && !isUserMuted,
                         rechargeAgentSet.has(slot.user_id),
                         bdSet.has(slot.user_id),
+                        (slot.profile as any)?.vip_level || 0,
                       )}
                       {isUserMuted && (
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center z-20 ring-2 ring-background">
