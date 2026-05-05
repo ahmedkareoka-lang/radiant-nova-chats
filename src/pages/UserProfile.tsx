@@ -41,7 +41,8 @@ const UserProfile = () => {
     const load = async () => {
       const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
       if (!data) { navigate("/"); return; }
-      setProfile(data);
+      const eff = { ...data, vip_level: Math.min(Math.max(0, (data as any).displayed_vip_level || data.vip_level || 0), data.vip_level || 0) };
+      setProfile(eff);
       const { count: sent } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("sender_id", userId);
       const { count: received } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", userId);
       setGiftStats({ sent: sent || 0, received: received || 0 });
