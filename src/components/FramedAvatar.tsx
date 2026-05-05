@@ -106,6 +106,20 @@ const FramedAvatar = ({
     );
   }
 
+  // Equipped VIP tier frame from inventory takes precedence over generic frame.
+  if (equippedVipTier) {
+    return (
+      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+        {behind}
+        <VipFrame level={equippedVipTier.level} size={px} reducedMotion={reducedMotion}>
+          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
+            alt={alt}
+            className="w-full h-full object-cover" />
+        </VipFrame>
+      </div>
+    );
+  }
+
   const frameKey = equippedFrame || null;
   const mapped = frameKey ? FRAME_MAP[frameKey] : null;
   const direct = !mapped && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/")) ? frameKey : null;
