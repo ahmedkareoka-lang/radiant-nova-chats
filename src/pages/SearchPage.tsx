@@ -17,23 +17,26 @@ const SearchPage = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!query.trim()) {
-        // Show all users when no search
+      const q = query.trim();
+      if (!q) {
         const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(20);
         setUsers(data || []);
         return;
       }
       setLoading(true);
-      const { data } = await supabase
+      // Escape commas/parens that would break PostgREST `or` filter
+      const safe = q.replace(/[,()]/g, " ");
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .or(`display_name.ilike.%${query}%,user_id.ilike.%${query}%`)
-        .limit(20);
+        .or(`display_name.ilike.%${safe}%,user_id.ilike.%${safe}%`)
+        .limit(30);
+      if (error) console.error("[search]", error);
       setUsers(data || []);
       setLoading(false);
     };
 
-    const timer = setTimeout(fetchUsers, 300);
+    const timer = setTimeout(fetchUsers, 250);
     return () => clearTimeout(timer);
   }, [query]);
 
