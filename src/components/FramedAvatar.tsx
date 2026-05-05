@@ -2,6 +2,7 @@ import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 import BDFrame from "@/components/BDFrame";
 import VipFrame from "@/components/VipFrame";
+import AvatarImg from "@/components/AvatarImg";
 import { getVipTier } from "@/lib/vipConfig";
 import { getVipFrameAsset } from "@/lib/vipFrameAssets";
 
@@ -91,9 +92,7 @@ const FramedAvatar = ({
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}
         <BDFrame size={px}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </BDFrame>
       </div>
     );
@@ -104,9 +103,7 @@ const FramedAvatar = ({
       <div className={`relative ${className}`} style={{ width: px, height: px }}>
         {behind}
         <RechargeAgentFrame size={px}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </RechargeAgentFrame>
       </div>
     );
@@ -125,9 +122,7 @@ const FramedAvatar = ({
       >
         {behind}
         <VipFrame level={equippedVipTier.level} size={outerW} reducedMotion={reducedMotion}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </VipFrame>
       </div>
     );
@@ -163,9 +158,7 @@ const FramedAvatar = ({
               transform: `translate(-50%, -50%)`,
             }}
           >
-            <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-              alt={alt}
-              className="w-full h-full object-cover" />
+            <AvatarImg src={avatarUrl} alt={alt} />
           </div>
           {/* Frame on top */}
           <img loading="lazy" decoding="async" src={frameImg}
@@ -187,9 +180,7 @@ const FramedAvatar = ({
       >
         {behind}
         <VipFrame level={vipTier.level} size={outerW} reducedMotion={reducedMotion}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </VipFrame>
       </div>
     );
@@ -201,9 +192,7 @@ const FramedAvatar = ({
       style={{ width: px, height: px }}
     >
       {behind}
-      <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-        alt={alt}
-        className="w-full h-full object-cover" />
+      <AvatarImg src={avatarUrl} alt={alt} />
     </div>
   );
 };
