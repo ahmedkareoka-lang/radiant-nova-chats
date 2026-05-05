@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeBatcher, type RealtimeBatcher } from "@/lib/realtimeBatcher";
 import { recordLatency } from "@/lib/perfMetrics";
+import { applyDisplayedVip } from "@/lib/vipDisplay";
 
 export interface RoomMember {
   id: string;
