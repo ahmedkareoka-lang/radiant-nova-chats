@@ -145,15 +145,16 @@ const FramedAvatar = ({
     const animClass = frameKey ? FRAME_ANIMATION[frameKey] || "" : "";
     // Scale OUTER frame so the inner hole equals `px` → avatar keeps its
     // intended size and the frame visually wraps around it.
-    const outerSize = Math.round(px / fit.innerScale);
-    const offsetPx = Math.round(outerSize * fit.innerOffsetY);
+    const outerW = Math.round(px / fit.innerScale);
+    const outerH = Math.round(outerW / fit.aspect);
+    const offsetPx = Math.round(px * fit.innerOffsetY);
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
         style={{ width: px, height: px, overflow: "visible" }}
       >
         {behind}
-        <div className="relative" style={{ width: outerSize, height: outerSize }}>
+        <div className="relative shrink-0" style={{ width: outerW, height: outerH }}>
           {/* Inner avatar — exactly `px` so it fills the frame's hole */}
           <div
             className="absolute left-1/2 rounded-full overflow-hidden bg-background"
