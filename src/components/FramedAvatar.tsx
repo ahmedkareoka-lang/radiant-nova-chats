@@ -2,6 +2,7 @@ import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 import BDFrame from "@/components/BDFrame";
 import VipFrame from "@/components/VipFrame";
+import AvatarImg from "@/components/AvatarImg";
 import { getVipTier } from "@/lib/vipConfig";
 import { getVipFrameAsset } from "@/lib/vipFrameAssets";
 
