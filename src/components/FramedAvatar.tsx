@@ -115,8 +115,10 @@ const FramedAvatar = ({
   // Equipped VIP tier frame from inventory takes precedence over generic frame.
   if (equippedVipTier) {
     const a = getVipFrameAsset(equippedVipTier.level);
-    // `px` = OUTER frame width. Avatar sits INSIDE the frame's hole.
-    const outerW = Math.round(px * FRAME_BOOST);
+    // For VIP frames, scale the OUTER frame so that the avatar inside the
+    // hole equals `px` (the requested avatar size). This way the avatar
+    // stays its intended size and the wings/crown extend around it.
+    const outerW = a ? Math.round(px / a.holeScale) : Math.round(px * FRAME_BOOST);
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
