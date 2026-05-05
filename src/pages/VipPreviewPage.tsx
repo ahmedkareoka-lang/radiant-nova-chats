@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import VipFrame from "@/components/VipFrame";
+import VipName from "@/components/VipName";
 import { VIP_TIERS, getVipTier } from "@/lib/vipConfig";
 
 export default function VipPreviewPage() {
@@ -42,6 +43,17 @@ export default function VipPreviewPage() {
 
   const next = () => setLevel((l) => (l >= 7 ? 1 : l + 1));
   const prev = () => setLevel((l) => (l <= 1 ? 7 : l - 1));
+
+  // Auto-play entrance effect when wearing/switching VIP level
+  useEffect(() => {
+    setPlayingEntrance(false);
+    const r = requestAnimationFrame(() => setPlayingEntrance(true));
+    const t = setTimeout(() => setPlayingEntrance(false), 4200);
+    return () => {
+      cancelAnimationFrame(r);
+      clearTimeout(t);
+    };
+  }, [level]);
 
   const handleBuy = async () => {
     if ((profile?.coins || 0) < tier.price) {
@@ -254,6 +266,13 @@ export default function VipPreviewPage() {
               <p className="text-[11px] font-bold tracking-widest text-foreground/60 mb-1">
                 VIP {tier.level} · {tier.titleEn}
               </p>
+              <div className="mb-2 flex justify-center">
+                <VipName
+                  name={profile?.display_name || "اسمك هنا"}
+                  level={tier.level}
+                  size="lg"
+                />
+              </div>
               <h2
                 className="text-2xl font-black mb-1"
                 style={{
