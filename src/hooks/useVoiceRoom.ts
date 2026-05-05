@@ -174,11 +174,11 @@ export const useVoiceRoom = (roomId: string | null) => {
       const senderIds = [...new Set(data.map((m) => m.sender_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, display_name, vip_level, is_boss")
+        .select("id, display_name, vip_level, displayed_vip_level, is_boss")
         .in("id", senderIds);
 
       const profileMap: Record<string, any> = {};
-      profiles?.forEach((p) => { profileMap[p.id] = p; });
+      profiles?.forEach((p) => { profileMap[p.id] = applyDisplayedVip(p as any); });
 
       setMessages(data.map((m) => ({
         ...m,
