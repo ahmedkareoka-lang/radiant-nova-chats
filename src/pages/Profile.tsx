@@ -321,6 +321,7 @@ const Profile = () => {
                     equippedFrame={equippedFrameKey}
                     isRechargeAgent={meIsAgent}
                     isBD={meIsBD}
+                    vipLevel={profile?.vip_level || 0}
                     size={120}
                   />
                 </div>

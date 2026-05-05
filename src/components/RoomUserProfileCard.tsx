@@ -146,6 +146,7 @@ export default function RoomUserProfileCard({
             size={120}
             isBD={!!isBD}
             isRechargeAgent={!!isRechargeAgent}
+            vipLevel={(profile as any)?.vip_level || 0}
           />
         </div>
 

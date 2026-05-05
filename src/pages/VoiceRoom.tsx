@@ -679,6 +679,7 @@ const VoiceRoom = () => {
     isSpeaking: boolean = false,
     isRechargeAgent: boolean = false,
     isBD: boolean = false,
+    vipLevel: number = 0,
   ) => {
     const sizePx = typeof size === "number"
       ? size
@@ -689,6 +690,7 @@ const VoiceRoom = () => {
         equippedFrame={equippedFrame}
         isRechargeAgent={isRechargeAgent}
         isBD={isBD}
+        vipLevel={vipLevel}
         size={sizePx}
         ringClassName={isSpeaking ? "ring-2 ring-green-400 shadow-[0_0_12px_rgba(74,222,128,0.5)]" : "ring-2 ring-border"}
         behind={isSpeaking ? <SpeakingWaves /> : null}
@@ -1149,6 +1151,7 @@ const VoiceRoom = () => {
                         !!slotIsSpeaking && !isUserMuted,
                         rechargeAgentSet.has(slot.user_id),
                         bdSet.has(slot.user_id),
+                        (slot.profile as any)?.vip_level || 0,
                       )}
                       {isUserMuted && (
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-destructive flex items-center justify-center z-20 ring-2 ring-background">

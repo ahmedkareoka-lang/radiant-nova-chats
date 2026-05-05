@@ -1,6 +1,8 @@
 import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 import BDFrame from "@/components/BDFrame";
+import VipFrame from "@/components/VipFrame";
+import { getVipTier } from "@/lib/vipConfig";
 
 /** Named size presets so pages don't need to hardcode pixel values everywhere. */
 export const FRAMED_AVATAR_SIZES = {
@@ -35,6 +37,10 @@ type Props = {
   /** When true, wraps the avatar in the BD (Business Developer) frame.
    *  Takes precedence over both `isRechargeAgent` and `equippedFrame`. */
   isBD?: boolean;
+  /** VIP level (1-7). When > 0 and no other special frame is set, wraps in VipFrame. */
+  vipLevel?: number | null;
+  /** Disable VIP animations (e.g., in long lists for perf) */
+  reducedMotion?: boolean;
 };
 
 const resolveSize = (s: FramedAvatarSize | number): number =>
@@ -55,9 +61,12 @@ const FramedAvatar = ({
   alt = "",
   isRechargeAgent = false,
   isBD = false,
+  vipLevel = 0,
+  reducedMotion = false,
 }: Props) => {
   const px = resolveSize(size);
   const equipped = equippedFrame || null;
+  const vipTier = getVipTier(vipLevel || 0);
 
   // Special keys: explicitly equipped BD / Recharge Agent frame from inventory.
   // If user has NOT equipped anything else, fall back to their role frame
@@ -126,6 +135,20 @@ const FramedAvatar = ({
         <img loading="lazy" decoding="async" src={frameImg}
           alt=""
           className={`absolute inset-0 w-full h-full object-contain pointer-events-none z-10 ${animClass}`} />
+      </div>
+    );
+  }
+
+  // No equipped frame, no role frame — but if user has VIP, show legendary VipFrame.
+  if (vipTier) {
+    return (
+      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+        {behind}
+        <VipFrame level={vipTier.level} size={px} reducedMotion={reducedMotion}>
+          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
+            alt={alt}
+            className="w-full h-full object-cover" />
+        </VipFrame>
       </div>
     );
   }

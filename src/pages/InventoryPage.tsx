@@ -52,13 +52,13 @@ const InventoryPage = () => {
   const equipFrame = async (frameUrl: string | null) => {
     await supabase.from("profiles").update({ equipped_frame: frameUrl }).eq("id", userId);
     setEquippedFrame(frameUrl);
-    toast.success(frameUrl ? "تم تفعيل الإطار! 🖼️" : "تم إزالة الإطار");
+    toast.success(frameUrl ? "✨ Style Updated — تم تفعيل الإطار" : "تم إزالة الإطار");
   };
 
   const equipBadge = async (badgeName: string | null) => {
     await supabase.from("profiles").update({ equipped_badge: badgeName } as any).eq("id", userId);
     setEquippedBadge(badgeName);
-    toast.success(badgeName ? "تم تفعيل الشارة! 🏅" : "تم إزالة الشارة");
+    toast.success(badgeName ? "✨ Style Updated — تم تفعيل الشارة" : "تم إزالة الشارة");
   };
 
   const tabs = [
