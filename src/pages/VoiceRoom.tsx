@@ -482,14 +482,30 @@ const VoiceRoom = () => {
       return;
     }
 
-    // Server-side validation
-    const { data: canAccess } = await supabase.rpc("validate_mic_access", {
+    // Make sure we're a member of the room before sitting (RLS / FK guard)
+    if (!existing) {
+      await joinRoom();
+    }
+
+    // Quick client-side check: is the slot taken by someone else?
+    const slotTaken = members.find((m) => m.mic_slot === slotIndex && m.user_id !== currentUserId);
+    if (slotTaken) {
+      toast.error("هذا المايك مشغول");
+      return;
+    }
+
+    // Server-side validation (banned / locked / muted / out-of-range)
+    const { data: canAccess, error: vErr } = await supabase.rpc("validate_mic_access", {
       _user_id: currentUserId,
       _room_id: roomId,
       _slot: slotIndex,
     });
 
-    if (!canAccess) {
+    if (vErr) {
+      console.error("validate_mic_access error", vErr);
+    }
+
+    if (canAccess === false) {
       toast.error("لا يمكنك الجلوس على هذا المايك");
       return;
     }
@@ -498,6 +514,17 @@ const VoiceRoom = () => {
       await updateMicSlot(null, false);
     }
 
+    const { error: upErr } = await (supabase
+      .from("room_members")
+      .upsert(
+        { room_id: roomId, user_id: currentUserId, mic_slot: slotIndex, is_on_mic: true },
+        { onConflict: "room_id,user_id" }
+      ) as any);
+    if (upErr) {
+      console.error("sit-on-mic upsert error", upErr);
+      toast.error("تعذر الجلوس على المايك");
+      return;
+    }
     await updateMicSlot(slotIndex, true);
     setIsMuted(false);
     toast.success(`جلست على المايك ${slotIndex + 1} 🎙️`);
