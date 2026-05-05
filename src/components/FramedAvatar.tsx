@@ -192,9 +192,7 @@ const FramedAvatar = ({
       style={{ width: px, height: px }}
     >
       {behind}
-      <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-        alt={alt}
-        className="w-full h-full object-cover" />
+      <AvatarImg src={avatarUrl} alt={alt} />
     </div>
   );
 };
