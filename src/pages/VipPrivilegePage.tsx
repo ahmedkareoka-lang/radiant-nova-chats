@@ -105,6 +105,13 @@ export default function VipPrivilegePage() {
                 ينتهي في {new Date(profile.vip_expiry).toLocaleDateString("ar-EG")}
               </p>
             )}
+            <button
+              onClick={() => navigate(`/vip/preview?level=${currentLevel || 1}`)}
+              className="mt-4 px-5 py-2 rounded-full text-xs font-black bg-background/40 backdrop-blur border border-foreground/20 hover:scale-105 active:scale-95 transition-transform flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
+              معاينة جميع الإطارات
+            </button>
           </motion.div>
 
           {/* Tiers */}
