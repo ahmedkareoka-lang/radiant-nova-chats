@@ -3,6 +3,7 @@ import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 import BDFrame from "@/components/BDFrame";
 import VipFrame from "@/components/VipFrame";
 import { getVipTier } from "@/lib/vipConfig";
+import { getVipFrameAsset } from "@/lib/vipFrameAssets";
 
 /** Named size presets so pages don't need to hardcode pixel values everywhere. */
 export const FRAMED_AVATAR_SIZES = {
@@ -108,13 +109,15 @@ const FramedAvatar = ({
 
   // Equipped VIP tier frame from inventory takes precedence over generic frame.
   if (equippedVipTier) {
+    const a = getVipFrameAsset(equippedVipTier.level);
+    const outerW = a ? Math.round(px / a.holeScale) : px;
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
         style={{ width: px, height: px, overflow: "visible" }}
       >
         {behind}
-        <VipFrame level={equippedVipTier.level} size={px} reducedMotion={reducedMotion}>
+        <VipFrame level={equippedVipTier.level} size={outerW} reducedMotion={reducedMotion}>
           <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
             alt={alt}
             className="w-full h-full object-cover" />
@@ -164,13 +167,15 @@ const FramedAvatar = ({
 
   // No equipped frame, no role frame — but if user has VIP, show legendary VipFrame.
   if (vipTier) {
+    const a = getVipFrameAsset(vipTier.level);
+    const outerW = a ? Math.round(px / a.holeScale) : px;
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
         style={{ width: px, height: px, overflow: "visible" }}
       >
         {behind}
-        <VipFrame level={vipTier.level} size={px} reducedMotion={reducedMotion}>
+        <VipFrame level={vipTier.level} size={outerW} reducedMotion={reducedMotion}>
           <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
             alt={alt}
             className="w-full h-full object-cover" />
