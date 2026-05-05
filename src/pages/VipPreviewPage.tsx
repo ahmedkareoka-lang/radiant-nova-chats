@@ -344,27 +344,47 @@ export default function VipPreviewPage() {
             </ul>
           </div>
 
-          {/* CTA */}
-          <button
-            onClick={handleBuy}
-            disabled={buying || isActive}
-            className="w-full py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 text-foreground hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
-            style={{ background: tier.gradient, boxShadow: tier.shadow }}
-          >
-            {buying ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : isActive ? (
-              <>✓ مفعّل حالياً</>
-            ) : (
-              <>
-                <CurrencyIcon type="gold" size="xs" />
-                {tier.price.toLocaleString()} — اشترِ {tier.title}
-              </>
-            )}
-          </button>
+          {/* CTA — Equip if owned, Buy otherwise */}
+          {isOwned && !isExpired ? (
+            <button
+              onClick={handleEquip}
+              disabled={isCurrentlyDisplayed}
+              className="w-full py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 text-foreground hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-70"
+              style={{ background: tier.gradient, boxShadow: tier.shadow }}
+            >
+              {isCurrentlyDisplayed ? <>✓ مرتدى حالياً</> : <>👑 ارتدِ {tier.title}</>}
+            </button>
+          ) : (
+            <button
+              onClick={handleBuy}
+              disabled={buying || (isActive && !isExpired)}
+              className="w-full py-3.5 rounded-full font-black text-sm flex items-center justify-center gap-2 text-foreground hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60"
+              style={{ background: tier.gradient, boxShadow: tier.shadow }}
+            >
+              {buying ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isActive && !isExpired ? (
+                <>✓ مفعّل حالياً</>
+              ) : (
+                <>
+                  <CurrencyIcon type="gold" size="xs" />
+                  {tier.price.toLocaleString()} — اشترِ لمدة 30 يوم
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Expiry info */}
+          {isOwned && expiryDate && (
+            <p className="text-center text-[11px] mt-3" style={{ color: `hsl(${tier.glow})` }}>
+              {isExpired
+                ? `⏳ انتهى في ${expiryDate.toLocaleDateString("ar-EG")}`
+                : `⏳ ينتهي في ${expiryDate.toLocaleDateString("ar-EG")}`}
+            </p>
+          )}
 
           <p className="text-center text-[10px] text-muted-foreground mt-3">
-            تنقّل بين المستويات لمعاينة الإطار قبل الشراء
+            VIP يدوم 30 يوماً فقط — لا يمكن تجديده قبل انتهاء صلاحيته
           </p>
         </div>
       </div>
