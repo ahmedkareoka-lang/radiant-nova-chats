@@ -158,9 +158,7 @@ const FramedAvatar = ({
               transform: `translate(-50%, -50%)`,
             }}
           >
-            <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-              alt={alt}
-              className="w-full h-full object-cover" />
+            <AvatarImg src={avatarUrl} alt={alt} />
           </div>
           {/* Frame on top */}
           <img loading="lazy" decoding="async" src={frameImg}
