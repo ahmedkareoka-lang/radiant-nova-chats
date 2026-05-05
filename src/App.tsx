@@ -71,6 +71,7 @@ const PostsFeedPage = lazyWithRetry(() => import("./pages/PostsFeedPage"));
 const GamesPage = lazyWithRetry(() => import("./pages/GamesPage"));
 const NovaPPage = lazyWithRetry(() => import("./pages/NovaPPage"));
 const VipPrivilegePage = lazyWithRetry(() => import("./pages/VipPrivilegePage"));
+const VipPreviewPage = lazyWithRetry(() => import("./pages/VipPreviewPage"));
 const NovaPassPage = lazyWithRetry(() => import("./pages/NovaPassPage"));
 const LuckyBoxPage = lazyWithRetry(() => import("./pages/LuckyBoxPage"));
 const StreakPage = lazyWithRetry(() => import("./pages/StreakPage"));
@@ -177,6 +178,7 @@ const AnimatedRoutes = () => {
         <Route path="/games" element={<AuthGate><GamesPage /></AuthGate>} />
         <Route path="/nova-p" element={<AuthGate><NovaPPage /></AuthGate>} />
         <Route path="/vip" element={<AuthGate><VipPrivilegePage /></AuthGate>} />
+        <Route path="/vip/preview" element={<AuthGate><VipPreviewPage /></AuthGate>} />
         <Route path="/nova-pass" element={<AuthGate><NovaPassPage /></AuthGate>} />
         <Route path="/lucky-box" element={<AuthGate><LuckyBoxPage /></AuthGate>} />
         <Route path="/streak" element={<AuthGate><StreakPage /></AuthGate>} />
