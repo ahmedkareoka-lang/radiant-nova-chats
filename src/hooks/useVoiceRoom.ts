@@ -126,14 +126,14 @@ export const useVoiceRoom = (roomId: string | null) => {
 
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, display_name, avatar_url, vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
+            .select("id, display_name, avatar_url, vip_level, displayed_vip_level, is_boss, user_id, wealth_level, wealth_xp, charisma_level, charisma_xp, equipped_frame, entrance_video_url, entrance_audio_url, equipped_entrance_effect")
             .in("id", userIds)
             .abortSignal(ac.signal);
 
           if (ac.signal.aborted) return;
 
           const profileMap: Record<string, any> = {};
-          profiles?.forEach((p) => { profileMap[p.id] = p; });
+          profiles?.forEach((p) => { profileMap[p.id] = applyDisplayedVip(p as any); });
 
           const next = fresh.map((m) => ({
             ...m,
