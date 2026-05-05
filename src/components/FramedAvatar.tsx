@@ -122,9 +122,7 @@ const FramedAvatar = ({
       >
         {behind}
         <VipFrame level={equippedVipTier.level} size={outerW} reducedMotion={reducedMotion}>
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+          <AvatarImg src={avatarUrl} alt={alt} />
         </VipFrame>
       </div>
     );
