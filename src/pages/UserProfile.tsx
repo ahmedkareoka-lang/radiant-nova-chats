@@ -101,6 +101,7 @@ const UserProfile = () => {
                   equippedFrame={frameKey}
                   isRechargeAgent={targetIsAgent}
                   isBD={targetIsBD}
+                  vipLevel={(profile as any)?.vip_level || 0}
                   size={120}
                 />
               </div>
