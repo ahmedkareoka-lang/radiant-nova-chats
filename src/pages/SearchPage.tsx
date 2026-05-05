@@ -24,13 +24,22 @@ const SearchPage = () => {
         return;
       }
       setLoading(true);
-      // Escape commas/parens that would break PostgREST `or` filter
-      const safe = q.replace(/[,()]/g, " ");
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .or(`display_name.ilike.%${safe}%,user_id.ilike.%${safe}%`)
-        .limit(30);
+      // Exact ID match when input is exactly 6 digits
+      const isExactId = /^\d{6}$/.test(q);
+      let data: any[] | null = null;
+      let error: any = null;
+      if (isExactId) {
+        const res = await supabase.from("profiles").select("*").eq("user_id", q).limit(1);
+        data = res.data; error = res.error;
+      } else {
+        const safe = q.replace(/[,()]/g, " ");
+        const res = await supabase
+          .from("profiles")
+          .select("*")
+          .or(`display_name.ilike.%${safe}%,user_id.ilike.%${safe}%`)
+          .limit(30);
+        data = res.data; error = res.error;
+      }
       if (error) console.error("[search]", error);
       setUsers(data || []);
       setLoading(false);
