@@ -29,7 +29,9 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
   const frameW = size;
   const frameH = Math.round(frameW / asset.aspect);
   const holeD = Math.round(frameW * asset.holeScale);
-  const holeOffsetPx = Math.round(frameH * asset.holeOffsetY);
+  // Auto-calibrated offset: anchored to hole DIAMETER (not frame height).
+  // This keeps the visual offset stable in proportion to the avatar at any scale.
+  const holeOffsetPx = Math.round(holeD * asset.holeOffsetY);
 
   return (
     <div

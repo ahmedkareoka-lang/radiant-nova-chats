@@ -47,6 +47,9 @@ type Props = {
 const resolveSize = (s: FramedAvatarSize | number): number =>
   typeof s === "number" ? s : FRAMED_AVATAR_SIZES[s];
 
+/** Global boost so frames feel "premium" — they overhang the avatar by ~15%. */
+const FRAME_BOOST = 1.15;
+
 /**
  * Renders an avatar that automatically adapts its size & position to fit
  * inside the equipped frame's transparent center. One source of truth for
@@ -110,7 +113,8 @@ const FramedAvatar = ({
   // Equipped VIP tier frame from inventory takes precedence over generic frame.
   if (equippedVipTier) {
     const a = getVipFrameAsset(equippedVipTier.level);
-    const outerW = a ? Math.round(px / a.holeScale) : px;
+    // +15% boost so the frame visually overhangs the avatar without breaking layout.
+    const outerW = a ? Math.round((px / a.holeScale) * FRAME_BOOST) : px;
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
@@ -137,7 +141,7 @@ const FramedAvatar = ({
     const animClass = frameKey ? FRAME_ANIMATION[frameKey] || "" : "";
     // Treat `px` as the AVATAR display size; the frame grows around it
     // (frame "wears" the avatar instead of shrinking it inside).
-    const outerSize = Math.round(px / fit.innerScale);
+    const outerSize = Math.round((px / fit.innerScale) * FRAME_BOOST);
     const offsetPx = Math.round(outerSize * fit.innerOffsetY);
     return (
       <div
@@ -172,7 +176,7 @@ const FramedAvatar = ({
   // No equipped frame, no role frame — but if user has VIP, show legendary VipFrame.
   if (vipTier) {
     const a = getVipFrameAsset(vipTier.level);
-    const outerW = a ? Math.round(px / a.holeScale) : px;
+    const outerW = a ? Math.round((px / a.holeScale) * FRAME_BOOST) : px;
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
