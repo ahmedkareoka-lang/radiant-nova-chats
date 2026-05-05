@@ -86,12 +86,12 @@ const ChatPage = () => {
             <p className="text-sm font-bold text-right mb-3">انضم إلى الحفلة</p>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {conversations.slice(0, 6).map((conv) => (
-                <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0" onClick={() => setActiveConvId(conv.id)}>
-                  <div className="party-avatar-ring">
+                <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <button onClick={() => navigate(`/user?id=${conv.other_user.id}`)} className="party-avatar-ring">
                     <div className="w-14 h-14 rounded-full overflow-hidden bg-background">
                       <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
                     </div>
-                  </div>
+                  </button>
                   <span className="text-[9px] text-muted-foreground max-w-[60px] truncate text-center">{conv.other_user.display_name}</span>
                 </div>
               ))}
