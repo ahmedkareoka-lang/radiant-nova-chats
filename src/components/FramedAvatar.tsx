@@ -141,9 +141,9 @@ const FramedAvatar = ({
 
   if (frameImg) {
     const animClass = frameKey ? FRAME_ANIMATION[frameKey] || "" : "";
-    // Treat `px` as the AVATAR display size; the frame grows around it
-    // (frame "wears" the avatar instead of shrinking it inside).
-    const outerSize = Math.round((px / fit.innerScale) * FRAME_BOOST);
+    // `px` = OUTER frame box. Avatar sits INSIDE = px * innerScale.
+    const outerSize = Math.round(px * FRAME_BOOST);
+    const innerSize = Math.round(outerSize * fit.innerScale);
     const offsetPx = Math.round(outerSize * fit.innerOffsetY);
     return (
       <div
@@ -152,12 +152,12 @@ const FramedAvatar = ({
       >
         {behind}
         <div className="relative" style={{ width: outerSize, height: outerSize }}>
-          {/* Inner avatar — exactly `px` so the frame appears to wrap it */}
+          {/* Inner avatar — sits inside the frame's transparent center */}
           <div
             className="absolute left-1/2 rounded-full overflow-hidden bg-background"
             style={{
-              width: px,
-              height: px,
+              width: innerSize,
+              height: innerSize,
               top: `calc(50% + ${offsetPx}px)`,
               transform: `translate(-50%, -50%)`,
             }}
