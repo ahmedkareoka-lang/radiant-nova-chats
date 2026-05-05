@@ -224,6 +224,23 @@ export default function VipPreviewPage() {
             </button>
           </div>
 
+          {/* Play entrance effect button */}
+          <div className="flex justify-center mb-5">
+            <button
+              onClick={playEntrance}
+              disabled={playingEntrance}
+              className="px-5 py-2.5 rounded-full text-xs font-black flex items-center gap-2 backdrop-blur border border-foreground/20 hover:scale-105 active:scale-95 transition-transform disabled:opacity-60"
+              style={{
+                background: tier.gradient,
+                boxShadow: tier.shadow,
+                color: "white",
+              }}
+            >
+              <Play className="w-3.5 h-3.5" fill="currentColor" />
+              {playingEntrance ? "جارٍ العرض…" : "تشغيل تأثير الدخول"}
+            </button>
+          </div>
+
           {/* Tier info */}
           <AnimatePresence mode="wait">
             <motion.div
