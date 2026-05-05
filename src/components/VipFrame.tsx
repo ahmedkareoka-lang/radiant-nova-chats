@@ -67,6 +67,9 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
       {/* ─── Tier-specific particle field ─── */}
       {!reducedMotion && <ParticleField tier={tier} />}
 
+      {/* ─── Orbiting gold sparkles (every VIP gets these) ─── */}
+      {!reducedMotion && <GoldSparkles size={frameSize} />}
+
       {/* ─── Avatar slot (centered) ─── */}
       <div
         className="absolute rounded-full overflow-hidden flex items-center justify-center"
