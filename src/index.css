@@ -358,6 +358,76 @@
   animation: glow-ring 2s ease-in-out infinite;
 }
 
+/* ───── NOVA VIP System — Universal Animations ───── */
+
+/* Pulsing glow used by all VIP badges. Reads --vip-glow CSS var per tier. */
+@keyframes vip-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 12px var(--vip-glow, hsl(45 100% 60%) / 0.4),
+                0 0 24px var(--vip-glow, hsl(45 100% 60%) / 0.15);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 22px var(--vip-glow, hsl(45 100% 60%) / 0.7),
+                0 0 48px var(--vip-glow, hsl(45 100% 60%) / 0.35);
+    transform: scale(1.03);
+  }
+}
+.vip-badge-glow { animation: vip-pulse-glow 2.4s ease-in-out infinite; }
+
+/* Slow rotating aura behind VIP avatar frames */
+@keyframes vip-aura-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.vip-aura-spin { animation: vip-aura-spin 18s linear infinite; }
+
+/* Reverse spin for inner counter-rotating ring */
+@keyframes vip-aura-spin-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+.vip-aura-spin-reverse { animation: vip-aura-spin-reverse 24s linear infinite; }
+
+/* Wing flap — used on tiers level >= 3 */
+@keyframes vip-wing-flap {
+  0%, 100% { transform: rotate(-6deg) scaleY(1); opacity: 0.85; }
+  50%      { transform: rotate(8deg)  scaleY(0.92); opacity: 1; }
+}
+.vip-wing-left  { animation: vip-wing-flap 1.6s ease-in-out infinite; transform-origin: 100% 50%; }
+.vip-wing-right { animation: vip-wing-flap 1.6s ease-in-out infinite reverse; transform-origin: 0% 50%; }
+
+/* Fire ember rise — phoenix / emperor / legend tiers */
+@keyframes vip-ember-rise {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateY(-60px) scale(0.3); opacity: 0; }
+}
+.vip-ember { animation: vip-ember-rise 2.2s ease-out infinite; }
+
+/* Stardust twinkle */
+@keyframes vip-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1.2); }
+}
+.vip-twinkle { animation: vip-twinkle 1.8s ease-in-out infinite; }
+
+/* Style-updated toast animation */
+@keyframes vip-style-updated {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.9); }
+  15%  { opacity: 1; transform: translateY(0) scale(1.05); }
+  85%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+.animate-vip-style-updated { animation: vip-style-updated 2.4s ease-out forwards; }
+
+/* Mic seat VIP glow ring (uses --vip-glow var) */
+@keyframes vip-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--vip-glow, hsl(45 100% 60%) / 0.6); }
+  50%      { box-shadow: 0 0 0 8px var(--vip-glow, hsl(45 100% 60%) / 0); }
+}
+.vip-mic-pulse { animation: vip-mic-pulse 2s ease-out infinite; }
+
 /* BOSS God Frame - RGB Lightning Border */
 .boss-god-frame {
   position: relative;
