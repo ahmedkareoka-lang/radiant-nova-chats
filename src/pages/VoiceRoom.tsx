@@ -13,6 +13,7 @@ import GiftAnimation from "@/components/GiftAnimation";
 import InventorySheet from "@/components/InventorySheet";
 import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
+import VipName from "@/components/VipName";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
 import { useAgoraVoice } from "@/hooks/useAgoraVoice";
