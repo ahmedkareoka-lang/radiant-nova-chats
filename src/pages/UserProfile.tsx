@@ -1,4 +1,4 @@
-import { ArrowLeft, TrendingUp, Heart, Users, Star, Crown, MessageCircle, UserPlus, UserMinus, Coins as CoinsIcon } from "lucide-react";
+import { ArrowLeft, TrendingUp, Heart, Users, Star, Crown, MessageCircle, UserPlus, UserMinus, Coins as CoinsIcon, ChevronRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import FramedAvatar from "@/components/FramedAvatar";
 import LoveBadge from "@/components/LoveBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import BDBadge from "@/components/BDBadge";
+import CurrencyIcon from "@/components/CurrencyIcon";
 import AgentTransferModal from "@/components/AgentTransferModal";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import { useIsBD } from "@/hooks/useIsBD";
@@ -19,6 +20,32 @@ import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
+import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+
+const wealthThreshold = (lvl: number) => {
+  if (lvl < 10) return 100_000;
+  if (lvl < 20) return 250_000;
+  if (lvl < 30) return 600_000;
+  if (lvl < 40) return 1_500_000;
+  if (lvl < 50) return 3_500_000;
+  if (lvl < 60) return 7_000_000;
+  if (lvl < 70) return 14_000_000;
+  if (lvl < 80) return 28_000_000;
+  if (lvl < 90) return 55_000_000;
+  return 120_000_000;
+};
+const charmThreshold = (lvl: number) => {
+  if (lvl < 10) return 60_000;
+  if (lvl < 20) return 160_000;
+  if (lvl < 30) return 400_000;
+  if (lvl < 40) return 1_000_000;
+  if (lvl < 50) return 2_500_000;
+  if (lvl < 60) return 5_000_000;
+  if (lvl < 70) return 10_000_000;
+  if (lvl < 80) return 20_000_000;
+  if (lvl < 90) return 40_000_000;
+  return 90_000_000;
+};
 
 const UserProfile = () => {
   const navigate = useNavigate();
