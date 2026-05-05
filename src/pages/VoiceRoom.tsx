@@ -13,6 +13,7 @@ import GiftAnimation from "@/components/GiftAnimation";
 import InventorySheet from "@/components/InventorySheet";
 import VipBadge from "@/components/VipBadge";
 import DualBadge from "@/components/DualBadge";
+import VipName from "@/components/VipName";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
 import { useAgoraVoice } from "@/hooks/useAgoraVoice";
@@ -1133,7 +1134,7 @@ const VoiceRoom = () => {
                 <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className={`font-bold text-sm ${host.is_boss ? "boss-fire-text" : "glow-neon-text"}`}>{host.display_name}</span>
+                <span className={`text-sm ${host.is_boss ? "boss-fire-text font-bold" : "glow-neon-text font-bold"}`}>{host.is_boss ? host.display_name : <VipName name={host.display_name} level={host.vip_level} size="md" />}</span>
                 <p className="text-[10px] text-muted-foreground">مضيف الغرفة</p>
               </div>
               <VipBadge level={host.vip_level} size="sm" />
@@ -1188,9 +1189,13 @@ const VoiceRoom = () => {
                     </div>
                     {/* Username — full width of slot, single line, never covered by support badge */}
                     <span
-                      className="text-[10px] font-semibold truncate block text-center mt-1.5 leading-tight w-full px-0.5"
+                      className="text-[10px] truncate block text-center mt-1.5 leading-tight w-full px-0.5"
                     >
-                      {slot.profile?.display_name || "User"}
+                      <VipName
+                        name={slot.profile?.display_name || "User"}
+                        level={(slot.profile as any)?.vip_level || 0}
+                        size="sm"
+                      />
                     </span>
                     {/* Compact diamond support icon — fixed-height row reserved so it cannot bleed onto the next row */}
                     <div className="h-[14px] flex items-center justify-center mt-0.5">
@@ -1300,9 +1305,19 @@ const VoiceRoom = () => {
                       <span className="inline-flex items-center gap-1 align-middle mr-1">
                         <DualBadge novaLevel={(msg.sender as any)?.nova_p_level || 0} vipLevel={msg.sender?.vip_level || 0} />
                       </span>
-                      <span className={`font-bold ${isBossMsg ? "boss-fire-text" : msg.sender?.vip_level && msg.sender.vip_level >= 5 ? "text-accent" : "text-primary"}`}>
-                        {isBossMsg && "👑 "}
-                        {msg.sender?.display_name || "User"}:{" "}
+                      <span className={`font-bold ${isBossMsg ? "boss-fire-text" : "text-primary"}`}>
+                        {isBossMsg ? (
+                          <>👑 {msg.sender?.display_name || "User"}:{" "}</>
+                        ) : (
+                          <>
+                            <VipName
+                              name={msg.sender?.display_name || "User"}
+                              level={msg.sender?.vip_level || 0}
+                              size="sm"
+                            />
+                            {": "}
+                          </>
+                        )}
                       </span>
                       <span className={`${isBossMsg ? "text-accent font-semibold" : "text-foreground"}`}>{msg.content}</span>
                       {/* AI live translation */}

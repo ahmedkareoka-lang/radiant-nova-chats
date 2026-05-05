@@ -784,3 +784,126 @@
 @media (min-resolution: 2dppx) {
   body { text-rendering: optimizeLegibility; }
 }
+
+/* ========================================================================
+   VIP NAME STYLES — animated tier-based name decoration
+   Keep all colors HSL; respects prefers-reduced-motion.
+   ======================================================================== */
+@layer utilities {
+  .vip-name { font-weight: 900; letter-spacing: 0.2px; line-height: 1.1; }
+
+  /* ---- VIP 3-4: animated gradient text using CSS vars set inline ---- */
+  .vip-mid-text {
+    background: linear-gradient(110deg, var(--vip-c1, #fff), var(--vip-glow, #fff), var(--vip-c2, #fff), var(--vip-c1, #fff));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: vipMidShift 4.5s linear infinite;
+    filter: drop-shadow(0 0 6px var(--vip-glow, transparent));
+  }
+  @keyframes vipMidShift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  /* ---- VIP 5: Phoenix flame text ---- */
+  .vip5-text {
+    background: linear-gradient(180deg, hsl(50 100% 75%) 0%, hsl(35 100% 60%) 35%, hsl(15 100% 55%) 65%, hsl(0 95% 50%) 100%);
+    background-size: 100% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 14px hsl(15 100% 55% / 0.7), 0 0 28px hsl(0 100% 50% / 0.45);
+    animation: vipFlameRise 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px hsl(15 100% 55% / 0.6));
+  }
+  @keyframes vipFlameRise {
+    0%,100% { background-position: 50% 100%; }
+    50%     { background-position: 50% 0%; }
+  }
+  .vip5-flame { display: inline-block; animation: vipFlicker 1.4s ease-in-out infinite; filter: drop-shadow(0 0 3px hsl(15 100% 55% / 0.8)); }
+  @keyframes vipFlicker {
+    0%,100% { transform: translateY(0) scale(1); opacity: 1; }
+    25%     { transform: translateY(-1px) scale(1.08); opacity: 0.9; }
+    50%     { transform: translateY(-2px) scale(0.95); opacity: 1; }
+    75%     { transform: translateY(-1px) scale(1.05); opacity: 0.85; }
+  }
+
+  /* ---- VIP 6: Celestial Emperor — golden fiery text with shimmer sweep ---- */
+  .vip6-text {
+    position: relative;
+    background: linear-gradient(110deg,
+      hsl(50 100% 75%) 0%,
+      hsl(45 100% 60%) 25%,
+      hsl(30 100% 50%) 50%,
+      hsl(45 100% 60%) 75%,
+      hsl(50 100% 75%) 100%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 14px hsl(45 100% 55% / 0.75), 0 0 28px hsl(30 100% 50% / 0.5);
+    animation: vip6Shimmer 3.5s linear infinite;
+    filter: drop-shadow(0 0 6px hsl(45 100% 55% / 0.65));
+  }
+  @keyframes vip6Shimmer {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 250% 50%; }
+  }
+  .vip6-crown { display: inline-block; animation: vipCrownBob 2.6s ease-in-out infinite; filter: drop-shadow(0 0 5px hsl(45 100% 55% / 0.85)); }
+  .vip6-flame { display: inline-block; animation: vipFlicker 1.4s ease-in-out infinite; }
+  @keyframes vipCrownBob {
+    0%,100% { transform: translateY(0) rotate(-4deg); }
+    50%     { transform: translateY(-2px) rotate(4deg); }
+  }
+
+  /* ---- VIP 7: Eternal Legend — rainbow holographic, dual crown, sparkles ---- */
+  .vip7-text {
+    background: linear-gradient(110deg,
+      hsl(50 100% 65%) 0%,
+      hsl(15 100% 60%) 18%,
+      hsl(320 100% 65%) 36%,
+      hsl(260 100% 70%) 54%,
+      hsl(190 100% 65%) 72%,
+      hsl(150 90% 60%) 86%,
+      hsl(50 100% 65%) 100%);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow:
+      0 0 16px hsl(45 100% 65% / 0.85),
+      0 0 32px hsl(320 100% 60% / 0.5),
+      0 0 48px hsl(260 100% 65% / 0.35);
+    animation: vip7Hologram 4s linear infinite;
+    filter: drop-shadow(0 0 6px hsl(45 100% 65% / 0.6)) drop-shadow(0 0 12px hsl(320 100% 60% / 0.4));
+  }
+  @keyframes vip7Hologram {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 400% 50%; }
+  }
+  .vip7-crown {
+    display: inline-block;
+    background: linear-gradient(135deg, hsl(50 100% 70%), hsl(320 100% 65%), hsl(260 100% 70%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: vip7CrownSpin 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px hsl(45 100% 65% / 0.8));
+  }
+  @keyframes vip7CrownSpin {
+    0%,100% { transform: rotate(-8deg) scale(1); }
+    50%     { transform: rotate(8deg) scale(1.12); }
+  }
+  .vip7-sparkle {
+    display: inline-block;
+    color: hsl(50 100% 80%);
+    animation: vip7Sparkle 1.8s ease-in-out infinite;
+    text-shadow: 0 0 8px hsl(50 100% 70% / 0.9);
+  }
+  @keyframes vip7Sparkle {
+    0%,100% { transform: scale(1) rotate(0deg); opacity: 0.55; }
+    50%     { transform: scale(1.4) rotate(180deg); opacity: 1; }
+  }
+}

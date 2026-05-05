@@ -18,6 +18,7 @@ import { useIsBD } from "@/hooks/useIsBD";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
+import VipName from "@/components/VipName";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -113,7 +114,9 @@ const UserProfile = () => {
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
             <h2 className={`font-black text-2xl ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
-              {profile?.display_name || "User"}
+              {isBoss ? (profile?.display_name || "User") : (
+                <VipName name={profile?.display_name || "User"} level={(profile as any)?.vip_level || 0} size="lg" />
+              )}
             </h2>
 
             {/* All badges visible to public */}
