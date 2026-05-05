@@ -24,11 +24,10 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
   const asset = getVipFrameAsset(level);
   if (!tier || !asset) return <>{children}</>;
 
-  // Outer container width — sized so wings & ornaments fit. Height follows the asset's aspect.
-  const frameW = Math.round(size * asset.widthMultiplier);
+  // `size` is the OUTER frame width (the box the frame visually occupies).
+  // The avatar slot inside is sized so the avatar fills the artwork's hole exactly.
+  const frameW = size;
   const frameH = Math.round(frameW / asset.aspect);
-
-  // Inner avatar slot — its diameter is a fraction of the frame width, matching the artwork's hole.
   const holeD = Math.round(frameW * asset.holeScale);
   const holeOffsetPx = Math.round(frameH * asset.holeOffsetY);
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, Crown, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Crown, Loader2, Play, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
@@ -16,6 +16,14 @@ export default function VipPreviewPage() {
   const [level, setLevel] = useState(initial);
   const [profile, setProfile] = useState<any>(null);
   const [buying, setBuying] = useState(false);
+  const [playingEntrance, setPlayingEntrance] = useState(false);
+
+  const playEntrance = () => {
+    setPlayingEntrance(false);
+    // Force remount to replay
+    requestAnimationFrame(() => setPlayingEntrance(true));
+    setTimeout(() => setPlayingEntrance(false), 4200);
+  };
 
   const tier = getVipTier(level)!;
 
@@ -118,10 +126,23 @@ export default function VipPreviewPage() {
                 animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                 exit={{ opacity: 0, scale: 0.85, rotateY: 15 }}
                 transition={{ duration: 0.35 }}
-                className="flex items-center justify-center"
+                className="relative flex items-center justify-center"
                 style={{ minHeight: 280 }}
               >
-                <VipFrame level={tier.level} size={140}>
+                {/* Pulsing glow halo behind frame */}
+                <motion.div
+                  aria-hidden
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.85, 0.5] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: 240,
+                    height: 240,
+                    background: tier.aura,
+                    filter: "blur(28px)",
+                  }}
+                />
+                <VipFrame level={tier.level} size={220}>
                   {profile?.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -134,6 +155,63 @@ export default function VipPreviewPage() {
                     </div>
                   )}
                 </VipFrame>
+
+                {/* Entrance effect overlay */}
+                <AnimatePresence>
+                  {playingEntrance && (
+                    <motion.div
+                      key={`entrance-${level}-${Date.now()}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
+                    >
+                      {/* Sweep streak */}
+                      <motion.div
+                        initial={{ x: "-120%", opacity: 0 }}
+                        animate={{ x: "120%", opacity: [0, 1, 0] }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        className="absolute inset-y-0 w-1/3"
+                        style={{
+                          background: `linear-gradient(90deg, transparent, hsl(${tier.glow} / 0.7), transparent)`,
+                          filter: "blur(8px)",
+                        }}
+                      />
+                      {/* Burst rings */}
+                      {[0, 0.3, 0.6].map((d) => (
+                        <motion.div
+                          key={d}
+                          initial={{ scale: 0.4, opacity: 0.9 }}
+                          animate={{ scale: 2.4, opacity: 0 }}
+                          transition={{ duration: 1.6, delay: d, ease: "easeOut" }}
+                          className="absolute rounded-full border-2"
+                          style={{
+                            width: 180,
+                            height: 180,
+                            borderColor: `hsl(${tier.glow})`,
+                            boxShadow: `0 0 40px hsl(${tier.glow} / 0.7)`,
+                          }}
+                        />
+                      ))}
+                      {/* Banner */}
+                      <motion.div
+                        initial={{ y: 120, opacity: 0, scale: 0.8 }}
+                        animate={{ y: 0, opacity: 1, scale: 1 }}
+                        exit={{ y: -40, opacity: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute bottom-2 px-5 py-2 rounded-full backdrop-blur-md text-xs font-black flex items-center gap-2"
+                        style={{
+                          background: tier.gradient,
+                          boxShadow: tier.shadow,
+                          color: "white",
+                        }}
+                      >
+                        <span>{tier.crest}</span>
+                        <span>{profile?.display_name || "أنت"} • {tier.title}</span>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </AnimatePresence>
 
@@ -143,6 +221,23 @@ export default function VipPreviewPage() {
               aria-label="التالي"
             >
               <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Play entrance effect button */}
+          <div className="flex justify-center mb-5">
+            <button
+              onClick={playEntrance}
+              disabled={playingEntrance}
+              className="px-5 py-2.5 rounded-full text-xs font-black flex items-center gap-2 backdrop-blur border border-foreground/20 hover:scale-105 active:scale-95 transition-transform disabled:opacity-60"
+              style={{
+                background: tier.gradient,
+                boxShadow: tier.shadow,
+                color: "white",
+              }}
+            >
+              <Play className="w-3.5 h-3.5" fill="currentColor" />
+              {playingEntrance ? "جارٍ العرض…" : "تشغيل تأثير الدخول"}
             </button>
           </div>
 
