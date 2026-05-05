@@ -115,8 +115,8 @@ const FramedAvatar = ({
   // Equipped VIP tier frame from inventory takes precedence over generic frame.
   if (equippedVipTier) {
     const a = getVipFrameAsset(equippedVipTier.level);
-    // +15% boost so the frame visually overhangs the avatar without breaking layout.
-    const outerW = a ? Math.round((px / a.holeScale) * FRAME_BOOST) : px;
+    // `px` = OUTER frame width. Avatar sits INSIDE the frame's hole.
+    const outerW = Math.round(px * FRAME_BOOST);
     return (
       <div
         className={`relative flex items-center justify-center ${className}`}
