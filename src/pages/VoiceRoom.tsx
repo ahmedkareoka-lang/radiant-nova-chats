@@ -341,6 +341,39 @@ const VoiceRoom = () => {
     setEntranceQueue(prev => prev.filter(e => e.id !== id));
   }, []);
 
+  // 👑 VIP-switch entrance: when the user changes which VIP they wear (or my own
+  // displayed VIP changes), replay a VIP entrance for them inside the room.
+  const lastVipForUser = useRef<Map<string, number>>(new Map());
+  useEffect(() => {
+    if (members.length === 0) return;
+    const additions: typeof entranceQueue = [];
+    for (const m of members) {
+      const p = m.profile as any;
+      if (!p) continue;
+      const lvl = p.vip_level || 0;
+      const prev = lastVipForUser.current.get(m.user_id);
+      lastVipForUser.current.set(m.user_id, lvl);
+      // Skip first observation (we don't want to replay on initial sync)
+      if (prev === undefined) continue;
+      if (prev === lvl) continue;
+      if (lvl < 1) continue;
+      additions.push({
+        id: `vip-switch-${m.user_id}-${lvl}-${Date.now()}`,
+        displayName: p.display_name,
+        avatarUrl: p.avatar_url,
+        videoUrl: null, // force the VIP-styled name banner
+        audioUrl: null,
+        novaLevel: p.nova_p_level || 0,
+        vipLevel: lvl,
+      });
+    }
+    if (additions.length > 0) {
+      setEntranceQueue(prev => [...prev, ...additions]);
+    }
+  }, [members]);
+
+
+
   // Auto-dismiss the "last gift delivered" panel after 8s of inactivity.
   useEffect(() => {
     if (!lastGift) return;
