@@ -97,7 +97,11 @@ const Profile = () => {
         setLoading(false);
         return;
       }
-      setProfile(data);
+      // Apply displayed VIP override (capped by what user owns)
+      const eff = data
+        ? { ...data, vip_level: Math.min(Math.max(0, (data as any).displayed_vip_level || data.vip_level || 0), data.vip_level || 0) }
+        : data;
+      setProfile(eff);
       const { count: sentCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("sender_id", user.id);
       const { count: receivedCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
       setGiftStats({ sent: sentCount || 0, received: receivedCount || 0 });
