@@ -33,14 +33,18 @@ export default function VipPrivilegePage() {
       navigate("/top-up");
       return;
     }
+    if ((profile?.vip_level || 0) === level && profile?.vip_expiry && new Date(profile.vip_expiry).getTime() > Date.now()) {
+      toast.error("VIP هذا مفعّل لديك — انتظر انتهاء الـ 30 يوماً قبل التجديد");
+      return;
+    }
     setBuying(level);
-    const { data, error } = await supabase.rpc("purchase_vip" as any, { _level: level });
+    const { error } = await supabase.rpc("purchase_vip" as any, { _level: level });
     setBuying(null);
     if (error) {
       toast.error(error.message || "فشل الشراء");
       return;
     }
-    toast.success(`✨ تم تفعيل VIP ${level} — تحقق من حقيبتك!`);
+    toast.success(`✨ تم تفعيل VIP ${level} لمدة 30 يوماً!`);
     await reload();
   };
 
