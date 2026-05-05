@@ -22,13 +22,15 @@ export const VIP_FRAME_ASSETS: Record<number, {
   holeOffsetY: number;  // -0.5..0.5 of height
   widthMultiplier: number; // outer width = avatarSize * this
 }> = {
-  1: { image: vip1, aspect: 1,    holeScale: 0.56, holeOffsetY: 0.02, widthMultiplier: 1.7 },
-  2: { image: vip2, aspect: 1,    holeScale: 0.50, holeOffsetY: 0.0,  widthMultiplier: 1.9 },
-  3: { image: vip3, aspect: 1.5,  holeScale: 0.32, holeOffsetY: 0.05, widthMultiplier: 2.8 },
-  4: { image: vip4, aspect: 1.5,  holeScale: 0.36, holeOffsetY: 0.0,  widthMultiplier: 2.6 },
-  5: { image: vip5, aspect: 1.5,  holeScale: 0.34, holeOffsetY: -0.04, widthMultiplier: 2.8 },
-  6: { image: vip6, aspect: 1.5,  holeScale: 0.30, holeOffsetY: 0.05, widthMultiplier: 3.0 },
-  7: { image: vip7, aspect: 1.5,  holeScale: 0.30, holeOffsetY: 0.02, widthMultiplier: 3.0 },
+  // widthMultiplier ≈ 1 / holeScale → ensures the inner hole matches the avatar size exactly,
+  // so the frame visually "hugs" the avatar (not too big, not too small).
+  1: { image: vip1, aspect: 1,    holeScale: 0.56, holeOffsetY: 0.02, widthMultiplier: 1.79 },
+  2: { image: vip2, aspect: 1,    holeScale: 0.50, holeOffsetY: 0.0,  widthMultiplier: 2.00 },
+  3: { image: vip3, aspect: 1.5,  holeScale: 0.32, holeOffsetY: 0.05, widthMultiplier: 3.13 },
+  4: { image: vip4, aspect: 1.5,  holeScale: 0.36, holeOffsetY: 0.0,  widthMultiplier: 2.78 },
+  5: { image: vip5, aspect: 1.5,  holeScale: 0.34, holeOffsetY: -0.04, widthMultiplier: 2.94 },
+  6: { image: vip6, aspect: 1.5,  holeScale: 0.30, holeOffsetY: 0.05, widthMultiplier: 3.33 },
+  7: { image: vip7, aspect: 1.5,  holeScale: 0.30, holeOffsetY: 0.02, widthMultiplier: 3.33 },
 };
 
 export const getVipFrameAsset = (level: number) => VIP_FRAME_ASSETS[level] || null;
