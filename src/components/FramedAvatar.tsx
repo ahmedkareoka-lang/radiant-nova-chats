@@ -165,7 +165,10 @@ const FramedAvatar = ({
   // No equipped frame, no role frame — but if user has VIP, show legendary VipFrame.
   if (vipTier) {
     return (
-      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+      <div
+        className={`relative flex items-center justify-center ${className}`}
+        style={{ width: px, height: px, overflow: "visible" }}
+      >
         {behind}
         <VipFrame level={vipTier.level} size={px} reducedMotion={reducedMotion}>
           <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
