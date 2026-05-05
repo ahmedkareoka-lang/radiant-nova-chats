@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, Crown, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Crown, Loader2, Play, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
@@ -16,6 +16,14 @@ export default function VipPreviewPage() {
   const [level, setLevel] = useState(initial);
   const [profile, setProfile] = useState<any>(null);
   const [buying, setBuying] = useState(false);
+  const [playingEntrance, setPlayingEntrance] = useState(false);
+
+  const playEntrance = () => {
+    setPlayingEntrance(false);
+    // Force remount to replay
+    requestAnimationFrame(() => setPlayingEntrance(true));
+    setTimeout(() => setPlayingEntrance(false), 4200);
+  };
 
   const tier = getVipTier(level)!;
 
