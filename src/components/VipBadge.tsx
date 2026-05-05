@@ -21,16 +21,17 @@ const VipBadge = ({ level, size = "sm", showTitle = false }: VipBadgeProps) => {
 
   return (
     <div
-      className={`inline-flex items-center rounded-full font-bold text-foreground vip-badge-glow ${sizes[size]}`}
+      className={`relative inline-flex items-center rounded-full font-black text-foreground vip-badge-glow vip-badge-shine ${sizes[size]}`}
       style={{
         background: tier.gradient,
         boxShadow: tier.shadow,
-        // CSS var consumed by .vip-badge-glow keyframes
+        border: `1px solid hsl(${tier.glow} / 0.7)`,
         ["--vip-glow" as any]: `hsl(${tier.glow})`,
+        textShadow: "0 1px 2px rgba(0,0,0,0.4)",
       }}
       title={`${tier.titleEn} — ${tier.tagline}`}
     >
-      <Crown className={crownSizes[size]} />
+      <Crown className={crownSizes[size]} style={{ filter: `drop-shadow(0 0 4px hsl(${tier.glow}))` }} />
       <span>VIP {level}</span>
       {showTitle && <span className="opacity-90">· {tier.title}</span>}
     </div>
