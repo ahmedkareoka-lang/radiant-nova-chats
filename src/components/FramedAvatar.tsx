@@ -132,35 +132,39 @@ const FramedAvatar = ({
   const frameImg = mapped || direct;
 
   const fit = getFrameFit(frameKey);
-  const innerSize = Math.round(px * fit.innerScale);
-  const offsetPx = Math.round(px * fit.innerOffsetY);
 
   if (frameImg) {
     const animClass = frameKey ? FRAME_ANIMATION[frameKey] || "" : "";
+    // Treat `px` as the AVATAR display size; the frame grows around it
+    // (frame "wears" the avatar instead of shrinking it inside).
+    const outerSize = Math.round(px / fit.innerScale);
+    const offsetPx = Math.round(outerSize * fit.innerOffsetY);
     return (
       <div
-        className={`relative ${className}`}
-        style={{ width: px, height: px }}
+        className={`relative flex items-center justify-center ${className}`}
+        style={{ width: px, height: px, overflow: "visible" }}
       >
         {behind}
-        {/* Inner avatar: size & vertical offset come from frame fit metadata */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-full overflow-hidden bg-background"
-          style={{
-            width: innerSize,
-            height: innerSize,
-            top: `calc(50% + ${offsetPx}px)`,
-            transform: `translate(-50%, -50%)`,
-          }}
-        >
-          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
-            alt={alt}
-            className="w-full h-full object-cover" />
+        <div className="relative" style={{ width: outerSize, height: outerSize }}>
+          {/* Inner avatar — exactly `px` so the frame appears to wrap it */}
+          <div
+            className="absolute left-1/2 rounded-full overflow-hidden bg-background"
+            style={{
+              width: px,
+              height: px,
+              top: `calc(50% + ${offsetPx}px)`,
+              transform: `translate(-50%, -50%)`,
+            }}
+          >
+            <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
+              alt={alt}
+              className="w-full h-full object-cover" />
+          </div>
+          {/* Frame on top */}
+          <img loading="lazy" decoding="async" src={frameImg}
+            alt=""
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none z-10 ${animClass}`} />
         </div>
-        {/* Frame on top */}
-        <img loading="lazy" decoding="async" src={frameImg}
-          alt=""
-          className={`absolute inset-0 w-full h-full object-contain pointer-events-none z-10 ${animClass}`} />
       </div>
     );
   }
