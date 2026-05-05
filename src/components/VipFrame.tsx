@@ -67,6 +67,9 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
       {/* ─── Tier-specific particle field ─── */}
       {!reducedMotion && <ParticleField tier={tier} />}
 
+      {/* ─── Orbiting gold sparkles (every VIP gets these) ─── */}
+      {!reducedMotion && <GoldSparkles size={frameSize} />}
+
       {/* ─── Avatar slot (centered) ─── */}
       <div
         className="absolute rounded-full overflow-hidden flex items-center justify-center"
@@ -214,6 +217,33 @@ const ParticleField = ({ tier }: { tier: VipTier }) => {
         >
           {p.symbol}
         </span>
+      ))}
+    </div>
+  );
+};
+
+/* ─────────────── Gold sparkles ─────────────── */
+const GoldSparkles = ({ size }: { size: number }) => {
+  const radius = Math.round(size * 0.5);
+  const sparks = useMemo(
+    () => Array.from({ length: 6 }, (_, i) => ({
+      delay: -((i * 6) / 6),
+      duration: 5 + (i % 3),
+    })),
+    []
+  );
+  return (
+    <div className="absolute inset-0 pointer-events-none" aria-hidden>
+      {sparks.map((s, i) => (
+        <span
+          key={i}
+          className="vip-gold-spark"
+          style={{
+            ["--vip-gold-r" as any]: `${radius}px`,
+            animationDelay: `${s.delay}s`,
+            animationDuration: `${s.duration}s`,
+          }}
+        />
       ))}
     </div>
   );

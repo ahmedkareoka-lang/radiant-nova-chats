@@ -68,6 +68,12 @@ const FramedAvatar = ({
   const equipped = equippedFrame || null;
   const vipTier = getVipTier(vipLevel || 0);
 
+  // Equipped VIP frame override: "vip-frame-N" key means user equipped a tier frame from inventory.
+  const equippedVipMatch = equipped && equipped.startsWith("vip-frame-")
+    ? Number(equipped.replace("vip-frame-", ""))
+    : 0;
+  const equippedVipTier = getVipTier(equippedVipMatch);
+
   // Special keys: explicitly equipped BD / Recharge Agent frame from inventory.
   // If user has NOT equipped anything else, fall back to their role frame
   // (BD takes priority over Recharge Agent).
@@ -96,6 +102,20 @@ const FramedAvatar = ({
             alt={alt}
             className="w-full h-full object-cover" />
         </RechargeAgentFrame>
+      </div>
+    );
+  }
+
+  // Equipped VIP tier frame from inventory takes precedence over generic frame.
+  if (equippedVipTier) {
+    return (
+      <div className={`relative ${className}`} style={{ width: px, height: px }}>
+        {behind}
+        <VipFrame level={equippedVipTier.level} size={px} reducedMotion={reducedMotion}>
+          <img loading="lazy" decoding="async" src={avatarUrl || "https://i.pravatar.cc/200"}
+            alt={alt}
+            className="w-full h-full object-cover" />
+        </VipFrame>
       </div>
     );
   }

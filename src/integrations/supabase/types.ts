@@ -1869,6 +1869,7 @@ export type Database = {
         Args: { _recharge_coins: number; _user_id: string }
         Returns: undefined
       }
+      purchase_vip: { Args: { _level: number }; Returns: Json }
       recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
       redeem_code: { Args: { _code: string }; Returns: Json }

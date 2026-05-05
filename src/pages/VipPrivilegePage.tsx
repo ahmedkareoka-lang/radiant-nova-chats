@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Crown, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Crown, Check, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import VipFrame from "@/components/VipFrame";
@@ -11,19 +12,37 @@ import { VIP_TIERS, getVipTier } from "@/lib/vipConfig";
 export default function VipPrivilegePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [buying, setBuying] = useState<number | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("vip_level, vip_expiry, coins, avatar_url, display_name")
-        .eq("id", user.id)
-        .single();
-      setProfile(data);
-    })();
-  }, []);
+  const reload = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("vip_level, vip_expiry, coins, avatar_url, display_name")
+      .eq("id", user.id)
+      .single();
+    setProfile(data);
+  };
+
+  useEffect(() => { reload(); }, []);
+
+  const handleBuy = async (level: number, price: number) => {
+    if ((profile?.coins || 0) < price) {
+      toast.error("رصيدك غير كافٍ — اشحن المزيد من النوفا كوين");
+      navigate("/top-up");
+      return;
+    }
+    setBuying(level);
+    const { data, error } = await supabase.rpc("purchase_vip" as any, { _level: level });
+    setBuying(null);
+    if (error) {
+      toast.error(error.message || "فشل الشراء");
+      return;
+    }
+    toast.success(`✨ تم تفعيل VIP ${level} — تحقق من حقيبتك!`);
+    await reload();
+  };
 
   const currentLevel = profile?.vip_level || 0;
   const currentTier = getVipTier(currentLevel);
@@ -92,7 +111,7 @@ export default function VipPrivilegePage() {
           <div className="space-y-4">
             {VIP_TIERS.map((tier, idx) => {
               const isActive = currentLevel === tier.level;
-              const isLocked = currentLevel < tier.level && currentLevel > 0;
+              const isBuying = buying === tier.level;
 
               return (
                 <motion.div
@@ -109,11 +128,7 @@ export default function VipPrivilegePage() {
                     boxShadow: isActive ? tier.shadow : undefined,
                   }}
                 >
-                  {/* Header band with live frame preview */}
-                  <div
-                    className="px-4 py-4 flex items-center justify-between gap-3"
-                    style={{ background: tier.gradient }}
-                  >
+                  <div className="px-4 py-4 flex items-center justify-between gap-3" style={{ background: tier.gradient }}>
                     <div className="flex items-center gap-3">
                       <VipFrame level={tier.level} size={56}>
                         <div className="w-full h-full bg-background/20 flex items-center justify-center text-xl">
@@ -135,37 +150,27 @@ export default function VipPrivilegePage() {
                     )}
                   </div>
 
-                  {/* Perks */}
                   <div className="p-3">
                     <ul className="space-y-1.5 mb-3">
                       {tier.perks.map((perk, i) => (
                         <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <Check
-                            className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
-                            style={{ color: `hsl(${tier.glow})` }}
-                          />
+                          <Check className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: `hsl(${tier.glow})` }} />
                           <span>{perk}</span>
                         </li>
                       ))}
                     </ul>
                     <button
-                      disabled={isActive || isLocked}
-                      onClick={() => navigate("/top-up")}
-                      className={`w-full py-2.5 rounded-full font-bold text-sm flex items-center justify-center gap-1.5 transition-all ${
-                        isActive
-                          ? "bg-secondary/40 text-muted-foreground cursor-default"
-                          : "text-foreground hover:scale-[1.02] active:scale-95"
-                      }`}
-                      style={
-                        isActive
-                          ? undefined
-                          : { background: tier.gradient, boxShadow: tier.shadow }
-                      }
+                      disabled={isBuying}
+                      onClick={() => handleBuy(tier.level, tier.price)}
+                      className="w-full py-2.5 rounded-full font-bold text-sm flex items-center justify-center gap-1.5 transition-all text-foreground hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+                      style={{ background: tier.gradient, boxShadow: tier.shadow }}
                     >
-                      {isActive ? "مفعّل حالياً" : (
+                      {isBuying ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
                         <>
                           <CurrencyIcon type="gold" size="xs" />
-                          {tier.price.toLocaleString()} للترقية
+                          {tier.price.toLocaleString()} {isActive ? "تجديد 30 يوماً" : currentLevel > tier.level ? "إضافة 30 يوماً" : "ترقية"}
                         </>
                       )}
                     </button>
@@ -176,7 +181,7 @@ export default function VipPrivilegePage() {
           </div>
 
           <p className="text-center text-[10px] text-muted-foreground mt-4 px-4">
-            * كل اشتراكات VIP تدوم 30 يوماً وتتجدد تلقائياً عند الترقية
+            * كل اشتراكات VIP تدوم 30 يوماً ويمكنك الترقية بين المستويات في أي وقت
           </p>
         </div>
       </div>
