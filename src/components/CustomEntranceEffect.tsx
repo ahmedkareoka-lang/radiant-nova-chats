@@ -167,38 +167,63 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
                 className="max-w-[85vw] max-h-[85vh] object-contain drop-shadow-2xl"
               />
             )
-          ) : (
-            // No custom media → animated name banner that LOOKS like an entrance
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: -20 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-primary/30 via-accent/20 to-primary/30 border border-accent/40 backdrop-blur-md shadow-[0_0_40px_hsl(var(--accent)/0.4)]"
-            >
-              <motion.img
-                src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
-                alt=""
-                initial={{ rotate: -90, scale: 0 }}
-                animate={{ rotate: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: "backOut" }}
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-accent shadow-lg"
-              />
-              <div className="flex flex-col">
-                <span className="text-base font-black text-foreground glow-neon-text">
-                  {activeEntry.displayName}
-                </span>
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-[10px] text-accent font-semibold tracking-wider"
-                >
-                  ✨ دخل الغرفة
-                </motion.span>
-              </div>
-            </motion.div>
-          )}
+          ) : (() => {
+            // No custom media → animated name banner. If VIP, wrap in legendary frame.
+            const vipTier = getVipTier(activeEntry.vipLevel || 0);
+            return (
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: -20 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center gap-4 px-6 py-3 rounded-full backdrop-blur-md"
+                style={{
+                  background: vipTier
+                    ? `linear-gradient(90deg, hsl(${vipTier.primary} / 0.3), hsl(${vipTier.secondary} / 0.2), hsl(${vipTier.primary} / 0.3))`
+                    : undefined,
+                  border: vipTier ? `1px solid hsl(${vipTier.glow} / 0.6)` : undefined,
+                  boxShadow: vipTier ? vipTier.shadow : `0 0 40px hsl(var(--accent) / 0.4)`,
+                  ["--vip-glow" as any]: vipTier ? `hsl(${vipTier.glow})` : undefined,
+                }}
+              >
+                {vipTier ? (
+                  <VipFrame level={vipTier.level} size={56}>
+                    <img
+                      src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </VipFrame>
+                ) : (
+                  <motion.img
+                    src={activeEntry.avatarUrl || "https://i.pravatar.cc/200"}
+                    alt=""
+                    initial={{ rotate: -90, scale: 0 }}
+                    animate={{ rotate: 0, scale: 1 }}
+                    transition={{ duration: 0.5, ease: "backOut" }}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-accent shadow-lg"
+                  />
+                )}
+                <div className="flex flex-col">
+                  <span
+                    className="text-base font-black text-foreground glow-neon-text"
+                    style={vipTier ? { textShadow: `0 0 12px hsl(${vipTier.glow})` } : undefined}
+                  >
+                    {activeEntry.displayName}
+                  </span>
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-[10px] font-semibold tracking-wider"
+                    style={{ color: vipTier ? `hsl(${vipTier.glow})` : "hsl(var(--accent))" }}
+                  >
+                    {vipTier ? `${vipTier.crest} ${vipTier.titleEn} • VIP ${vipTier.level}` : "✨ دخل الغرفة"}
+                  </motion.span>
+                </div>
+              </motion.div>
+            );
+          })()}
         </motion.div>
       )}
     </AnimatePresence>
