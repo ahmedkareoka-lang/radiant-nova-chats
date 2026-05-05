@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { playNovaEntranceSound } from "@/lib/novaEntranceSounds";
 import { logAgora } from "@/lib/agoraDebugLog";
+import { getVipTier } from "@/lib/vipConfig";
+import VipFrame from "@/components/VipFrame";
 
 interface EntranceEntry {
   id: string;
