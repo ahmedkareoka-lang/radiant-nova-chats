@@ -299,11 +299,11 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: conv } = await (await import("@/integrations/supabase/client")).supabase
+      const { data: conv } = await supabase
         .from("conversations").select("user1_id, user2_id").eq("id", conversationId).maybeSingle();
       if (!conv || !currentUserId || cancelled) return;
       const otherId = conv.user1_id === currentUserId ? conv.user2_id : conv.user1_id;
-      const { data: prof } = await (await import("@/integrations/supabase/client")).supabase
+      const { data: prof } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url, vip_level, displayed_vip_level, nova_p_level")
         .eq("id", otherId).maybeSingle();
