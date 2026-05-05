@@ -1,6 +1,8 @@
 import { FRAME_MAP, FRAME_ANIMATION, getFrameFit } from "@/lib/frameConfig";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
 import BDFrame from "@/components/BDFrame";
+import VipFrame from "@/components/VipFrame";
+import { getVipTier } from "@/lib/vipConfig";
 
 /** Named size presets so pages don't need to hardcode pixel values everywhere. */
 export const FRAMED_AVATAR_SIZES = {
