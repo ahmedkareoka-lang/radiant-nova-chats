@@ -292,6 +292,27 @@ const AIChatView = ({ onBack }: { onBack: () => void }) => {
 const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: string; onBack: () => void; currentUserId: string | null }) => {
   const { messages, sendMessage } = useChatMessages(conversationId);
   const [input, setInput] = useState("");
+  const [other, setOther] = useState<{ id: string; display_name: string; avatar_url: string | null; vip_level: number; nova_p_level: number } | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: conv } = await (await import("@/integrations/supabase/client")).supabase
+        .from("conversations").select("user1_id, user2_id").eq("id", conversationId).maybeSingle();
+      if (!conv || !currentUserId || cancelled) return;
+      const otherId = conv.user1_id === currentUserId ? conv.user2_id : conv.user1_id;
+      const { data: prof } = await (await import("@/integrations/supabase/client")).supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, vip_level, displayed_vip_level, nova_p_level")
+        .eq("id", otherId).maybeSingle();
+      if (prof && !cancelled) {
+        const eff: any = { ...prof, vip_level: Math.min(Math.max(0, (prof as any).displayed_vip_level || prof.vip_level || 0), prof.vip_level || 0) };
+        setOther(eff);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [conversationId, currentUserId]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -306,7 +327,26 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
           <button onClick={onBack} className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="font-bold text-sm">Chat</h1>
+          {other ? (
+            <button
+              onClick={() => navigate(`/user?id=${other.id}`)}
+              className="flex items-center gap-2.5 flex-1 min-w-0 text-right hover:bg-secondary/30 rounded-full p-1 -m-1 transition-colors"
+              aria-label="عرض الملف الشخصي"
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/40 flex-shrink-0">
+                <img loading="lazy" decoding="async" src={other.avatar_url || "https://i.pravatar.cc/60?img=3"} alt={other.display_name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 justify-end">
+                  <DualBadge novaLevel={other.nova_p_level || 0} vipLevel={other.vip_level || 0} />
+                  <p className="font-bold text-sm truncate">{other.display_name}</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground text-right">اضغط لعرض البروفايل</p>
+              </div>
+            </button>
+          ) : (
+            <h1 className="font-bold text-sm">Chat</h1>
+          )}
         </div>
       </header>
 
