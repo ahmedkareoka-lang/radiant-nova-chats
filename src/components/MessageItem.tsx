@@ -1,5 +1,7 @@
 import { memo } from "react";
+import { useNavigate } from "react-router-dom";
 import VipName from "@/components/VipName";
+import AvatarImg from "@/components/AvatarImg";
 
 export interface ChatMessage {
   id: string;
@@ -20,14 +22,29 @@ interface Props {
 }
 
 /**
- * 💬 MessageItem — single chat bubble. Memoized so virtualized lists
- * don't re-render every visible row when the parent updates.
+ * 💬 MessageItem — single chat bubble with sender avatar (tap → profile).
  */
 export const MessageItem = memo(function MessageItem({ message, isMine }: Props) {
+  const navigate = useNavigate();
+  const goProfile = () => {
+    if (message.sender_id) navigate(`/user?id=${message.sender_id}`);
+  };
+
+  const Avatar = (
+    <button
+      onClick={goProfile}
+      className="shrink-0 w-8 h-8 rounded-full overflow-hidden ring-1 ring-border/40"
+      aria-label="عرض الملف الشخصي"
+    >
+      <AvatarImg src={message.sender?.avatar_url} alt={message.sender?.display_name || ""} />
+    </button>
+  );
+
   return (
-    <div className={`flex ${isMine ? "justify-end" : "justify-start"} px-1 py-1`}>
+    <div className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"} px-1 py-1`}>
+      {!isMine && Avatar}
       <div
-        className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+        className={`max-w-[70%] rounded-2xl px-3 py-2 text-sm ${
           isMine
             ? "gradient-neon text-primary-foreground rounded-br-sm"
             : "bg-secondary text-foreground rounded-bl-sm"
@@ -51,6 +68,7 @@ export const MessageItem = memo(function MessageItem({ message, isMine }: Props)
           })}
         </p>
       </div>
+      {isMine && Avatar}
     </div>
   );
 });

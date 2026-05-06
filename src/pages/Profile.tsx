@@ -323,10 +323,10 @@ const Profile = () => {
                 <div className="rounded-full bg-background p-0.5">
                   <FramedAvatar
                     avatarUrl={profile?.avatar_url || "https://i.pravatar.cc/200?img=3"}
-                    equippedFrame={equippedFrameKey}
-                    isRechargeAgent={meIsAgent}
-                    isBD={meIsBD}
-                    vipLevel={profile?.vip_level || 0}
+                    equippedFrame={null}
+                    isRechargeAgent={false}
+                    isBD={false}
+                    vipLevel={0}
                     size={120}
                   />
                 </div>
