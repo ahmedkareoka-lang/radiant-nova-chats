@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check } from "lucide-react";
+import { CheckCheck } from "lucide-react";
 import AvatarImg from "@/components/AvatarImg";
 
 export interface ChatMessage {
@@ -21,11 +21,6 @@ interface Props {
   isMine: boolean;
 }
 
-/**
- * 💬 MessageItem — bubble + circular tappable avatar (→ profile).
- * Mine: gradient bubble with green check on the inner side.
- * Theirs: dark secondary bubble.
- */
 export const MessageItem = memo(function MessageItem({ message, isMine }: Props) {
   const navigate = useNavigate();
   const goProfile = () => {
@@ -35,7 +30,7 @@ export const MessageItem = memo(function MessageItem({ message, isMine }: Props)
   const Avatar = (
     <button
       onClick={goProfile}
-      className="shrink-0 w-10 h-10 rounded-full overflow-hidden ring-2 ring-border/40 bg-secondary"
+      className="relative shrink-0 w-11 h-11 rounded-full overflow-hidden ring-2 ring-border/60 bg-secondary shadow-md"
       aria-label="عرض الملف الشخصي"
     >
       <AvatarImg src={message.sender?.avatar_url} alt={message.sender?.display_name || ""} />
@@ -43,33 +38,31 @@ export const MessageItem = memo(function MessageItem({ message, isMine }: Props)
   );
 
   return (
-    <div className={`flex items-center gap-2 ${isMine ? "justify-end" : "justify-start"} px-2 py-1.5`}>
+    <div className={`flex items-end gap-2.5 ${isMine ? "justify-end" : "justify-start"} px-1 py-1.5`} dir="ltr">
       {!isMine && Avatar}
 
-      {isMine && (
-        <Check className="w-4 h-4 text-green-500 bg-green-500/10 rounded-full p-0.5" strokeWidth={3} />
-      )}
-
       <div
-        className={`max-w-[70%] px-4 py-2.5 text-sm leading-relaxed break-words shadow-md ${
+        className={`relative max-w-[72%] min-w-12 px-3.5 py-2.5 text-[14px] leading-6 break-words shadow-lg ${
           isMine
-            ? "text-white rounded-2xl"
-            : "bg-secondary/80 text-foreground rounded-2xl"
+            ? "gradient-neon text-primary-foreground rounded-[18px] rounded-br-md"
+            : "bg-secondary/90 text-foreground rounded-[18px] rounded-bl-md border border-border/40"
         }`}
-        style={
-          isMine
-            ? {
-                background: "linear-gradient(135deg, hsl(200 90% 65%), hsl(265 85% 70%))",
-              }
-            : undefined
-        }
       >
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        <span
+          className={`absolute bottom-1.5 h-3.5 w-3.5 rotate-45 ${
+            isMine
+              ? "-right-1.5 gradient-neon rounded-br-sm"
+              : "-left-1.5 bg-secondary border-l border-b border-border/40 rounded-bl-sm"
+          }`}
+          aria-hidden="true"
+        />
+        <p className={`relative z-10 whitespace-pre-wrap break-words ${isMine ? "text-right" : "text-left"}`} dir="auto">
+          {message.content}
+        </p>
+        <div className={`relative z-10 mt-0.5 flex items-center ${isMine ? "justify-start" : "justify-end"}`}>
+          <CheckCheck className="h-3.5 w-3.5 text-accent" strokeWidth={2.6} />
+        </div>
       </div>
-
-      {!isMine && (
-        <Check className="w-4 h-4 text-green-500 bg-green-500/10 rounded-full p-0.5" strokeWidth={3} />
-      )}
 
       {isMine && Avatar}
     </div>
