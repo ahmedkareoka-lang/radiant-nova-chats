@@ -25,7 +25,7 @@ export const VirtualizedMessageList = memo(function VirtualizedMessageList({
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
+    estimateSize: () => 86,
     overscan: 8,
     getItemKey: (index) => messages[index]?.id ?? index,
   });
@@ -61,7 +61,7 @@ export const VirtualizedMessageList = memo(function VirtualizedMessageList({
         const t = e.currentTarget;
         if (t.scrollTop < 80) onScrollTop?.();
       }}
-      className="flex-1 overflow-auto px-4 py-4 max-w-lg mx-auto w-full"
+      className="flex-1 overflow-auto px-3 py-4 max-w-lg mx-auto w-full"
     >
       <div
         style={{ height: `${totalSize}px`, width: "100%", position: "relative" }}
