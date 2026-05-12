@@ -72,12 +72,14 @@ const TopUpPage = () => {
         setProfile(data);
       }
 
-      const [{ data: s }, { data: a }] = await Promise.all([
+      const [{ data: s }, { data: a }, { data: rate }] = await Promise.all([
         supabase.from("recharge_settings" as any).select("usdt_wallet_address, usdt_network, usdt_qr_url").limit(1).maybeSingle(),
         supabase.from("recharge_agents" as any).select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("system_settings" as any).select("value").eq("key", "exchange_rate").maybeSingle(),
       ]);
       setSettings((s as any) || { usdt_wallet_address: "", usdt_network: "TRC20", usdt_qr_url: null });
       setAgents((a as any) || []);
+      if (rate && (rate as any).value) setExchangeRate(parseInt((rate as any).value));
     };
     load();
   }, []);
