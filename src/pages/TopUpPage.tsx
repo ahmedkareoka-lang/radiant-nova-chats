@@ -157,6 +157,28 @@ const TopUpPage = () => {
     refreshBalance();
   };
 
+  // Diamond → Coin self-exchange (matches WalletPage.submit "self" mode)
+  const parsedExchange = parseInt(exchangeAmount) || 0;
+  const exchangeCoinsOut = Math.floor((parsedExchange * exchangeRate) / 100);
+
+  const doExchange = async () => {
+    if (!profile) return;
+    if (parsedExchange <= 0) { toast.error("أدخل كمية صحيحة"); return; }
+    if (profile.diamonds < parsedExchange) { toast.error("رصيد الماس غير كافٍ!"); return; }
+    if (exchangeCoinsOut <= 0) { toast.error("الكمية أقل من الحد الأدنى"); return; }
+    setExchanging(true);
+    const { error } = await supabase.rpc("exchange_diamonds_to_coins" as any, {
+      _user_id: profile.id,
+      _diamond_amount: parsedExchange,
+      _coin_amount: exchangeCoinsOut,
+    });
+    setExchanging(false);
+    if (error) { toast.error("فشل في التبديل"); return; }
+    setProfile({ ...profile, diamonds: profile.diamonds - parsedExchange, coins: profile.coins + exchangeCoinsOut });
+    toast.success(`تم تحويل ${formatNum(parsedExchange)} ماسة إلى ${formatNum(exchangeCoinsOut)} 💰`);
+    setExchangeAmount("");
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen pb-24 bg-gradient-to-b from-background via-background to-purple-950/20">
@@ -184,11 +206,17 @@ const TopUpPage = () => {
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-5">
           {/* Method Tabs */}
-          <div className="grid grid-cols-3 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+          <div className="grid grid-cols-4 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+            <MethodTab
+              active={method === "wallet"}
+              onClick={() => setMethod("wallet")}
+              icon={<Wallet className="w-4 h-4" />} label="محفظة" sub="رصيدي"
+              gradient="from-emerald-400 to-teal-500"
+            />
             <MethodTab
               active={method === "binance"}
               onClick={() => setMethod("binance")}
-              icon={<Wallet className="w-4 h-4" />} label="USDT" sub="Binance"
+              icon={<Sparkles className="w-4 h-4" />} label="USDT" sub="Binance"
               gradient="from-yellow-400 to-amber-500"
             />
             <MethodTab
@@ -205,7 +233,72 @@ const TopUpPage = () => {
             />
           </div>
 
-          {/* === BINANCE === */}
+          {/* === WALLET === */}
+          {method === "wallet" && (
+            <div className="space-y-4">
+              {/* Balances */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl p-4 border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-amber-500/5 text-center">
+                  <CurrencyIcon type="gold" size="lg" className="mx-auto mb-1" />
+                  <p className="text-[10px] text-muted-foreground">NOVA Coins</p>
+                  <p className="font-black text-xl text-yellow-300">{formatNum(profile?.coins || 0)}</p>
+                </div>
+                <div className="rounded-2xl p-4 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 text-center">
+                  <CurrencyIcon type="diamond" size="lg" className="mx-auto mb-1" />
+                  <p className="text-[10px] text-muted-foreground">الماس</p>
+                  <p className="font-black text-xl text-purple-300">{formatNum(profile?.diamonds || 0)}</p>
+                </div>
+              </div>
+
+              {/* Exchange box */}
+              <div className="rounded-3xl p-4 border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-yellow-500/10 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                    <ArrowRightLeft className="w-5 h-5 text-black" />
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-emerald-200">تبديل الماس إلى NOVA Coins</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      كل 1000 ماسة = {formatNum(1000 * exchangeRate / 100)} كوين
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="عدد الماسات"
+                    value={exchangeAmount}
+                    onChange={(e) => setExchangeAmount(e.target.value)}
+                    className="flex-1 bg-background/60 rounded-xl px-3 py-2.5 text-sm border border-emerald-500/20 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                  />
+                  <button
+                    onClick={doExchange}
+                    disabled={exchanging || !parsedExchange}
+                    className="px-4 rounded-xl font-black text-sm flex items-center gap-1.5 bg-gradient-to-r from-emerald-400 to-teal-500 text-black disabled:opacity-50"
+                  >
+                    {exchanging ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRightLeft className="w-4 h-4" />}
+                    تبديل
+                  </button>
+                </div>
+
+                {parsedExchange > 0 && (
+                  <p className="text-xs text-center text-emerald-200">
+                    ستحصل على <b>{formatNum(exchangeCoinsOut)}</b> NOVA Coin
+                  </p>
+                )}
+
+                <button
+                  onClick={() => navigate("/wallet")}
+                  className="w-full py-2 rounded-xl text-xs font-bold border border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/10"
+                >
+                  المزيد من خيارات المحفظة (تحويل لمستخدم آخر…)
+                </button>
+              </div>
+            </div>
+          )}
+
           {method === "binance" && (
             <div className="space-y-4">
               {/* Wallet card */}
