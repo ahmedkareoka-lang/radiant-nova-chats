@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft, Check, Sparkles, Phone, MessageCircle, Copy, Loader2,
-  Wallet, Users, Ticket, ShieldCheck, Clock, X
+  Wallet, Users, Ticket, ShieldCheck, Clock, X, ArrowRightLeft
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ import BinancePayModal from "@/components/BinancePayModal";
  * Visa / cards intentionally REMOVED.
  */
 
-type Method = "binance" | "agents" | "redeem";
+type Method = "binance" | "agents" | "redeem" | "wallet";
 
 // Each package now ships with its own dedicated Binance Pay link
 // so the user is redirected directly to the locked-amount checkout.
@@ -55,6 +55,11 @@ const TopUpPage = () => {
   // Redeem
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
+
+  // Wallet (diamond → coin exchange, self only — quick inline)
+  const [exchangeRate, setExchangeRate] = useState(100); // 100 = 1 diamond → 1 coin
+  const [exchangeAmount, setExchangeAmount] = useState("");
+  const [exchanging, setExchanging] = useState(false);
 
   useEffect(() => {
     const load = async () => {
