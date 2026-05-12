@@ -8,34 +8,30 @@ import vip7 from "@/assets/vip/vip-7-eternal.png";
 
 /**
  * Per-tier rendering metadata for the legendary VIP frames.
- * - `image`: the transparent PNG asset
- * - `aspect`: width / height of the asset (square vs wide-with-wings)
+ * - `image`: transparent PNG asset
+ * - `aspect`: width / height (all square — uniform behavior across sizes)
  * - `holeScale`: diameter of the inner avatar hole, relative to FRAME WIDTH
- * - `holeOffsetY`: vertical nudge as a fraction of HOLE DIAMETER (positive = down).
- *   Anchoring to hole-diameter (not frame-height) keeps the avatar perfectly
- *   centered at every size — no drift when the frame scales.
- * - `widthMultiplier`: legacy field, kept for backwards-compat (FramedAvatar
- *   now derives outer width from holeScale directly).
+ * - `holeOffsetY`: vertical nudge as fraction of HOLE DIAMETER (size-invariant)
+ * - `widthMultiplier`: legacy field
+ *
+ * All new tiers (3–7) use centered transparent holes — calibrated to each
+ * artwork so the avatar fits perfectly at every size with no drift.
  */
 export const VIP_FRAME_ASSETS: Record<number, {
   image: string;
-  aspect: number;       // w / h
-  holeScale: number;    // 0..1 of width
-  holeOffsetY: number;  // fraction of HOLE DIAMETER (size-invariant)
+  aspect: number;
+  holeScale: number;
+  holeOffsetY: number;
   widthMultiplier: number;
 }> = {
-  // Tuned so the avatar sits visually centered in each artwork's hole.
-  // Higher tiers (3-7) have crowns / wings above, so the hole sits slightly
-  // lower in the artwork and the avatar needs a small downward nudge.
-  // Tuned so the avatar fills the frame's hole nicely (image inside frame).
   1: { image: vip1, aspect: 1, holeScale: 0.66, holeOffsetY: 0.02, widthMultiplier: 1.52 },
   2: { image: vip2, aspect: 1, holeScale: 0.64, holeOffsetY: 0.00, widthMultiplier: 1.56 },
-  // New square luxury frames — large centered avatar hole, no vertical drift.
-  3: { image: vip3, aspect: 1, holeScale: 0.46, holeOffsetY: 0.18, widthMultiplier: 2.17 },
-  4: { image: vip4, aspect: 1, holeScale: 0.58, holeOffsetY: 0.00, widthMultiplier: 1.72 },
-  5: { image: vip5, aspect: 1, holeScale: 0.44, holeOffsetY: 0.18, widthMultiplier: 2.27 },
-  6: { image: vip6, aspect: 1, holeScale: 0.50, holeOffsetY: 0.10, widthMultiplier: 2.00 },
-  7: { image: vip7, aspect: 1, holeScale: 0.42, holeOffsetY: 0.05, widthMultiplier: 2.38 },
+  // New premium AAA-style frames — hole perfectly centered.
+  3: { image: vip3, aspect: 1, holeScale: 0.56, holeOffsetY: 0.04, widthMultiplier: 1.79 },
+  4: { image: vip4, aspect: 1, holeScale: 0.52, holeOffsetY: 0.00, widthMultiplier: 1.92 },
+  5: { image: vip5, aspect: 1, holeScale: 0.54, holeOffsetY: 0.06, widthMultiplier: 1.85 },
+  6: { image: vip6, aspect: 1, holeScale: 0.46, holeOffsetY: 0.18, widthMultiplier: 2.17 },
+  7: { image: vip7, aspect: 1, holeScale: 0.50, holeOffsetY: 0.04, widthMultiplier: 2.00 },
 };
 
 export const getVipFrameAsset = (level: number) => VIP_FRAME_ASSETS[level] || null;
