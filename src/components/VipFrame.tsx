@@ -136,6 +136,70 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
   );
 };
 
+/* ─────────────── Flapping Wings (SVG, behind frame) ─────────────── */
+const FlappingWings = memo(({ tier, frameW, frameH, animate }: { tier: VipTier; frameW: number; frameH: number; animate: boolean }) => {
+  // Wings extend ~55% of frame width on each side.
+  const wingW = Math.round(frameW * 0.62);
+  const wingH = Math.round(frameH * 0.78);
+  const topOffset = Math.round(frameH * 0.18);
+  const overlap = Math.round(frameW * 0.08); // tuck behind the frame edge
+
+  // Wing shape — layered feather strokes, tier-tinted.
+  const Wing = ({ side }: { side: "left" | "right" }) => (
+    <svg
+      viewBox="0 0 100 120"
+      width={wingW}
+      height={wingH}
+      style={{
+        position: "absolute",
+        top: topOffset,
+        [side]: -wingW + overlap,
+        transform: side === "right" ? "scaleX(-1)" : undefined,
+        filter: `drop-shadow(0 0 ${Math.round(wingW * 0.08)}px hsl(${tier.glow} / 0.85))`,
+        willChange: animate ? "transform, opacity" : "auto",
+        pointerEvents: "none",
+      } as any}
+      className={animate ? (side === "left" ? "vip-wing-left" : "vip-wing-right") : undefined}
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={`wg-${tier.level}-${side}`} x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={`hsl(${tier.glow})`} stopOpacity="1" />
+          <stop offset="55%" stopColor={`hsl(${tier.primary})`} stopOpacity="0.9" />
+          <stop offset="100%" stopColor={`hsl(${tier.secondary})`} stopOpacity="0.55" />
+        </linearGradient>
+      </defs>
+      {/* Main wing fan */}
+      <path
+        d="M98,60 C70,18 35,8 6,22 C20,30 28,42 30,55 C12,52 4,62 2,76 C18,72 30,78 36,88 C24,92 18,102 18,114 C40,98 70,96 96,78 C92,72 92,66 98,60 Z"
+        fill={`url(#wg-${tier.level}-${side})`}
+        stroke={`hsl(${tier.glow})`}
+        strokeWidth="0.6"
+        strokeOpacity="0.7"
+      />
+      {/* Feather lines */}
+      {[0.30, 0.42, 0.54, 0.66, 0.78].map((t, i) => (
+        <path
+          key={i}
+          d={`M96,60 Q ${50 - i * 4},${30 + i * 14} ${10 + i * 3},${30 + i * 16}`}
+          stroke={`hsl(${tier.glow})`}
+          strokeOpacity={0.55}
+          strokeWidth="0.7"
+          fill="none"
+        />
+      ))}
+    </svg>
+  );
+
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none" aria-hidden>
+      <Wing side="left" />
+      <Wing side="right" />
+    </div>
+  );
+});
+FlappingWings.displayName = "FlappingWings";
+
 /* ─────────────── Fire embers ─────────────── */
 const Embers = memo(({ tier, height }: { tier: VipTier; height: number }) => {
   const embers = useMemo(
