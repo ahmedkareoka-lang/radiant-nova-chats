@@ -744,7 +744,7 @@ const VoiceRoom = () => {
   ) => {
     const sizePx = typeof size === "number"
       ? size
-      : size === "sm" ? 72 : size === "lg" ? 100 : 82;
+      : size === "sm" ? 96 : size === "lg" ? 132 : 112;
     return (
       <FramedAvatar
         avatarUrl={avatarUrl}
