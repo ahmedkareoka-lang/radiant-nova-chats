@@ -105,7 +105,12 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
         {children}
       </div>
 
-      {/* Frame artwork */}
+      {/* Animated flapping wings — only for winged tiers. Sit behind the frame. */}
+      {tier.hasWings && !compact && (
+        <FlappingWings tier={tier} frameW={frameW} frameH={frameH} animate={fxEnabled} />
+      )}
+
+      {/* Frame artwork — STATIONARY. Only wings flap. */}
       <img
         src={asset.image}
         alt=""
@@ -114,13 +119,10 @@ const VipFrameImpl = ({ level, size = 80, children, reducedMotion = false, class
         onLoad={() => setLoaded(true)}
         className={cn(
           "absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-10 transition-opacity duration-500",
-          loaded ? "opacity-100" : "opacity-0",
-          fxEnabled && tier.hasWings && "vip-frame-sway",
-          fxEnabled && !tier.hasWings && "vip-frame-float"
+          loaded ? "opacity-100" : "opacity-0"
         )}
         style={{
           filter: `drop-shadow(0 0 ${Math.round(holeD * 0.12)}px hsl(${tier.glow} / 0.6))`,
-          willChange: fxEnabled ? "transform" : "auto",
         }}
       />
 
