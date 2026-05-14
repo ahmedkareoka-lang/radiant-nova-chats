@@ -4,6 +4,7 @@ import { playNovaEntranceSound } from "@/lib/novaEntranceSounds";
 import { logAgora } from "@/lib/agoraDebugLog";
 import { getVipTier } from "@/lib/vipConfig";
 import VipFrame from "@/components/VipFrame";
+import VipTierBadge from "@/components/VipTierBadge";
 
 interface EntranceEntry {
   id: string;
@@ -211,15 +212,26 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
                   >
                     {activeEntry.displayName}
                   </span>
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-[10px] font-semibold tracking-wider"
-                    style={{ color: vipTier ? `hsl(${vipTier.glow})` : "hsl(var(--accent))" }}
-                  >
-                    {vipTier ? `${vipTier.crest} ${vipTier.titleEn} • VIP ${vipTier.level}` : "✨ دخل الغرفة"}
-                  </motion.span>
+                  {vipTier ? (
+                    <motion.div
+                      initial={{ opacity: 0, x: -16, scale: 0.85 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      transition={{ delay: 0.25, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="mt-1"
+                    >
+                      <VipTierBadge level={vipTier.level} size={32} showcase />
+                    </motion.div>
+                  ) : (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-[10px] font-semibold tracking-wider"
+                      style={{ color: "hsl(var(--accent))" }}
+                    >
+                      ✨ دخل الغرفة
+                    </motion.span>
+                  )}
                 </div>
               </motion.div>
             );
