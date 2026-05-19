@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs><linearGradient id="dr" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#06ffa5"/><stop offset="100%" stop-color="#0a9396"/></linearGradient><filter id="drg" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8" result="b"/><feFlood flood-color="#06ffa5" flood-opacity="0.9"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+
+<path filter="url(#drg)" d="M100 300 Q150 200 250 220 Q350 200 420 280 Q400 360 320 360 Q280 400 240 360 Q160 380 100 300Z" fill="url(#dr)"/>
+   <path d="M250 220 L240 160 L260 180 L280 150 L290 200" fill="url(#dr)"/>
+   <circle cx="380" cy="280" r="8" fill="#ff006e"/>
+   <polygon points="400,290 430,295 400,305" fill="#fff"/>
+   <path d="M200 250 Q230 220 260 250 Q230 280 200 250" fill="#0a9396" opacity="0.6"/>
+   <path d="M280 250 Q310 220 340 250 Q310 280 280 250" fill="#0a9396" opacity="0.6"/>
+   <path d="M100 300 Q60 320 80 360 Q120 350 100 300" fill="url(#dr)"/>
+</svg>
