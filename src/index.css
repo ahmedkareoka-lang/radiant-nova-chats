@@ -389,13 +389,17 @@
 }
 .vip-aura-spin-reverse { animation: vip-aura-spin-reverse 24s linear infinite; }
 
-/* Wing flap — used on tiers level >= 3 */
-@keyframes vip-wing-flap {
-  0%, 100% { transform: rotate(-6deg) scaleY(1); opacity: 0.85; }
-  50%      { transform: rotate(8deg)  scaleY(0.92); opacity: 1; }
+/* Wing flap — per-tier customizable via CSS vars
+ *   --flap-min   rest rotation (e.g. -8deg)
+ *   --flap-max   peak rotation (e.g. 14deg)
+ *   --flap-squash vertical squash at peak (default .94)
+ *   animation-duration set inline per tier */
+@keyframes vip-wing-flap-v {
+  0%, 100% { transform: rotate(var(--flap-min, -8deg)) scaleY(1);                       opacity: 0.92; }
+  50%      { transform: rotate(var(--flap-max, 12deg)) scaleY(var(--flap-squash, 0.94)); opacity: 1;    }
 }
-.vip-wing-left  { animation: vip-wing-flap 1.6s ease-in-out infinite; transform-origin: 100% 50%; }
-.vip-wing-right { animation: vip-wing-flap 1.6s ease-in-out infinite reverse; transform-origin: 0% 50%; }
+.vip-wing-left  { animation: vip-wing-flap-v var(--flap-dur, 1.4s) ease-in-out infinite;         transform-origin: 100% 50%; }
+.vip-wing-right { animation: vip-wing-flap-v var(--flap-dur, 1.4s) ease-in-out infinite reverse; transform-origin: 0% 50%; }
 
 /* Fire ember rise — phoenix / emperor / legend tiers */
 @keyframes vip-ember-rise {
