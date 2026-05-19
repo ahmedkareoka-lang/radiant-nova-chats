@@ -1,6 +1,7 @@
 import { memo, useMemo, useState, useRef, useEffect } from "react";
 import { getVipTier, type VipTier } from "@/lib/vipConfig";
 import { getVipFrameAsset } from "@/lib/vipFrameAssets";
+import { getVipWingAsset, getVipWingMotion } from "@/lib/vipWingAssets";
 import { cn } from "@/lib/utils";
 
 interface VipFrameProps {
