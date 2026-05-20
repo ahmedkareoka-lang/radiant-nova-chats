@@ -866,7 +866,7 @@ const VoiceRoom = () => {
       </AnimatePresence>
 
       {/* Top text notifications for every gift sent in the room */}
-      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-md px-3">
+      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-lg px-3">
         <AnimatePresence>
           {giftToasts.map((t) => {
             const tierStyle = t.amount >= 100000
