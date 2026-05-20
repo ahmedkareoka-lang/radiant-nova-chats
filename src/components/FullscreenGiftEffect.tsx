@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import GiftMediaPlayer from "@/components/GiftMediaPlayer";
 import { recordGiftEvent } from "@/lib/perfMetrics";
 import { shouldRenderHeavyEffect } from "@/lib/perfPriority";
+import { playTieredGiftSound } from "@/lib/effects";
 
 interface GiftPayload {
   id: string;
