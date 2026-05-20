@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="be-feather" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2024"/>
+      <stop offset="100%" stop-color="#02020a"/>
+    </linearGradient>
+    <radialGradient id="be-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff5cc"/>
+      <stop offset="55%" stop-color="#ffb800"/>
+      <stop offset="100%" stop-color="#3a1500"/>
+    </radialGradient>
+    <filter id="be-glow"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <!-- wings spread -->
+  <path d="M256 220 q-150 -40 -240 40 q90 20 240 0z" fill="url(#be-feather)"/>
+  <path d="M256 220 q150 -40 240 40 q-90 20 -240 0z" fill="url(#be-feather)"/>
+  <g stroke="#3a3036" stroke-width="2" fill="none">
+    <path d="M20 250 q120 -30 230 -30"/>
+    <path d="M40 270 q120 -10 215 -10"/>
+    <path d="M492 250 q-120 -30 -230 -30"/>
+    <path d="M472 270 q-120 -10 -215 -10"/>
+  </g>
+  <!-- feather tips -->
+  <g fill="#000">
+    <polygon points="16,255 50,250 50,275"/>
+    <polygon points="40,285 70,280 65,305"/>
+    <polygon points="496,255 462,250 462,275"/>
+    <polygon points="472,285 442,280 447,305"/>
+  </g>
+  <!-- body -->
+  <ellipse cx="256" cy="280" rx="60" ry="100" fill="url(#be-feather)"/>
+  <!-- head -->
+  <circle cx="256" cy="180" r="70" fill="url(#be-feather)"/>
+  <!-- beak -->
+  <path d="M256 200 q-25 30 -10 60 q15 -10 30 -10 q5 -30 -20 -50z" fill="#ffb800"/>
+  <path d="M246 250 q10 6 30 0" stroke="#5a3a00" stroke-width="2" fill="none"/>
+  <!-- eyes -->
+  <circle cx="230" cy="170" r="14" fill="url(#be-eye)"/>
+  <circle cx="282" cy="170" r="14" fill="url(#be-eye)"/>
+  <circle cx="230" cy="172" r="5" fill="#000"/>
+  <circle cx="282" cy="172" r="5" fill="#000"/>
+  <!-- talons -->
+  <g fill="#ffb800">
+    <path d="M230 380 q-5 30 -15 50 M240 385 q0 30 -5 55 M250 388 q5 30 5 60"/>
+    <path d="M282 380 q5 30 15 50 M272 385 q0 30 5 55 M262 388 q-5 30 -5 60"/>
+  </g>
+  <g stroke="#ffb800" stroke-width="6" fill="none" stroke-linecap="round">
+    <path d="M230 380 v50"/><path d="M240 385 v55"/><path d="M250 388 v60"/>
+    <path d="M282 380 v50"/><path d="M272 385 v55"/><path d="M262 388 v60"/>
+  </g>
+  <!-- glow halo -->
+  <circle cx="256" cy="220" r="240" fill="none" stroke="#ffb800" stroke-width="2" opacity="0.35" filter="url(#be-glow)"/>
+</svg>
