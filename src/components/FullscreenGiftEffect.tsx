@@ -196,14 +196,17 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[80] flex items-center justify-center pointer-events-none overflow-hidden bg-transparent"
         >
+          {/* 💥 EXPLOSION OVERLAY — pure SVG burst behind the gift */}
+          <ExplosionBurst tier={gift.amount} />
+
           {/* MAIN GIFT — only the gift shape, fills screen */}
           <div className="relative z-10 flex flex-col items-center gap-2 px-4 w-full">
             <motion.div
-              initial={{ scale: 0.4, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.2, opacity: 0, rotate: -20 }}
+              animate={{ scale: [0.2, 1.25, 1], opacity: 1, rotate: [-20, 6, 0] }}
               exit={{ scale: 0.6, opacity: 0 }}
-              transition={{ duration: 0.45, type: "spring", damping: 16, stiffness: 140 }}
-              className="relative flex items-center justify-center"
+              transition={{ duration: 0.7, times: [0, 0.55, 1], ease: "easeOut" }}
+              className="relative flex items-center justify-center drop-shadow-[0_0_40px_hsl(45_100%_55%/0.55)]"
               style={{ width: "min(85vw, 520px)", height: "min(85vw, 520px)" }}
               onAnimationComplete={() => setMediaReady(true)}
             >
