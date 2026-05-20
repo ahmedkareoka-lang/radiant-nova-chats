@@ -97,6 +97,11 @@ const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEf
       return;
     }
 
+    // 🔊 Epic tiered sound on every gift open
+    playTieredGiftSound(gift.amount);
+
+
+
     if (timerRef.current) clearTimeout(timerRef.current);
 
     // Determine media type to pick the right exit buffer.
