@@ -632,9 +632,11 @@ const VoiceRoom = () => {
           giftName: giftName || "هدية",
           amount: amount || 0,
         }]);
+        // Toast duration scales with gift tier so big gifts linger in chat
+        const toastMs = amount >= 100000 ? 12000 : amount >= 10000 ? 9000 : amount >= 1000 ? 6500 : 5000;
         setTimeout(() => {
           setGiftToasts(prev => prev.filter(t => t.id !== toastId));
-        }, 4500);
+        }, toastMs);
       })
       .subscribe((status) => {
         logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `gift channel status: ${status}`, { roomId });
@@ -864,34 +866,58 @@ const VoiceRoom = () => {
       </AnimatePresence>
 
       {/* Top text notifications for every gift sent in the room */}
-      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-md px-3">
+      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[90] flex flex-col gap-2 items-center pointer-events-none w-full max-w-lg px-3">
         <AnimatePresence>
-          {giftToasts.map((t) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: -30, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ type: "spring", damping: 18 }}
-              className="w-full rounded-2xl px-3 py-2 flex items-center gap-2 backdrop-blur-xl bg-card/85 border border-accent/40 shadow-[0_4px_20px_hsl(var(--accent)/0.35)]"
-            >
-              {t.imageUrl ? (
-                <img loading="lazy" decoding="async" src={t.imageUrl} alt="" className="w-10 h-10 object-contain shrink-0" />
-              ) : (
-                <span className="text-2xl shrink-0">{t.emoji}</span>
-              )}
-              <div className="flex-1 min-w-0 text-right">
-                <p className="text-xs font-bold text-foreground truncate">
-                  <span className="text-primary">{t.senderName}</span>
-                  <span className="text-muted-foreground"> أهدى </span>
-                  <span className="text-accent">{t.recipientName}</span>
-                </p>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  🎁 {t.giftName} • 💰 {t.amount.toLocaleString()}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+          {giftToasts.map((t) => {
+            const tierStyle = t.amount >= 100000
+              ? { ring: "ring-2 ring-yellow-300/70", glow: "shadow-[0_0_40px_hsl(45_100%_55%/0.7)]", chip: "from-yellow-400 to-orange-500", label: "أسطورية خارقة" }
+              : t.amount >= 10000
+              ? { ring: "ring-2 ring-orange-400/60", glow: "shadow-[0_0_32px_hsl(25_100%_55%/0.55)]", chip: "from-orange-400 to-pink-500", label: "أسطورية" }
+              : t.amount >= 1000
+              ? { ring: "ring-2 ring-fuchsia-400/60", glow: "shadow-[0_0_24px_hsl(280_90%_60%/0.5)]", chip: "from-fuchsia-500 to-purple-600", label: "ملحمية" }
+              : { ring: "ring-1 ring-accent/50", glow: "shadow-[0_0_18px_hsl(var(--accent)/0.4)]", chip: "from-accent to-primary", label: "هدية" };
+            return (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: -40, scale: 0.85 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                transition={{ type: "spring", damping: 16, stiffness: 220 }}
+                className={`w-full rounded-2xl px-3 py-2.5 flex items-center gap-3 backdrop-blur-xl bg-card/85 border border-accent/40 ${tierStyle.glow}`}
+              >
+                <div className={`relative shrink-0 w-20 h-20 rounded-2xl ${tierStyle.ring} bg-gradient-to-br from-background/60 to-background/20 flex items-center justify-center overflow-hidden`}>
+                  {/* Soft halo behind the gift */}
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${tierStyle.chip} opacity-20`} aria-hidden="true" />
+                  {t.imageUrl ? (
+                    <img
+                      src={t.imageUrl}
+                      alt={t.giftName}
+                      loading="eager"
+                      decoding="async"
+                      draggable={false}
+                      className="relative w-[88%] h-[88%] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+                      style={{ imageRendering: "auto", background: "transparent" }}
+                    />
+                  ) : (
+                    <span className="relative text-4xl leading-none">{t.emoji}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-right">
+                  <p className="text-[13px] font-bold text-foreground truncate">
+                    <span className="text-primary">{t.senderName}</span>
+                    <span className="text-muted-foreground"> أهدى </span>
+                    <span className="text-accent">{t.recipientName}</span>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                    🎁 {t.giftName} • 💰 {t.amount.toLocaleString()}
+                  </p>
+                  <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white bg-gradient-to-r ${tierStyle.chip}`}>
+                    {tierStyle.label}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 
