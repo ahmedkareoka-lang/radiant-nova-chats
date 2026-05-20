@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bph-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a0008"/>
+      <stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+    <linearGradient id="bph-fire" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ff0044"/>
+      <stop offset="50%" stop-color="#ff7a00"/>
+      <stop offset="100%" stop-color="#fff2a0"/>
+    </linearGradient>
+    <filter id="bph-glow"><feGaussianBlur stdDeviation="9"/></filter>
+  </defs>
+  <!-- fire aura -->
+  <g filter="url(#bph-glow)" opacity="0.85">
+    <path d="M256 480 q-90 -120 -40 -260 q40 80 0 200 q60 -130 40 -260 q40 130 0 260 q40 -100 100 -180 q-20 140 -60 240z" fill="url(#bph-fire)"/>
+  </g>
+  <!-- wings -->
+  <path d="M256 220 q-180 -60 -240 60 q40 -20 100 -10 q-60 10 -90 60 q80 -40 230 -50z" fill="url(#bph-body)"/>
+  <path d="M256 220 q180 -60 240 60 q-40 -20 -100 -10 q60 10 90 60 q-80 -40 -230 -50z" fill="url(#bph-body)"/>
+  <g stroke="#ff3300" stroke-width="2" fill="none" opacity="0.6">
+    <path d="M30 270 q120 -40 220 -50"/>
+    <path d="M50 305 q110 -25 200 -30"/>
+    <path d="M482 270 q-120 -40 -220 -50"/>
+    <path d="M462 305 q-110 -25 -200 -30"/>
+  </g>
+  <!-- body -->
+  <ellipse cx="256" cy="260" rx="44" ry="90" fill="url(#bph-body)"/>
+  <!-- head -->
+  <circle cx="256" cy="170" r="50" fill="url(#bph-body)"/>
+  <!-- crest fire -->
+  <path d="M230 130 q26 -90 52 0 q-10 -30 -26 -10 q-16 -20 -26 10z" fill="url(#bph-fire)" filter="url(#bph-glow)"/>
+  <!-- beak -->
+  <path d="M256 178 q-20 26 -5 44 q12 -8 24 -8 q5 -22 -19 -36z" fill="#ff7a00"/>
+  <!-- eye -->
+  <circle cx="244" cy="166" r="9" fill="#ffd000"/>
+  <circle cx="244" cy="168" r="4" fill="#000"/>
+  <!-- tail flames -->
+  <path filter="url(#bph-glow)" d="M256 350 q-30 60 -10 130 q10 -30 30 -50 q0 40 20 70 q15 -30 10 -80 q15 25 30 50 q-10 -70 -80 -120z" fill="url(#bph-fire)"/>
+</svg>

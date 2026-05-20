@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bw-fur" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#2a2a32"/>
+      <stop offset="100%" stop-color="#02020a"/>
+    </radialGradient>
+    <radialGradient id="bw-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d0ffe0"/>
+      <stop offset="60%" stop-color="#00e07a"/>
+      <stop offset="100%" stop-color="#003319"/>
+    </radialGradient>
+    <filter id="bw-glow"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <!-- head shape -->
+  <path d="M256 70 q-110 30 -130 160 q-10 100 50 170 q80 40 160 0 q60 -70 50 -170 q-20 -130 -130 -160z" fill="url(#bw-fur)"/>
+  <!-- ears tall pointed -->
+  <polygon points="120,140 100,40 180,120" fill="url(#bw-fur)"/>
+  <polygon points="392,140 412,40 332,120" fill="url(#bw-fur)"/>
+  <polygon points="130,130 120,70 165,120" fill="#3a3a45"/>
+  <polygon points="382,130 392,70 347,120" fill="#3a3a45"/>
+  <!-- snout -->
+  <path d="M210 290 q46 -20 92 0 q10 50 -10 80 q-36 18 -72 0 q-20 -30 -10 -80z" fill="#15151a"/>
+  <!-- eyes -->
+  <ellipse cx="200" cy="230" rx="30" ry="22" fill="url(#bw-eye)"/>
+  <ellipse cx="312" cy="230" rx="30" ry="22" fill="url(#bw-eye)"/>
+  <ellipse cx="200" cy="232" rx="6" ry="15" fill="#000"/>
+  <ellipse cx="312" cy="232" rx="6" ry="15" fill="#000"/>
+  <circle cx="208" cy="225" r="3" fill="#fff"/>
+  <circle cx="320" cy="225" r="3" fill="#fff"/>
+  <!-- nose -->
+  <ellipse cx="256" cy="316" rx="22" ry="16" fill="#000"/>
+  <!-- mouth + fangs -->
+  <path d="M256 332 v22 M256 354 q-28 26 -50 8 M256 354 q28 26 50 8" stroke="#000" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <polygon points="232,358 240,394 252,358" fill="#fff"/>
+  <polygon points="280,358 272,394 260,358" fill="#fff"/>
+  <!-- moon glow behind -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="#00e07a" stroke-width="2" opacity="0.4" filter="url(#bw-glow)"/>
+</svg>

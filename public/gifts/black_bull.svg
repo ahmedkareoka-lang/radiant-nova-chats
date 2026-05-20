@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bb-body" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#2a1f25"/>
+      <stop offset="100%" stop-color="#040206"/>
+    </radialGradient>
+    <linearGradient id="bb-horn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0e0c0"/>
+      <stop offset="100%" stop-color="#5a4020"/>
+    </linearGradient>
+    <radialGradient id="bb-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffe0a0"/>
+      <stop offset="60%" stop-color="#ff3300"/>
+      <stop offset="100%" stop-color="#1a0000"/>
+    </radialGradient>
+  </defs>
+  <!-- head -->
+  <ellipse cx="256" cy="290" rx="160" ry="160" fill="url(#bb-body)"/>
+  <!-- snout -->
+  <ellipse cx="256" cy="370" rx="80" ry="55" fill="#1a1014"/>
+  <!-- nostrils -->
+  <ellipse cx="228" cy="370" rx="8" ry="12" fill="#000"/>
+  <ellipse cx="284" cy="370" rx="8" ry="12" fill="#000"/>
+  <!-- horns massive curved -->
+  <path d="M110 200 q-40 -40 -10 -100 q60 20 90 80 q-40 30 -80 20z" fill="url(#bb-horn)" stroke="#3a2a10" stroke-width="2"/>
+  <path d="M402 200 q40 -40 10 -100 q-60 20 -90 80 q40 30 80 20z" fill="url(#bb-horn)" stroke="#3a2a10" stroke-width="2"/>
+  <!-- horn tips dark -->
+  <path d="M100 100 q-10 -10 0 -20 q15 10 20 30z" fill="#1a0a05"/>
+  <path d="M412 100 q10 -10 0 -20 q-15 10 -20 30z" fill="#1a0a05"/>
+  <!-- ears -->
+  <ellipse cx="130" cy="230" rx="30" ry="18" fill="#1a1014" transform="rotate(-30 130 230)"/>
+  <ellipse cx="382" cy="230" rx="30" ry="18" fill="#1a1014" transform="rotate(30 382 230)"/>
+  <!-- eyes glowing red -->
+  <ellipse cx="200" cy="250" rx="26" ry="22" fill="url(#bb-eye)"/>
+  <ellipse cx="312" cy="250" rx="26" ry="22" fill="url(#bb-eye)"/>
+  <ellipse cx="200" cy="252" rx="6" ry="14" fill="#000"/>
+  <ellipse cx="312" cy="252" rx="6" ry="14" fill="#000"/>
+  <!-- nose ring -->
+  <circle cx="256" cy="395" r="14" fill="none" stroke="#f0e0c0" stroke-width="5"/>
+  <!-- forehead mark -->
+  <path d="M256 180 l-12 40 h24z" fill="#fff" opacity="0.85"/>
+</svg>

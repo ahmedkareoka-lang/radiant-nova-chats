@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bt-face" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#2a1a14"/>
+      <stop offset="100%" stop-color="#050202"/>
+    </radialGradient>
+    <radialGradient id="bt-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a0f0ff"/>
+      <stop offset="60%" stop-color="#0099cc"/>
+      <stop offset="100%" stop-color="#001a33"/>
+    </radialGradient>
+    <filter id="bt-glow"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <ellipse cx="256" cy="270" rx="180" ry="190" fill="url(#bt-face)"/>
+  <!-- ears -->
+  <path d="M110 150 q-10 -60 60 -50 q10 40 -20 80z" fill="#0a0504"/>
+  <path d="M402 150 q10 -60 -60 -50 q-10 40 20 80z" fill="#0a0504"/>
+  <circle cx="140" cy="140" r="14" fill="#2a1a14"/>
+  <circle cx="372" cy="140" r="14" fill="#2a1a14"/>
+  <!-- electric blue stripes -->
+  <g fill="#00d4ff" opacity="0.85" filter="url(#bt-glow)">
+    <path d="M100 220 q40 -10 60 10 l-10 25 q-30 -15 -55 -15z"/>
+    <path d="M90 290 q50 -5 70 15 l-12 22 q-32 -16 -60 -16z"/>
+    <path d="M412 220 q-40 -10 -60 10 l10 25 q30 -15 55 -15z"/>
+    <path d="M422 290 q-50 -5 -70 15 l12 22 q32 -16 60 -16z"/>
+    <path d="M256 90 q-10 30 0 50 q10 -20 0 -50z"/>
+    <path d="M226 100 q-15 35 -5 60"/>
+    <path d="M286 100 q15 35 5 60"/>
+  </g>
+  <!-- eyes -->
+  <ellipse cx="200" cy="245" rx="32" ry="26" fill="url(#bt-eye)"/>
+  <ellipse cx="312" cy="245" rx="32" ry="26" fill="url(#bt-eye)"/>
+  <ellipse cx="200" cy="248" rx="7" ry="18" fill="#000"/>
+  <ellipse cx="312" cy="248" rx="7" ry="18" fill="#000"/>
+  <circle cx="210" cy="238" r="4" fill="#fff"/>
+  <circle cx="322" cy="238" r="4" fill="#fff"/>
+  <!-- nose -->
+  <path d="M230 308 q26 -18 52 0 q-6 22 -26 26 q-20 -4 -26 -26z" fill="#1a0a05"/>
+  <!-- mouth + fangs -->
+  <path d="M256 336 v22 M256 358 q-28 22 -54 6 M256 358 q28 22 54 6" stroke="#000" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <polygon points="232,358 240,392 250,358" fill="#fff"/>
+  <polygon points="280,358 272,392 262,358" fill="#fff"/>
+  <!-- whisker dots -->
+  <g fill="#a0f0ff" opacity="0.8">
+    <circle cx="200" cy="318" r="2"/><circle cx="190" cy="328" r="2"/><circle cx="312" cy="318" r="2"/><circle cx="322" cy="328" r="2"/>
+  </g>
+</svg>

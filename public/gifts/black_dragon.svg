@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bd-scale" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a0a1f"/>
+      <stop offset="50%" stop-color="#080208"/>
+      <stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+    <linearGradient id="bd-fire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="40%" stop-color="#ffd000"/>
+      <stop offset="100%" stop-color="#ff0044"/>
+    </linearGradient>
+    <radialGradient id="bd-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff7c0"/>
+      <stop offset="50%" stop-color="#ff0033"/>
+      <stop offset="100%" stop-color="#330000"/>
+    </radialGradient>
+    <filter id="bd-glow"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <!-- wings -->
+  <path d="M60 220 q60 -100 180 -60 l-20 80 q-90 -10 -160 -20z" fill="url(#bd-scale)" stroke="#3a0033" stroke-width="2"/>
+  <path d="M452 220 q-60 -100 -180 -60 l20 80 q90 -10 160 -20z" fill="url(#bd-scale)" stroke="#3a0033" stroke-width="2"/>
+  <g stroke="#5a0044" stroke-width="2" fill="none">
+    <path d="M80 210 q40 -40 130 -40"/>
+    <path d="M100 240 q40 -30 120 -25"/>
+    <path d="M432 210 q-40 -40 -130 -40"/>
+    <path d="M412 240 q-40 -30 -120 -25"/>
+  </g>
+  <!-- body -->
+  <path d="M180 280 q40 -60 152 -10 q40 70 -10 120 q-90 30 -160 -10 q-30 -50 18 -100z" fill="url(#bd-scale)"/>
+  <!-- spikes -->
+  <g fill="#2a0a30">
+    <polygon points="200,260 210,230 220,260"/>
+    <polygon points="230,250 240,215 250,250"/>
+    <polygon points="262,248 272,210 282,248"/>
+    <polygon points="295,255 305,222 315,255"/>
+  </g>
+  <!-- head -->
+  <path d="M120 340 q-30 -40 20 -70 q40 -10 70 10 q15 30 -10 70 q-40 30 -80 -10z" fill="url(#bd-scale)"/>
+  <!-- horns -->
+  <path d="M150 280 q-10 -40 20 -55 q5 30 -5 55z" fill="#1a0a1f"/>
+  <path d="M180 270 q5 -40 35 -50 q-5 35 -20 55z" fill="#1a0a1f"/>
+  <!-- eye -->
+  <ellipse cx="175" cy="320" rx="14" ry="10" fill="url(#bd-eye)"/>
+  <ellipse cx="175" cy="322" rx="4" ry="8" fill="#000"/>
+  <!-- fire breath -->
+  <path filter="url(#bd-glow)" d="M120 360 q-30 -10 -60 0 q20 20 60 25 q-30 10 -60 5 q40 15 70 -5 q20 10 -10 25" fill="url(#bd-fire)"/>
+  <ellipse cx="60" cy="370" rx="40" ry="14" fill="url(#bd-fire)" opacity="0.7"/>
+  <!-- tail -->
+  <path d="M340 380 q60 0 90 -40 q20 -30 40 -20 q-10 30 -40 50 q-40 30 -90 30z" fill="url(#bd-scale)"/>
+  <polygon points="470,310 500,295 480,330" fill="#2a0a30"/>
+</svg>

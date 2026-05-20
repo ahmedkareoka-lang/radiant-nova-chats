@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bl-mane" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#3a2a1e"/>
+      <stop offset="55%" stop-color="#120a06"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="bl-face" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#2a1a10"/>
+      <stop offset="100%" stop-color="#050302"/>
+    </radialGradient>
+    <radialGradient id="bl-eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd166"/>
+      <stop offset="60%" stop-color="#ff8500"/>
+      <stop offset="100%" stop-color="#5a1a00"/>
+    </radialGradient>
+    <filter id="bl-glow"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+  <!-- mane spikes -->
+  <g fill="url(#bl-mane)">
+    <circle cx="256" cy="256" r="200"/>
+    <g>
+      <polygon points="256,30 280,120 232,120"/>
+      <polygon points="80,120 160,160 110,200"/>
+      <polygon points="432,120 352,160 402,200"/>
+      <polygon points="40,260 130,250 120,310"/>
+      <polygon points="472,260 382,250 392,310"/>
+      <polygon points="90,400 170,360 160,420"/>
+      <polygon points="422,400 342,360 352,420"/>
+      <polygon points="256,486 220,400 292,400"/>
+    </g>
+  </g>
+  <!-- glow halo -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#ff6b00" stroke-width="2" opacity="0.5" filter="url(#bl-glow)"/>
+  <!-- face -->
+  <ellipse cx="256" cy="270" rx="130" ry="135" fill="url(#bl-face)"/>
+  <!-- ears -->
+  <path d="M150 170 q-10 -50 40 -50 q20 30 0 70z" fill="url(#bl-mane)"/>
+  <path d="M362 170 q10 -50 -40 -50 q-20 30 0 70z" fill="url(#bl-mane)"/>
+  <!-- eyes -->
+  <ellipse cx="210" cy="250" rx="26" ry="22" fill="url(#bl-eye)"/>
+  <ellipse cx="302" cy="250" rx="26" ry="22" fill="url(#bl-eye)"/>
+  <ellipse cx="210" cy="252" rx="6" ry="14" fill="#1a0500"/>
+  <ellipse cx="302" cy="252" rx="6" ry="14" fill="#1a0500"/>
+  <circle cx="218" cy="244" r="3" fill="#fff"/>
+  <circle cx="310" cy="244" r="3" fill="#fff"/>
+  <!-- nose -->
+  <path d="M236 300 q20 -16 40 0 q-4 18 -20 22 q-16 -4 -20 -22z" fill="#1a0a05"/>
+  <!-- mouth -->
+  <path d="M256 326 v18 M256 344 q-22 18 -44 6 M256 344 q22 18 44 6" stroke="#0a0402" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- fangs -->
+  <polygon points="240,348 246,372 252,348" fill="#fff"/>
+  <polygon points="272,348 266,372 260,348" fill="#fff"/>
+  <!-- whiskers -->
+  <g stroke="#3a2a20" stroke-width="2" opacity="0.7">
+    <line x1="160" y1="305" x2="225" y2="312"/>
+    <line x1="160" y1="320" x2="225" y2="320"/>
+    <line x1="352" y1="305" x2="287" y2="312"/>
+    <line x1="352" y1="320" x2="287" y2="320"/>
+  </g>
+</svg>
