@@ -78,6 +78,121 @@ const readLottieDurationMs = async (url: string): Promise<number | null> => {
   }
   return null;
 };
+/**
+ * 💥 Pure-SVG explosion burst rendered behind every gift.
+ * Scales rays + ring + particle count by gift amount tier.
+ */
+const ExplosionBurst = memo(({ tier }: { tier: number }) => {
+  const intensity = tier >= 100000 ? 3 : tier >= 10000 ? 2 : tier >= 1000 ? 1.4 : 1;
+  const rayCount = Math.round(18 * intensity);
+  const particleCount = Math.round(28 * intensity);
+  const colorA = tier >= 100000 ? "#fff2a0" : tier >= 10000 ? "#ffd166" : "#a855f7";
+  const colorB = tier >= 100000 ? "#ff3d3d" : tier >= 10000 ? "#ff7a00" : "#ec4899";
+
+  return (
+    <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
+      {/* Shockwave ring */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0.9 }}
+        animate={{ scale: 3 * intensity, opacity: 0 }}
+        transition={{ duration: 1.1, ease: "easeOut" }}
+        className="absolute rounded-full"
+        style={{
+          width: "min(60vw, 380px)",
+          height: "min(60vw, 380px)",
+          border: `4px solid ${colorA}`,
+          boxShadow: `0 0 60px ${colorA}, inset 0 0 60px ${colorB}`,
+        }}
+      />
+      {/* Second slower wave */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0.7 }}
+        animate={{ scale: 4 * intensity, opacity: 0 }}
+        transition={{ duration: 1.6, delay: 0.15, ease: "easeOut" }}
+        className="absolute rounded-full"
+        style={{
+          width: "min(40vw, 240px)",
+          height: "min(40vw, 240px)",
+          border: `2px solid ${colorB}`,
+        }}
+      />
+      {/* Radial rays */}
+      <svg
+        viewBox="-200 -200 400 400"
+        className="absolute"
+        style={{ width: "min(95vw, 600px)", height: "min(95vw, 600px)" }}
+      >
+        <defs>
+          <linearGradient id={`ray-${tier}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={colorA} stopOpacity="0.95" />
+            <stop offset="100%" stopColor={colorB} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {Array.from({ length: rayCount }).map((_, i) => {
+          const angle = (360 / rayCount) * i;
+          const len = 110 + Math.random() * 70;
+          return (
+            <motion.rect
+              key={i}
+              x={20}
+              y={-3}
+              width={len}
+              height={6}
+              rx={3}
+              fill={`url(#ray-${tier})`}
+              transform={`rotate(${angle})`}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: [0, 1.3, 1], opacity: [0, 1, 0] }}
+              transition={{ duration: 0.9, delay: 0.05, ease: "easeOut" }}
+              style={{ transformOrigin: "0 0" }}
+            />
+          );
+        })}
+      </svg>
+      {/* Sparkle particles */}
+      {Array.from({ length: particleCount }).map((_, i) => {
+        const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.4;
+        const dist = 140 + Math.random() * 180 * intensity;
+        const size = 6 + Math.random() * 10;
+        return (
+          <motion.span
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: size,
+              height: size,
+              background: i % 2 ? colorA : colorB,
+              boxShadow: `0 0 12px ${i % 2 ? colorA : colorB}`,
+            }}
+            initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+            animate={{
+              x: Math.cos(angle) * dist,
+              y: Math.sin(angle) * dist,
+              opacity: [0, 1, 0],
+              scale: [0, 1.4, 0],
+            }}
+            transition={{ duration: 1.1 + Math.random() * 0.6, ease: "easeOut" }}
+          />
+        );
+      })}
+      {/* Central flash */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: 160,
+          height: 160,
+          background: `radial-gradient(circle, ${colorA} 0%, transparent 70%)`,
+          filter: "blur(8px)",
+        }}
+        initial={{ scale: 0, opacity: 1 }}
+        animate={{ scale: 2.5, opacity: 0 }}
+        transition={{ duration: 0.55, ease: "easeOut" }}
+      />
+    </div>
+  );
+});
+ExplosionBurst.displayName = "ExplosionBurst";
+
 
 const FullscreenGiftEffectInner = ({ gift, onComplete, muted }: FullscreenGiftEffectProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
