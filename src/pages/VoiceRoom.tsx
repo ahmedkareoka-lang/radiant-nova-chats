@@ -632,9 +632,11 @@ const VoiceRoom = () => {
           giftName: giftName || "هدية",
           amount: amount || 0,
         }]);
+        // Toast duration scales with gift tier so big gifts linger in chat
+        const toastMs = amount >= 100000 ? 12000 : amount >= 10000 ? 9000 : amount >= 1000 ? 6500 : 5000;
         setTimeout(() => {
           setGiftToasts(prev => prev.filter(t => t.id !== toastId));
-        }, 4500);
+        }, toastMs);
       })
       .subscribe((status) => {
         logAgora(status === "SUBSCRIBED" ? "success" : "info", "Gift", `gift channel status: ${status}`, { roomId });
