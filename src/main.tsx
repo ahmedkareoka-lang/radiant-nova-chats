@@ -5,6 +5,10 @@ import "./index.css";
 import { Capacitor } from "@capacitor/core";
 import { registerServiceWorker } from "./lib/registerServiceWorker";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { initTelegramWebApp } from "./lib/telegramWebApp";
+
+// 📱 Initialize Telegram Mini App (no-op outside Telegram WebView)
+initTelegramWebApp();
 
 // 🌐 Respect user's data-saving preferences before doing any preloading work
 const shouldPreload = () => {
