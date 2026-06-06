@@ -133,17 +133,18 @@
     background-attachment: scroll; /* fixed bg jitters inside Telegram WebView */
   }
 
-  /* Comfortable mobile touch targets — buttons & links get a 40px min hit area */
+  /* Comfortable mobile interactions — no tap delay, no callout, no highlight */
   @media (pointer: coarse) {
     button,
     a,
     [role="button"],
     [role="tab"],
     label[for] {
-      min-height: 40px;
       touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
   }
+
 
 }
 
