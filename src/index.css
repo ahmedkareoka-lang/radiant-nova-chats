@@ -93,8 +93,58 @@
     padding-right: env(safe-area-inset-right);
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
     overscroll-behavior: none;
+    touch-action: manipulation; /* disable double-tap zoom */
   }
+
+  /* Allow text selection & native input behavior where it's actually needed */
+  input,
+  textarea,
+  [contenteditable="true"],
+  .allow-select {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  /* Prevent iOS auto-zoom on focus (font must be >= 16px) */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+
+  /* 📱 Telegram Mini App: use Telegram viewport height so bottom nav never gets clipped */
+  html[data-tg="1"],
+  html[data-tg="1"] body {
+    height: var(--tg-viewport-height, 100vh);
+    min-height: var(--tg-viewport-height, 100vh);
+    overflow-x: hidden;
+  }
+  html[data-tg="1"] body {
+    background-attachment: scroll; /* fixed bg jitters inside Telegram WebView */
+  }
+
+  /* Comfortable mobile touch targets — buttons & links get a 40px min hit area */
+  @media (pointer: coarse) {
+    button,
+    a,
+    [role="button"],
+    [role="tab"],
+    label[for] {
+      min-height: 40px;
+      touch-action: manipulation;
+    }
+  }
+
 }
 
 @keyframes bgShift {
