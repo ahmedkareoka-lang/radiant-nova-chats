@@ -96,6 +96,34 @@ const Index = () => {
           setProfile({ ...p, telegram_id: tg.id, telegram_first_name: tg.first_name, telegram_username: tg.username ?? null });
         }
       }
+
+
+
+
+      // 🎁 Telegram startapp referral: if opened via t.me/.../NOVA?startapp=ref_<telegramId>
+      // credit both the new user and the inviter (one-time, server-enforced).
+      try {
+        const startParam =
+          window.Telegram?.WebApp?.initDataUnsafe?.start_param ||
+          new URLSearchParams(window.location.search).get("startapp") ||
+          "";
+        const m = /^ref_(\d+)$/.exec(startParam);
+        if (m && p && !cancelled) {
+          const refTgId = Number(m[1]);
+          if (refTgId && refTgId !== (tg?.id ?? -1)) {
+            const claimedKey = `nova_tg_ref_claimed_${user.id}`;
+            if (!localStorage.getItem(claimedKey)) {
+              const { error: refErr } = await supabase.rpc("apply_telegram_referral", {
+                _user_id: user.id,
+                _referrer_telegram_id: refTgId,
+              });
+              if (!refErr) localStorage.setItem(claimedKey, "1");
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[TG referral] skipped:", e);
+      }
     };
     init();
 

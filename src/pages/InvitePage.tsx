@@ -57,16 +57,32 @@ const InvitePage = () => {
     }
   };
 
+  const [telegramId, setTelegramId] = useState<number | null>(null);
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/login"); return; }
       setUserId(user.id);
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("telegram_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (prof?.telegram_id) setTelegramId(Number(prof.telegram_id));
       await refresh(user.id);
     })();
   }, [navigate]);
 
-  const inviteUrl = myCode ? `${window.location.origin}/?ref=${myCode.code}` : "";
+  // Telegram Mini App referral link (preferred when telegram_id exists),
+  // otherwise fall back to the legacy web referral code link.
+  const TG_BOT = "NovaVoiceChat_bot";
+  const TG_APP = "NOVA";
+  const inviteUrl = telegramId
+    ? `https://t.me/${TG_BOT}/${TG_APP}?startapp=ref_${telegramId}`
+    : myCode
+    ? `${window.location.origin}/?ref=${myCode.code}`
+    : "";
 
   const copyCode = async () => {
     if (!myCode) return;
