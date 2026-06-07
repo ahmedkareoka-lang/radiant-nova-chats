@@ -64,6 +64,44 @@ const TopUpPage = () => {
   const [exchangeAmount, setExchangeAmount] = useState("");
   const [exchanging, setExchanging] = useState(false);
 
+  // Telegram Stars
+  const [starsLoadingIdx, setStarsLoadingIdx] = useState<number | null>(null);
+  const inTelegram = useMemo(() => isTelegramMiniApp(), []);
+
+  const payWithStars = async (idx: number) => {
+    if (!inTelegram) {
+      toast.error("افتح NOVA من داخل Telegram لاستخدام Stars");
+      return;
+    }
+    setStarsLoadingIdx(idx);
+    try {
+      const { data, error } = await supabase.functions.invoke("telegram-stars-invoice", {
+        body: { package_index: idx },
+      });
+      if (error || !data?.invoice_url) {
+        toast.error("تعذّر إنشاء فاتورة Stars");
+        return;
+      }
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg?.openInvoice) {
+        tg.openInvoice(data.invoice_url, (status: string) => {
+          if (status === "paid") {
+            toast.success("تم الدفع بنجاح ⭐ — جاري تحديث الرصيد");
+            setTimeout(refreshBalance, 1500);
+          } else if (status === "failed") toast.error("فشل الدفع");
+          else if (status === "cancelled") toast("تم إلغاء الدفع");
+        });
+      } else {
+        window.open(data.invoice_url, "_blank");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "خطأ");
+    } finally {
+      setStarsLoadingIdx(null);
+    }
+  };
+
+
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
