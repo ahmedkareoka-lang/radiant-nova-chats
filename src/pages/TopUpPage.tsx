@@ -22,7 +22,9 @@ import BinancePayModal from "@/components/BinancePayModal";
  * Visa / cards intentionally REMOVED.
  */
 
-type Method = "binance" | "agents" | "redeem" | "wallet";
+type Method = "binance" | "agents" | "redeem" | "wallet" | "stars";
+
+const STARS_PER_USD = 50; // 1 USD ≈ 50 Telegram Stars (mirrors edge function default)
 
 // Each package now ships with its own dedicated Binance Pay link
 // so the user is redirected directly to the locked-amount checkout.
