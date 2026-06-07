@@ -20,6 +20,19 @@ const translations = {
   "auth.verify_otp": { ar: "تحقق", en: "Verify" },
   "auth.use_otp": { ar: "تسجيل برمز OTP", en: "Login with OTP" },
   "auth.use_password": { ar: "تسجيل بكلمة المرور", en: "Login with Password" },
+  "auth.telegram": { ar: "تلجرام", en: "Telegram" },
+  "auth.tg_inapp_btn": { ar: "تسجيل الدخول بحساب تلجرام", en: "Continue with Telegram" },
+  "auth.tg_widget_hint": { ar: "اضغط الزر لتسجيل الدخول بحسابك في تلجرام", en: "Tap the button to sign in with your Telegram account" },
+  "auth.tg_success": { ar: "تم تسجيل الدخول عبر تلجرام", en: "Signed in with Telegram" },
+  "auth.tg_failed": { ar: "فشل تسجيل الدخول بتلجرام", en: "Telegram login failed" },
+  "auth.password_rule": {
+    ar: "كلمة السر: 6-12 خانة. أرقام فقط، أو حروف فقط، أو حروف وأرقام.",
+    en: "Password: 6-12 chars. Digits only, letters only, or letters + digits.",
+  },
+  "auth.password_invalid": {
+    ar: "كلمة السر يجب أن تكون 6-12 خانة (أرقام فقط أو حروف فقط أو خليط حروف وأرقام).",
+    en: "Password must be 6-12 chars (digits only, letters only, or letters + digits).",
+  },
 
   // Navigation
   "nav.home": { ar: "الرئيسية", en: "Home" },
