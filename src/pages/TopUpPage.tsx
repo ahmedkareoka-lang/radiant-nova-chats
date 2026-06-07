@@ -70,8 +70,7 @@ const TopUpPage = () => {
 
   const payWithStars = async (idx: number) => {
     if (!inTelegram) {
-      toast.error("افتح NOVA من داخل Telegram لاستخدام Stars");
-      return;
+      toast("معاينة فقط — افتح NOVA من داخل Telegram لإتمام الدفع بالـ Stars");
     }
     setStarsLoadingIdx(idx);
     try {
@@ -479,7 +478,7 @@ const TopUpPage = () => {
                       <button
                         key={i}
                         onClick={() => payWithStars(i)}
-                        disabled={loading || !inTelegram}
+                        disabled={loading}
                         className={`relative rounded-2xl p-3 text-left border transition-all bg-secondary/30 hover:border-sky-400/50 ${
                           pkg.popular ? "ring-1 ring-sky-400/40" : "border-border/40"
                         } disabled:opacity-50`}
