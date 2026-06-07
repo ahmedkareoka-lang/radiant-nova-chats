@@ -70,8 +70,7 @@ const TopUpPage = () => {
 
   const payWithStars = async (idx: number) => {
     if (!inTelegram) {
-      toast.error("افتح NOVA من داخل Telegram لاستخدام Stars");
-      return;
+      toast("معاينة فقط — افتح NOVA من داخل Telegram لإتمام الدفع بالـ Stars");
     }
     setStarsLoadingIdx(idx);
     try {
