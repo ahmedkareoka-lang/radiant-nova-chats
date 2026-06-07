@@ -8,6 +8,7 @@ import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import BannerCarousel from "@/components/BannerCarousel";
 import { useRooms } from "@/hooks/useRooms";
+import { getTelegramUser } from "@/lib/telegramWebApp";
 import { useMyRoom } from "@/hooks/useMyRoom";
 import { usePresence } from "@/hooks/usePresence";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -37,6 +38,7 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState("hot");
   const [topRechargers, setTopRechargers] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const tgUser = useMemo(() => getTelegramUser(), []);
   const { myRoomId, loading: myRoomLoading } = useMyRoom(profile?.id ?? null);
 
   const handleTabClick = (tabId: string) => {
@@ -175,6 +177,15 @@ const Index = () => {
         </header>
 
         <main className="px-3 py-3 max-w-lg mx-auto">
+          {tgUser && (
+            <div className="mb-3 px-3 py-2 rounded-2xl bg-gradient-to-r from-primary/15 to-accent/15 border border-primary/20 flex items-center gap-2">
+              <span className="text-lg">👋</span>
+              <p className="text-sm font-bold text-foreground">
+                أهلاً، <span className="glow-gold-text">{tgUser.first_name}</span>
+                {tgUser.username && <span className="text-muted-foreground font-normal"> · @{tgUser.username}</span>}
+              </p>
+            </div>
+          )}
           {/* Banner Carousel (Soulmatch style with auto-rotation) */}
           {banners.length > 0 ? (
             <BannerCarousel
