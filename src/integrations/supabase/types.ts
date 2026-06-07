@@ -1496,6 +1496,57 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_star_payments: {
+        Row: {
+          coins: number
+          created_at: string
+          diamonds: number
+          id: string
+          package_index: number
+          paid_at: string | null
+          payload: string
+          provider_charge_id: string | null
+          stars: number
+          status: string
+          telegram_charge_id: string | null
+          telegram_id: number | null
+          usdt: number
+          user_id: string
+        }
+        Insert: {
+          coins: number
+          created_at?: string
+          diamonds: number
+          id?: string
+          package_index: number
+          paid_at?: string | null
+          payload: string
+          provider_charge_id?: string | null
+          stars: number
+          status?: string
+          telegram_charge_id?: string | null
+          telegram_id?: number | null
+          usdt: number
+          user_id: string
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          diamonds?: number
+          id?: string
+          package_index?: number
+          paid_at?: string | null
+          payload?: string
+          provider_charge_id?: string | null
+          stars?: number
+          status?: string
+          telegram_charge_id?: string | null
+          telegram_id?: number | null
+          usdt?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       usdt_recharge_requests: {
         Row: {
           admin_notes: string | null

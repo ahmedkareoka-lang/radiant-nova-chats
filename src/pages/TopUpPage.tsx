@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft, Check, Sparkles, Phone, MessageCircle, Copy, Loader2,
-  Wallet, Users, Ticket, ShieldCheck, Clock, X, ArrowRightLeft
+  Wallet, Users, Ticket, ShieldCheck, Clock, X, ArrowRightLeft, Star
 } from "lucide-react";
+import { isTelegramMiniApp } from "@/lib/telegramWebApp";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,7 +22,9 @@ import BinancePayModal from "@/components/BinancePayModal";
  * Visa / cards intentionally REMOVED.
  */
 
-type Method = "binance" | "agents" | "redeem" | "wallet";
+type Method = "binance" | "agents" | "redeem" | "wallet" | "stars";
+
+const STARS_PER_USD = 50; // 1 USD ≈ 50 Telegram Stars (mirrors edge function default)
 
 // Each package now ships with its own dedicated Binance Pay link
 // so the user is redirected directly to the locked-amount checkout.
@@ -60,6 +63,44 @@ const TopUpPage = () => {
   const [exchangeRate, setExchangeRate] = useState(100); // 100 = 1 diamond → 1 coin
   const [exchangeAmount, setExchangeAmount] = useState("");
   const [exchanging, setExchanging] = useState(false);
+
+  // Telegram Stars
+  const [starsLoadingIdx, setStarsLoadingIdx] = useState<number | null>(null);
+  const inTelegram = useMemo(() => isTelegramMiniApp(), []);
+
+  const payWithStars = async (idx: number) => {
+    if (!inTelegram) {
+      toast.error("افتح NOVA من داخل Telegram لاستخدام Stars");
+      return;
+    }
+    setStarsLoadingIdx(idx);
+    try {
+      const { data, error } = await supabase.functions.invoke("telegram-stars-invoice", {
+        body: { package_index: idx },
+      });
+      if (error || !data?.invoice_url) {
+        toast.error("تعذّر إنشاء فاتورة Stars");
+        return;
+      }
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg?.openInvoice) {
+        tg.openInvoice(data.invoice_url, (status: string) => {
+          if (status === "paid") {
+            toast.success("تم الدفع بنجاح ⭐ — جاري تحديث الرصيد");
+            setTimeout(refreshBalance, 1500);
+          } else if (status === "failed") toast.error("فشل الدفع");
+          else if (status === "cancelled") toast("تم إلغاء الدفع");
+        });
+      } else {
+        window.open(data.invoice_url, "_blank");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "خطأ");
+    } finally {
+      setStarsLoadingIdx(null);
+    }
+  };
+
 
   useEffect(() => {
     const load = async () => {
@@ -206,7 +247,7 @@ const TopUpPage = () => {
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-5">
           {/* Method Tabs */}
-          <div className="grid grid-cols-4 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+          <div className="grid grid-cols-5 gap-1.5 p-1 rounded-2xl bg-secondary/40 border border-border/40">
             <MethodTab
               active={method === "wallet"}
               onClick={() => setMethod("wallet")}
@@ -220,9 +261,15 @@ const TopUpPage = () => {
               gradient="from-yellow-400 to-amber-500"
             />
             <MethodTab
+              active={method === "stars"}
+              onClick={() => setMethod("stars")}
+              icon={<Star className="w-4 h-4" />} label="Stars" sub="Telegram"
+              gradient="from-sky-400 to-blue-500"
+            />
+            <MethodTab
               active={method === "agents"}
               onClick={() => setMethod("agents")}
-              icon={<Users className="w-4 h-4" />} label="وكلاء" sub={`${agents.length} متاح`}
+              icon={<Users className="w-4 h-4" />} label="وكلاء" sub={`${agents.length}`}
               gradient="from-purple-500 to-fuchsia-500"
             />
             <MethodTab
@@ -397,6 +444,91 @@ const TopUpPage = () => {
               </div>
             </div>
           )}
+
+          {/* === TELEGRAM STARS === */}
+          {method === "stars" && (
+            <div className="space-y-4">
+              <div className="rounded-3xl p-4 border border-sky-500/30 bg-gradient-to-br from-sky-500/10 via-blue-500/5 to-purple-500/10 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-sky-400/10 blur-3xl" />
+                <div className="relative flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-white" fill="currentColor" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-extrabold text-sm text-sky-200">الدفع داخل Telegram ⭐</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      ادفع بـ Telegram Stars مباشرة — الرصيد يُضاف فوراً بعد الدفع
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {!inTelegram && (
+                <div className="rounded-2xl p-3 border border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-100">
+                  هذه الطريقة متاحة فقط داخل تطبيق Telegram. افتح NOVA من البوت الرسمي ثم عُد إلى هذه الصفحة.
+                </div>
+              )}
+
+              <div>
+                <h2 className="text-sm font-bold mb-2 text-sky-200">اختر باقتك بالـ Stars</h2>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {packages.map((pkg, i) => {
+                    const stars = pkg.usdt * STARS_PER_USD;
+                    const loading = starsLoadingIdx === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => payWithStars(i)}
+                        disabled={loading || !inTelegram}
+                        className={`relative rounded-2xl p-3 text-left border transition-all bg-secondary/30 hover:border-sky-400/50 ${
+                          pkg.popular ? "ring-1 ring-sky-400/40" : "border-border/40"
+                        } disabled:opacity-50`}
+                      >
+                        {pkg.popular && (
+                          <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-gradient-to-r from-sky-400 to-blue-500 text-[9px] font-black text-white flex items-center gap-0.5 whitespace-nowrap">
+                            <Sparkles className="w-2.5 h-2.5" /> الأكثر شعبية
+                          </div>
+                        )}
+                        {pkg.bonus > 0 && (
+                          <div className="absolute -top-2 -right-1 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-[9px] font-black text-white">
+                            +{pkg.bonus}%
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-sky-300" fill="currentColor" />
+                          <p className="font-black text-lg text-sky-200">{formatNum(stars)}</p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground -mt-0.5">≈ ${pkg.usdt}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <CurrencyIcon type="gold" size="xs" />
+                          <span className="text-[11px] font-bold text-yellow-300">{formatNum(pkg.coins)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <CurrencyIcon type="diamond" size="xs" />
+                          <span className="text-[10px] text-purple-300">{formatNum(pkg.diamonds)}</span>
+                        </div>
+                        {loading && (
+                          <div className="absolute inset-0 bg-background/60 rounded-2xl flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 animate-spin text-sky-300" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-2xl p-3 border border-sky-500/20 bg-sky-500/5 text-[11px] text-sky-100/90 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <span>
+                  اضغط أي باقة لفتح نافذة الدفع الرسمية من Telegram. السعر يطابق
+                  باقات USDT تماماً — لا فروقات.
+                </span>
+              </div>
+            </div>
+          )}
+
+
 
           {/* === AGENTS === */}
           {method === "agents" && (
