@@ -77,6 +77,25 @@ const Index = () => {
       setProfile(profileRes.data);
       setTopRechargers(topRes.data || []);
       setBanners(bannersRes.data || []);
+
+      // 🔗 Link Telegram identity to the in-app profile (one-time / on change)
+      const tg = getTelegramUser();
+      const p = profileRes.data;
+      if (tg && p && (p.telegram_id !== tg.id || p.telegram_username !== (tg.username ?? null) || p.telegram_first_name !== tg.first_name)) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            telegram_id: tg.id,
+            telegram_first_name: tg.first_name,
+            telegram_username: tg.username ?? null,
+            telegram_photo_url: tg.photo_url ?? null,
+            telegram_linked_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+        if (!error && !cancelled) {
+          setProfile({ ...p, telegram_id: tg.id, telegram_first_name: tg.first_name, telegram_username: tg.username ?? null });
+        }
+      }
     };
     init();
 
