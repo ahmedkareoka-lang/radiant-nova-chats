@@ -908,6 +908,11 @@ export type Database = {
           nova_p_expiry: string | null
           nova_p_level: number
           phone: string | null
+          telegram_first_name: string | null
+          telegram_id: number | null
+          telegram_linked_at: string | null
+          telegram_photo_url: string | null
+          telegram_username: string | null
           total_spend_gold: number
           user_id: string
           vip_expiry: string | null
@@ -946,6 +951,11 @@ export type Database = {
           nova_p_expiry?: string | null
           nova_p_level?: number
           phone?: string | null
+          telegram_first_name?: string | null
+          telegram_id?: number | null
+          telegram_linked_at?: string | null
+          telegram_photo_url?: string | null
+          telegram_username?: string | null
           total_spend_gold?: number
           user_id: string
           vip_expiry?: string | null
@@ -984,6 +994,11 @@ export type Database = {
           nova_p_expiry?: string | null
           nova_p_level?: number
           phone?: string | null
+          telegram_first_name?: string | null
+          telegram_id?: number | null
+          telegram_linked_at?: string | null
+          telegram_photo_url?: string | null
+          telegram_username?: string | null
           total_spend_gold?: number
           user_id?: string
           vip_expiry?: string | null
