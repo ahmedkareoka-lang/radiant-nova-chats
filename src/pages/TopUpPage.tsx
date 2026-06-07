@@ -247,7 +247,7 @@ const TopUpPage = () => {
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-5">
           {/* Method Tabs */}
-          <div className="grid grid-cols-4 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+          <div className="grid grid-cols-5 gap-1.5 p-1 rounded-2xl bg-secondary/40 border border-border/40">
             <MethodTab
               active={method === "wallet"}
               onClick={() => setMethod("wallet")}
@@ -261,9 +261,15 @@ const TopUpPage = () => {
               gradient="from-yellow-400 to-amber-500"
             />
             <MethodTab
+              active={method === "stars"}
+              onClick={() => setMethod("stars")}
+              icon={<Star className="w-4 h-4" />} label="Stars" sub="Telegram"
+              gradient="from-sky-400 to-blue-500"
+            />
+            <MethodTab
               active={method === "agents"}
               onClick={() => setMethod("agents")}
-              icon={<Users className="w-4 h-4" />} label="وكلاء" sub={`${agents.length} متاح`}
+              icon={<Users className="w-4 h-4" />} label="وكلاء" sub={`${agents.length}`}
               gradient="from-purple-500 to-fuchsia-500"
             />
             <MethodTab
