@@ -1,10 +1,13 @@
 // Public Telegram webhook for Stars payments + bot updates.
 // Handles:
+//  - /start command → welcome message + inline keyboard
+//  - callback_query → reply with feature explanation
 //  - pre_checkout_query  → answer ok:true (required by Bot API)
 //  - successful_payment  → credit coins/diamonds atomically
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/telegram";
+const MINI_APP_URL = "https://t.me/NovaVoiceChat_bot/NOVA";
 
 async function deriveSecret(token: string): Promise<string> {
   const buf = new TextEncoder().encode(`telegram-webhook:${token}`);
@@ -17,6 +20,47 @@ function safeEq(a: string | null, b: string) {
   let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return d === 0;
 }
+
+function tgHeaders(lov: string, tg: string) {
+  return {
+    Authorization: `Bearer ${lov}`,
+    "X-Connection-Api-Key": tg,
+    "Content-Type": "application/json",
+  };
+}
+
+async function tg(method: string, body: unknown, lov: string, tgKey: string) {
+  try {
+    await fetch(`${GATEWAY}/${method}`, {
+      method: "POST",
+      headers: tgHeaders(lov, tgKey),
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    console.error(`[tg ${method}]`, e);
+  }
+}
+
+const WELCOME_TEXT =
+  "مرحباً بك في NOVA! 🚀 عالمك الخاص للدردشة الصوتية والألعاب التنافسية. 💎";
+
+const MAIN_KEYBOARD = {
+  inline_keyboard: [
+    [{ text: "🎙️ غرف الدردشة الصوتية", callback_data: "info_rooms" }],
+    [{ text: "🎮 الألعاب والتحديات", callback_data: "info_games" }],
+    [{ text: "💰 الشحن ونظام الجوائز", callback_data: "info_topup" }],
+    [{ text: "🚀 دخول تطبيق NOVA", url: MINI_APP_URL }],
+  ],
+};
+
+const INFO_TEXTS: Record<string, string> = {
+  info_rooms:
+    "🎙️ غرف الدردشة الصوتية\n\nانضم إلى غرف صوتية حية مع آلاف المستخدمين، أنشئ غرفتك الخاصة، اصعد على المايك، أرسل الهدايا، وكوّن صداقات جديدة. كل غرفة لها مواضيعها وثيماتها الفريدة. 🎧✨",
+  info_games:
+    "🎮 الألعاب والتحديات\n\nالعب في مركز الألعاب: الروليت، الأسد والنمر، وصندوق الحظ. راهن بـ NOVA Coins واربح المزيد، تنافس على لوحة المتصدرين، واحصل على جوائز يومية. 🏆🎲",
+  info_topup:
+    "💰 الشحن ونظام الجوائز\n\nاحصل على NOVA Coins بعدة طرق:\n• 💳 Binance Pay\n• ⭐ Telegram Stars (داخل التطبيق مباشرة)\n• 🧑‍💼 وكلاء الشحن المعتمدين\n\nاستخدم الكوينز لإرسال الهدايا، شراء VIP، والمراهنة في الألعاب. كل هدية تتحول إلى ماسات زرقاء للمستلم! 💎",
+};
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("ok", { status: 200 });
@@ -36,16 +80,44 @@ Deno.serve(async (req) => {
   );
 
   try {
+    // /start command
+    const msg = update.message;
+    if (msg?.text && typeof msg.text === "string" && msg.chat?.id) {
+      const text = msg.text.trim();
+      if (text === "/start" || text.startsWith("/start ")) {
+        await tg("sendMessage", {
+          chat_id: msg.chat.id,
+          text: WELCOME_TEXT,
+          reply_markup: MAIN_KEYBOARD,
+        }, LOVABLE_API_KEY, TELEGRAM_API_KEY);
+        return new Response("ok");
+      }
+    }
+
+    // Inline keyboard button click
+    const cq = update.callback_query;
+    if (cq?.id) {
+      const data = String(cq.data ?? "");
+      const reply = INFO_TEXTS[data];
+      await tg("answerCallbackQuery", { callback_query_id: cq.id }, LOVABLE_API_KEY, TELEGRAM_API_KEY);
+      if (reply && cq.message?.chat?.id) {
+        await tg("sendMessage", {
+          chat_id: cq.message.chat.id,
+          text: reply,
+          reply_markup: {
+            inline_keyboard: [[{ text: "🚀 دخول تطبيق NOVA", url: MINI_APP_URL }]],
+          },
+        }, LOVABLE_API_KEY, TELEGRAM_API_KEY);
+      }
+      return new Response("ok");
+    }
+
     // 1) pre-checkout — must answer within 10s
     if (update.pre_checkout_query) {
-      await fetch(`${GATEWAY}/answerPreCheckoutQuery`, {
-        method: "POST",
-        headers: tgHeaders(LOVABLE_API_KEY, TELEGRAM_API_KEY),
-        body: JSON.stringify({
-          pre_checkout_query_id: update.pre_checkout_query.id,
-          ok: true,
-        }),
-      });
+      await tg("answerPreCheckoutQuery", {
+        pre_checkout_query_id: update.pre_checkout_query.id,
+        ok: true,
+      }, LOVABLE_API_KEY, TELEGRAM_API_KEY);
       return new Response("ok");
     }
 
@@ -59,7 +131,6 @@ Deno.serve(async (req) => {
         .eq("payload", payload)
         .maybeSingle();
       if (row && row.status !== "paid") {
-        // Credit coins & diamonds
         const { data: prof } = await supabase
           .from("profiles")
           .select("coins, diamonds")
@@ -82,7 +153,6 @@ Deno.serve(async (req) => {
           })
           .eq("payload", payload);
 
-        // Optional notification
         await supabase.from("notifications").insert({
           user_id: row.user_id,
           type: "topup",
@@ -97,11 +167,3 @@ Deno.serve(async (req) => {
 
   return new Response("ok");
 });
-
-function tgHeaders(lov: string, tg: string) {
-  return {
-    Authorization: `Bearer ${lov}`,
-    "X-Connection-Api-Key": tg,
-    "Content-Type": "application/json",
-  };
-}
