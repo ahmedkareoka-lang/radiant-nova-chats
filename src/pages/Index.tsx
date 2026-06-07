@@ -8,6 +8,7 @@ import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import BannerCarousel from "@/components/BannerCarousel";
 import { useRooms } from "@/hooks/useRooms";
+import { getTelegramUser } from "@/lib/telegramWebApp";
 import { useMyRoom } from "@/hooks/useMyRoom";
 import { usePresence } from "@/hooks/usePresence";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -37,6 +38,7 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState("hot");
   const [topRechargers, setTopRechargers] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const tgUser = useMemo(() => getTelegramUser(), []);
   const { myRoomId, loading: myRoomLoading } = useMyRoom(profile?.id ?? null);
 
   const handleTabClick = (tabId: string) => {
