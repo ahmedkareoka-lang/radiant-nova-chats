@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   ArrowLeft, Check, Sparkles, Phone, MessageCircle, Copy, Loader2,
-  Wallet, Users, Ticket, ShieldCheck, Clock, X, ArrowRightLeft
+  Wallet, Users, Ticket, ShieldCheck, Clock, X, ArrowRightLeft, Star
 } from "lucide-react";
+import { isTelegramMiniApp } from "@/lib/telegramWebApp";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
