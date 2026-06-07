@@ -1731,6 +1731,10 @@ export type Database = {
         Args: { _code: string; _user_id: string }
         Returns: Json
       }
+      apply_telegram_referral: {
+        Args: { _referrer_telegram_id: number; _user_id: string }
+        Returns: Json
+      }
       approve_resignation: {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
