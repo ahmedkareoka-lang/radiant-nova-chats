@@ -95,6 +95,9 @@ const Index = () => {
         if (!error && !cancelled) {
           setProfile({ ...p, telegram_id: tg.id, telegram_first_name: tg.first_name, telegram_username: tg.username ?? null });
         }
+      }
+
+
 
 
       // 🎁 Telegram startapp referral: if opened via t.me/.../NOVA?startapp=ref_<telegramId>
