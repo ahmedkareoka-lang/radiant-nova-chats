@@ -83,6 +83,44 @@ export const AuthGate = memo(function AuthGate({
     );
   }
 
+  // 🚀 Auto-login via Telegram Mini App initData (no manual button)
+  if (requireAuth && !session && isTelegramMiniApp() && !tgAttempted) {
+    if (!tgTriedRef.current) {
+      tgTriedRef.current = true;
+      (async () => {
+        try {
+          const initData = getTelegramInitData();
+          if (!initData) {
+            setTgAttempted(true);
+            return;
+          }
+          const { data, error } = await supabase.functions.invoke("telegram-auth", {
+            body: { initData },
+          });
+          if (error || !data?.email || !data?.password) {
+            console.warn("[AuthGate] tg auto-login failed", error || data);
+            setTgAttempted(true);
+            return;
+          }
+          const { error: signInErr } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          });
+          if (signInErr) console.warn("[AuthGate] tg signIn err", signInErr);
+        } catch (e) {
+          console.warn("[AuthGate] tg auto-login error", e);
+        } finally {
+          setTgAttempted(true);
+        }
+      })();
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   // 🚫 منع الوصول غير المصرح به
   if (requireAuth && !session) {
     const redirect = encodeURIComponent(
