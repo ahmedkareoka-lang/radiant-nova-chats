@@ -1,8 +1,9 @@
-import { useEffect, useState, memo } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { isTelegramMiniApp, getTelegramInitData } from "@/lib/telegramWebApp";
 
 interface AuthGateProps {
   children: React.ReactNode;
