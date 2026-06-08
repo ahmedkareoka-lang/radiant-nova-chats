@@ -100,6 +100,15 @@ const LoginPage = () => {
     await signInWithTelegramPayload({ initData });
   };
 
+  // 🚀 Auto-login when opened inside Telegram Mini App
+  useEffect(() => {
+    if (!inTelegram) return;
+    const initData = getTelegramInitData();
+    if (!initData) return;
+    signInWithTelegramPayload({ initData });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inTelegram]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
