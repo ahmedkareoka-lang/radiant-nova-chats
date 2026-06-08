@@ -18,6 +18,8 @@ export const AuthGate = memo(function AuthGate({
 }: AuthGateProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tgAttempted, setTgAttempted] = useState(false);
+  const tgTriedRef = useRef(false);
   const queryClient = useQueryClient();
 
   // ✅ تحميل الجلسة الأولية + الاستماع لتغييرات المصادقة
