@@ -61,7 +61,7 @@ const LoversPage = () => {
 
   // Bump streak when both partners visit the page
   useEffect(() => {
-    if (couple) { supabase.rpc("bump_couple_streak").catch(() => {}); }
+    if (couple) { (supabase.rpc("bump_couple_streak") as any).then(() => {}, () => {}); }
   }, [couple?.id]);
 
   const loadMutuals = async () => {
