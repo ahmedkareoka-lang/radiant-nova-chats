@@ -563,47 +563,147 @@ export type Database = {
         }
         Relationships: []
       }
+      love_achievements: {
+        Row: {
+          achievement_key: string
+          couple_id: string
+          id: string
+          unlocked_at: string
+        }
+        Insert: {
+          achievement_key: string
+          couple_id: string
+          id?: string
+          unlocked_at?: string
+        }
+        Update: {
+          achievement_key?: string
+          couple_id?: string
+          id?: string
+          unlocked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "love_achievements_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "love_couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       love_couples: {
         Row: {
           activated_at: string
           anniversary_date: string
           created_at: string
+          custom_title: string | null
+          daily_hearts_count: number
+          daily_hearts_sent_at: string | null
           id: string
           is_active: boolean
+          last_streak_date: string | null
           love_level: number
           love_points: number
+          monthly_anniversary_claimed_at: string | null
           relationship_type: string
+          streak_days: number
           updated_at: string
           user1_id: string
           user2_id: string
+          weekly_gift_claimed_at: string | null
         }
         Insert: {
           activated_at?: string
           anniversary_date?: string
           created_at?: string
+          custom_title?: string | null
+          daily_hearts_count?: number
+          daily_hearts_sent_at?: string | null
           id?: string
           is_active?: boolean
+          last_streak_date?: string | null
           love_level?: number
           love_points?: number
+          monthly_anniversary_claimed_at?: string | null
           relationship_type?: string
+          streak_days?: number
           updated_at?: string
           user1_id: string
           user2_id: string
+          weekly_gift_claimed_at?: string | null
         }
         Update: {
           activated_at?: string
           anniversary_date?: string
           created_at?: string
+          custom_title?: string | null
+          daily_hearts_count?: number
+          daily_hearts_sent_at?: string | null
           id?: string
           is_active?: boolean
+          last_streak_date?: string | null
           love_level?: number
           love_points?: number
+          monthly_anniversary_claimed_at?: string | null
           relationship_type?: string
+          streak_days?: number
           updated_at?: string
           user1_id?: string
           user2_id?: string
+          weekly_gift_claimed_at?: string | null
         }
         Relationships: []
+      }
+      love_quests: {
+        Row: {
+          claimed: boolean
+          completed: boolean
+          couple_id: string
+          created_at: string
+          id: string
+          progress: number
+          quest_date: string
+          quest_key: string
+          reward_points: number
+          target: number
+          updated_at: string
+        }
+        Insert: {
+          claimed?: boolean
+          completed?: boolean
+          couple_id: string
+          created_at?: string
+          id?: string
+          progress?: number
+          quest_date?: string
+          quest_key: string
+          reward_points?: number
+          target: number
+          updated_at?: string
+        }
+        Update: {
+          claimed?: boolean
+          completed?: boolean
+          couple_id?: string
+          created_at?: string
+          id?: string
+          progress?: number
+          quest_date?: string
+          quest_key?: string
+          reward_points?: number
+          target?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "love_quests_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "love_couples"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lucky_box_openings: {
         Row: {
@@ -1798,10 +1898,15 @@ export type Database = {
         Args: { _agency_id: string; _bd_user_id: string }
         Returns: Json
       }
+      award_love_points: {
+        Args: { _couple_id: string; _points: number }
+        Returns: Json
+      }
       bd_activate_agency_for_user: {
         Args: { _target_public_id: string }
         Returns: Json
       }
+      bump_couple_streak: { Args: never; Returns: Json }
       cancel_relationship_request: {
         Args: { _request_id: string }
         Returns: undefined
@@ -1811,6 +1916,9 @@ export type Database = {
         Returns: undefined
       }
       claim_daily_streak: { Args: { _user_id: string }; Returns: Json }
+      claim_love_quest: { Args: { _quest_id: string }; Returns: Json }
+      claim_monthly_anniversary: { Args: never; Returns: Json }
+      claim_weekly_couple_gift: { Args: never; Returns: Json }
       cleanup_stale_room_members: { Args: never; Returns: undefined }
       deactivate_bd_account: { Args: { _user_id: string }; Returns: Json }
       deactivate_love_couple: { Args: never; Returns: undefined }
@@ -1958,6 +2066,7 @@ export type Database = {
         Args: { _gift_name: string; _gold_amount: number; _receiver_id: string }
         Returns: Json
       }
+      send_love_heart: { Args: never; Returns: Json }
       send_relationship_request: {
         Args: { _message?: string; _receiver_id: string; _type: string }
         Returns: string
