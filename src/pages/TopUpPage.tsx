@@ -419,10 +419,6 @@ const TopUpPage = () => {
                         <CurrencyIcon type="gold" size="xs" />
                         <span className="text-[11px] font-bold text-yellow-300">{formatNum(pkg.coins)}</span>
                       </div>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <CurrencyIcon type="diamond" size="xs" />
-                        <span className="text-[10px] text-purple-300">{formatNum(pkg.diamonds)}</span>
-                      </div>
                       {selectedPkg === i && (
                         <div className="absolute top-2 right-2">
                           <Check className="w-4 h-4 text-yellow-300" />
