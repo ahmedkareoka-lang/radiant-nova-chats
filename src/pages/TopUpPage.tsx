@@ -498,10 +498,6 @@ const TopUpPage = () => {
                           <CurrencyIcon type="gold" size="xs" />
                           <span className="text-[11px] font-bold text-yellow-300">{formatNum(pkg.coins)}</span>
                         </div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <CurrencyIcon type="diamond" size="xs" />
-                          <span className="text-[10px] text-purple-300">{formatNum(pkg.diamonds)}</span>
-                        </div>
                         {loading && (
                           <div className="absolute inset-0 bg-background/60 rounded-2xl flex items-center justify-center">
                             <Loader2 className="w-5 h-5 animate-spin text-sky-300" />
