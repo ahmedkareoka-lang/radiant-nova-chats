@@ -208,6 +208,19 @@ const VoiceRoom = () => {
     }
   }, [roomId, roomData?.name]);
 
+  // Love Quest: report 1 shared minute every 60s while in this room.
+  // Server checks that the caller has an active couple AND partner is also a member.
+  useEffect(() => {
+    if (!roomId || !currentUserId) return;
+    const tick = () => {
+      supabase.rpc("bump_couple_room_minutes" as any, { _room_id: roomId, _minutes: 1 }).then(() => {}, () => {});
+    };
+    const t = setInterval(tick, 60_000);
+    // First ping after 30s so short visits still count
+    const first = setTimeout(tick, 30_000);
+    return () => { clearInterval(t); clearTimeout(first); };
+  }, [roomId, currentUserId]);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
