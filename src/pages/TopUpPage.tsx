@@ -29,14 +29,14 @@ const STARS_PER_USD = 50; // 1 USD ≈ 50 Telegram Stars (mirrors edge function 
 // Each package now ships with its own dedicated Binance Pay link
 // so the user is redirected directly to the locked-amount checkout.
 const packages = [
-  { usdt: 1,   coins: 1400,    diamonds: 1000,   bonus: 0,  payUrl: "https://s.binance.com/vfZvdFse" },
-  { usdt: 2,   coins: 2800,    diamonds: 2000,   bonus: 0,  payUrl: "https://s.binance.com/0v9WkEP2" },
-  { usdt: 4,   coins: 5600,    diamonds: 4000,   bonus: 0,  payUrl: "https://s.binance.com/08dvPCYg" },
-  { usdt: 7,   coins: 9800,    diamonds: 7000,   bonus: 5,  payUrl: "https://s.binance.com/V3FFZBnR" },
-  { usdt: 14,  coins: 19600,   diamonds: 14000,  bonus: 10, payUrl: "https://s.binance.com/oplr3iAB" },
-  { usdt: 28,  coins: 39200,   diamonds: 28000,  bonus: 15, popular: true, payUrl: "https://s.binance.com/Rz9IhCSk" },
-  { usdt: 100, coins: 140000,  diamonds: 100000, bonus: 20, payUrl: "https://s.binance.com/iZZDvYpU" },
-  { usdt: 128, coins: 179200,  diamonds: 128000, bonus: 25, payUrl: "https://s.binance.com/3alyDtOe" },
+  { usdt: 1,   coins: 7000,     diamonds: 1000,   bonus: 0,  payUrl: "https://s.binance.com/vfZvdFse" },
+  { usdt: 2,   coins: 14000,    diamonds: 2000,   bonus: 0,  payUrl: "https://s.binance.com/0v9WkEP2" },
+  { usdt: 4,   coins: 28000,    diamonds: 4000,   bonus: 0,  payUrl: "https://s.binance.com/08dvPCYg" },
+  { usdt: 7,   coins: 51450,    diamonds: 7000,   bonus: 5,  payUrl: "https://s.binance.com/V3FFZBnR" },
+  { usdt: 14,  coins: 107800,   diamonds: 14000,  bonus: 10, payUrl: "https://s.binance.com/oplr3iAB" },
+  { usdt: 28,  coins: 225400,   diamonds: 28000,  bonus: 15, popular: true, payUrl: "https://s.binance.com/Rz9IhCSk" },
+  { usdt: 100, coins: 840000,   diamonds: 100000, bonus: 20, payUrl: "https://s.binance.com/iZZDvYpU" },
+  { usdt: 128, coins: 1120000,  diamonds: 128000, bonus: 25, payUrl: "https://s.binance.com/3alyDtOe" },
 ];
 
 const formatNum = (n: number) => n.toLocaleString();
