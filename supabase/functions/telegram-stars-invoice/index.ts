@@ -11,14 +11,14 @@ const GATEWAY = "https://connector-gateway.lovable.dev/telegram";
 
 // Mirror of the 8 packages in src/pages/TopUpPage.tsx (kept in sync by code).
 const PACKAGES = [
-  { usdt: 1,   coins: 1400,   diamonds: 1000   },
-  { usdt: 2,   coins: 2800,   diamonds: 2000   },
-  { usdt: 4,   coins: 5600,   diamonds: 4000   },
-  { usdt: 7,   coins: 9800,   diamonds: 7000   },
-  { usdt: 14,  coins: 19600,  diamonds: 14000  },
-  { usdt: 28,  coins: 39200,  diamonds: 28000  },
-  { usdt: 100, coins: 140000, diamonds: 100000 },
-  { usdt: 128, coins: 179200, diamonds: 128000 },
+  { usdt: 1,   coins: 7000,    diamonds: 1000   },
+  { usdt: 2,   coins: 14000,   diamonds: 2000   },
+  { usdt: 4,   coins: 28000,   diamonds: 4000   },
+  { usdt: 7,   coins: 51450,   diamonds: 7000   },
+  { usdt: 14,  coins: 107800,  diamonds: 14000  },
+  { usdt: 28,  coins: 225400,  diamonds: 28000  },
+  { usdt: 100, coins: 840000,  diamonds: 100000 },
+  { usdt: 128, coins: 1120000, diamonds: 128000 },
 ];
 
 Deno.serve(async (req) => {
