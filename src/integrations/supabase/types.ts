@@ -1845,6 +1845,11 @@ export type Database = {
       }
     }
     Functions: {
+      _bump_love_quest: {
+        Args: { _couple_id: string; _delta: number; _quest_key: string }
+        Returns: undefined
+      }
+      _find_active_couple: { Args: { _a: string; _b: string }; Returns: string }
       accept_agency_invite: {
         Args: { _invite_id: string; _user_id: string }
         Returns: undefined
@@ -1904,6 +1909,10 @@ export type Database = {
       }
       bd_activate_agency_for_user: {
         Args: { _target_public_id: string }
+        Returns: Json
+      }
+      bump_couple_room_minutes: {
+        Args: { _minutes?: number; _room_id: string }
         Returns: Json
       }
       bump_couple_streak: { Args: never; Returns: Json }
