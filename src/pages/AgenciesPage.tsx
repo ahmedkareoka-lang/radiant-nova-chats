@@ -453,7 +453,42 @@ const AgenciesPage = () => {
                   {myMembership?.badge === "agent" ? "وكيل 🏅" : "مضيف 🎤"}
                 </span>
               </div>
-              <p className="font-bold text-lg">{myAgency.name}</p>
+              <div className="flex items-center justify-between gap-3 rounded-2xl p-3 bg-gradient-to-br from-purple-700/30 via-fuchsia-600/20 to-purple-900/30 border border-fuchsia-500/40 shadow-[0_0_30px_hsl(280_90%_60%/0.35)]">
+                <div className="min-w-0">
+                  <p className="font-extrabold text-lg truncate text-foreground">{myAgency.name}</p>
+                  <p className="text-[10px] text-fuchsia-300/90">وكالة معتمدة • {agencyHosts.length || 0} مضيف</p>
+                </div>
+                <div className="text-center px-3 py-1.5 rounded-xl bg-black/40 border border-fuchsia-400/50 shadow-[0_0_18px_hsl(280_90%_60%/0.6)_inset]">
+                  <p className="text-[9px] text-fuchsia-300 tracking-wider">AGENCY ID</p>
+                  <p className="font-black text-2xl text-fuchsia-200 tracking-[0.3em] tabular-nums">{myAgency.agency_code || "----"}</p>
+                </div>
+              </div>
+
+              {/* Incoming join requests — owner only */}
+              {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && joinRequests.length > 0 && (
+                <div className="rounded-2xl border border-fuchsia-500/40 bg-gradient-to-br from-purple-900/40 to-fuchsia-900/20 p-3 space-y-2">
+                  <p className="text-xs font-bold flex items-center gap-2 text-fuchsia-200">
+                    <UserPlus className="w-3.5 h-3.5" /> طلبات انضمام جديدة ({joinRequests.length})
+                  </p>
+                  {joinRequests.map((r: any) => (
+                    <div key={r.request_id} className="flex items-center gap-2 bg-black/30 rounded-xl p-2">
+                      <img src={r.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-9 h-9 rounded-full object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate">{r.display_name || "—"}</p>
+                        <p className="text-[9px] text-muted-foreground">ID: {r.friendly_id}</p>
+                      </div>
+                      <button onClick={() => respondJoinRequest(r.request_id, true)}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                        <Check className="w-3 h-3" /> قبول
+                      </button>
+                      <button onClick={() => respondJoinRequest(r.request_id, false)}
+                        className="px-2.5 py-1 rounded-lg bg-destructive/20 border border-destructive/40 text-destructive text-[10px] font-bold flex items-center gap-1">
+                        <X className="w-3 h-3" /> رفض
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Inline payroll-policy banner — appears INSIDE the agency system for hosts and agents */}
               <PayrollStructureBanner />
