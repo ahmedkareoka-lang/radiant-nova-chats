@@ -522,15 +522,110 @@ const AgenciesPage = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 rounded-2xl p-3 bg-gradient-to-br from-purple-700/30 via-fuchsia-600/20 to-purple-900/30 border border-fuchsia-500/40 shadow-[0_0_30px_hsl(280_90%_60%/0.35)]">
-                <div className="min-w-0">
-                  <p className="font-extrabold text-lg truncate text-foreground">{myAgency.name}</p>
-                  <p className="text-[10px] text-fuchsia-300/90">وكالة معتمدة • {agencyHosts.length || 0} مضيف</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative shrink-0">
+                    {myAgency.logo_url ? (
+                      <img src={myAgency.logo_url} alt="" className="w-14 h-14 rounded-2xl object-cover border border-fuchsia-400/50 shadow-[0_0_18px_hsl(280_90%_60%/0.6)]" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-black/40 border border-fuchsia-400/50">
+                        <ImageIcon className="w-6 h-6 text-fuchsia-300/70" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-lg truncate text-foreground">{myAgency.name}</p>
+                    <p className="text-[10px] text-fuchsia-300/90">وكالة معتمدة • {agencyHosts.length || 0} مضيف</p>
+                  </div>
                 </div>
                 <div className="text-center px-3 py-1.5 rounded-xl bg-black/40 border border-fuchsia-400/50 shadow-[0_0_18px_hsl(280_90%_60%/0.6)_inset]">
                   <p className="text-[9px] text-fuchsia-300 tracking-wider">AGENCY ID</p>
                   <p className="font-black text-2xl text-fuchsia-200 tracking-[0.3em] tabular-nums">{myAgency.agency_code || "----"}</p>
                 </div>
               </div>
+
+              {/* Owner-only: edit agency name & logo with 15-day cooldown */}
+              {myAgency.owner_id === userId && (() => {
+                const nameNext = myAgency.name_updated_at ? new Date(new Date(myAgency.name_updated_at).getTime() + 15 * 86400000).toISOString() : null;
+                const logoNext = myAgency.logo_updated_at ? new Date(new Date(myAgency.logo_updated_at).getTime() + 15 * 86400000).toISOString() : null;
+                const nameCd = formatCountdown(nameNext);
+                const logoCd = formatCountdown(logoNext);
+                return (
+                  <div className="rounded-2xl border border-fuchsia-500/30 bg-black/30 p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold flex items-center gap-2 text-fuchsia-200">
+                        <Pencil className="w-3.5 h-3.5" /> تعديل بيانات الوكالة
+                      </p>
+                      <button
+                        onClick={() => { setEditName(myAgency.name); setShowEditAgency(v => !v); }}
+                        className="text-[10px] px-2 py-1 rounded-lg bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-200 font-bold"
+                      >
+                        {showEditAgency ? "إغلاق" : "تعديل"}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-fuchsia-300/80 leading-relaxed">
+                      يمكنك تغيير الاسم والشعار <span className="font-bold text-fuchsia-200">مرتين شهرياً فقط</span> (كل 15 يوم).
+                    </p>
+
+                    {showEditAgency && (
+                      <div className="space-y-3">
+                        {/* Logo */}
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            {myAgency.logo_url ? (
+                              <img src={myAgency.logo_url} alt="" className="w-16 h-16 rounded-2xl object-cover border border-fuchsia-400/50" />
+                            ) : (
+                              <div className="w-16 h-16 rounded-2xl bg-black/50 border border-fuchsia-400/50 flex items-center justify-center"><ImageIcon className="w-6 h-6 text-fuchsia-300/60" /></div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => logoInputRef.current?.click()}
+                              disabled={uploadingLogo || !!logoCd}
+                              className="w-full py-2 rounded-xl bg-gradient-to-r from-fuchsia-600/40 to-purple-700/40 border border-fuchsia-400/50 text-fuchsia-100 text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              {uploadingLogo ? "جاري الرفع..." : logoCd ? `الشعار: متاح بعد ${logoCd}` : "تغيير شعار الوكالة"}
+                            </button>
+                            <input
+                              ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAgencyLogo(f); e.currentTarget.value = ""; }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Name */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-fuchsia-300/80 font-bold">اسم الوكالة</label>
+                          <div className="flex gap-2">
+                            <input
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              disabled={!!nameCd}
+                              maxLength={40}
+                              className="flex-1 bg-black/50 border border-fuchsia-400/40 rounded-xl px-3 py-2 text-sm text-foreground disabled:opacity-60"
+                              placeholder="اسم وكالتك"
+                            />
+                            <button
+                              onClick={saveAgencyName}
+                              disabled={savingAgencyName || !!nameCd || !editName.trim() || editName.trim() === myAgency.name}
+                              className="px-3 rounded-xl bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-xs font-bold flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <Save className="w-3.5 h-3.5" /> حفظ
+                            </button>
+                          </div>
+                          {nameCd && (
+                            <p className="text-[10px] text-amber-300 flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> الاسم: متاح بعد {nameCd}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
 
               {/* Incoming join requests — owner only */}
               {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && joinRequests.length > 0 && (
