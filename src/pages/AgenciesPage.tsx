@@ -178,7 +178,7 @@ const AgenciesPage = () => {
     if (!agencyName.trim()) return;
     if (hasOwnedAgency) { toast.error("لديك وكالة بالفعل — لا يمكن إنشاء وكالة أخرى"); return; }
     if (myMembership) { toast.error("أنت عضو في وكالة بالفعل"); return; }
-    const { error } = await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending" });
+    const { error } = await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending", agency_code: "" } as any);
     if (error) {
       if (error.code === "23505") toast.error("لديك وكالة مسجلة مسبقاً");
       else toast.error("فشل التقديم: " + error.message);
