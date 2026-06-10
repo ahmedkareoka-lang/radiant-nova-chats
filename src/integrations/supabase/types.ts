@@ -16,33 +16,39 @@ export type Database = {
     Tables: {
       agencies: {
         Row: {
+          agency_code: string
           broadcast_enabled: boolean
           commission_balance: number
           created_at: string
           id: string
           is_active: boolean
+          logo_url: string | null
           name: string
           owner_id: string
           recharge_enabled: boolean
           status: string
         }
         Insert: {
+          agency_code: string
           broadcast_enabled?: boolean
           commission_balance?: number
           created_at?: string
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name: string
           owner_id: string
           recharge_enabled?: boolean
           status?: string
         }
         Update: {
+          agency_code?: string
           broadcast_enabled?: boolean
           commission_balance?: number
           created_at?: string
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           name?: string
           owner_id?: string
           recharge_enabled?: boolean
@@ -78,6 +84,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "agency_invites_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_join_requests: {
+        Row: {
+          agency_id: string
+          created_at: string
+          id: string
+          message: string | null
+          reviewed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          reviewed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          reviewed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_join_requests_agency_id_fkey"
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
@@ -1891,6 +1935,10 @@ export type Database = {
         Args: { _referrer_telegram_id: number; _user_id: string }
         Returns: Json
       }
+      apply_to_join_agency: {
+        Args: { _agency_id: string; _message?: string }
+        Returns: string
+      }
       approve_resignation: {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
@@ -1948,8 +1996,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_agency_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       generate_user_id: { Args: never; Returns: string }
+      get_agency_join_requests: { Args: never; Returns: Json }
       get_agency_payroll_report: { Args: { _ref?: string }; Returns: Json }
       get_agent_transfer_stats: { Args: never; Returns: Json }
       get_bd_stats: { Args: { _bd_user_id: string }; Returns: Json }
@@ -1966,6 +2016,7 @@ export type Database = {
       get_love_level: { Args: { _points: number }; Returns: number }
       get_my_agency_overview: { Args: never; Returns: Json }
       get_my_host_events: { Args: never; Returns: Json }
+      get_my_join_requests: { Args: never; Returns: Json }
       get_my_pending_invites: { Args: never; Returns: Json }
       get_my_phone: { Args: never; Returns: string }
       get_my_sent_invites: { Args: never; Returns: Json }
@@ -2071,6 +2122,11 @@ export type Database = {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
       }
+      respond_join_request: {
+        Args: { _accept: boolean; _request_id: string }
+        Returns: undefined
+      }
+      search_agency_by_code: { Args: { _code: string }; Returns: Json }
       send_gift_atomic: {
         Args: { _gift_name: string; _gold_amount: number; _receiver_id: string }
         Returns: Json
