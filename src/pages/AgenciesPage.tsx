@@ -49,6 +49,74 @@ const AgenciesPage = () => {
   const [searchingAgency, setSearchingAgency] = useState(false);
   const [joinRequests, setJoinRequests] = useState<any[]>([]);     // for owner
   const [myJoinRequests, setMyJoinRequests] = useState<any[]>([]); // for applicant
+  // Agency profile edit
+  const [showEditAgency, setShowEditAgency] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [savingAgencyName, setSavingAgencyName] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const formatCountdown = (target: string | null | undefined) => {
+    if (!target) return null;
+    const diff = new Date(target).getTime() - nowTick;
+    if (diff <= 0) return null;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return `${d}ي ${h}س ${m}د`;
+  };
+
+  const saveAgencyName = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === myAgency?.name) { setShowEditAgency(false); return; }
+    setSavingAgencyName(true);
+    const { data, error } = await supabase.rpc("update_agency_profile" as any, { _new_name: trimmed, _new_logo_url: null });
+    setSavingAgencyName(false);
+    if (error) { toast.error(error.message); return; }
+    const res = data as any;
+    if (!res?.ok) {
+      if (res?.error === "name_cooldown") {
+        toast.error(`لا يمكن تغيير الاسم الآن — تبقى ${formatCountdown(res.next_name_change_at) || "—"}`);
+      } else { toast.error(res?.error || "فشل التحديث"); }
+      return;
+    }
+    toast.success("تم تحديث اسم الوكالة ✨");
+    setShowEditAgency(false);
+    await loadAll();
+  };
+
+  const uploadAgencyLogo = async (file: File) => {
+    setUploadingLogo(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `agency-logos/${userId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
+      const { data, error } = await supabase.rpc("update_agency_profile" as any, { _new_name: null, _new_logo_url: urlData.publicUrl });
+      if (error) throw error;
+      const res = data as any;
+      if (!res?.ok) {
+        if (res?.error === "logo_cooldown") {
+          toast.error(`لا يمكن تغيير الشعار الآن — تبقى ${formatCountdown(res.next_logo_change_at) || "—"}`);
+        } else { toast.error(res?.error || "فشل تحديث الشعار"); }
+        return;
+      }
+      toast.success("تم تحديث شعار الوكالة 🖼️");
+      await loadAll();
+    } catch (e: any) {
+      toast.error(e.message || "فشل رفع الصورة");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
 
   const loadAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
