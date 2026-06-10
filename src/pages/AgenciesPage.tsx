@@ -888,14 +888,123 @@ const AgenciesPage = () => {
             </div>
           )}
 
+          {/* 🔮 Premium: Search agency by 4-digit code */}
+          <div className="rounded-3xl p-4 space-y-3 bg-gradient-to-br from-purple-900/60 via-fuchsia-900/40 to-purple-900/60 border border-fuchsia-500/40 shadow-[0_0_40px_hsl(280_90%_60%/0.35)]">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-fuchsia-500/20 border border-fuchsia-400/40 flex items-center justify-center shadow-[0_0_14px_hsl(280_90%_60%/0.6)]">
+                <Search className="w-4 h-4 text-fuchsia-200" />
+              </div>
+              <div className="flex-1">
+                <p className="font-extrabold text-sm text-fuchsia-100">البحث عن وكالة</p>
+                <p className="text-[10px] text-fuchsia-300/80">أدخل كود الوكالة المكوّن من 4 أرقام</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="مثال: 1024"
+                value={codeQuery}
+                onChange={(e) => setCodeQuery(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="flex-1 bg-black/40 rounded-2xl px-4 py-3 text-center text-2xl font-black tracking-[0.5em] tabular-nums text-fuchsia-100 border border-fuchsia-400/30 focus:outline-none focus:border-fuchsia-300 focus:ring-2 focus:ring-fuchsia-500/40 placeholder:text-fuchsia-500/30 placeholder:tracking-normal placeholder:text-sm"
+              />
+              <button
+                onClick={searchByCode}
+                disabled={searchingAgency || codeQuery.length !== 4}
+                className="px-5 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-700 text-white font-bold shadow-[0_0_24px_hsl(280_90%_60%/0.6)] disabled:opacity-50"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </div>
+
+            {searchedAgency && (
+              <div className="rounded-2xl p-3 bg-black/40 border border-fuchsia-400/40 space-y-3">
+                <div className="flex items-center gap-3">
+                  {searchedAgency.logo_url ? (
+                    <img src={searchedAgency.logo_url} alt="" className="w-14 h-14 rounded-2xl object-cover border border-fuchsia-400/50" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-700 flex items-center justify-center text-2xl">🏢</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-extrabold text-base truncate text-fuchsia-100">{searchedAgency.name}</p>
+                    <p className="text-[10px] text-fuchsia-300/80">المالك: {searchedAgency.owner_name || "—"}</p>
+                  </div>
+                  <div className="text-center px-2 py-1 rounded-lg bg-fuchsia-500/15 border border-fuchsia-400/40">
+                    <p className="text-[8px] text-fuchsia-300">ID</p>
+                    <p className="font-black text-sm text-fuchsia-100 tracking-widest tabular-nums">{searchedAgency.agency_code}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-black/40 rounded-xl p-2">
+                    <p className="text-[9px] text-fuchsia-300/80">عدد المضيفين</p>
+                    <p className="font-extrabold text-lg text-fuchsia-100">{searchedAgency.host_count}</p>
+                  </div>
+                  <div className="bg-black/40 rounded-xl p-2">
+                    <p className="text-[9px] text-fuchsia-300/80">إنجاز الدورة</p>
+                    <p className="font-extrabold text-lg text-fuchsia-100">{Number(searchedAgency.cycle_diamonds).toLocaleString()} 💎</p>
+                  </div>
+                </div>
+                {myMembership || hasOwnedAgency ? (
+                  <p className="text-[10px] text-center text-muted-foreground">{myMembership ? "أنت بالفعل عضو في وكالة" : "لديك وكالة خاصة بك"}</p>
+                ) : myJoinRequests.some(r => r.agency_id === searchedAgency.id && r.status === "pending") ? (
+                  <div className="w-full py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold text-center flex items-center justify-center gap-2">
+                    <Clock className="w-3.5 h-3.5" /> طلبك قيد المراجعة
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => applyToJoin(searchedAgency.id)}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-fuchsia-600 text-white font-extrabold text-sm shadow-[0_0_24px_hsl(280_90%_60%/0.65)] flex items-center justify-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" /> طلب الانضمام كمضيف
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* My pending join requests */}
+          {myJoinRequests.length > 0 && (
+            <div className="card-nova p-3 space-y-2 border border-fuchsia-500/30">
+              <p className="text-xs font-bold flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-fuchsia-300" /> طلبات الانضمام الخاصة بي</p>
+              {myJoinRequests.map((r: any) => (
+                <div key={r.request_id} className="flex items-center gap-2 bg-secondary/40 rounded-xl p-2">
+                  <div className="w-9 h-9 rounded-xl bg-fuchsia-500/15 border border-fuchsia-400/30 flex items-center justify-center text-lg">🏢</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate">{r.agency_name}</p>
+                    <p className="text-[9px] text-muted-foreground">كود: {r.agency_code}</p>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    r.status === "accepted" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
+                    r.status === "rejected" ? "bg-destructive/15 text-destructive border-destructive/30" :
+                    "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  }`}>
+                    {r.status === "accepted" ? "مقبول ✅" : r.status === "rejected" ? "مرفوض ❌" : "قيد الانتظار ⏳"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* All agencies */}
-          <h3 className="font-bold text-sm">الوكالات المعتمدة</h3>
+          <h3 className="font-bold text-sm flex items-center gap-2"><Building2 className="w-4 h-4 text-fuchsia-300" /> الوكالات المعتمدة</h3>
           <div className="space-y-2">
             {agencies.map((ag) => (
-              <div key={ag.id} className="card-nova p-3 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-sm">{ag.name}</p>
-                  <p className="text-[10px] text-muted-foreground">🟢 نشطة</p>
+              <div key={ag.id} className="card-nova p-3 flex items-center justify-between border border-fuchsia-500/20">
+                <div className="flex items-center gap-2 min-w-0">
+                  {ag.logo_url ? (
+                    <img src={ag.logo_url} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500/40 to-purple-700/40 flex items-center justify-center">🏢</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm truncate">{ag.name}</p>
+                    <p className="text-[10px] text-muted-foreground">🟢 نشطة</p>
+                  </div>
+                </div>
+                <div className="text-center px-2 py-1 rounded-lg bg-fuchsia-500/10 border border-fuchsia-400/30 flex-shrink-0">
+                  <p className="text-[8px] text-fuchsia-300">ID</p>
+                  <p className="font-black text-sm text-fuchsia-200 tracking-widest tabular-nums">{ag.agency_code || "----"}</p>
                 </div>
               </div>
             ))}
