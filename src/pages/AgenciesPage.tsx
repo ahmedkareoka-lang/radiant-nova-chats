@@ -43,6 +43,12 @@ const AgenciesPage = () => {
   const [pendingInvites, setPendingInvites] = useState<any>(null);
   const [sentInvites, setSentInvites] = useState<any[]>([]);
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
+  // NEW — search-by-code + join requests
+  const [codeQuery, setCodeQuery] = useState("");
+  const [searchedAgency, setSearchedAgency] = useState<any>(null);
+  const [searchingAgency, setSearchingAgency] = useState(false);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);     // for owner
+  const [myJoinRequests, setMyJoinRequests] = useState<any[]>([]); // for applicant
 
   const loadAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
