@@ -328,6 +328,44 @@ const AgenciesPage = () => {
     toast.success("تمت الموافقة على الاستقالة");
   };
 
+  // NEW — search agency by 4-digit code
+  const searchByCode = async () => {
+    const c = codeQuery.trim();
+    if (!/^\d{4}$/.test(c)) { toast.error("أدخل كود مكون من 4 أرقام"); return; }
+    setSearchingAgency(true);
+    setSearchedAgency(null);
+    try {
+      const { data, error } = await supabase.rpc("search_agency_by_code" as any, { _code: c });
+      if (error) throw error;
+      const r = data as any;
+      if (!r?.found) { toast.error("لم يتم العثور على وكالة بهذا الكود"); return; }
+      setSearchedAgency(r);
+    } catch (e: any) {
+      toast.error(e.message || "خطأ في البحث");
+    } finally {
+      setSearchingAgency(false);
+    }
+  };
+
+  const applyToJoin = async (agencyId: string) => {
+    if (myMembership) { toast.error("أنت بالفعل في وكالة"); return; }
+    if (myJoinRequests.some(r => r.agency_id === agencyId && r.status === "pending")) {
+      toast.error("لديك طلب معلّق لهذه الوكالة"); return;
+    }
+    const { error } = await supabase.rpc("apply_to_join_agency" as any, { _agency_id: agencyId, _message: null });
+    if (error) { toast.error(error.message); return; }
+    toast.success("📨 تم إرسال طلب الانضمام");
+    const { data: myReqs } = await supabase.rpc("get_my_join_requests" as any);
+    if (Array.isArray(myReqs)) setMyJoinRequests(myReqs as any[]);
+  };
+
+  const respondJoinRequest = async (requestId: string, accept: boolean) => {
+    const { error } = await supabase.rpc("respond_join_request" as any, { _request_id: requestId, _accept: accept });
+    if (error) { toast.error(error.message); return; }
+    toast.success(accept ? "تم قبول الطلب ✅" : "تم رفض الطلب");
+    await loadAll();
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen pb-24">
