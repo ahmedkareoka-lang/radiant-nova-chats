@@ -22,8 +22,10 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          logo_updated_at: string | null
           logo_url: string | null
           name: string
+          name_updated_at: string | null
           owner_id: string
           recharge_enabled: boolean
           status: string
@@ -35,8 +37,10 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          logo_updated_at?: string | null
           logo_url?: string | null
           name: string
+          name_updated_at?: string | null
           owner_id: string
           recharge_enabled?: boolean
           status?: string
@@ -48,8 +52,10 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          logo_updated_at?: string | null
           logo_url?: string | null
           name?: string
+          name_updated_at?: string | null
           owner_id?: string
           recharge_enabled?: boolean
           status?: string
@@ -2163,6 +2169,10 @@ export type Database = {
       sweep_expired_perks: { Args: never; Returns: undefined }
       transfer_diamonds_to_user: {
         Args: { _amount: number; _recipient_user_id: string }
+        Returns: Json
+      }
+      update_agency_profile: {
+        Args: { _new_logo_url?: string; _new_name?: string }
         Returns: Json
       }
       validate_mic_access: {

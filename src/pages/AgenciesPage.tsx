@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock, Target, Mic, Gem, DollarSign, Calendar, AlertCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Building2, Users, Plus, Crown, Check, X, Search, UserPlus, LogOut, Clock, Target, Mic, Gem, DollarSign, Calendar, AlertCircle, Camera, Pencil, Save, ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,6 +49,74 @@ const AgenciesPage = () => {
   const [searchingAgency, setSearchingAgency] = useState(false);
   const [joinRequests, setJoinRequests] = useState<any[]>([]);     // for owner
   const [myJoinRequests, setMyJoinRequests] = useState<any[]>([]); // for applicant
+  // Agency profile edit
+  const [showEditAgency, setShowEditAgency] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [savingAgencyName, setSavingAgencyName] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const formatCountdown = (target: string | null | undefined) => {
+    if (!target) return null;
+    const diff = new Date(target).getTime() - nowTick;
+    if (diff <= 0) return null;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return `${d}ي ${h}س ${m}د`;
+  };
+
+  const saveAgencyName = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === myAgency?.name) { setShowEditAgency(false); return; }
+    setSavingAgencyName(true);
+    const { data, error } = await supabase.rpc("update_agency_profile" as any, { _new_name: trimmed, _new_logo_url: null });
+    setSavingAgencyName(false);
+    if (error) { toast.error(error.message); return; }
+    const res = data as any;
+    if (!res?.ok) {
+      if (res?.error === "name_cooldown") {
+        toast.error(`لا يمكن تغيير الاسم الآن — تبقى ${formatCountdown(res.next_name_change_at) || "—"}`);
+      } else { toast.error(res?.error || "فشل التحديث"); }
+      return;
+    }
+    toast.success("تم تحديث اسم الوكالة ✨");
+    setShowEditAgency(false);
+    await loadAll();
+  };
+
+  const uploadAgencyLogo = async (file: File) => {
+    setUploadingLogo(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `agency-logos/${userId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
+      const { data, error } = await supabase.rpc("update_agency_profile" as any, { _new_name: null, _new_logo_url: urlData.publicUrl });
+      if (error) throw error;
+      const res = data as any;
+      if (!res?.ok) {
+        if (res?.error === "logo_cooldown") {
+          toast.error(`لا يمكن تغيير الشعار الآن — تبقى ${formatCountdown(res.next_logo_change_at) || "—"}`);
+        } else { toast.error(res?.error || "فشل تحديث الشعار"); }
+        return;
+      }
+      toast.success("تم تحديث شعار الوكالة 🖼️");
+      await loadAll();
+    } catch (e: any) {
+      toast.error(e.message || "فشل رفع الصورة");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
 
   const loadAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -454,15 +522,110 @@ const AgenciesPage = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 rounded-2xl p-3 bg-gradient-to-br from-purple-700/30 via-fuchsia-600/20 to-purple-900/30 border border-fuchsia-500/40 shadow-[0_0_30px_hsl(280_90%_60%/0.35)]">
-                <div className="min-w-0">
-                  <p className="font-extrabold text-lg truncate text-foreground">{myAgency.name}</p>
-                  <p className="text-[10px] text-fuchsia-300/90">وكالة معتمدة • {agencyHosts.length || 0} مضيف</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative shrink-0">
+                    {myAgency.logo_url ? (
+                      <img src={myAgency.logo_url} alt="" className="w-14 h-14 rounded-2xl object-cover border border-fuchsia-400/50 shadow-[0_0_18px_hsl(280_90%_60%/0.6)]" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-black/40 border border-fuchsia-400/50">
+                        <ImageIcon className="w-6 h-6 text-fuchsia-300/70" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-lg truncate text-foreground">{myAgency.name}</p>
+                    <p className="text-[10px] text-fuchsia-300/90">وكالة معتمدة • {agencyHosts.length || 0} مضيف</p>
+                  </div>
                 </div>
                 <div className="text-center px-3 py-1.5 rounded-xl bg-black/40 border border-fuchsia-400/50 shadow-[0_0_18px_hsl(280_90%_60%/0.6)_inset]">
                   <p className="text-[9px] text-fuchsia-300 tracking-wider">AGENCY ID</p>
                   <p className="font-black text-2xl text-fuchsia-200 tracking-[0.3em] tabular-nums">{myAgency.agency_code || "----"}</p>
                 </div>
               </div>
+
+              {/* Owner-only: edit agency name & logo with 15-day cooldown */}
+              {myAgency.owner_id === userId && (() => {
+                const nameNext = myAgency.name_updated_at ? new Date(new Date(myAgency.name_updated_at).getTime() + 15 * 86400000).toISOString() : null;
+                const logoNext = myAgency.logo_updated_at ? new Date(new Date(myAgency.logo_updated_at).getTime() + 15 * 86400000).toISOString() : null;
+                const nameCd = formatCountdown(nameNext);
+                const logoCd = formatCountdown(logoNext);
+                return (
+                  <div className="rounded-2xl border border-fuchsia-500/30 bg-black/30 p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold flex items-center gap-2 text-fuchsia-200">
+                        <Pencil className="w-3.5 h-3.5" /> تعديل بيانات الوكالة
+                      </p>
+                      <button
+                        onClick={() => { setEditName(myAgency.name); setShowEditAgency(v => !v); }}
+                        className="text-[10px] px-2 py-1 rounded-lg bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-200 font-bold"
+                      >
+                        {showEditAgency ? "إغلاق" : "تعديل"}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-fuchsia-300/80 leading-relaxed">
+                      يمكنك تغيير الاسم والشعار <span className="font-bold text-fuchsia-200">مرتين شهرياً فقط</span> (كل 15 يوم).
+                    </p>
+
+                    {showEditAgency && (
+                      <div className="space-y-3">
+                        {/* Logo */}
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            {myAgency.logo_url ? (
+                              <img src={myAgency.logo_url} alt="" className="w-16 h-16 rounded-2xl object-cover border border-fuchsia-400/50" />
+                            ) : (
+                              <div className="w-16 h-16 rounded-2xl bg-black/50 border border-fuchsia-400/50 flex items-center justify-center"><ImageIcon className="w-6 h-6 text-fuchsia-300/60" /></div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => logoInputRef.current?.click()}
+                              disabled={uploadingLogo || !!logoCd}
+                              className="w-full py-2 rounded-xl bg-gradient-to-r from-fuchsia-600/40 to-purple-700/40 border border-fuchsia-400/50 text-fuchsia-100 text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              {uploadingLogo ? "جاري الرفع..." : logoCd ? `الشعار: متاح بعد ${logoCd}` : "تغيير شعار الوكالة"}
+                            </button>
+                            <input
+                              ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAgencyLogo(f); e.currentTarget.value = ""; }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Name */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] text-fuchsia-300/80 font-bold">اسم الوكالة</label>
+                          <div className="flex gap-2">
+                            <input
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                              disabled={!!nameCd}
+                              maxLength={40}
+                              className="flex-1 bg-black/50 border border-fuchsia-400/40 rounded-xl px-3 py-2 text-sm text-foreground disabled:opacity-60"
+                              placeholder="اسم وكالتك"
+                            />
+                            <button
+                              onClick={saveAgencyName}
+                              disabled={savingAgencyName || !!nameCd || !editName.trim() || editName.trim() === myAgency.name}
+                              className="px-3 rounded-xl bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-xs font-bold flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <Save className="w-3.5 h-3.5" /> حفظ
+                            </button>
+                          </div>
+                          {nameCd && (
+                            <p className="text-[10px] text-amber-300 flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> الاسم: متاح بعد {nameCd}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
 
               {/* Incoming join requests — owner only */}
               {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && joinRequests.length > 0 && (
