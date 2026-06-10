@@ -43,6 +43,12 @@ const AgenciesPage = () => {
   const [pendingInvites, setPendingInvites] = useState<any>(null);
   const [sentInvites, setSentInvites] = useState<any[]>([]);
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
+  // NEW — search-by-code + join requests
+  const [codeQuery, setCodeQuery] = useState("");
+  const [searchedAgency, setSearchedAgency] = useState<any>(null);
+  const [searchingAgency, setSearchingAgency] = useState(false);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);     // for owner
+  const [myJoinRequests, setMyJoinRequests] = useState<any[]>([]); // for applicant
 
   const loadAll = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -145,6 +151,16 @@ const AgenciesPage = () => {
     const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
     setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
 
+    // Load my own join requests (as applicant)
+    const { data: myReqs } = await supabase.rpc("get_my_join_requests" as any);
+    if (Array.isArray(myReqs)) setMyJoinRequests(myReqs as any[]);
+
+    // Load incoming join requests if I own an agency
+    if (activeAgency && activeAgency.owner_id === user.id) {
+      const { data: incoming } = await supabase.rpc("get_agency_join_requests" as any);
+      if (Array.isArray(incoming)) setJoinRequests(incoming as any[]);
+    }
+
     setLoading(false);
   };
 
@@ -178,7 +194,7 @@ const AgenciesPage = () => {
     if (!agencyName.trim()) return;
     if (hasOwnedAgency) { toast.error("لديك وكالة بالفعل — لا يمكن إنشاء وكالة أخرى"); return; }
     if (myMembership) { toast.error("أنت عضو في وكالة بالفعل"); return; }
-    const { error } = await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending" });
+    const { error } = await supabase.from("agencies").insert({ name: agencyName, owner_id: userId, status: "pending", agency_code: "" } as any);
     if (error) {
       if (error.code === "23505") toast.error("لديك وكالة مسجلة مسبقاً");
       else toast.error("فشل التقديم: " + error.message);
@@ -312,6 +328,44 @@ const AgenciesPage = () => {
     toast.success("تمت الموافقة على الاستقالة");
   };
 
+  // NEW — search agency by 4-digit code
+  const searchByCode = async () => {
+    const c = codeQuery.trim();
+    if (!/^\d{4}$/.test(c)) { toast.error("أدخل كود مكون من 4 أرقام"); return; }
+    setSearchingAgency(true);
+    setSearchedAgency(null);
+    try {
+      const { data, error } = await supabase.rpc("search_agency_by_code" as any, { _code: c });
+      if (error) throw error;
+      const r = data as any;
+      if (!r?.found) { toast.error("لم يتم العثور على وكالة بهذا الكود"); return; }
+      setSearchedAgency(r);
+    } catch (e: any) {
+      toast.error(e.message || "خطأ في البحث");
+    } finally {
+      setSearchingAgency(false);
+    }
+  };
+
+  const applyToJoin = async (agencyId: string) => {
+    if (myMembership) { toast.error("أنت بالفعل في وكالة"); return; }
+    if (myJoinRequests.some(r => r.agency_id === agencyId && r.status === "pending")) {
+      toast.error("لديك طلب معلّق لهذه الوكالة"); return;
+    }
+    const { error } = await supabase.rpc("apply_to_join_agency" as any, { _agency_id: agencyId, _message: null });
+    if (error) { toast.error(error.message); return; }
+    toast.success("📨 تم إرسال طلب الانضمام");
+    const { data: myReqs } = await supabase.rpc("get_my_join_requests" as any);
+    if (Array.isArray(myReqs)) setMyJoinRequests(myReqs as any[]);
+  };
+
+  const respondJoinRequest = async (requestId: string, accept: boolean) => {
+    const { error } = await supabase.rpc("respond_join_request" as any, { _request_id: requestId, _accept: accept });
+    if (error) { toast.error(error.message); return; }
+    toast.success(accept ? "تم قبول الطلب ✅" : "تم رفض الطلب");
+    await loadAll();
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen pb-24">
@@ -399,7 +453,42 @@ const AgenciesPage = () => {
                   {myMembership?.badge === "agent" ? "وكيل 🏅" : "مضيف 🎤"}
                 </span>
               </div>
-              <p className="font-bold text-lg">{myAgency.name}</p>
+              <div className="flex items-center justify-between gap-3 rounded-2xl p-3 bg-gradient-to-br from-purple-700/30 via-fuchsia-600/20 to-purple-900/30 border border-fuchsia-500/40 shadow-[0_0_30px_hsl(280_90%_60%/0.35)]">
+                <div className="min-w-0">
+                  <p className="font-extrabold text-lg truncate text-foreground">{myAgency.name}</p>
+                  <p className="text-[10px] text-fuchsia-300/90">وكالة معتمدة • {agencyHosts.length || 0} مضيف</p>
+                </div>
+                <div className="text-center px-3 py-1.5 rounded-xl bg-black/40 border border-fuchsia-400/50 shadow-[0_0_18px_hsl(280_90%_60%/0.6)_inset]">
+                  <p className="text-[9px] text-fuchsia-300 tracking-wider">AGENCY ID</p>
+                  <p className="font-black text-2xl text-fuchsia-200 tracking-[0.3em] tabular-nums">{myAgency.agency_code || "----"}</p>
+                </div>
+              </div>
+
+              {/* Incoming join requests — owner only */}
+              {(myMembership?.badge === "agent" || myAgency.owner_id === userId) && joinRequests.length > 0 && (
+                <div className="rounded-2xl border border-fuchsia-500/40 bg-gradient-to-br from-purple-900/40 to-fuchsia-900/20 p-3 space-y-2">
+                  <p className="text-xs font-bold flex items-center gap-2 text-fuchsia-200">
+                    <UserPlus className="w-3.5 h-3.5" /> طلبات انضمام جديدة ({joinRequests.length})
+                  </p>
+                  {joinRequests.map((r: any) => (
+                    <div key={r.request_id} className="flex items-center gap-2 bg-black/30 rounded-xl p-2">
+                      <img src={r.avatar_url || "https://i.pravatar.cc/40"} alt="" className="w-9 h-9 rounded-full object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate">{r.display_name || "—"}</p>
+                        <p className="text-[9px] text-muted-foreground">ID: {r.friendly_id}</p>
+                      </div>
+                      <button onClick={() => respondJoinRequest(r.request_id, true)}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                        <Check className="w-3 h-3" /> قبول
+                      </button>
+                      <button onClick={() => respondJoinRequest(r.request_id, false)}
+                        className="px-2.5 py-1 rounded-lg bg-destructive/20 border border-destructive/40 text-destructive text-[10px] font-bold flex items-center gap-1">
+                        <X className="w-3 h-3" /> رفض
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Inline payroll-policy banner — appears INSIDE the agency system for hosts and agents */}
               <PayrollStructureBanner />
@@ -799,14 +888,123 @@ const AgenciesPage = () => {
             </div>
           )}
 
+          {/* 🔮 Premium: Search agency by 4-digit code */}
+          <div className="rounded-3xl p-4 space-y-3 bg-gradient-to-br from-purple-900/60 via-fuchsia-900/40 to-purple-900/60 border border-fuchsia-500/40 shadow-[0_0_40px_hsl(280_90%_60%/0.35)]">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-fuchsia-500/20 border border-fuchsia-400/40 flex items-center justify-center shadow-[0_0_14px_hsl(280_90%_60%/0.6)]">
+                <Search className="w-4 h-4 text-fuchsia-200" />
+              </div>
+              <div className="flex-1">
+                <p className="font-extrabold text-sm text-fuchsia-100">البحث عن وكالة</p>
+                <p className="text-[10px] text-fuchsia-300/80">أدخل كود الوكالة المكوّن من 4 أرقام</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="مثال: 1024"
+                value={codeQuery}
+                onChange={(e) => setCodeQuery(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="flex-1 bg-black/40 rounded-2xl px-4 py-3 text-center text-2xl font-black tracking-[0.5em] tabular-nums text-fuchsia-100 border border-fuchsia-400/30 focus:outline-none focus:border-fuchsia-300 focus:ring-2 focus:ring-fuchsia-500/40 placeholder:text-fuchsia-500/30 placeholder:tracking-normal placeholder:text-sm"
+              />
+              <button
+                onClick={searchByCode}
+                disabled={searchingAgency || codeQuery.length !== 4}
+                className="px-5 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-700 text-white font-bold shadow-[0_0_24px_hsl(280_90%_60%/0.6)] disabled:opacity-50"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </div>
+
+            {searchedAgency && (
+              <div className="rounded-2xl p-3 bg-black/40 border border-fuchsia-400/40 space-y-3">
+                <div className="flex items-center gap-3">
+                  {searchedAgency.logo_url ? (
+                    <img src={searchedAgency.logo_url} alt="" className="w-14 h-14 rounded-2xl object-cover border border-fuchsia-400/50" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-700 flex items-center justify-center text-2xl">🏢</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-extrabold text-base truncate text-fuchsia-100">{searchedAgency.name}</p>
+                    <p className="text-[10px] text-fuchsia-300/80">المالك: {searchedAgency.owner_name || "—"}</p>
+                  </div>
+                  <div className="text-center px-2 py-1 rounded-lg bg-fuchsia-500/15 border border-fuchsia-400/40">
+                    <p className="text-[8px] text-fuchsia-300">ID</p>
+                    <p className="font-black text-sm text-fuchsia-100 tracking-widest tabular-nums">{searchedAgency.agency_code}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-black/40 rounded-xl p-2">
+                    <p className="text-[9px] text-fuchsia-300/80">عدد المضيفين</p>
+                    <p className="font-extrabold text-lg text-fuchsia-100">{searchedAgency.host_count}</p>
+                  </div>
+                  <div className="bg-black/40 rounded-xl p-2">
+                    <p className="text-[9px] text-fuchsia-300/80">إنجاز الدورة</p>
+                    <p className="font-extrabold text-lg text-fuchsia-100">{Number(searchedAgency.cycle_diamonds).toLocaleString()} 💎</p>
+                  </div>
+                </div>
+                {myMembership || hasOwnedAgency ? (
+                  <p className="text-[10px] text-center text-muted-foreground">{myMembership ? "أنت بالفعل عضو في وكالة" : "لديك وكالة خاصة بك"}</p>
+                ) : myJoinRequests.some(r => r.agency_id === searchedAgency.id && r.status === "pending") ? (
+                  <div className="w-full py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold text-center flex items-center justify-center gap-2">
+                    <Clock className="w-3.5 h-3.5" /> طلبك قيد المراجعة
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => applyToJoin(searchedAgency.id)}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-fuchsia-600 text-white font-extrabold text-sm shadow-[0_0_24px_hsl(280_90%_60%/0.65)] flex items-center justify-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" /> طلب الانضمام كمضيف
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* My pending join requests */}
+          {myJoinRequests.length > 0 && (
+            <div className="card-nova p-3 space-y-2 border border-fuchsia-500/30">
+              <p className="text-xs font-bold flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-fuchsia-300" /> طلبات الانضمام الخاصة بي</p>
+              {myJoinRequests.map((r: any) => (
+                <div key={r.request_id} className="flex items-center gap-2 bg-secondary/40 rounded-xl p-2">
+                  <div className="w-9 h-9 rounded-xl bg-fuchsia-500/15 border border-fuchsia-400/30 flex items-center justify-center text-lg">🏢</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate">{r.agency_name}</p>
+                    <p className="text-[9px] text-muted-foreground">كود: {r.agency_code}</p>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    r.status === "accepted" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
+                    r.status === "rejected" ? "bg-destructive/15 text-destructive border-destructive/30" :
+                    "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  }`}>
+                    {r.status === "accepted" ? "مقبول ✅" : r.status === "rejected" ? "مرفوض ❌" : "قيد الانتظار ⏳"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* All agencies */}
-          <h3 className="font-bold text-sm">الوكالات المعتمدة</h3>
+          <h3 className="font-bold text-sm flex items-center gap-2"><Building2 className="w-4 h-4 text-fuchsia-300" /> الوكالات المعتمدة</h3>
           <div className="space-y-2">
             {agencies.map((ag) => (
-              <div key={ag.id} className="card-nova p-3 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-sm">{ag.name}</p>
-                  <p className="text-[10px] text-muted-foreground">🟢 نشطة</p>
+              <div key={ag.id} className="card-nova p-3 flex items-center justify-between border border-fuchsia-500/20">
+                <div className="flex items-center gap-2 min-w-0">
+                  {ag.logo_url ? (
+                    <img src={ag.logo_url} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500/40 to-purple-700/40 flex items-center justify-center">🏢</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm truncate">{ag.name}</p>
+                    <p className="text-[10px] text-muted-foreground">🟢 نشطة</p>
+                  </div>
+                </div>
+                <div className="text-center px-2 py-1 rounded-lg bg-fuchsia-500/10 border border-fuchsia-400/30 flex-shrink-0">
+                  <p className="text-[8px] text-fuchsia-300">ID</p>
+                  <p className="font-black text-sm text-fuchsia-200 tracking-widest tabular-nums">{ag.agency_code || "----"}</p>
                 </div>
               </div>
             ))}
