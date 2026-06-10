@@ -151,6 +151,16 @@ const AgenciesPage = () => {
     const { data: ownedAgencies } = await supabase.from("agencies").select("id").eq("owner_id", user.id);
     setHasOwnedAgency((ownedAgencies?.length || 0) > 0);
 
+    // Load my own join requests (as applicant)
+    const { data: myReqs } = await supabase.rpc("get_my_join_requests" as any);
+    if (Array.isArray(myReqs)) setMyJoinRequests(myReqs as any[]);
+
+    // Load incoming join requests if I own an agency
+    if (activeAgency && activeAgency.owner_id === user.id) {
+      const { data: incoming } = await supabase.rpc("get_agency_join_requests" as any);
+      if (Array.isArray(incoming)) setJoinRequests(incoming as any[]);
+    }
+
     setLoading(false);
   };
 
