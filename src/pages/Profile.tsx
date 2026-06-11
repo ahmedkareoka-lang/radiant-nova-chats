@@ -22,6 +22,7 @@ import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
 import VipName from "@/components/VipName";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 // LevelTable hidden per design — kept import removed
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
