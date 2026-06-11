@@ -53,7 +53,10 @@ const AdminDashboard = () => {
   const [giftPreviewUrl, setGiftPreviewUrl] = useState<string | null>(null);
   const [giftMediaType, setGiftMediaType] = useState<"image" | "lottie" | "video">("image");
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
-  const [newBanner, setNewBanner] = useState({ title: "" });
+  const [newBanner, setNewBanner] = useState({ title: "", description: "" });
+  // Verification badge management (BOSS-only)
+  const [verifySearchId, setVerifySearchId] = useState("");
+  const [verifyTarget, setVerifyTarget] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [bulkJson, setBulkJson] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
