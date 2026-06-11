@@ -59,7 +59,7 @@ const PROFILE_PUBLIC_FIELDS = `
   id, user_id, display_name, avatar_url, cover_url, gender, age, country_code,
   coins, diamonds, level, vip_level, vip_expiry, displayed_vip_level, nova_p_level, nova_p_expiry,
   wealth_level, wealth_xp, charisma_level, charisma_xp, total_spend_gold,
-  is_boss, is_agent, is_host, is_bd, agency_eligible, agency_id,
+  is_boss, is_verified, is_agent, is_host, is_bd, agency_eligible, agency_id,
   equipped_frame, equipped_badge, equipped_chat_bubble,
   equipped_entrance_effect, equipped_name_style,
   entrance_video_url, entrance_audio_url, created_at
