@@ -166,9 +166,10 @@ const Profile = () => {
     if (file.size > 2 * 1024 * 1024) { toast.error("حجم الصورة يجب أن يكون أقل من 2MB"); return; }
     setUploadingAvatar(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `avatars/${profile.id}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      // First folder MUST equal auth.uid() to satisfy storage RLS.
+      const path = `${profile.id}/avatars/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const avatar_url = urlData.publicUrl + "?t=" + Date.now();
