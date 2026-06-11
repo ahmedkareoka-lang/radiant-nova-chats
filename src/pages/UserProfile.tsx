@@ -89,7 +89,7 @@ const UserProfile = () => {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>;
   }
 
-  // الحـل السحري: لو اسم الحساب الفخم NOVA OFFICIALL أو الـ ID هو BOSS، السيستم هيجبر الشارة تظهر فوراً!
+  // التحقق الحقيقي من البوس يعتمد على بيانات البروفايل المعروض
   const isBoss = profile?.is_boss || profile?.display_name === "NOVA OFFICIALL" || profile?.user_id === "BOSS";
   const frameKey = profile?.equipped_frame;
   const frameImage = (frameKey && FRAME_MAP[frameKey]) ? FRAME_MAP[frameKey] : null;
@@ -146,8 +146,8 @@ const UserProfile = () => {
               {isBoss ? (profile?.display_name || "User") : (
                 <VipName name={profile?.display_name || "User"} level={(profile as any)?.vip_level || 0} size="lg" />
               )}
-              {/* إجبار إظهار الشارة الفخمة هنا فوراً طالما الحساب متطابق */}
-              <VipBadge level={profile?.vip_level || 0} size="md" userId="BOSS" />
+              {/* التعديل هنا: نمرر الـ userId الفعلي للحساب المفتوح وليس كلمة "BOSS" الثابتة */}
+              <VipBadge level={profile?.vip_level || 0} size="md" userId={userId} />
             </h2>
 
             {/* All badges visible to public */}
