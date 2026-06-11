@@ -479,12 +479,13 @@ const AdminDashboard = () => {
 
     const { error } = await supabase.from("banners").insert({
       title: newBanner.title || "",
+      description: newBanner.description || null,
       image_url: imageUrl,
       sort_order: banners.length,
-    });
+    } as any);
     if (error) { toast.error("فشل في إضافة البانر"); return; }
     toast.success("تمت إضافة البانر ✅");
-    setNewBanner({ title: "" });
+    setNewBanner({ title: "", description: "" });
     if (bannerFileRef.current) bannerFileRef.current.value = "";
     await fetchBanners();
   };
