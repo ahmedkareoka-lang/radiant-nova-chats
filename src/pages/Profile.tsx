@@ -186,9 +186,10 @@ const Profile = () => {
     if (file.size > 5 * 1024 * 1024) { toast.error("حجم الغلاف يجب أن يكون أقل من 5MB"); return; }
     setUploadingCover(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `covers/${profile.id}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      // First folder MUST equal auth.uid() to satisfy storage RLS.
+      const path = `${profile.id}/covers/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const cover_url = urlData.publicUrl + "?t=" + Date.now();
