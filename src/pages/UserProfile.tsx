@@ -21,6 +21,7 @@ import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+import VipBadge from "@/components/VipBadge"; // استيراد ملف الشارات اللي فيه شارتك الحمراء
 
 const wealthThreshold = (lvl: number) => {
   if (lvl < 10) return 100_000;
@@ -88,10 +89,10 @@ const UserProfile = () => {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>;
   }
 
-  const isBoss = profile?.is_boss;
+  // التعرف الذكي: لو الحساب متفعل له boss أو لو الـ user_id الظاهري على الشاشة هو BOSS
+  const isBoss = profile?.is_boss || profile?.user_id === "BOSS";
   const frameKey = profile?.equipped_frame;
   const frameImage = (frameKey && FRAME_MAP[frameKey]) ? FRAME_MAP[frameKey] : null;
-  // For admin-store frames the equipped key may be a direct URL
   const directFrameImage = (!frameImage && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/"))) ? frameKey : null;
   const finalFrame = frameImage || directFrameImage;
   const isMe = currentUserId === userId;
@@ -100,7 +101,7 @@ const UserProfile = () => {
   return (
     <PageTransition>
       <div className="min-h-screen pb-10">
-        {/* === COVER + AVATAR (matches own-profile style) === */}
+        {/* === COVER + AVATAR === */}
         <div className="relative">
           <div className="relative w-full h-56 overflow-hidden">
             {profile?.cover_url ? (
@@ -141,10 +142,13 @@ const UserProfile = () => {
         {/* === USER INFO === */}
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
-            <h2 className={`font-black text-2xl ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
+            {/* عرض الاسم وجنبه الشارة الفخمة مباشرة */}
+            <h2 className={`font-black text-2xl flex items-center gap-2 justify-center ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
               {isBoss ? (profile?.display_name || "User") : (
                 <VipName name={profile?.display_name || "User"} level={(profile as any)?.vip_level || 0} size="lg" />
               )}
+              {/* هنا بتظهر الشارة الحمراء الكبيرة جنب الاسم لو الحساب BOSS */}
+              <VipBadge level={profile?.vip_level || 0} size="md" userId={isBoss ? "BOSS" : ""} />
             </h2>
 
             {/* All badges visible to public */}
@@ -156,11 +160,15 @@ const UserProfile = () => {
               )}
               {profile?.age && <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{profile.age}</span>}
               {profile?.country_code && <span className="text-xs">🌍 {profile.country_code}</span>}
+              
               {isBoss ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">🔥 BOSS</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">🔥 BOSS</span>
+                </div>
               ) : (
                 <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
               )}
+              
               {profile?.is_agent ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">🏅 وكيل</span>
               ) : profile?.is_host ? (
