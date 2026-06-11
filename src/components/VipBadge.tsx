@@ -16,8 +16,8 @@ const VipBadge = ({ level, size = "sm", showTitle = false, userId }: VipBadgePro
   const tier = getVipTier(level);
   if (!tier) return null;
 
-  // هنا بنحط رابط مؤقت للشارة لحد ما نرفع صورتك الحقيقية
-  const bossBadgeUrl = "https://img.icons8.com/fluency/48/verified-badge.png";
+  // رابط شارة التوثيق الحمراء الفخمة للبوص أحمد
+  const bossBadgeUrl = "https://i.ibb.co/4ZJYFwjk/image.png";
 
   // السيستم هيتعرف عليك لأن الـ ID بتاعك BOSS
   const bossUserId = "BOSS";
