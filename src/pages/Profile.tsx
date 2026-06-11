@@ -359,10 +359,11 @@ const Profile = () => {
         {/* === USER INFO === */}
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
-            <h2 className={`font-black text-2xl ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
+            <h2 className={`font-black text-2xl flex items-center gap-2 justify-center ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
               {isBoss ? (profile?.display_name || "User") : (
                 <VipName name={profile?.display_name || "User"} level={profile?.vip_level || 0} size="lg" />
               )}
+              {(isBoss || (profile as any)?.is_verified) && <VerifiedBadge size={22} />}
             </h2>
 
             <div className="flex items-center gap-1.5 mt-2 flex-wrap justify-center">
