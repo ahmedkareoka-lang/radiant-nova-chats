@@ -1221,6 +1221,9 @@ const AdminDashboard = () => {
                       <p className="text-xs font-bold">{b.title || "بدون عنوان"}</p>
                       <button onClick={() => deleteBanner(b.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
                     </div>
+                    {b.description && (
+                      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{b.description}</p>
+                    )}
                   </div>
                 ))}
                 {banners.length === 0 && <p className="text-center text-muted-foreground text-sm py-4">لا توجد بانرات</p>}
