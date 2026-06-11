@@ -22,6 +22,7 @@ import EquippedBadge from "@/components/EquippedBadge";
 import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
 import VipName from "@/components/VipName";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 // LevelTable hidden per design — kept import removed
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
@@ -58,7 +59,7 @@ const PROFILE_PUBLIC_FIELDS = `
   id, user_id, display_name, avatar_url, cover_url, gender, age, country_code,
   coins, diamonds, level, vip_level, vip_expiry, displayed_vip_level, nova_p_level, nova_p_expiry,
   wealth_level, wealth_xp, charisma_level, charisma_xp, total_spend_gold,
-  is_boss, is_agent, is_host, is_bd, agency_eligible, agency_id,
+  is_boss, is_verified, is_agent, is_host, is_bd, agency_eligible, agency_id,
   equipped_frame, equipped_badge, equipped_chat_bubble,
   equipped_entrance_effect, equipped_name_style,
   entrance_video_url, entrance_audio_url, created_at
@@ -165,9 +166,10 @@ const Profile = () => {
     if (file.size > 2 * 1024 * 1024) { toast.error("حجم الصورة يجب أن يكون أقل من 2MB"); return; }
     setUploadingAvatar(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `avatars/${profile.id}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      // First folder MUST equal auth.uid() to satisfy storage RLS.
+      const path = `${profile.id}/avatars/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const avatar_url = urlData.publicUrl + "?t=" + Date.now();
@@ -184,9 +186,10 @@ const Profile = () => {
     if (file.size > 5 * 1024 * 1024) { toast.error("حجم الغلاف يجب أن يكون أقل من 5MB"); return; }
     setUploadingCover(true);
     try {
-      const ext = file.name.split(".").pop();
-      const path = `covers/${profile.id}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      // First folder MUST equal auth.uid() to satisfy storage RLS.
+      const path = `${profile.id}/covers/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const cover_url = urlData.publicUrl + "?t=" + Date.now();
@@ -359,10 +362,11 @@ const Profile = () => {
         {/* === USER INFO === */}
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
-            <h2 className={`font-black text-2xl ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
+            <h2 className={`font-black text-2xl flex items-center gap-2 justify-center ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
               {isBoss ? (profile?.display_name || "User") : (
                 <VipName name={profile?.display_name || "User"} level={profile?.vip_level || 0} size="lg" />
               )}
+              {(isBoss || (profile as any)?.is_verified) && <VerifiedBadge size={22} />}
             </h2>
 
             <div className="flex items-center gap-1.5 mt-2 flex-wrap justify-center">

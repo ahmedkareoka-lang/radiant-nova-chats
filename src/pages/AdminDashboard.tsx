@@ -53,7 +53,10 @@ const AdminDashboard = () => {
   const [giftPreviewUrl, setGiftPreviewUrl] = useState<string | null>(null);
   const [giftMediaType, setGiftMediaType] = useState<"image" | "lottie" | "video">("image");
   const [newStoreItem, setNewStoreItem] = useState({ name: "", price_coins: "", type: "frame", tier_type: "none", tier_required: "0" });
-  const [newBanner, setNewBanner] = useState({ title: "" });
+  const [newBanner, setNewBanner] = useState({ title: "", description: "" });
+  // Verification badge management (BOSS-only)
+  const [verifySearchId, setVerifySearchId] = useState("");
+  const [verifyTarget, setVerifyTarget] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [bulkJson, setBulkJson] = useState("");
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -476,12 +479,13 @@ const AdminDashboard = () => {
 
     const { error } = await supabase.from("banners").insert({
       title: newBanner.title || "",
+      description: newBanner.description || null,
       image_url: imageUrl,
       sort_order: banners.length,
-    });
+    } as any);
     if (error) { toast.error("فشل في إضافة البانر"); return; }
     toast.success("تمت إضافة البانر ✅");
-    setNewBanner({ title: "" });
+    setNewBanner({ title: "", description: "" });
     if (bannerFileRef.current) bannerFileRef.current.value = "";
     await fetchBanners();
   };
@@ -553,10 +557,13 @@ const AdminDashboard = () => {
 
   const tabs = [
     { id: "users", label: "المستخدمين", icon: Users },
+    { id: "verified", label: "التوثيق", icon: Shield },
     { id: "nova", label: "NOVA P", icon: BarChart3 },
     { id: "nova_items", label: "عناصر NOVA P", icon: Crown },
     { id: "vip_items", label: "عناصر VIP", icon: Crown },
     { id: "gifts", label: "الهدايا", icon: Gift },
+    { id: "frames", label: "الإطارات", icon: Image },
+    { id: "entrances", label: "الدخوليات", icon: Zap },
     { id: "store", label: "المتجر", icon: Image },
     { id: "banners", label: "البانرات", icon: Image },
     { id: "agencies", label: "الوكالات", icon: Building2 },
@@ -1045,13 +1052,159 @@ const AdminDashboard = () => {
           {/* STORE TAB - generic items */}
           {activeTab === "store" && renderTierItemForm("none", "إضافة عنصر متجر عام (إطار/شارة/دخول)", "text-primary")}
 
+          {/* FRAMES TAB - shows ALL frames across tiers */}
+          {activeTab === "frames" && (
+            <div className="space-y-3">
+              <div className="card-nova p-4">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-fuchsia-300">
+                  <Image className="w-4 h-4" /> 🖼️ كل الإطارات في النظام
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  لإضافة إطار جديد استخدم تبويب "عناصر NOVA P" أو "عناصر VIP" أو "المتجر" وحدد النوع = إطار.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {storeItems.filter((s) => s.type === "frame").map((s) => (
+                  <div key={s.id} className="card-nova p-3 flex items-center gap-3">
+                    {s.image_url ? <img loading="lazy" src={s.image_url} className="w-12 h-12 rounded-lg object-cover" alt="" /> : <span className="text-2xl">🖼️</span>}
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">{s.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {s.price_coins} عملة · {s.tier_type === "nova_p" ? `P${s.tier_required || 0}+` : s.tier_type === "vip" ? `VIP ${s.tier_required || 0}+` : "عام"}
+                      </p>
+                    </div>
+                    <button onClick={() => deleteStoreItem(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                ))}
+                {storeItems.filter((s) => s.type === "frame").length === 0 && (
+                  <p className="text-center text-muted-foreground text-sm py-6">لا توجد إطارات حتى الآن</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ENTRANCES TAB - shows ALL entrance effects across tiers */}
+          {activeTab === "entrances" && (
+            <div className="space-y-3">
+              <div className="card-nova p-4">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-amber-300">
+                  <Zap className="w-4 h-4" /> ✨ كل تأثيرات الدخول
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  لإضافة دخولية جديدة استخدم تبويب "عناصر NOVA P" أو "عناصر VIP" أو "المتجر" وحدد النوع = تأثير دخول.
+                </p>
+              </div>
+              <div className="space-y-2">
+                {storeItems.filter((s) => s.type === "entrance").map((s) => (
+                  <div key={s.id} className="card-nova p-3 flex items-center gap-3">
+                    {s.image_url ? <img loading="lazy" src={s.image_url} className="w-12 h-12 rounded-lg object-cover" alt="" /> : <span className="text-2xl">✨</span>}
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">{s.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {s.price_coins} عملة · {s.tier_type === "nova_p" ? `P${s.tier_required || 0}+` : s.tier_type === "vip" ? `VIP ${s.tier_required || 0}+` : "عام"}
+                      </p>
+                    </div>
+                    <button onClick={() => deleteStoreItem(s.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                ))}
+                {storeItems.filter((s) => s.type === "entrance").length === 0 && (
+                  <p className="text-center text-muted-foreground text-sm py-6">لا توجد دخوليات حتى الآن</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* VERIFICATION BADGE TAB - BOSS exclusive */}
+          {activeTab === "verified" && (
+            <div className="space-y-3">
+              <div className="card-nova p-4 border border-blue-500/40">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-300 mb-3">
+                  <Shield className="w-4 h-4" /> 🎖️ منح/سحب شارة التوثيق
+                </h3>
+                <p className="text-[10px] text-muted-foreground mb-3">
+                  هذه الأداة حصرية للبوص فقط. اكتب معرّف المستخدم ثم اختر منح أو سحب الشارة الزرقاء الرسمية.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={verifySearchId}
+                    onChange={(e) => setVerifySearchId(e.target.value)}
+                    placeholder="معرّف المستخدم (UUID)"
+                    className="flex-1 bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none"
+                  />
+                  <button
+                    onClick={async () => {
+                      const id = verifySearchId.trim();
+                      if (!id) return;
+                      const { data, error } = await supabase
+                        .from("profiles")
+                        .select("id, display_name, avatar_url, is_verified, is_boss")
+                        .eq("id", id)
+                        .maybeSingle();
+                      if (error || !data) { toast.error("المستخدم غير موجود"); setVerifyTarget(null); return; }
+                      setVerifyTarget(data);
+                    }}
+                    className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs"
+                  >
+                    بحث
+                  </button>
+                </div>
+                {verifyTarget && (
+                  <div className="mt-4 p-3 rounded-xl bg-secondary/40 border border-border space-y-3">
+                    <div className="flex items-center gap-3">
+                      <img src={verifyTarget.avatar_url || "/placeholder.svg"} className="w-12 h-12 rounded-full object-cover" alt="" />
+                      <div className="flex-1">
+                        <p className="font-bold text-sm flex items-center gap-1">
+                          {verifyTarget.display_name}
+                          {verifyTarget.is_verified && <span className="text-blue-400">✔️</span>}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">{verifyTarget.is_verified ? "موثّق حالياً" : "غير موثّق"}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase.rpc("boss_set_verified" as any, { _user_id: verifyTarget.id, _value: true });
+                          if (error) { toast.error("فشل المنح: " + error.message); return; }
+                          toast.success("تم منح شارة التوثيق ✅");
+                          setVerifyTarget({ ...verifyTarget, is_verified: true });
+                        }}
+                        className="flex-1 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-700 text-white"
+                      >
+                        ✔️ منح التوثيق
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const { error } = await supabase.rpc("boss_set_verified" as any, { _user_id: verifyTarget.id, _value: false });
+                          if (error) { toast.error("فشل السحب: " + error.message); return; }
+                          toast.success("تم سحب شارة التوثيق");
+                          setVerifyTarget({ ...verifyTarget, is_verified: false });
+                        }}
+                        className="flex-1 py-2 rounded-xl text-xs font-bold bg-destructive/20 text-destructive border border-destructive/40"
+                      >
+                        ✖ سحب التوثيق
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* BANNERS TAB */}
           {activeTab === "banners" && (
             <div className="space-y-4">
               <div className="card-nova p-4 space-y-3">
                 <h3 className="font-bold text-sm flex items-center gap-2"><Image className="w-4 h-4 text-accent" /> إضافة بانر</h3>
-                <input placeholder="عنوان (اختياري)" value={newBanner.title} onChange={(e) => setNewBanner({ title: e.target.value })}
+                <input placeholder="عنوان (اختياري)" value={newBanner.title} onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
                   className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
+                <textarea
+                  placeholder="وصف البانر (يظهر داخل نافذة العرض الكامل)"
+                  value={newBanner.description}
+                  onChange={(e) => setNewBanner({ ...newBanner, description: e.target.value })}
+                  rows={3}
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none resize-none"
+                />
                 <div className="flex gap-2 items-center">
                   <input ref={bannerFileRef} type="file" accept="image/*" className="text-xs flex-1" />
                   <button onClick={handleAddBanner} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
@@ -1068,6 +1221,9 @@ const AdminDashboard = () => {
                       <p className="text-xs font-bold">{b.title || "بدون عنوان"}</p>
                       <button onClick={() => deleteBanner(b.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
                     </div>
+                    {b.description && (
+                      <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{b.description}</p>
+                    )}
                   </div>
                 ))}
                 {banners.length === 0 && <p className="text-center text-muted-foreground text-sm py-4">لا توجد بانرات</p>}

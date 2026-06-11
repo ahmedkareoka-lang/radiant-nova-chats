@@ -235,6 +235,7 @@ export type Database = {
       banners: {
         Row: {
           created_at: string
+          description: string | null
           id: string
           image_url: string
           is_active: boolean
@@ -244,6 +245,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
           image_url: string
           is_active?: boolean
@@ -253,6 +255,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string
           is_active?: boolean
@@ -1054,6 +1057,7 @@ export type Database = {
           is_bd: boolean
           is_boss: boolean
           is_host: boolean
+          is_verified: boolean
           level: number
           nova_p_expiry: string | null
           nova_p_level: number
@@ -1097,6 +1101,7 @@ export type Database = {
           is_bd?: boolean
           is_boss?: boolean
           is_host?: boolean
+          is_verified?: boolean
           level?: number
           nova_p_expiry?: string | null
           nova_p_level?: number
@@ -1140,6 +1145,7 @@ export type Database = {
           is_bd?: boolean
           is_boss?: boolean
           is_host?: boolean
+          is_verified?: boolean
           level?: number
           nova_p_expiry?: string | null
           nova_p_level?: number
@@ -1964,6 +1970,10 @@ export type Database = {
       bd_activate_agency_for_user: {
         Args: { _target_public_id: string }
         Returns: Json
+      }
+      boss_set_verified: {
+        Args: { _user_id: string; _value: boolean }
+        Returns: undefined
       }
       bump_couple_room_minutes: {
         Args: { _minutes?: number; _room_id: string }

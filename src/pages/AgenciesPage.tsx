@@ -95,8 +95,9 @@ const AgenciesPage = () => {
     setUploadingLogo(true);
     try {
       const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `agency-logos/${userId}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true });
+      // First folder MUST equal auth.uid() for storage RLS to allow the upload.
+      const path = `${userId}/agency-logos/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const { data, error } = await supabase.rpc("update_agency_profile" as any, { _new_name: null, _new_logo_url: urlData.publicUrl });

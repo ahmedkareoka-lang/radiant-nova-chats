@@ -20,6 +20,7 @@ import { useLoveCouple } from "@/hooks/useLoveCouple";
 import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
 
 const wealthThreshold = (lvl: number) => {
@@ -141,10 +142,11 @@ const UserProfile = () => {
         {/* === USER INFO === */}
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
-            <h2 className={`font-black text-2xl ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
+            <h2 className={`font-black text-2xl flex items-center gap-2 justify-center ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
               {isBoss ? (profile?.display_name || "User") : (
                 <VipName name={profile?.display_name || "User"} level={(profile as any)?.vip_level || 0} size="lg" />
               )}
+              {(isBoss || (profile as any)?.is_verified) && <VerifiedBadge size={22} />}
             </h2>
 
             {/* All badges visible to public */}

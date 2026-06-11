@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Bell, Check, CheckCheck, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Bell, CheckCheck, Check, X, Gift, Wallet, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,22 +7,56 @@ import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
 import EmptyState from "@/components/EmptyState";
+import VerifiedBadge from "@/components/VerifiedBadge";
+
+type Stream = "all" | "gifts" | "recharge";
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
+  const [stream, setStream] = useState<Stream>("all");
+  const [boss, setBoss] = useState<{ id: string; display_name: string; avatar_url: string | null } | null>(null);
+
+  // Load NOVA OFFICIAL (BOSS) so notifications carry official branding & link to its profile.
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .eq("is_boss", true)
+        .limit(1)
+        .maybeSingle();
+      if (data) setBoss(data);
+    })();
+  }, []);
 
   const getIcon = (type: string) => {
     switch (type) {
       case "gift": return "🎁";
       case "agency": return "🏢";
       case "agency_invite": return "📨";
-      case "purchase": return "🛍️";
+      case "purchase":
+      case "recharge": return "💰";
       case "system": return "⚙️";
       default: return "🔔";
     }
   };
+
+  const isGiftType = (t: string) => t === "gift";
+  const isRechargeType = (t: string) => t === "purchase" || t === "recharge" || t === "topup";
+
+  const filtered = useMemo(() => {
+    if (stream === "gifts") return notifications.filter((n) => isGiftType(n.type));
+    if (stream === "recharge") return notifications.filter((n) => isRechargeType(n.type));
+    return notifications;
+  }, [notifications, stream]);
+
+  const counts = useMemo(() => ({
+    all: notifications.length,
+    gifts: notifications.filter((n) => isGiftType(n.type)).length,
+    recharge: notifications.filter((n) => isRechargeType(n.type)).length,
+  }), [notifications]);
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -35,13 +69,24 @@ const NotificationsPage = () => {
     return `منذ ${days} يوم`;
   };
 
+  const goToOfficialProfile = () => {
+    if (boss?.id) navigate(`/user/${boss.id}`);
+  };
+
+  const handleNotificationClick = (n: any) => {
+    if (!n.is_read) markAsRead(n.id);
+    // Route to NOVA OFFICIAL profile (system messages stream)
+    if (n.type !== "agency_invite" && boss?.id) {
+      navigate(`/user/${boss.id}`);
+    }
+  };
+
   const handleInviteAction = async (notifId: string, action: "accept" | "reject") => {
     setProcessingInvite(notifId);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Find the pending invite for this user
       const { data: invite } = await supabase
         .from("agency_invites")
         .select("*")
@@ -66,7 +111,6 @@ const NotificationsPage = () => {
           toast.error("فشل في قبول الدعوة: " + error.message);
         } else {
           toast.success("تم قبول الدعوة! أنت الآن مضيف 🎤");
-          // Notify agent
           await supabase.from("notifications").insert({
             user_id: invite.agent_id,
             title: "تم قبول الدعوة ✅",
@@ -92,12 +136,15 @@ const NotificationsPage = () => {
     setProcessingInvite(null);
   };
 
+  const officialName = boss?.display_name || "NOVA OFFICIAL";
+  const officialAvatar = boss?.avatar_url || "/placeholder.svg";
+
   return (
     <PageTransition>
       <div className="min-h-screen pb-24">
         <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border">
           <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
-            <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+            <button onClick={() => navigate(-1)} aria-label="back"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
             <Bell className="w-5 h-5 text-primary" />
             <h1 className="font-bold text-lg">الإشعارات</h1>
             {unreadCount > 0 && (
@@ -107,33 +154,92 @@ const NotificationsPage = () => {
               <CheckCheck className="w-3.5 h-3.5" /> قراءة الكل
             </button>
           </div>
+
+          {/* Official sender header */}
+          <button
+            onClick={goToOfficialProfile}
+            className="w-full max-w-lg mx-auto flex items-center gap-3 px-4 py-2 border-t border-border/40 bg-gradient-to-r from-fuchsia-500/10 via-violet-500/10 to-blue-500/10 hover:bg-primary/10 transition"
+          >
+            <img
+              src={officialAvatar}
+              alt={officialName}
+              className="w-9 h-9 rounded-full object-cover border-2 border-blue-400/70 shadow-[0_0_12px_rgba(59,130,246,0.45)]"
+            />
+            <div className="flex-1 text-right">
+              <div className="flex items-center justify-end gap-1.5">
+                <VerifiedBadge size={14} />
+                <span className="text-sm font-black bg-gradient-to-r from-fuchsia-300 to-blue-300 bg-clip-text text-transparent">
+                  {officialName}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">الحساب الرسمي · جميع الإشعارات صادرة عنه</p>
+            </div>
+            <MessageSquare className="w-4 h-4 text-primary" />
+          </button>
+
+          {/* Stream tabs */}
+          <div className="max-w-lg mx-auto px-3 pb-2 flex gap-2">
+            {([
+              { id: "all", label: "الكل", icon: Bell, count: counts.all },
+              { id: "gifts", label: "الهدايا", icon: Gift, count: counts.gifts },
+              { id: "recharge", label: "الشحن", icon: Wallet, count: counts.recharge },
+            ] as const).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setStream(t.id as Stream)}
+                className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition-all ${
+                  stream === t.id
+                    ? "gradient-neon text-primary-foreground shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                    : "bg-secondary/40 text-muted-foreground"
+                }`}
+              >
+                <t.icon className="w-3 h-3" />
+                {t.label}
+                <span className="text-[9px] opacity-80">({t.count})</span>
+              </button>
+            ))}
+          </div>
         </header>
 
         <main className="px-4 py-2 max-w-lg mx-auto">
-          {notifications.length === 0 ? (
+          {filtered.length === 0 ? (
             <EmptyState icon="🔔" title="لا توجد إشعارات" subtitle="ستظهر هنا التنبيهات الجديدة" />
           ) : (
-            <div className="space-y-1">
-              {notifications.map((n: any) => (
+            <div className="space-y-1.5">
+              {filtered.map((n: any) => (
                 <div
                   key={n.id}
-                  className={`w-full text-right p-3 rounded-2xl transition-all ${
+                  onClick={() => handleNotificationClick(n)}
+                  role="button"
+                  tabIndex={0}
+                  className={`w-full text-right p-3 rounded-2xl transition-all cursor-pointer hover:bg-primary/10 ${
                     n.is_read ? "bg-secondary/30" : "bg-primary/5 border border-primary/20"
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl mt-0.5">{getIcon(n.type)}</span>
+                    {/* Official avatar (always NOVA OFFICIAL) */}
+                    <div className="relative shrink-0">
+                      <img
+                        src={officialAvatar}
+                        alt={officialName}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-blue-400/60"
+                      />
+                      <span className="absolute -bottom-1 -right-1 text-base">{getIcon(n.type)}</span>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-bold truncate ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="text-[11px] font-bold text-blue-300 truncate">{officialName}</span>
+                          <VerifiedBadge size={11} />
+                        </div>
                         {!n.is_read && <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />}
                       </div>
+                      <p className={`text-sm font-bold mt-0.5 truncate ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>{n.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
                       <p className="text-[10px] text-muted-foreground/60 mt-1">{timeAgo(n.created_at)}</p>
 
-                      {/* Agency Invite Actions */}
                       {n.type === "agency_invite" && !n.is_read && (
-                        <div className="flex gap-2 mt-2">
+                        <div className="flex gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => handleInviteAction(n.id, "accept")}
                             disabled={processingInvite === n.id}
