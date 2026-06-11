@@ -2,6 +2,7 @@ import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCheck } from "lucide-react";
 import AvatarImg from "@/components/AvatarImg";
+import VipBadge from "@/components/VipBadge"; // استيراد ملف الشارات اللي عدلناه سوا
 
 export interface ChatMessage {
   id: string;
@@ -48,6 +49,22 @@ export const MessageItem = memo(function MessageItem({ message, isMine }: Props)
             : "bg-secondary/90 text-foreground rounded-[18px] rounded-bl-md border border-border/40"
         }`}
       >
+        {/* إضافة اسم المرسل وجنبه الشارة الملكية للبوص أو شارة الـ VIP للباقيين */}
+        <div className="flex items-center gap-1 mb-1 flex-wrap" dir="auto">
+          <span 
+            className={`text-[12px] font-bold cursor-pointer hover:underline ${isMine ? "text-primary-foreground/90" : "text-muted-foreground"}`}
+            onClick={goProfile}
+          >
+            {message.sender?.display_name || "مستخدم نوفا"}
+          </span>
+          {/* هنا السحر: بننادي الشارة وبنبعت لها ليفل الـ VIP ومعرف المستخدم عشان يتحقق إذا كنت BOSS */}
+          <VipBadge 
+            level={message.sender?.vip_level || 0} 
+            size="sm" 
+            userId={message.sender_id} 
+          />
+        </div>
+
         <span
           className={`absolute bottom-1.5 h-3.5 w-3.5 rotate-45 ${
             isMine
