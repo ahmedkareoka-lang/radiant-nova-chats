@@ -557,10 +557,13 @@ const AdminDashboard = () => {
 
   const tabs = [
     { id: "users", label: "المستخدمين", icon: Users },
+    { id: "verified", label: "التوثيق", icon: Shield },
     { id: "nova", label: "NOVA P", icon: BarChart3 },
     { id: "nova_items", label: "عناصر NOVA P", icon: Crown },
     { id: "vip_items", label: "عناصر VIP", icon: Crown },
     { id: "gifts", label: "الهدايا", icon: Gift },
+    { id: "frames", label: "الإطارات", icon: Image },
+    { id: "entrances", label: "الدخوليات", icon: Zap },
     { id: "store", label: "المتجر", icon: Image },
     { id: "banners", label: "البانرات", icon: Image },
     { id: "agencies", label: "الوكالات", icon: Building2 },
