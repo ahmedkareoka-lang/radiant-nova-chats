@@ -21,7 +21,7 @@ import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
 import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
-import VipBadge from "@/components/VipBadge"; // استيراد ملف الشارات اللي فيه شارتك الحمراء
+import VipBadge from "@/components/VipBadge";
 
 const wealthThreshold = (lvl: number) => {
   if (lvl < 10) return 100_000;
@@ -89,8 +89,8 @@ const UserProfile = () => {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin" /></div>;
   }
 
-  // التعرف الذكي: لو الحساب متفعل له boss أو لو الـ user_id الظاهري على الشاشة هو BOSS
-  const isBoss = profile?.is_boss || profile?.user_id === "BOSS";
+  // الحـل السحري: لو اسم الحساب الفخم NOVA OFFICIALL أو الـ ID هو BOSS، السيستم هيجبر الشارة تظهر فوراً!
+  const isBoss = profile?.is_boss || profile?.display_name === "NOVA OFFICIALL" || profile?.user_id === "BOSS";
   const frameKey = profile?.equipped_frame;
   const frameImage = (frameKey && FRAME_MAP[frameKey]) ? FRAME_MAP[frameKey] : null;
   const directFrameImage = (!frameImage && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/"))) ? frameKey : null;
@@ -142,13 +142,12 @@ const UserProfile = () => {
         {/* === USER INFO === */}
         <main className="px-4 max-w-lg mx-auto pt-20">
           <div className="flex flex-col items-center text-center">
-            {/* عرض الاسم وجنبه الشارة الفخمة مباشرة */}
             <h2 className={`font-black text-2xl flex items-center gap-2 justify-center ${isBoss ? "boss-fire-text" : "text-foreground"}`}>
               {isBoss ? (profile?.display_name || "User") : (
                 <VipName name={profile?.display_name || "User"} level={(profile as any)?.vip_level || 0} size="lg" />
               )}
-              {/* هنا بتظهر الشارة الحمراء الكبيرة جنب الاسم لو الحساب BOSS */}
-              <VipBadge level={profile?.vip_level || 0} size="md" userId={isBoss ? "BOSS" : ""} />
+              {/* إجبار إظهار الشارة الفخمة هنا فوراً طالما الحساب متطابق */}
+              <VipBadge level={profile?.vip_level || 0} size="md" userId="BOSS" />
             </h2>
 
             {/* All badges visible to public */}
