@@ -1054,8 +1054,15 @@ const AdminDashboard = () => {
             <div className="space-y-4">
               <div className="card-nova p-4 space-y-3">
                 <h3 className="font-bold text-sm flex items-center gap-2"><Image className="w-4 h-4 text-accent" /> إضافة بانر</h3>
-                <input placeholder="عنوان (اختياري)" value={newBanner.title} onChange={(e) => setNewBanner({ title: e.target.value })}
+                <input placeholder="عنوان (اختياري)" value={newBanner.title} onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
                   className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none" />
+                <textarea
+                  placeholder="وصف البانر (يظهر داخل نافذة العرض الكامل)"
+                  value={newBanner.description}
+                  onChange={(e) => setNewBanner({ ...newBanner, description: e.target.value })}
+                  rows={3}
+                  className="w-full bg-secondary/50 rounded-xl px-3 py-2 text-xs border border-border focus:outline-none resize-none"
+                />
                 <div className="flex gap-2 items-center">
                   <input ref={bannerFileRef} type="file" accept="image/*" className="text-xs flex-1" />
                   <button onClick={handleAddBanner} disabled={uploading} className="px-4 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
