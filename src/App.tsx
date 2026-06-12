@@ -63,6 +63,7 @@ const WalletPage = lazyWithRetry(() => import("./pages/WalletPage"));
 const InventoryPage = lazyWithRetry(() => import("./pages/InventoryPage"));
 const AgenciesPage = lazyWithRetry(() => import("./pages/AgenciesPage"));
 const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
+const NotificationsChatPage = lazyWithRetry(() => import("./pages/NotificationsChatPage"));
 const UserProfile = lazyWithRetry(() => import("./pages/UserProfile"));
 const EditProfile = lazyWithRetry(() => import("./pages/EditProfile"));
 const LeaderboardPage = lazyWithRetry(() => import("./pages/LeaderboardPage"));
@@ -170,6 +171,7 @@ const AnimatedRoutes = () => {
         <Route path="/inventory" element={<AuthGate><InventoryPage /></AuthGate>} />
         <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />
         <Route path="/notifications" element={<AuthGate><NotificationsPage /></AuthGate>} />
+        <Route path="/notifications/chat" element={<AuthGate><NotificationsChatPage /></AuthGate>} />
         <Route path="/user" element={<AuthGate><UserProfile /></AuthGate>} />
         <Route path="/edit-profile" element={<AuthGate><EditProfile /></AuthGate>} />
         <Route path="/leaderboard" element={<AuthGate><LeaderboardPage /></AuthGate>} />

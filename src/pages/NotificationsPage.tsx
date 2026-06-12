@@ -75,10 +75,9 @@ const NotificationsPage = () => {
 
   const handleNotificationClick = (n: any) => {
     if (!n.is_read) markAsRead(n.id);
-    // Route to NOVA OFFICIAL profile (system messages stream)
-    if (n.type !== "agency_invite" && boss?.id) {
-      navigate(`/user/${boss.id}`);
-    }
+    if (n.type === "agency_invite") return;
+    // Open chat-like view with NOVA OFFICIAL containing all notifications
+    navigate(`/notifications/chat`);
   };
 
   const handleInviteAction = async (notifId: string, action: "accept" | "reject") => {
@@ -218,14 +217,20 @@ const NotificationsPage = () => {
                 >
                   <div className="flex items-start gap-3">
                     {/* Official avatar (always NOVA OFFICIAL) */}
-                    <div className="relative shrink-0">
+                    {/* Official avatar (always NOVA OFFICIAL) — click goes to profile */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); goToOfficialProfile(); }}
+                      className="relative shrink-0"
+                      aria-label="فتح حساب الإدارة"
+                    >
                       <img
                         src={officialAvatar}
                         alt={officialName}
                         className="w-10 h-10 rounded-full object-cover border-2 border-blue-400/60"
                       />
                       <span className="absolute -bottom-1 -right-1 text-base">{getIcon(n.type)}</span>
-                    </div>
+                    </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1 min-w-0">
