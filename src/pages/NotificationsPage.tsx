@@ -75,10 +75,9 @@ const NotificationsPage = () => {
 
   const handleNotificationClick = (n: any) => {
     if (!n.is_read) markAsRead(n.id);
-    // Route to NOVA OFFICIAL profile (system messages stream)
-    if (n.type !== "agency_invite" && boss?.id) {
-      navigate(`/user/${boss.id}`);
-    }
+    if (n.type === "agency_invite") return;
+    // Open chat-like view with NOVA OFFICIAL containing all notifications
+    navigate(`/notifications/chat`);
   };
 
   const handleInviteAction = async (notifId: string, action: "accept" | "reject") => {
