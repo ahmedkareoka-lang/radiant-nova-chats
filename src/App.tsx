@@ -63,6 +63,7 @@ const WalletPage = lazyWithRetry(() => import("./pages/WalletPage"));
 const InventoryPage = lazyWithRetry(() => import("./pages/InventoryPage"));
 const AgenciesPage = lazyWithRetry(() => import("./pages/AgenciesPage"));
 const NotificationsPage = lazyWithRetry(() => import("./pages/NotificationsPage"));
+const NotificationsChatPage = lazyWithRetry(() => import("./pages/NotificationsChatPage"));
 const UserProfile = lazyWithRetry(() => import("./pages/UserProfile"));
 const EditProfile = lazyWithRetry(() => import("./pages/EditProfile"));
 const LeaderboardPage = lazyWithRetry(() => import("./pages/LeaderboardPage"));
