@@ -171,6 +171,7 @@ const AnimatedRoutes = () => {
         <Route path="/inventory" element={<AuthGate><InventoryPage /></AuthGate>} />
         <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />
         <Route path="/notifications" element={<AuthGate><NotificationsPage /></AuthGate>} />
+        <Route path="/notifications/chat" element={<AuthGate><NotificationsChatPage /></AuthGate>} />
         <Route path="/user" element={<AuthGate><UserProfile /></AuthGate>} />
         <Route path="/edit-profile" element={<AuthGate><EditProfile /></AuthGate>} />
         <Route path="/leaderboard" element={<AuthGate><LeaderboardPage /></AuthGate>} />
