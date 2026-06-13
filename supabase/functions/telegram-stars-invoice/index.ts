@@ -24,10 +24,9 @@ const PACKAGES = [
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const TELEGRAM_API_KEY = Deno.env.get("TELEGRAM_API_KEY");
-    if (!LOVABLE_API_KEY || !TELEGRAM_API_KEY) {
-      return json({ error: "Telegram not configured" }, 500);
+    const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+    if (!BOT_TOKEN) {
+      return json({ error: "TELEGRAM_BOT_TOKEN not configured" }, 500);
     }
     const auth = req.headers.get("Authorization") || "";
     const supabase = createClient(
