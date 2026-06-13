@@ -70,7 +70,7 @@ const NotificationsPage = () => {
   };
 
   const goToOfficialProfile = () => {
-    if (boss?.id) navigate(`/user/${boss.id}`);
+    if (boss?.id) navigate(`/user?id=${boss.id}`);
   };
 
   const handleNotificationClick = (n: any) => {
