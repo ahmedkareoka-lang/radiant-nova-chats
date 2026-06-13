@@ -20,6 +20,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import SplashScreen from "./pages/SplashScreen";
 import LoginPage from "./pages/LoginPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import Index from "./pages/Index";
 import { useCatalogStore } from "@/stores/catalogStore";
 
@@ -158,6 +159,7 @@ const AnimatedRoutes = () => {
       <Suspense fallback={<RouteFallback />}>
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/" element={<AuthGate><DeepLinkRedirector /><Index /></AuthGate>} />
         <Route path="/create-room" element={<AuthGate><CreateRoom /></AuthGate>} />
         <Route path="/voice-room" element={<AuthGate><VoiceRoom /></AuthGate>} />

@@ -123,10 +123,13 @@ export const AuthGate = memo(function AuthGate({
 
   // 🚫 منع الوصول غير المصرح به
   if (requireAuth && !session) {
-    const redirect = encodeURIComponent(
-      window.location.pathname + window.location.search,
-    );
-    window.location.href = `/auth?redirect=${redirect}`;
+    try {
+      sessionStorage.setItem(
+        "nova-redirect-after-login",
+        window.location.pathname + window.location.search,
+      );
+    } catch {}
+    window.location.href = `/login`;
     return null;
   }
 

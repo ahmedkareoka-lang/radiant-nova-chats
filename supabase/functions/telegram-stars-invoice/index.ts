@@ -24,10 +24,9 @@ const PACKAGES = [
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const TELEGRAM_API_KEY = Deno.env.get("TELEGRAM_API_KEY");
-    if (!LOVABLE_API_KEY || !TELEGRAM_API_KEY) {
-      return json({ error: "Telegram not configured" }, 500);
+    const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+    if (!BOT_TOKEN) {
+      return json({ error: "TELEGRAM_BOT_TOKEN not configured" }, 500);
     }
     const auth = req.headers.get("Authorization") || "";
     const supabase = createClient(
@@ -79,14 +78,10 @@ Deno.serve(async (req) => {
     });
     if (insErr) return json({ error: insErr.message }, 500);
 
-    // Create invoice link via Telegram Bot API (currency XTR = Telegram Stars).
-    const tgRes = await fetch(`${GATEWAY}/createInvoiceLink`, {
+    // Create invoice link via Telegram Bot API directly (currency XTR = Telegram Stars).
+    const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": TELEGRAM_API_KEY,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: `NOVA $${pkg.usdt} Pack`,
         description: `${pkg.coins.toLocaleString()} NOVA Coins + ${pkg.diamonds.toLocaleString()} Diamonds`,
