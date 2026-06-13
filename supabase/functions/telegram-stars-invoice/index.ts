@@ -78,14 +78,10 @@ Deno.serve(async (req) => {
     });
     if (insErr) return json({ error: insErr.message }, 500);
 
-    // Create invoice link via Telegram Bot API (currency XTR = Telegram Stars).
-    const tgRes = await fetch(`${GATEWAY}/createInvoiceLink`, {
+    // Create invoice link via Telegram Bot API directly (currency XTR = Telegram Stars).
+    const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": TELEGRAM_API_KEY,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: `NOVA $${pkg.usdt} Pack`,
         description: `${pkg.coins.toLocaleString()} NOVA Coins + ${pkg.diamonds.toLocaleString()} Diamonds`,
