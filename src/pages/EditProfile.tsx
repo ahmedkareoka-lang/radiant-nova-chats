@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Camera, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Save, Sparkles, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,6 +33,21 @@ const EditProfile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, uploading } = useMediaUpload();
   const [previewQueue, setPreviewQueue] = useState<any[]>([]);
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPwd, setChangingPwd] = useState(false);
+
+  const PWD_RE = /^(?:[0-9]{6,12}|[A-Za-z]{6,12}|(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6,12})$/;
+  const handleChangePassword = async () => {
+    if (!PWD_RE.test(newPassword)) {
+      toast.error("كلمة السر يجب أن تكون 6-12 حرف/رقم");
+      return;
+    }
+    setChangingPwd(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPwd(false);
+    if (error) toast.error(error.message);
+    else { toast.success("تم تغيير كلمة السر بنجاح 🔐"); setNewPassword(""); }
+  };
 
   const replayEntrance = () => {
     if (!profile) return;
@@ -163,6 +178,30 @@ const EditProfile = () => {
             <Sparkles className="w-4 h-4" />
             إعادة تشغيل تأثير الدخول
           </button>
+
+          {/* Change Password */}
+          <div className="rounded-2xl border border-border bg-secondary/30 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <KeyRound className="w-4 h-4 text-primary" />
+              تغيير كلمة السر
+            </div>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="كلمة السر الجديدة (6-12)"
+              minLength={6}
+              maxLength={12}
+              className="w-full bg-background/60 rounded-xl px-3 py-2.5 text-sm border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <button
+              onClick={handleChangePassword}
+              disabled={changingPwd || !newPassword}
+              className="w-full py-2.5 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"
+            >
+              {changingPwd ? "جارٍ الحفظ..." : "تحديث كلمة السر"}
+            </button>
+          </div>
 
           <button onClick={async () => { await supabase.auth.signOut(); navigate("/login"); }}
             className="w-full py-3 rounded-full border border-destructive/50 text-destructive font-bold text-sm">
