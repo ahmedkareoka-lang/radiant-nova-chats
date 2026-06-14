@@ -430,10 +430,13 @@ const VoiceRoom = () => {
     }
   };
 
-  // Admin: Kick user from mic
+  // Admin: Kick user from mic (SECURITY DEFINER bypasses room_members RLS)
   const handleKickFromMic = async (userId: string) => {
     if (!roomId || !isAdmin) return;
-    await supabase.from("room_members").update({ mic_slot: null, is_on_mic: false }).eq("room_id", roomId).eq("user_id", userId);
+    const { error } = await supabase.rpc("admin_kick_from_mic" as any, {
+      _room_id: roomId, _target_user: userId,
+    });
+    if (error) { toast.error("تعذر إنزال المستخدم: " + error.message); return; }
     fetchMembers();
     toast.success("تم إنزال المستخدم من المايك");
     setSelectedProfile(null);
@@ -442,7 +445,10 @@ const VoiceRoom = () => {
   // Admin: Kick user from room
   const handleKickUser = async (userId: string) => {
     if (!roomId || !isAdmin) return;
-    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+    const { error } = await supabase.rpc("admin_kick_user" as any, {
+      _room_id: roomId, _target_user: userId,
+    });
+    if (error) { toast.error("تعذر طرد المستخدم: " + error.message); return; }
     fetchMembers();
     toast.success("تم طرد المستخدم من الغرفة 🚫");
     setSelectedProfile(null);
@@ -451,21 +457,22 @@ const VoiceRoom = () => {
   // Admin: Ban user from room
   const handleBanUser = async (userId: string) => {
     if (!roomId || !isAdmin || !currentUserId) return;
-    await supabase.from("room_bans").insert({ room_id: roomId, user_id: userId, banned_by: currentUserId } as any);
-    await supabase.from("room_members").delete().eq("room_id", roomId).eq("user_id", userId);
+    const { error: bErr } = await supabase.from("room_bans").insert({ room_id: roomId, user_id: userId, banned_by: currentUserId } as any);
+    if (bErr) { toast.error("تعذر الحظر: " + bErr.message); return; }
+    await supabase.rpc("admin_kick_user" as any, { _room_id: roomId, _target_user: userId });
     fetchMembers();
     toast.success("تم حظر المستخدم من الغرفة ⛔");
     setSelectedProfile(null);
   };
 
-  // Admin: Mute user (force mute via room muted_users array)
+  // Admin: Toggle force-mute (atomic via RPC, host or BOSS)
   const handleMuteUser = async (userId: string) => {
     if (!roomId || !isAdmin) return;
-    const current = mutedUsers || [];
-    const isMutedAlready = current.includes(userId);
-    const updated = isMutedAlready ? current.filter((id: string) => id !== userId) : [...current, userId];
-    await supabase.from("rooms").update({ muted_users: updated } as any).eq("id", roomId);
-    toast.success(isMutedAlready ? "تم إلغاء كتم المستخدم" : "تم كتم المستخدم 🔇");
+    const { data: nowMuted, error } = await supabase.rpc("admin_toggle_mute_user" as any, {
+      _room_id: roomId, _target_user: userId,
+    });
+    if (error) { toast.error("تعذر الكتم: " + error.message); return; }
+    toast.success(nowMuted ? "تم كتم المستخدم 🔇" : "تم إلغاء كتم المستخدم");
     setSelectedProfile(null);
   };
 
@@ -474,7 +481,8 @@ const VoiceRoom = () => {
     if (!roomId || !isAdmin) return;
     const onMicUsers = members.filter(m => m.is_on_mic && m.user_id !== currentUserId).map(m => m.user_id);
     const updated = [...new Set([...(mutedUsers || []), ...onMicUsers])];
-    await supabase.from("rooms").update({ muted_users: updated } as any).eq("id", roomId);
+    const { error } = await supabase.from("rooms").update({ muted_users: updated } as any).eq("id", roomId);
+    if (error) { toast.error("تعذر كتم الكل: " + error.message); return; }
     toast.success("تم كتم جميع المايكات 🔇");
   };
 
