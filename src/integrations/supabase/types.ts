@@ -1924,6 +1924,18 @@ export type Database = {
         Args: { _diamond_amount: number; _user_id: string; _xp_amount: number }
         Returns: undefined
       }
+      admin_kick_from_mic: {
+        Args: { _room_id: string; _target_user: string }
+        Returns: undefined
+      }
+      admin_kick_user: {
+        Args: { _room_id: string; _target_user: string }
+        Returns: undefined
+      }
+      admin_toggle_mute_user: {
+        Args: { _room_id: string; _target_user: string }
+        Returns: boolean
+      }
       admin_update_profile: {
         Args: {
           _admin_id: string
