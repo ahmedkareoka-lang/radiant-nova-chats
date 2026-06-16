@@ -15,6 +15,9 @@ import ProfileSkeleton from "@/components/ProfileSkeleton";
 import DualBadge from "@/components/DualBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import BDBadge from "@/components/BDBadge";
+import AgentBadge from "@/components/AgentBadge";
+import HostBadge from "@/components/HostBadge";
+import CopyIdButton from "@/components/CopyIdButton";
 import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import { useIsBD } from "@/hooks/useIsBD";
@@ -382,11 +385,8 @@ const Profile = () => {
               ) : (
                 <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
               )}
-              {profile?.is_agent ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">🏅 وكيل</span>
-              ) : profile?.is_host ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
-              ) : null}
+              {profile?.is_agent && <AgentBadge size="md" />}
+              {profile?.is_host && <HostBadge size="md" />}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {meIsAgent && <RechargeAgentBadge size="md" />}
               {meIsBD && <BDBadge size="md" />}
@@ -398,7 +398,7 @@ const Profile = () => {
               <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
             </div>
 
-            <span className="text-[11px] text-muted-foreground mt-1.5">ID: {profile?.user_id}</span>
+            <CopyIdButton id={profile?.user_id} className="mt-2" />
           </div>
 
           {/* === STATS PILL === */}
@@ -671,7 +671,7 @@ const Profile = () => {
                 <FramedAvatar avatarUrl={profile?.avatar_url} equippedFrame={profile?.equipped_frame} size={56} />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate">{profile?.display_name || "مستخدم"}</p>
-                  <p className="text-[11px] text-muted-foreground">ID: {profile?.user_id}</p>
+                  <CopyIdButton id={profile?.user_id} className="mt-0.5" />
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
                     <span>المستوى {profile?.level || 1}</span>
                     <span>•</span>

@@ -12,6 +12,9 @@ import FramedAvatar from "@/components/FramedAvatar";
 import LoveBadge from "@/components/LoveBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import BDBadge from "@/components/BDBadge";
+import AgentBadge from "@/components/AgentBadge";
+import HostBadge from "@/components/HostBadge";
+import CopyIdButton from "@/components/CopyIdButton";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import AgentTransferModal from "@/components/AgentTransferModal";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
@@ -163,11 +166,8 @@ const UserProfile = () => {
               ) : (
                 <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
               )}
-              {profile?.is_agent ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">🏅 وكيل</span>
-              ) : profile?.is_host ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary font-bold">🎤 مضيف</span>
-              ) : null}
+              {profile?.is_agent && <AgentBadge size="md" />}
+              {profile?.is_host && <HostBadge size="md" />}
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {targetIsAgent && <RechargeAgentBadge size="md" />}
               {targetIsBD && <BDBadge size="md" />}
@@ -179,7 +179,7 @@ const UserProfile = () => {
               <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
             </div>
 
-            <span className="text-[11px] text-muted-foreground mt-1.5">ID: {profile?.user_id}</span>
+            <CopyIdButton id={profile?.user_id} className="mt-2" />
 
             {/* Action buttons */}
             {!isMe && (
