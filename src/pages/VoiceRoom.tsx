@@ -1540,6 +1540,14 @@ const VoiceRoom = () => {
             <Gift className="w-6 h-6 text-accent-foreground" />
           </button>
           <button
+            onClick={() => setShowCoinStorm(true)}
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-[0_0_18px_rgba(217,70,239,0.7)] flex items-center justify-center text-white relative overflow-hidden"
+            aria-label="Launch Coin Storm"
+            title="عاصفة الكوينز النيون"
+          >
+            <Zap className="w-5 h-5" fill="currentColor" />
+          </button>
+          <button
             onClick={() => setShowInventory(true)}
             className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
             aria-label="الحقيبة"
