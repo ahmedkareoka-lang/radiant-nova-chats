@@ -293,7 +293,7 @@ export default function NeonCoinStorm({
               </div>
 
               <p className="text-[10px] text-white/50 text-center mt-3">
-                اضغط على كوين أثناء العاصفة لتجمعه ⚡
+                اضغط على الكيس أثناء المطر لتجمعه ⚡ الأسرع يأخذ أكثر
               </p>
             </div>
           </motion.div>
