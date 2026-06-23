@@ -16,7 +16,7 @@ import DualBadge from "@/components/DualBadge";
 import VipName from "@/components/VipName";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
-import { useAgoraVoice } from "@/hooks/useAgoraVoice";
+import { useAgoraVoiceState } from "@/contexts/AgoraVoiceProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
