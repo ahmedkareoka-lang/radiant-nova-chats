@@ -789,7 +789,7 @@ const VoiceRoom = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
+    <div className={`h-[100dvh] max-h-[100dvh] flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
       {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
       <VoiceRoomBackdrop backgroundUrl={(roomData as any)?.background_url} />
       {/* Animated Particles */}
