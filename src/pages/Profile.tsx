@@ -589,6 +589,21 @@ const Profile = () => {
           )}
 
 
+          {/* Posts section */}
+          {profile?.id && (
+            <div className="mt-6">
+              <h3 className="text-sm font-black text-accent mb-3 flex items-center gap-2">
+                📝 منشوراتي
+              </h3>
+              <UserPostsSection
+                profileUserId={profile.id}
+                currentUserId={profile.id}
+                authorName={profile?.display_name}
+                authorAvatar={profile?.avatar_url}
+              />
+            </div>
+          )}
+
           {/* Hint to redirect to home for actions */}
           <button
             onClick={() => navigate("/")}
