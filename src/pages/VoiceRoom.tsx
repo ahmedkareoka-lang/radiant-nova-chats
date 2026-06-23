@@ -1576,7 +1576,7 @@ const VoiceRoom = () => {
         roomId={roomId || undefined}
       />
       <InventorySheet open={showInventory} onClose={() => setShowInventory(false)} />
-      <NeonCoinStorm open={showCoinStorm} onClose={() => setShowCoinStorm(false)} />
+      <NeonCoinStorm open={showCoinStorm} onClose={() => setShowCoinStorm(false)} currentUserId={currentUserId} />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />
