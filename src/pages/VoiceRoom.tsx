@@ -789,7 +789,7 @@ const VoiceRoom = () => {
   return (
     <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
       {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
-      <VoiceRoomBackdrop />
+      <VoiceRoomBackdrop backgroundUrl={(roomData as any)?.background_url} />
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
 
@@ -1046,7 +1046,7 @@ const VoiceRoom = () => {
             <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
             <h3 className="font-bold text-sm text-center">⚙️ إعدادات الغرفة</h3>
 
-            {/* Edit Room Name */}
+            {/* Edit Room Name + Avatar + Custom Background (host only) */}
             <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
               <span className="text-xs font-bold">اسم الغرفة</span>
               <div className="flex gap-2">
@@ -1066,6 +1066,64 @@ const VoiceRoom = () => {
                 }} className="px-3 py-2 rounded-lg gradient-neon text-primary-foreground text-xs font-bold">
                   حفظ
                 </button>
+              </div>
+
+              {/* Room avatar (shows on home page room cards) */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-bold">صورة الغرفة (تظهر للجميع)</span>
+                <label className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground text-[10px] font-bold cursor-pointer">
+                  📷 تغيير الصورة
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f || !roomId) return;
+                      if (f.size > 5 * 1024 * 1024) { toast.error("الصورة أكبر من 5MB"); return; }
+                      const url = await mediaUpload.upload({ file: f, fileType: "image", folder: `rooms/${roomId}/avatar` });
+                      if (!url) return;
+                      const { error } = await supabase.from("rooms").update({ room_image: url }).eq("id", roomId);
+                      if (error) { toast.error("فشل التحديث"); return; }
+                      toast.success("تم تحديث صورة الغرفة ✅");
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Custom background image */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-bold">خلفية مخصصة للغرفة</span>
+                <div className="flex gap-2">
+                  {(roomData as any)?.background_url && (
+                    <button
+                      onClick={async () => {
+                        if (!roomId) return;
+                        await supabase.from("rooms").update({ background_url: null } as any).eq("id", roomId);
+                        toast.success("تمت إزالة الخلفية");
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-destructive/20 text-destructive text-[10px] font-bold"
+                    >إزالة</button>
+                  )}
+                  <label className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-[10px] font-bold cursor-pointer">
+                    🖼️ رفع خلفية
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f || !roomId) return;
+                        if (f.size > 8 * 1024 * 1024) { toast.error("الصورة أكبر من 8MB"); return; }
+                        const url = await mediaUpload.upload({ file: f, fileType: "image", folder: `rooms/${roomId}/bg` });
+                        if (!url) return;
+                        const { error } = await supabase.from("rooms").update({ background_url: url } as any).eq("id", roomId);
+                        if (error) { toast.error("فشل التحديث"); return; }
+                        toast.success("تم تحديث خلفية الغرفة ✨");
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
