@@ -1255,7 +1255,7 @@ const VoiceRoom = () => {
       {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
       <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
         {/* Top fixed region: PK + couple seats + host info + mic grid (no page scroll) */}
-        <div className="shrink-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+        <div className="shrink-0 overflow-y-auto max-h-[58%]" style={{ scrollbarWidth: "none" }}>
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
           <div className="mb-4 flex items-start gap-2">
