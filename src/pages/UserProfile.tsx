@@ -99,7 +99,8 @@ const UserProfile = () => {
   const directFrameImage = (!frameImage && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/"))) ? frameKey : null;
   const finalFrame = frameImage || directFrameImage;
   const isMe = currentUserId === userId;
-  const tabs = ["الصفحة الشخصية", "بطاقة العلاقات", "الألعاب"];
+  const tabs = ["الصفحة الشخصية", "المنشورات", "بطاقة العلاقات", "الألعاب"];
+  const tabKeys = ["personal", "posts", "relations", "games"];
 
   return (
     <PageTransition>
