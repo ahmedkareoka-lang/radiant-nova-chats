@@ -302,14 +302,16 @@ const App = () => {
           ) : (
             <BrowserRouter>
               <ActiveRoomProvider>
-                <CatalogPrefetcher />
-                <AnimatedRoutes />
-                <FloatingRoomBubble />
-                <GlobalGiftTicker />
-                <LegendaryGiftExplosion />
-                <LevelUpRoot />
-                <AgoraDebugPanel />
-                <PerfDebugPanel />
+                <AgoraVoiceProvider>
+                  <CatalogPrefetcher />
+                  <AnimatedRoutes />
+                  <FloatingRoomBubble />
+                  <GlobalGiftTicker />
+                  <LegendaryGiftExplosion />
+                  <LevelUpRoot />
+                  <AgoraDebugPanel />
+                  <PerfDebugPanel />
+                </AgoraVoiceProvider>
               </ActiveRoomProvider>
             </BrowserRouter>
           )}
