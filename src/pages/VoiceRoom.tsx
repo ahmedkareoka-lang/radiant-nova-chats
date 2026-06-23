@@ -1279,7 +1279,7 @@ const VoiceRoom = () => {
 
         {/* Host Info Banner with Top 3 Senders strip */}
         {host && (
-          <div className="mb-6">
+          <div className="mb-2">
             <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
               <div className="relative">
                 <img loading="lazy" decoding="async" src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
