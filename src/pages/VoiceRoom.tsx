@@ -416,6 +416,7 @@ const VoiceRoom = () => {
   };
 
   const handleLeave = async () => {
+    leavingRef.current = true;
     await leaveRoom();
     closeRoom();
     navigate("/");
