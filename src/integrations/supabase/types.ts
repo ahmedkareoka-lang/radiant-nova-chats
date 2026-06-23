@@ -883,33 +883,6 @@ export type Database = {
         }
         Relationships: []
       }
-      nova_p_monthly_history: {
-        Row: {
-          achieved_at: string
-          highest_level: number
-          id: string
-          total_gold_earned: number
-          user_id: string
-          year_month: string
-        }
-        Insert: {
-          achieved_at?: string
-          highest_level?: number
-          id?: string
-          total_gold_earned?: number
-          user_id: string
-          year_month: string
-        }
-        Update: {
-          achieved_at?: string
-          highest_level?: number
-          id?: string
-          total_gold_earned?: number
-          user_id?: string
-          year_month?: string
-        }
-        Relationships: []
-      }
       payroll_audit_log: {
         Row: {
           action_type: string
@@ -946,6 +919,52 @@ export type Database = {
         }
         Relationships: []
       }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_likes: {
         Row: {
           created_at: string
@@ -975,26 +994,81 @@ export type Database = {
           },
         ]
       }
+      post_reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reason?: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
+          comment_count: number
           content: string
           created_at: string
           id: string
           image_url: string | null
+          is_hidden: boolean
           user_id: string
         }
         Insert: {
+          comment_count?: number
           content?: string
           created_at?: string
           id?: string
           image_url?: string | null
+          is_hidden?: boolean
           user_id: string
         }
         Update: {
+          comment_count?: number
           content?: string
           created_at?: string
           id?: string
           image_url?: string | null
+          is_hidden?: boolean
           user_id?: string
         }
         Relationships: []
@@ -1059,8 +1133,6 @@ export type Database = {
           is_host: boolean
           is_verified: boolean
           level: number
-          nova_p_expiry: string | null
-          nova_p_level: number
           phone: string | null
           telegram_first_name: string | null
           telegram_id: number | null
@@ -1103,8 +1175,6 @@ export type Database = {
           is_host?: boolean
           is_verified?: boolean
           level?: number
-          nova_p_expiry?: string | null
-          nova_p_level?: number
           phone?: string | null
           telegram_first_name?: string | null
           telegram_id?: number | null
@@ -1147,8 +1217,6 @@ export type Database = {
           is_host?: boolean
           is_verified?: boolean
           level?: number
-          nova_p_expiry?: string | null
-          nova_p_level?: number
           phone?: string | null
           telegram_first_name?: string | null
           telegram_id?: number | null
@@ -1532,6 +1600,7 @@ export type Database = {
       rooms: {
         Row: {
           background_theme: string
+          background_url: string | null
           created_at: string
           host_id: string
           id: string
@@ -1547,6 +1616,7 @@ export type Database = {
         }
         Insert: {
           background_theme?: string
+          background_url?: string | null
           created_at?: string
           host_id: string
           id?: string
@@ -1562,6 +1632,7 @@ export type Database = {
         }
         Update: {
           background_theme?: string
+          background_url?: string | null
           created_at?: string
           host_id?: string
           id?: string
@@ -1834,8 +1905,6 @@ export type Database = {
           is_boss: boolean | null
           is_host: boolean | null
           level: number | null
-          nova_p_expiry: string | null
-          nova_p_level: number | null
           user_id: string | null
           vip_expiry: string | null
           vip_level: number | null
@@ -1858,8 +1927,6 @@ export type Database = {
           is_boss?: boolean | null
           is_host?: boolean | null
           level?: number | null
-          nova_p_expiry?: string | null
-          nova_p_level?: number | null
           user_id?: string | null
           vip_expiry?: string | null
           vip_level?: number | null
@@ -1882,8 +1949,6 @@ export type Database = {
           is_boss?: boolean | null
           is_host?: boolean | null
           level?: number | null
-          nova_p_expiry?: string | null
-          nova_p_level?: number | null
           user_id?: string | null
           vip_expiry?: string | null
           vip_level?: number | null
@@ -2048,13 +2113,6 @@ export type Database = {
       get_my_pending_invites: { Args: never; Returns: Json }
       get_my_phone: { Args: never; Returns: string }
       get_my_sent_invites: { Args: never; Returns: Json }
-      get_nova_p_tier: {
-        Args: { gold_amount: number }
-        Returns: {
-          duration_days: number
-          level: number
-        }[]
-      }
       get_profile_safe_fields: {
         Args: { _profile_id: string }
         Returns: {
@@ -2139,7 +2197,6 @@ export type Database = {
         Returns: undefined
       }
       purchase_vip: { Args: { _level: number }; Returns: Json }
-      recompute_nova_p: { Args: { _user_id: string }; Returns: undefined }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
       redeem_code: { Args: { _code: string }; Returns: Json }
       reject_relationship_request: {

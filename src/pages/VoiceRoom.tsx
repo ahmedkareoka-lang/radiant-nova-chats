@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package } from "lucide-react";
-import NovaCup from "@/components/NovaCup";
+
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
 import PKChallenge from "@/components/PKChallenge";
@@ -40,6 +40,7 @@ import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
@@ -104,6 +105,7 @@ const VoiceRoom = () => {
   const { t, locale } = useLanguage();
   const rechargeAgentSet = useRechargeAgentSet();
   const bdSet = useBDSet();
+  const mediaUpload = useMediaUpload();
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
@@ -297,16 +299,13 @@ const VoiceRoom = () => {
       }
 
       const p = m.profile as any;
-      const novaLvl = p.nova_p_level || 0;
       const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
-      // Stable, deterministic id: same member = same id across clients (no Date.now())
       additions.push({
         id: `entrance-${m.user_id}-${(m as any).joined_at || ""}`,
         displayName: m.profile!.display_name,
         avatarUrl: m.profile!.avatar_url,
         videoUrl: entranceMedia,
         audioUrl: p.entrance_audio_url || null,
-        novaLevel: novaLvl,
         vipLevel: m.profile!.vip_level || 0,
       });
     }
@@ -374,9 +373,8 @@ const VoiceRoom = () => {
         id: `vip-switch-${m.user_id}-${lvl}-${Date.now()}`,
         displayName: p.display_name,
         avatarUrl: p.avatar_url,
-        videoUrl: null, // force the VIP-styled name banner
+        videoUrl: null,
         audioUrl: null,
-        novaLevel: p.nova_p_level || 0,
         vipLevel: lvl,
       });
     }
@@ -793,7 +791,7 @@ const VoiceRoom = () => {
   return (
     <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
       {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
-      <VoiceRoomBackdrop />
+      <VoiceRoomBackdrop backgroundUrl={(roomData as any)?.background_url} />
       {/* Animated Particles */}
       <RoomParticles theme={currentTheme.id} />
 
@@ -1050,7 +1048,7 @@ const VoiceRoom = () => {
             <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto" />
             <h3 className="font-bold text-sm text-center">⚙️ إعدادات الغرفة</h3>
 
-            {/* Edit Room Name */}
+            {/* Edit Room Name + Avatar + Custom Background (host only) */}
             <div className="bg-secondary/50 rounded-xl p-3 space-y-2">
               <span className="text-xs font-bold">اسم الغرفة</span>
               <div className="flex gap-2">
@@ -1070,6 +1068,64 @@ const VoiceRoom = () => {
                 }} className="px-3 py-2 rounded-lg gradient-neon text-primary-foreground text-xs font-bold">
                   حفظ
                 </button>
+              </div>
+
+              {/* Room avatar (shows on home page room cards) */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-bold">صورة الغرفة (تظهر للجميع)</span>
+                <label className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground text-[10px] font-bold cursor-pointer">
+                  📷 تغيير الصورة
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f || !roomId) return;
+                      if (f.size > 5 * 1024 * 1024) { toast.error("الصورة أكبر من 5MB"); return; }
+                      const url = await mediaUpload.upload({ file: f, fileType: "image", folder: `rooms/${roomId}/avatar` });
+                      if (!url) return;
+                      const { error } = await supabase.from("rooms").update({ room_image: url }).eq("id", roomId);
+                      if (error) { toast.error("فشل التحديث"); return; }
+                      toast.success("تم تحديث صورة الغرفة ✅");
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Custom background image */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-bold">خلفية مخصصة للغرفة</span>
+                <div className="flex gap-2">
+                  {(roomData as any)?.background_url && (
+                    <button
+                      onClick={async () => {
+                        if (!roomId) return;
+                        await supabase.from("rooms").update({ background_url: null } as any).eq("id", roomId);
+                        toast.success("تمت إزالة الخلفية");
+                      }}
+                      className="px-2.5 py-1.5 rounded-lg bg-destructive/20 text-destructive text-[10px] font-bold"
+                    >إزالة</button>
+                  )}
+                  <label className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-[10px] font-bold cursor-pointer">
+                    🖼️ رفع خلفية
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f || !roomId) return;
+                        if (f.size > 8 * 1024 * 1024) { toast.error("الصورة أكبر من 8MB"); return; }
+                        const url = await mediaUpload.upload({ file: f, fileType: "image", folder: `rooms/${roomId}/bg` });
+                        if (!url) return;
+                        const { error } = await supabase.from("rooms").update({ background_url: url } as any).eq("id", roomId);
+                        if (error) { toast.error("فشل التحديث"); return; }
+                        toast.success("تم تحديث خلفية الغرفة ✨");
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -1189,7 +1245,6 @@ const VoiceRoom = () => {
             <div className="flex-1">
               <PKChallenge roomId={roomId} isHost={isHost} members={members} />
             </div>
-            <NovaCup roomId={roomId} />
           </div>
         )}
 
@@ -1383,7 +1438,7 @@ const VoiceRoom = () => {
                   ) : (
                     <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
                       <span className="inline-flex items-center gap-1 align-middle mr-1">
-                        <DualBadge novaLevel={(msg.sender as any)?.nova_p_level || 0} vipLevel={msg.sender?.vip_level || 0} />
+                        <DualBadge vipLevel={msg.sender?.vip_level || 0} />
                       </span>
                       <span className={`font-bold ${isBossMsg ? "boss-fire-text" : "text-primary"}`}>
                         {isBossMsg ? (

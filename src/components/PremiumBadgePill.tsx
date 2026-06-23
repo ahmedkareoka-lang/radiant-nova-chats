@@ -1,28 +1,31 @@
 import { ReactNode } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 /**
  * Unified premium badge pill — STATIC (no motion), heavy multi-layer glow,
  * metallic gradient body, inner shine line, rim light, outer halo.
- * All role badges (Agent / Host / Recharge Agent / BD / VIP) reuse this look
+ * All role badges (Agent / Host / Recharge Agent / BD) reuse this look
  * so they feel like a coherent legendary set.
+ *
+ * Pass `title` (and optional `description`) to attach a tooltip showing
+ * the badge's name and short explanation on hover/long-press.
  */
 
 type Size = "sm" | "md" | "lg";
 
 interface Props {
-  /** HSL string without `hsl()` wrap, e.g. "45 100% 55%" */
   hue1: string;
   hue2: string;
-  /** Glow color (HSL no wrap) */
   glow: string;
-  /** Optional accent for rim (HSL no wrap). Defaults to glow. */
   rim?: string;
   size?: Size;
-  /** Optional left icon node */
   icon?: ReactNode;
-  /** Label content */
   children: ReactNode;
   className?: string;
+  /** Tooltip headline (badge full name) */
+  title?: string;
+  /** Tooltip subtitle (short description) */
+  description?: string;
 }
 
 const SIZE_CLS: Record<Size, string> = {
@@ -32,20 +35,13 @@ const SIZE_CLS: Record<Size, string> = {
 };
 
 const PremiumBadgePill = ({
-  hue1,
-  hue2,
-  glow,
-  rim,
-  size = "md",
-  icon,
-  children,
-  className = "",
+  hue1, hue2, glow, rim, size = "md", icon, children, className = "", title, description,
 }: Props) => {
   const rimColor = rim || glow;
-  return (
+  const chip = (
     <span
       className={`relative inline-flex items-center ${SIZE_CLS[size]} font-black text-white rounded-full
-        whitespace-nowrap select-none ${className}`}
+        whitespace-nowrap select-none ${title ? "cursor-help" : ""} ${className}`}
       style={{
         background: `linear-gradient(135deg, hsl(${hue1}) 0%, hsl(${hue2}) 50%, hsl(${hue1}) 100%)`,
         border: `1.5px solid hsl(${rimColor} / 0.9)`,
@@ -60,23 +56,31 @@ const PremiumBadgePill = ({
         textShadow: `0 0 6px hsl(${glow} / 0.9), 0 1px 1px hsl(0 0% 0% / 0.5)`,
       }}
     >
-      {/* glossy top highlight */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-1 top-0 h-1/2 rounded-t-full opacity-50"
-        style={{
-          background:
-            "linear-gradient(to bottom, hsl(0 0% 100% / 0.55), transparent)",
-        }}
+        style={{ background: "linear-gradient(to bottom, hsl(0 0% 100% / 0.55), transparent)" }}
       />
       {icon && (
-        <span className="relative inline-flex items-center justify-center drop-shadow-[0_0_4px_currentColor]">
-          {icon}
-        </span>
+        <span className="relative inline-flex items-center justify-center drop-shadow-[0_0_4px_currentColor]">{icon}</span>
       )}
       <span className="relative tracking-wider">{children}</span>
     </span>
   );
+
+  if (!title) return chip;
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>{chip}</TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[220px] text-center">
+          <div className="font-bold text-sm">{title}</div>
+          {description && <div className="text-[10px] opacity-80 mt-0.5">{description}</div>}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 };
 
 export default PremiumBadgePill;
+

@@ -24,7 +24,7 @@ import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+
 
 const wealthThreshold = (lvl: number) => {
   if (lvl < 10) return 100_000;
@@ -164,7 +164,7 @@ const UserProfile = () => {
               {isBoss ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">🔥 BOSS</span>
               ) : (
-                <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
+                <DualBadge vipLevel={profile?.vip_level || 0} />
               )}
               {profile?.is_agent && <AgentBadge size="md" />}
               {profile?.is_host && <HostBadge size="md" />}
@@ -265,48 +265,7 @@ const UserProfile = () => {
             <div className="mt-4 pb-10">
               {activeTab === "personal" && (
                 <div className="space-y-3">
-                  {/* NOVA P card */}
-                  {(() => {
-                    const novaLvl = profile?.nova_p_level || 0;
-                    const totalGold = profile?.total_spend_gold || 0;
-                    const novaProgress = getNovaProgress(totalGold);
-                    const novaAsset = novaLvl > 0 ? getNovaAsset(novaLvl) : null;
-                    return (
-                      <div className="w-full text-right rounded-3xl border border-accent/30 p-4 relative overflow-hidden"
-                        style={{ background: "linear-gradient(135deg, hsl(280 60% 18% / 0.85), hsl(260 50% 14% / 0.85) 50%, hsl(45 70% 22% / 0.7))" }}>
-                        <div className="absolute inset-0 opacity-30 pointer-events-none"
-                          style={{ background: "radial-gradient(circle at 80% 20%, hsl(45 90% 55% / 0.4), transparent 60%)" }} />
-                        <div className="relative flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-                              style={{ background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(280 80% 50%))" }}>
-                              <Crown className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-black text-sm text-foreground flex items-center gap-1.5">
-                                NOVA P
-                                {novaAsset && (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-accent/30 text-accent font-black">{novaAsset.label}</span>
-                                )}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {novaLvl > 0 ? `إجمالي الذهب: ${totalGold.toLocaleString()}` : "لم يصل لأي مستوى بعد"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        {novaProgress.nextThreshold && (
-                          <div className="relative mt-3">
-                            <div className="h-2 rounded-full bg-background/40 overflow-hidden">
-                              <div className="h-full rounded-full transition-all"
-                                style={{ width: `${novaProgress.pct}%`, background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(280 80% 60%))" }} />
-                            </div>
-                            <p className="text-[9px] text-muted-foreground mt-1">التقدّم نحو P{novaProgress.nextLevel}: {Math.round(novaProgress.pct)}%</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  {/* NOVA P card removed */}
 
                   {/* Wealth & Charm progress */}
                   {(() => {

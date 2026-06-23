@@ -33,7 +33,7 @@ export interface RoomUserProfileData {
   charisma_xp?: number;
   equipped_frame?: string | null;
   equipped_badge?: string | null;
-  nova_p_level?: number;
+  
   gender?: string | null;
   country?: string | null;
   is_online?: boolean;
@@ -199,9 +199,8 @@ export default function RoomUserProfileCard({
 
         {/* Showcase Badges – same components used in Profile page */}
         {(() => {
-          const hasVipOrNova = (profile.vip_level || 0) > 0 || (profile.nova_p_level || 0) > 0;
-          const count =
-            (hasVipOrNova ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0);
+          const hasVip = (profile.vip_level || 0) > 0;
+          const count = (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0);
           return (
             <div className="rounded-2xl bg-gradient-to-b from-white/5 to-white/[0.02] border border-white/10 p-3">
               <div className="flex items-center justify-between mb-3">
@@ -216,12 +215,7 @@ export default function RoomUserProfileCard({
                 </p>
               ) : (
                 <div className="flex items-center justify-center gap-2 flex-wrap">
-                  {hasVipOrNova && (
-                    <DualBadge
-                      novaLevel={profile.nova_p_level || 0}
-                      vipLevel={profile.vip_level || 0}
-                    />
-                  )}
+                  {hasVip && <DualBadge vipLevel={profile.vip_level || 0} />}
                   {isRechargeAgent && <RechargeAgentBadge size="md" />}
                   {isBD && <BDBadge size="md" />}
                 </div>

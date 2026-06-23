@@ -28,7 +28,7 @@ import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 // LevelTable hidden per design — kept import removed
-import { getNovaAsset, getNovaProgress } from "@/lib/novaAssets";
+
 
 // Wealth XP thresholds per level — EXTREME difficulty curve (Lv 1 → 100)
 // Designed so reaching Lv 100 requires multi-million long-term spending.
@@ -60,7 +60,7 @@ const charmThreshold = (lvl: number) => {
 
 const PROFILE_PUBLIC_FIELDS = `
   id, user_id, display_name, avatar_url, cover_url, gender, age, country_code,
-  coins, diamonds, level, vip_level, vip_expiry, displayed_vip_level, nova_p_level, nova_p_expiry,
+  coins, diamonds, level, vip_level, vip_expiry, displayed_vip_level,
   wealth_level, wealth_xp, charisma_level, charisma_xp, total_spend_gold,
   is_boss, is_verified, is_agent, is_host, is_bd, agency_eligible, agency_id,
   equipped_frame, equipped_badge, equipped_chat_bubble,
@@ -383,7 +383,7 @@ const Profile = () => {
               {isBoss ? (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold">🔥 BOSS</span>
               ) : (
-                <DualBadge novaLevel={profile?.nova_p_level || 0} vipLevel={profile?.vip_level || 0} />
+                <DualBadge vipLevel={profile?.vip_level || 0} />
               )}
               {profile?.is_agent && <AgentBadge size="md" />}
               {profile?.is_host && <HostBadge size="md" />}
@@ -425,66 +425,7 @@ const Profile = () => {
 
           {/* (Love couple badge moved next to Backpack below) */}
 
-          {(() => {
-            const novaLvl = profile?.nova_p_level || 0;
-            const totalGold = profile?.total_spend_gold || 0;
-            const novaProgress = getNovaProgress(totalGold);
-            const novaAsset = novaLvl > 0 ? getNovaAsset(novaLvl) : null;
-            return (
-              <button
-                onClick={() => navigate("/nova-p")}
-                className="mt-4 w-full text-right rounded-3xl border border-accent/30 p-4 relative overflow-hidden group"
-                style={{
-                  background:
-                    "linear-gradient(135deg, hsl(280 60% 18% / 0.85), hsl(260 50% 14% / 0.85) 50%, hsl(45 70% 22% / 0.7))",
-                }}
-              >
-                <div className="absolute inset-0 opacity-30 pointer-events-none"
-                  style={{ background: "radial-gradient(circle at 80% 20%, hsl(45 90% 55% / 0.4), transparent 60%)" }} />
-                <div className="relative flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-                      style={{ background: "linear-gradient(135deg, hsl(45 95% 55%), hsl(280 80% 50%))" }}>
-                      <Crown className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-black text-sm text-foreground flex items-center gap-1.5">
-                        NOVA P
-                        {novaAsset && (
-                          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-accent/30 text-accent font-black">
-                            {novaAsset.label}
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {novaLvl > 0
-                          ? `إجمالي الذهب: ${totalGold.toLocaleString()}`
-                          : "لم تصل لأي مستوى بعد - أرسل هدايا لتفعيله"}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180 shrink-0" />
-                </div>
-                {/* Progress bar */}
-                {novaProgress.nextThreshold && (
-                  <div className="relative mt-3">
-                    <div className="h-2 rounded-full bg-background/40 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${novaProgress.pct}%`,
-                          background: "linear-gradient(90deg, hsl(45 90% 55%), hsl(280 80% 60%))",
-                        }}
-                      />
-                    </div>
-                    <p className="text-[9px] text-muted-foreground mt-1">
-                      التقدّم نحو P{novaProgress.nextLevel}: {Math.round(novaProgress.pct)}%
-                    </p>
-                  </div>
-                )}
-              </button>
-            );
-          })()}
+          {/* NOVA P card removed */}
 
           {/* === Wealth & Charm progress bars (show remaining XP to next level) === */}
           {(() => {

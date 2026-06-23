@@ -384,60 +384,7 @@ const StorePage = () => {
           {filteredCatalogFrames.length > 0 && renderCatalogSection("إطارات أسطورية", "🖼️", "frame", filteredCatalogFrames)}
           {filteredCatalogGifts.length > 0 && renderCatalogSection("هدايا فاخرة", "🎁", "gift", filteredCatalogGifts)}
           {filteredCatalogEntrances.length > 0 && renderCatalogSection("دخوليات أسطورية", "🚪", "entrance", filteredCatalogEntrances)}
-          {[1, 2, 3, 4, 5, 6].map((tier) => {
-            const items = adminItems.filter((it) => it.tier_type === "nova_p" && (it.tier_required || 0) === tier);
-            if (items.length === 0) return null;
-            return (
-              <div key={`nova-${tier}`} className="space-y-2">
-                <h2 className="font-bold text-sm flex items-center gap-2 text-purple-300">
-                  👑 عناصر NOVA P{tier}
-                </h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {items.map((item) => {
-                    const owned = ownedItemNames.has(item.name);
-                    const equipped = item.type === "frame" && profile?.equipped_frame === item.image_url;
-                    return (
-                    <div key={item.id} className={`card-nova p-4 text-center space-y-2 border ${equipped ? "border-primary glow-neon" : "border-purple-400/40"} shadow-[0_0_20px_hsl(280_90%_60%/0.3)]`}>
-                      {item.image_url && (
-                        <div className="w-24 h-24 mx-auto"><img src={item.image_url} alt={item.name} className="w-full h-full object-contain" loading="lazy" decoding="async" /></div>
-                      )}
-                      <p className="font-bold text-xs">{item.name}</p>
-                      <p className="text-[9px] text-purple-300 font-bold">عنصر NOVA P{tier} ✨</p>
-                      <div className="flex items-center justify-center gap-1">
-                        <CurrencyIcon type="gold" size="xs" />
-                        <span className="text-xs font-bold text-accent">{Number(item.price_coins).toLocaleString()}</span>
-                      </div>
-                      {owned ? (
-                        <button
-                          onClick={() => toggleEquipItem(item.type, item)}
-                          className={`w-full py-1.5 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 ${isEquippedItem(item.type, item) ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground border border-border"}`}
-                        >
-                          {isEquippedItem(item.type, item) ? <Check className="w-3 h-3" /> : <Shirt className="w-3 h-3" />}
-                          {isEquippedItem(item.type, item) ? "خلع" : "تجهيز"}
-                        </button>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <button
-                            onClick={() => setPreviewItem({ ...item, _tierType: "nova_p", _tier: tier })}
-                            className="py-1.5 rounded-xl border border-purple-400/50 text-purple-200 text-[10px] font-bold flex items-center justify-center gap-1 hover:bg-purple-400/10 transition"
-                          >
-                            <Eye className="w-3 h-3" /> معاينة
-                          </button>
-                          <button
-                            onClick={() => buyAdminItem(item)}
-                            className="py-1.5 rounded-xl gradient-neon text-primary-foreground text-[10px] font-bold btn-nova"
-                          >
-                            شراء
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+          {/* NOVA P store items removed */}
 
           {/* VIP items (grouped by tier) — anyone can buy */}
           {[1, 2, 3, 4, 5, 6, 7].map((tier) => {
@@ -581,10 +528,8 @@ const StorePage = () => {
                   <p className="font-bold text-base">{profile?.display_name || "أنت"}</p>
                   <div className="flex justify-center">
                     <DualBadge
-                      novaLevel={previewItem._tierType === "nova_p" ? previewItem._tier : (profile?.nova_p_level || 0)}
                       vipLevel={previewItem._tierType === "vip" ? previewItem._tier : (profile?.vip_level || 0)}
                       size="md"
-                      luxury
                     />
                   </div>
                   {/* Badge / entrance / other type preview */}
