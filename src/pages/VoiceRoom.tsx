@@ -1257,9 +1257,10 @@ const VoiceRoom = () => {
       {/* Treasure Box (auto-trigger at 300K daily room support) */}
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
-      {/* Voice Room Area */}
       {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
       <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
+        {/* Top fixed region: PK + couple seats + host info + mic grid (no page scroll) */}
+        <div className="shrink-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
           <div className="mb-4 flex items-start gap-2">
