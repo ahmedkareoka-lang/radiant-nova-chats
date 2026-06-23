@@ -40,6 +40,7 @@ import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
@@ -104,6 +105,7 @@ const VoiceRoom = () => {
   const { t, locale } = useLanguage();
   const rechargeAgentSet = useRechargeAgentSet();
   const bdSet = useBDSet();
+  const mediaUpload = useMediaUpload();
 
   const [isMuted, setIsMuted] = useState(false);
   const [showGifts, setShowGifts] = useState(false);
