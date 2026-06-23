@@ -91,11 +91,14 @@ const ChatPage = () => {
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {conversations.slice(0, 6).map((conv) => (
                 <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <button onClick={() => navigate(`/user?id=${conv.other_user.id}`)} className="party-avatar-ring">
-                    <div className="w-14 h-14 rounded-full overflow-hidden bg-background">
-                      <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  </button>
+                  <LiveAvatar
+                    avatarUrl={conv.other_user.avatar_url}
+                    activeRoom={liveMap[conv.other_user.id]}
+                    size={56}
+                    ringClassName="ring-2 ring-primary/40"
+                    onAvatarClick={() => navigate(`/user?id=${conv.other_user.id}`)}
+                    showOnlineDot={false}
+                  />
                   <span className="text-[9px] text-muted-foreground max-w-[60px] truncate text-center">{conv.other_user.display_name}</span>
                 </div>
               ))}
