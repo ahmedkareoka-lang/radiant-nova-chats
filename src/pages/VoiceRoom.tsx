@@ -16,7 +16,7 @@ import DualBadge from "@/components/DualBadge";
 import VipName from "@/components/VipName";
 import BossEntrance from "@/components/BossEntrance";
 import { useVoiceRoom } from "@/hooks/useVoiceRoom";
-import { useAgoraVoice } from "@/hooks/useAgoraVoice";
+import { useAgoraVoiceState } from "@/contexts/AgoraVoiceProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -107,7 +107,8 @@ const VoiceRoom = () => {
   const bdSet = useBDSet();
   const mediaUpload = useMediaUpload();
 
-  const [isMuted, setIsMuted] = useState(false);
+  // Mic muted state lives in the global Agora provider so it survives navigation
+  const { isMuted, setIsMuted, connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoiceState();
   const [showGifts, setShowGifts] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
@@ -186,13 +187,7 @@ const VoiceRoom = () => {
   const lockedSlots: number[] = (roomData as any)?.locked_slots || [];
   const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
-  // Voice (Agora)
-  const { connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoice({
-    roomId,
-    currentUserId,
-    isOnMic,
-    isMuted,
-  });
+  // Agora state comes from the global provider — see line 110.
 
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
