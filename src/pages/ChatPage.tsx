@@ -23,6 +23,7 @@ const ChatPage = () => {
   const [showAI, setShowAI] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { unreadCount } = useNotifications();
+  const liveMap = useUsersActiveRoom(conversations.map((c) => c.other_user.id));
 
   useEffect(() => {
     const conv = searchParams.get("conv");
@@ -44,7 +45,6 @@ const ChatPage = () => {
   const filtered = conversations.filter((c) =>
     c.other_user.display_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const liveMap = useUsersActiveRoom(conversations.map((c) => c.other_user.id));
 
   return (
     <div className="min-h-screen pb-20">
