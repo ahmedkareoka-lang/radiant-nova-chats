@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfileStore } from "@/stores/profileStore";
-import { Zap, Coins, X } from "lucide-react";
+import { Zap, X } from "lucide-react";
+import novaCoin3d from "@/assets/nova-coin-3d.png";
 
 interface NeonCoinStormProps {
   open: boolean;
@@ -32,6 +33,7 @@ interface Coin {
   drift: number;
   rotate: number;
   size: number;
+  value: number;
 }
 
 interface Pop {
@@ -86,32 +88,35 @@ export default function NeonCoinStorm({
         toast.error(`رصيدك غير كافٍ! تحتاج ${tier.cost.toLocaleString()} كوين`);
         return;
       }
-      // Deduct cost atomically (only succeeds if balance is still enough).
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ coins: balance - tier.cost })
-        .eq("id", currentUserId)
-        .gte("coins", tier.cost)
-        .select("coins")
-        .single();
-      if (error || !data) {
-        toast.error("تعذر خصم الرصيد");
+      // Only 5% of the tier cost is actually deducted from the launcher;
+      // the remaining 95% becomes the prize pool that rains for everyone.
+      const fee = Math.max(1, Math.ceil(tier.cost * 0.05));
+      const pool = tier.cost - fee;
+
+      const { error } = await supabase.rpc("deduct_coins", {
+        _user_id: currentUserId,
+        _amount: fee,
+      });
+      if (error) {
+        toast.error(error.message || "تعذر خصم الرصيد");
         return;
       }
-      setProfile({ coins: data.coins });
+      setProfile({ coins: balance - fee });
 
       setSelectedTier(tier);
       setPhase("storm");
 
-      // Generate coins falling from sky
+      // Distribute the pool across the falling coins
+      const perCoin = Math.max(1, Math.floor(pool / tier.coins));
       const next: Coin[] = Array.from({ length: tier.coins }, (_, i) => ({
         id: i,
-        x: Math.random() * 92 + 2, // vw
+        x: Math.random() * 92 + 2,
         delay: Math.random() * 3,
         duration: 3 + Math.random() * 2.5,
         drift: (Math.random() - 0.5) * 30,
         rotate: 360 + Math.random() * 720,
-        size: 34 + Math.random() * 26,
+        size: 38 + Math.random() * 24,
+        value: perCoin,
       }));
       setCoins(next);
 
@@ -127,8 +132,14 @@ export default function NeonCoinStorm({
       setTimeout(() => {
         if (closedRef.current) return;
         closedRef.current = true;
+        const winnings = collectedRef.current;
+        if (winnings > 0 && currentUserId) {
+          supabase.rpc("add_coins", { _user_id: currentUserId, _amount: winnings }).then(() => {
+            setProfile({ coins: (useProfileStore.getState().profile?.coins ?? 0) + winnings });
+          });
+        }
         toast.success(
-          `انتهت ${tier.label}! جمعت ${collectedRef.current} كوين ⚡`,
+          `انتهت ${tier.label}! جمعت ${winnings.toLocaleString()} كوين ⚡`,
           { description: "The storm has ended!" }
         );
         thunderRef.current?.pause();
@@ -151,7 +162,7 @@ export default function NeonCoinStorm({
     setPops((p) => [...p, { id: popId, x, y }]);
     setTimeout(() => setPops((p) => p.filter((pp) => pp.id !== popId)), 500);
     setCoins((cs) => cs.filter((c) => c.id !== coin.id));
-    setCollected((n) => n + 1);
+    setCollected((n) => n + coin.value);
     try {
       if (popAudioRef.current) {
         const a = popAudioRef.current.cloneNode(true) as HTMLAudioElement;
@@ -233,7 +244,7 @@ export default function NeonCoinStorm({
               <div className="mt-3 mb-4 flex items-center justify-between px-3 py-2 rounded-xl bg-black/40 border border-white/10">
                 <span className="text-[11px] text-white/70">رصيدك</span>
                 <div className="flex items-center gap-1.5 text-amber-300 font-bold">
-                  <Coins className="w-4 h-4" />
+                  <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
                   <span>{balance.toLocaleString()}</span>
                 </div>
               </div>
@@ -263,10 +274,10 @@ export default function NeonCoinStorm({
                       <div className="relative">
                         <div className="text-white font-bold text-sm mb-0.5">{tier.label}</div>
                         <div className="text-[10px] text-white/70 mb-2">
-                          {tier.coins} كوين متطاير
+                          {tier.coins} كوين متطاير • رسوم 5%
                         </div>
                         <div className="flex items-center gap-1 text-amber-300 font-extrabold text-sm">
-                          <Coins className="w-3.5 h-3.5" />
+                          <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
                           {tier.cost.toLocaleString()}
                         </div>
                       </div>
@@ -385,8 +396,9 @@ function StormOverlay({
         transition={{ delay: 0.25 }}
         className="absolute top-16 left-1/2 -translate-x-1/2 z-[112] pointer-events-none"
       >
-        <div className="px-4 py-1.5 rounded-full bg-black/70 border border-fuchsia-400/60 shadow-[0_0_22px_rgba(217,70,239,0.6)] text-white font-bold text-xs">
-          Coins Collected: +{collected} 🪙
+        <div className="px-4 py-1.5 rounded-full bg-black/70 border border-fuchsia-400/60 shadow-[0_0_22px_rgba(217,70,239,0.6)] text-white font-bold text-xs flex items-center gap-1.5">
+          <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
+          +{collected.toLocaleString()}
         </div>
       </motion.div>
 
@@ -422,41 +434,22 @@ function StormOverlay({
           whileTap={{ scale: 1.4 }}
           aria-label="coin"
         >
-          <svg
-            viewBox="0 0 64 64"
-            className="w-full h-full drop-shadow-[0_0_12px_rgba(250,204,21,0.95)]"
-          >
-            <defs>
-              <radialGradient id={`coinGrad-${coin.id}`} cx="35%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#fffbeb" />
-                <stop offset="40%" stopColor="#fde047" />
-                <stop offset="80%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#78350f" />
-              </radialGradient>
-            </defs>
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill={`url(#coinGrad-${coin.id})`}
-              stroke="#fef3c7"
-              strokeWidth="2"
+          <div className="relative w-full h-full">
+            <div className="absolute inset-0 rounded-full bg-amber-300/40 blur-lg" />
+            <img
+              src={novaCoin3d}
+              alt="nova coin"
+              className="relative w-full h-full object-contain drop-shadow-[0_0_14px_rgba(250,204,21,0.95)]"
+              draggable={false}
             />
-            <circle cx="32" cy="32" r="20" fill="none" stroke="#fffbeb" strokeWidth="1.5" opacity="0.7" />
-            <text
-              x="32"
-              y="41"
-              textAnchor="middle"
-              fontSize="24"
-              fontWeight="900"
-              fill="#7c2d12"
-              fontFamily="system-ui"
-            >
-              $
-            </text>
-          </svg>
+          </div>
         </motion.button>
       ))}
+
+      {/* keep block balance */}
+      {false && (
+        <span />
+      )}
 
       {/* Pop explosions */}
       {pops.map((p) => (
