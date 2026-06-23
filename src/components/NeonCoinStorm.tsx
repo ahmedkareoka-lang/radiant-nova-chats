@@ -88,32 +88,35 @@ export default function NeonCoinStorm({
         toast.error(`رصيدك غير كافٍ! تحتاج ${tier.cost.toLocaleString()} كوين`);
         return;
       }
-      // Deduct cost atomically (only succeeds if balance is still enough).
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ coins: balance - tier.cost })
-        .eq("id", currentUserId)
-        .gte("coins", tier.cost)
-        .select("coins")
-        .single();
-      if (error || !data) {
-        toast.error("تعذر خصم الرصيد");
+      // Only 5% of the tier cost is actually deducted from the launcher;
+      // the remaining 95% becomes the prize pool that rains for everyone.
+      const fee = Math.max(1, Math.ceil(tier.cost * 0.05));
+      const pool = tier.cost - fee;
+
+      const { error } = await supabase.rpc("deduct_coins", {
+        _user_id: currentUserId,
+        _amount: fee,
+      });
+      if (error) {
+        toast.error(error.message || "تعذر خصم الرصيد");
         return;
       }
-      setProfile({ coins: data.coins });
+      setProfile({ coins: balance - fee });
 
       setSelectedTier(tier);
       setPhase("storm");
 
-      // Generate coins falling from sky
+      // Distribute the pool across the falling coins
+      const perCoin = Math.max(1, Math.floor(pool / tier.coins));
       const next: Coin[] = Array.from({ length: tier.coins }, (_, i) => ({
         id: i,
-        x: Math.random() * 92 + 2, // vw
+        x: Math.random() * 92 + 2,
         delay: Math.random() * 3,
         duration: 3 + Math.random() * 2.5,
         drift: (Math.random() - 0.5) * 30,
         rotate: 360 + Math.random() * 720,
-        size: 34 + Math.random() * 26,
+        size: 38 + Math.random() * 24,
+        value: perCoin,
       }));
       setCoins(next);
 
@@ -129,8 +132,14 @@ export default function NeonCoinStorm({
       setTimeout(() => {
         if (closedRef.current) return;
         closedRef.current = true;
+        const winnings = collectedRef.current;
+        if (winnings > 0 && currentUserId) {
+          supabase.rpc("add_coins", { _user_id: currentUserId, _amount: winnings }).then(() => {
+            setProfile({ coins: (useProfileStore.getState().profile?.coins ?? 0) + winnings });
+          });
+        }
         toast.success(
-          `انتهت ${tier.label}! جمعت ${collectedRef.current} كوين ⚡`,
+          `انتهت ${tier.label}! جمعت ${winnings.toLocaleString()} كوين ⚡`,
           { description: "The storm has ended!" }
         );
         thunderRef.current?.pause();
@@ -153,7 +162,7 @@ export default function NeonCoinStorm({
     setPops((p) => [...p, { id: popId, x, y }]);
     setTimeout(() => setPops((p) => p.filter((pp) => pp.id !== popId)), 500);
     setCoins((cs) => cs.filter((c) => c.id !== coin.id));
-    setCollected((n) => n + 1);
+    setCollected((n) => n + coin.value);
     try {
       if (popAudioRef.current) {
         const a = popAudioRef.current.cloneNode(true) as HTMLAudioElement;
