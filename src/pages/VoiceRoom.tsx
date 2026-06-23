@@ -187,13 +187,7 @@ const VoiceRoom = () => {
   const lockedSlots: number[] = (roomData as any)?.locked_slots || [];
   const mutedUsers: string[] = (roomData as any)?.muted_users || [];
 
-  // Voice (Agora)
-  const { connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoice({
-    roomId,
-    currentUserId,
-    isOnMic,
-    isMuted,
-  });
+  // Agora state comes from the global provider — see line 110.
 
   const handleBossEntranceComplete = useCallback(() => setShowBossEntrance(false), []);
 
