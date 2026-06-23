@@ -244,7 +244,7 @@ export default function NeonCoinStorm({
               <div className="mt-3 mb-4 flex items-center justify-between px-3 py-2 rounded-xl bg-black/40 border border-white/10">
                 <span className="text-[11px] text-white/70">رصيدك</span>
                 <div className="flex items-center gap-1.5 text-amber-300 font-bold">
-                  <Coins className="w-4 h-4" />
+                  <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
                   <span>{balance.toLocaleString()}</span>
                 </div>
               </div>
