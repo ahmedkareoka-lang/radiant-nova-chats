@@ -12,6 +12,8 @@ import DualBadge from "@/components/DualBadge";
 import ReactMarkdown from "react-markdown";
 import VirtualizedMessageList from "@/components/VirtualizedMessageList";
 import { supabase } from "@/integrations/supabase/client";
+import LiveAvatar from "@/components/LiveAvatar";
+import { useUsersActiveRoom } from "@/hooks/useUsersActiveRoom";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
@@ -42,6 +44,7 @@ const ChatPage = () => {
   const filtered = conversations.filter((c) =>
     c.other_user.display_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const liveMap = useUsersActiveRoom(conversations.map((c) => c.other_user.id));
 
   return (
     <div className="min-h-screen pb-20">
@@ -88,11 +91,14 @@ const ChatPage = () => {
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {conversations.slice(0, 6).map((conv) => (
                 <div key={conv.id} className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <button onClick={() => navigate(`/user?id=${conv.other_user.id}`)} className="party-avatar-ring">
-                    <div className="w-14 h-14 rounded-full overflow-hidden bg-background">
-                      <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  </button>
+                  <LiveAvatar
+                    avatarUrl={conv.other_user.avatar_url}
+                    activeRoom={liveMap[conv.other_user.id]}
+                    size={56}
+                    ringClassName="ring-2 ring-primary/40"
+                    onAvatarClick={() => navigate(`/user?id=${conv.other_user.id}`)}
+                    showOnlineDot={false}
+                  />
                   <span className="text-[9px] text-muted-foreground max-w-[60px] truncate text-center">{conv.other_user.display_name}</span>
                 </div>
               ))}
@@ -123,14 +129,12 @@ const ChatPage = () => {
               key={conv.id}
               className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/20 transition-colors border-b border-border/20"
             >
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/user?id=${conv.other_user.id}`); }}
-                className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border/30"
-                aria-label="عرض الملف الشخصي"
-              >
-                <img loading="lazy" decoding="async" src={conv.other_user.avatar_url || "https://i.pravatar.cc/60?img=3"} alt="" className="w-full h-full object-cover" />
-                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
-              </button>
+              <LiveAvatar
+                avatarUrl={conv.other_user.avatar_url}
+                activeRoom={liveMap[conv.other_user.id]}
+                size={48}
+                onAvatarClick={() => navigate(`/user?id=${conv.other_user.id}`)}
+              />
               <div onClick={() => setActiveConvId(conv.id)} className="flex-1 min-w-0 text-right cursor-pointer">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] text-muted-foreground flex-shrink-0">

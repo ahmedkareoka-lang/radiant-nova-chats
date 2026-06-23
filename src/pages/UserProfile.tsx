@@ -25,6 +25,8 @@ import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import UserPostsSection from "@/components/UserPostsSection";
+import InRoomCard from "@/components/InRoomCard";
+import { useUserActiveRoom } from "@/hooks/useUsersActiveRoom";
 
 
 const wealthThreshold = (lvl: number) => {
@@ -67,6 +69,7 @@ const UserProfile = () => {
   const targetIsBD = useIsBD(userId);
   const meIsAgent = useIsRechargeAgent(currentUserId);
   const [transferOpen, setTransferOpen] = useState(false);
+  const activeRoom = useUserActiveRoom(userId);
 
   useEffect(() => {
     if (!userId) { navigate("/"); return; }
@@ -182,6 +185,11 @@ const UserProfile = () => {
             </div>
 
             <CopyIdButton id={profile?.user_id} className="mt-2" />
+
+            {/* Prominent: "currently in a voice room" card */}
+            <div className="w-full max-w-sm">
+              <InRoomCard activeRoom={activeRoom} userName={profile?.display_name} />
+            </div>
 
             {/* Action buttons */}
             {!isMe && (

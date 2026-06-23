@@ -210,6 +210,19 @@ const VoiceRoom = () => {
     }
   }, [roomId, roomData?.name]);
 
+  // Auto-minimize on unmount unless the user explicitly left the room.
+  // This keeps the floating bubble + room membership alive when they navigate
+  // away to chat or to their profile, so others still see them as "LIVE".
+  const leavingRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      if (!leavingRef.current) {
+        minimizeRoom();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Love Quest: report 1 shared minute every 60s while in this room.
   // Server checks that the caller has an active couple AND partner is also a member.
   useEffect(() => {
@@ -403,6 +416,7 @@ const VoiceRoom = () => {
   };
 
   const handleLeave = async () => {
+    leavingRef.current = true;
     await leaveRoom();
     closeRoom();
     navigate("/");
@@ -789,7 +803,10 @@ const VoiceRoom = () => {
   };
 
   return (
-    <div className={`h-[100dvh] max-h-[100dvh] flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
+    <div
+      className={`h-[100dvh] max-h-[100dvh] flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}
+      style={{ touchAction: "pan-x" }}
+    >
       {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
       <VoiceRoomBackdrop backgroundUrl={(roomData as any)?.background_url} />
       {/* Animated Particles */}
@@ -1188,7 +1205,10 @@ const VoiceRoom = () => {
       )}
 
       {/* Header */}
-      <header className="relative z-20 bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
+      <header
+        className="relative z-20 shrink-0 bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3"
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+      >
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
             <button onClick={handleLeave} className="text-muted-foreground">
@@ -1237,8 +1257,10 @@ const VoiceRoom = () => {
       {/* Treasure Box (auto-trigger at 300K daily room support) */}
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
-      {/* Voice Room Area */}
-      <div className="relative z-10 flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+      {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
+        {/* Top fixed region: PK + couple seats + host info + mic grid (no page scroll) */}
+        <div className="shrink-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
           <div className="mb-4 flex items-start gap-2">
@@ -1377,9 +1399,11 @@ const VoiceRoom = () => {
             );
           })}
         </div>
+        </div>
+        {/* /top fixed region */}
 
-        {/* Chat */}
-        <div className="card-nova p-3">
+        {/* Chat — only this section scrolls inside the locked room view */}
+        <div className="card-nova p-3 flex-1 min-h-0 flex flex-col mt-3">
           <div className="flex items-center gap-2 mb-2">
             <MessageCircle className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold">الدردشة الحية</span>
@@ -1405,7 +1429,7 @@ const VoiceRoom = () => {
             )}
           </AnimatePresence>
 
-          <div className="space-y-2 max-h-40 overflow-auto mb-3">
+          <div className="space-y-2 flex-1 min-h-0 overflow-auto mb-3">
             {messages.map((msg) => {
               // System "join" message detection.
               // New format: "[[JOIN:<uid>]] DisplayName"
@@ -1498,7 +1522,10 @@ const VoiceRoom = () => {
       </div>
 
       {/* Bottom Controls */}
-      <div className="relative z-20 bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3">
+      <div
+        className="relative z-20 shrink-0 bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+      >
         <div className="flex items-center justify-center gap-4 max-w-lg mx-auto">
           <button
             onClick={handleToggleMic}
