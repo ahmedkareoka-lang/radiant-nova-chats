@@ -789,7 +789,7 @@ const VoiceRoom = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
+    <div className={`h-[100dvh] max-h-[100dvh] flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}>
       {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
       <VoiceRoomBackdrop backgroundUrl={(roomData as any)?.background_url} />
       {/* Animated Particles */}
@@ -1188,7 +1188,7 @@ const VoiceRoom = () => {
       )}
 
       {/* Header */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
+      <header className="relative z-20 bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
             <button onClick={handleLeave} className="text-muted-foreground">
@@ -1238,7 +1238,7 @@ const VoiceRoom = () => {
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
       {/* Voice Room Area */}
-      <div className="flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+      <div className="relative z-10 flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
           <div className="mb-4 flex items-start gap-2">
@@ -1498,7 +1498,7 @@ const VoiceRoom = () => {
       </div>
 
       {/* Bottom Controls */}
-      <div className="bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3">
+      <div className="relative z-20 bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3">
         <div className="flex items-center justify-center gap-4 max-w-lg mx-auto">
           <button
             onClick={handleToggleMic}

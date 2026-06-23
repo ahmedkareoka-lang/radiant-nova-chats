@@ -78,10 +78,62 @@ export default function UserPostsSection({ profileUserId, currentUserId, authorN
     const ch = supabase
       .channel(`user-posts-${profileUserId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `user_id=eq.${profileUserId}` }, () => fetchPosts())
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, (payload: any) => {
+        const postId = (payload.new?.post_id || payload.old?.post_id) as string | undefined;
+        if (!postId) return;
+        setPosts((prev) => {
+          if (!prev.some((p) => p.id === postId)) return prev;
+          return prev.map((p) => {
+            if (p.id !== postId) return p;
+            const delta = payload.eventType === "INSERT" ? 1 : payload.eventType === "DELETE" ? -1 : 0;
+            const isMine =
+              currentUserId &&
+              ((payload.new as any)?.user_id === currentUserId || (payload.old as any)?.user_id === currentUserId);
+            return {
+              ...p,
+              likes_count: Math.max(0, (p.likes_count || 0) + delta),
+              liked_by_me: isMine ? payload.eventType === "INSERT" : p.liked_by_me,
+            };
+          });
+        });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_comments" }, (payload: any) => {
+        const postId = (payload.new?.post_id || payload.old?.post_id) as string | undefined;
+        if (!postId) return;
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== postId) return p;
+            const delta = payload.eventType === "INSERT" ? 1 : payload.eventType === "DELETE" ? -1 : 0;
+            return { ...p, comment_count: Math.max(0, (p.comment_count || 0) + delta) };
+          })
+        );
+        // If comments drawer is open for this post, refresh its list
+        setOpenComments((prev) => {
+          if (!prev[postId]) return prev;
+          // re-fetch asynchronously
+          (async () => {
+            const { data } = await (supabase as any)
+              .from("post_comments")
+              .select("*")
+              .eq("post_id", postId)
+              .order("created_at", { ascending: true });
+            const uids: string[] = Array.from(new Set((data || []).map((c: any) => c.user_id as string)));
+            const { data: profs } = await supabase
+              .from("profiles")
+              .select("id, display_name, avatar_url")
+              .in("id", uids.length ? uids : ["00000000-0000-0000-0000-000000000000"]);
+            const pm = new Map((profs || []).map((p) => [p.id, p]));
+            const enriched: Comment[] = (data || []).map((c: any) => ({ ...c, author: pm.get(c.user_id) as any }));
+            setOpenComments((cur) => (cur[postId] ? { ...cur, [postId]: enriched } : cur));
+          })();
+          return prev;
+        });
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileUserId, currentUserId]);
+
 
   const handleImagePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
