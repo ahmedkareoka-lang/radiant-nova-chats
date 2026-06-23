@@ -253,10 +253,10 @@ const UserProfile = () => {
           <div className="mt-5">
             <div className="flex justify-center gap-6 border-b border-border/20 pb-2">
               {tabs.map((tab, i) => (
-                <button key={tab} onClick={() => setActiveTab(["personal", "relations", "games"][i])}
-                  className={`text-sm font-bold pb-1 transition-colors relative ${activeTab === ["personal", "relations", "games"][i] ? "text-primary" : "text-muted-foreground/50"}`}>
+                <button key={tab} onClick={() => setActiveTab(tabKeys[i])}
+                  className={`text-sm font-bold pb-1 transition-colors relative ${activeTab === tabKeys[i] ? "text-primary" : "text-muted-foreground/50"}`}>
                   {tab}
-                  {activeTab === ["personal", "relations", "games"][i] && (
+                  {activeTab === tabKeys[i] && (
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
                   )}
                 </button>
