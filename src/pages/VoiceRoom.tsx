@@ -1255,7 +1255,7 @@ const VoiceRoom = () => {
       {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
       <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
         {/* Top fixed region: PK + couple seats + host info + mic grid (no page scroll) */}
-        <div className="shrink-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+        <div className="shrink-0 overflow-y-auto max-h-[58%]" style={{ scrollbarWidth: "none" }}>
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
           <div className="mb-4 flex items-start gap-2">
@@ -1279,7 +1279,7 @@ const VoiceRoom = () => {
 
         {/* Host Info Banner with Top 3 Senders strip */}
         {host && (
-          <div className="mb-6">
+          <div className="mb-2">
             <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
               <div className="relative">
                 <img loading="lazy" decoding="async" src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
@@ -1301,7 +1301,8 @@ const VoiceRoom = () => {
         )}
 
         {/* Mic Grid — adaptive size & spacing, stable seats (no shake) */}
-        <div className={`grid ${gridCols} ${micGapClass} mb-6 justify-items-center`}>
+        <div className={`grid ${gridCols} ${micGapClass} mb-2 justify-items-center`}>
+
           {micSlots.map((slot, i) => {
             const isSlotLocked = lockedSlots.includes(i);
             const slotIsSpeaking = slot?.is_on_mic && (
@@ -1398,7 +1399,7 @@ const VoiceRoom = () => {
         {/* /top fixed region */}
 
         {/* Chat — only this section scrolls inside the locked room view */}
-        <div className="card-nova p-3 flex-1 min-h-0 flex flex-col mt-3">
+        <div className="card-nova p-3 flex-1 min-h-[180px] flex flex-col mt-2 overflow-hidden">
           <div className="flex items-center gap-2 mb-2">
             <MessageCircle className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold">الدردشة الحية</span>

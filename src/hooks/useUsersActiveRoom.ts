@@ -8,8 +8,7 @@ export interface ActiveRoomInfo {
 }
 
 // Returns a map: userId -> active room (if the user is currently sitting in a room).
-// "Active" = present in room_members and seen within the last 3 minutes.
-const FRESH_MS = 180_000;
+// "Active" = present in room_members. Rows are deleted on leave, so presence is truth.
 
 export function useUsersActiveRoom(userIds: (string | null | undefined)[]) {
   const [map, setMap] = useState<Record<string, ActiveRoomInfo>>({});
@@ -31,10 +30,7 @@ export function useUsersActiveRoom(userIds: (string | null | undefined)[]) {
         .in("user_id", ids);
       if (!members || cancelled) return;
 
-      const now = Date.now();
-      const fresh = members.filter(
-        (m) => now - new Date(m.joined_at as any).getTime() < FRESH_MS,
-      );
+      const fresh = members;
       const roomIds = Array.from(new Set(fresh.map((m) => m.room_id)));
       if (!roomIds.length) {
         setMap({});
