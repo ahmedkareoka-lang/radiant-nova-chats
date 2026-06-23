@@ -49,7 +49,7 @@ const ChatPage = () => {
   return (
     <div className="min-h-screen pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.9)", backdropFilter: "blur(20px)" }}>
+      <header className="sticky top-0 z-40 border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6%)" }}>
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ const AIChatView = ({ onBack }: { onBack: () => void }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)", backdropFilter: "blur(20px)" }}>
+      <header className="border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6%)" }}>
         <div className="flex items-center gap-3 max-w-lg mx-auto">
           <button onClick={onBack} className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
@@ -269,7 +269,7 @@ const AIChatView = ({ onBack }: { onBack: () => void }) => {
         )}
       </div>
 
-      <div className="border-t border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)" }}>
+      <div className="border-t border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6%)" }}>
         <div className="flex gap-2 max-w-lg mx-auto">
           <input
             type="text"
@@ -327,7 +327,7 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)", backdropFilter: "blur(20px)" }}>
+      <header className="border-b border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6%)" }}>
         <div className="flex items-center gap-3 max-w-lg mx-auto">
           <button onClick={onBack} className="w-8 h-8 rounded-full bg-secondary/50 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
@@ -360,7 +360,7 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
         currentUserId={currentUserId}
       />
 
-      <div className="border-t border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6% / 0.95)" }}>
+      <div className="border-t border-border/20 px-4 py-3" style={{ background: "hsl(260 28% 6%)" }}>
         <div className="flex gap-2 max-w-lg mx-auto">
           <input
             type="text"
