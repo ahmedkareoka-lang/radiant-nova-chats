@@ -122,9 +122,7 @@ const RoomCard = ({
             <span className="text-[9px] font-bold text-foreground/90">{viewerCount}</span>
           </div>
           <div className="flex items-center gap-1">
-            {(hostNovaLevel > 0 || hostVipLevel > 0) && (
-              <DualBadge novaLevel={hostNovaLevel} vipLevel={hostVipLevel} />
-            )}
+            {hostVipLevel > 0 && <DualBadge vipLevel={hostVipLevel} />}
             {countryCode && <span className="text-[10px]">🏳️</span>}
           </div>
         </div>

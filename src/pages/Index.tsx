@@ -323,10 +323,6 @@ const Index = () => {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-base">📸</div>
               <span className="text-[9px] font-bold text-foreground/90">المنشورات</span>
             </button>
-            <button onClick={() => navigate("/nova-p")} className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-secondary/40 hover:bg-secondary/70 transition-all hover:-translate-y-0.5 accent-white">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-base">⭐</div>
-              <span className="text-[9px] font-bold text-foreground/90">NOVA P</span>
-            </button>
           </div>
 
           {/* Categories scrollable bar */}
@@ -377,7 +373,7 @@ const Index = () => {
                     viewerCount={room.member_count || 0}
                     isVip={(room.host_profile?.vip_level || 0) >= 5}
                     category={room.type}
-                    hostNovaLevel={room.host_profile?.nova_p_level || 0}
+                    
                     hostVipLevel={room.host_profile?.vip_level || 0}
                     micPreviews={room.mic_previews || []}
                     isHot={hotRoomIds.has(room.id)}

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import PageTransition from "@/components/PageTransition";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { NOVA_ASSETS } from "@/lib/novaAssets";
+
 import SalaryDetailsModal from "@/components/SalaryDetailsModal";
 
 const AdminDashboard = () => {
@@ -26,7 +26,7 @@ const AdminDashboard = () => {
   const [exchangeRate, setExchangeRate] = useState("100");
   const [newCountry, setNewCountry] = useState({ code: "", name: "", currency: "", coin_price: "", diamond_price: "" });
   const [stats, setStats] = useState({ totalUsers: 0, onlineUsers: 0, totalRooms: 0 });
-  const [novaStats, setNovaStats] = useState<{ level: number; label: string; count: number }[]>([]);
+  // NOVA P stats removed
   const [adminId, setAdminId] = useState<string | null>(null);
   const [rechargeAgents, setRechargeAgents] = useState<any[]>([]);
   const [agentReport, setAgentReport] = useState<{ today_total: number; today_count: number; week_total: number; week_count: number; week_start: string } | null>(null);
@@ -164,19 +164,7 @@ const AdminDashboard = () => {
     fetchRechargeAgents();
   };
 
-  const fetchNovaStats = async () => {
-    // Count users per NOVA P level (0-6)
-    const counts = await Promise.all(
-      [0, 1, 2, 3, 4, 5, 6].map(async (lvl) => {
-        const { count } = await supabase
-          .from("profiles")
-          .select("*", { count: "exact", head: true })
-          .eq("nova_p_level", lvl);
-        return { level: lvl, label: lvl === 0 ? "بدون" : `P${lvl}`, count: count || 0 };
-      })
-    );
-    setNovaStats(counts);
-  };
+  // fetchNovaStats removed — NOVA P system deleted
 
   useEffect(() => {
     const checkBoss = async () => {
@@ -201,7 +189,7 @@ const AdminDashboard = () => {
       const { data: er } = await supabase.from("system_settings").select("value").eq("key", "exchange_rate").single();
       if (er) setExchangeRate(er.value);
 
-      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchNovaStats(), fetchRechargeAgents()]);
+      await Promise.all([fetchGifts(), fetchStoreItems(), fetchBanners(), fetchRechargeAgents()]);
       setLoading(false);
     };
     checkBoss();
@@ -558,8 +546,6 @@ const AdminDashboard = () => {
   const tabs = [
     { id: "users", label: "المستخدمين", icon: Users },
     { id: "verified", label: "التوثيق", icon: Shield },
-    { id: "nova", label: "NOVA P", icon: BarChart3 },
-    { id: "nova_items", label: "عناصر NOVA P", icon: Crown },
     { id: "vip_items", label: "عناصر VIP", icon: Crown },
     { id: "gifts", label: "الهدايا", icon: Gift },
     { id: "frames", label: "الإطارات", icon: Image },
@@ -807,78 +793,7 @@ const AdminDashboard = () => {
             </>
           )}
 
-          {/* NOVA P STATS TAB */}
-          {activeTab === "nova" && (
-            <div className="space-y-4">
-              <div className="card-nova p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <BarChart3 className="w-4 h-4 text-accent" />
-                  <h3 className="font-bold text-sm">إحصائيات NOVA P — توزيع المستويات</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {novaStats.filter(s => s.level >= 1).map(s => {
-                    const asset = NOVA_ASSETS.byLevel[s.level];
-                    return (
-                      <div key={s.level} className={`rounded-xl p-2 text-center bg-gradient-to-br ${asset?.gradient || ''} border border-white/20`}>
-                        <p className="text-[10px] font-bold opacity-80">👑 {s.label}</p>
-                        <p className="text-lg font-black">{s.count.toLocaleString()}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="h-56 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={novaStats.filter(s => s.level >= 1)} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <Tooltip
-                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
-                        labelStyle={{ color: "hsl(var(--foreground))" }}
-                      />
-                      <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                        {novaStats.filter(s => s.level >= 1).map((s) => {
-                          const colors: Record<number, string> = {
-                            1: "hsl(280 90% 60%)",
-                            2: "hsl(200 90% 60%)",
-                            3: "hsl(180 90% 60%)",
-                            4: "hsl(20 90% 55%)",
-                            5: "hsl(320 90% 60%)",
-                            6: "hsl(45 95% 55%)",
-                          };
-                          return <Cell key={s.level} fill={colors[s.level] || "hsl(var(--primary))"} />;
-                        })}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="card-nova p-4">
-                <h3 className="font-bold text-sm mb-3">ملخص</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">إجمالي مستخدمي NOVA P</span>
-                    <span className="font-black text-accent">
-                      {novaStats.filter(s => s.level >= 1).reduce((sum, s) => sum + s.count, 0).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">مستخدمون بدون NOVA P</span>
-                    <span className="font-bold">{(novaStats.find(s => s.level === 0)?.count || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">أعلى مستوى نشط (P5+P6)</span>
-                    <span className="font-black text-amber-400">
-                      {((novaStats.find(s => s.level === 5)?.count || 0) + (novaStats.find(s => s.level === 6)?.count || 0)).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                <button onClick={fetchNovaStats} className="w-full mt-3 py-2 rounded-xl gradient-neon text-primary-foreground font-bold text-xs">
-                  تحديث الإحصائيات
-                </button>
-              </div>
-            </div>
-          )}
+          {/* NOVA P STATS TAB removed */}
 
           {/* GIFTS TAB */}
           {activeTab === "gifts" && (
@@ -1043,8 +958,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* NOVA P ITEMS TAB */}
-          {activeTab === "nova_items" && renderTierItemForm("nova_p", "إضافة عنصر NOVA P (إطار/شارة/دخول/مركبة)", "text-purple-300")}
+          {/* NOVA P ITEMS TAB removed */}
 
           {/* VIP ITEMS TAB */}
           {activeTab === "vip_items" && renderTierItemForm("vip", "إضافة عنصر VIP (إطار/شارة/دخول/مركبة)", "text-amber-300")}

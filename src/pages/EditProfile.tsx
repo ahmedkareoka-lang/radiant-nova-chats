@@ -57,7 +57,7 @@ const EditProfile = () => {
       avatarUrl: profile.avatar_url,
       videoUrl: profile.entrance_video_url || null,
       audioUrl: profile.entrance_audio_url || null,
-      novaLevel: profile.nova_p_level || 0,
+      
       vipLevel: profile.vip_level || 0,
     }]);
   };

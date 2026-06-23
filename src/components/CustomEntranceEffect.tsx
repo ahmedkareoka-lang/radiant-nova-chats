@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { playNovaEntranceSound } from "@/lib/novaEntranceSounds";
+
 import { playVipEntranceSound } from "@/lib/vipEntranceSounds";
 import { logAgora } from "@/lib/agoraDebugLog";
 import { getVipTier } from "@/lib/vipConfig";
@@ -58,10 +58,7 @@ const CustomEntranceEffect = ({ roomId, currentUserId, queue, onComplete, muteEn
     setVideoDurationMs(null);
     startedAtRef.current = Date.now();
 
-    // Tier-based NOVA P entrance sound
-    if (!muteEntrance && entry.novaLevel && entry.novaLevel >= 4) {
-      playNovaEntranceSound(entry.novaLevel);
-    }
+    // NOVA P system removed — VIP sound below handles all entrances
     // VIP signature entrance sound (1-7) — unique cue per legendary tier
     if (!muteEntrance && entry.vipLevel && entry.vipLevel >= 1) {
       playVipEntranceSound(entry.vipLevel);

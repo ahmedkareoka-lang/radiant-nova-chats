@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package } from "lucide-react";
-import NovaCup from "@/components/NovaCup";
+
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
 import PKChallenge from "@/components/PKChallenge";
@@ -297,16 +297,13 @@ const VoiceRoom = () => {
       }
 
       const p = m.profile as any;
-      const novaLvl = p.nova_p_level || 0;
       const entranceMedia = p.equipped_entrance_effect || p.entrance_video_url || null;
-      // Stable, deterministic id: same member = same id across clients (no Date.now())
       additions.push({
         id: `entrance-${m.user_id}-${(m as any).joined_at || ""}`,
         displayName: m.profile!.display_name,
         avatarUrl: m.profile!.avatar_url,
         videoUrl: entranceMedia,
         audioUrl: p.entrance_audio_url || null,
-        novaLevel: novaLvl,
         vipLevel: m.profile!.vip_level || 0,
       });
     }
@@ -374,9 +371,8 @@ const VoiceRoom = () => {
         id: `vip-switch-${m.user_id}-${lvl}-${Date.now()}`,
         displayName: p.display_name,
         avatarUrl: p.avatar_url,
-        videoUrl: null, // force the VIP-styled name banner
+        videoUrl: null,
         audioUrl: null,
-        novaLevel: p.nova_p_level || 0,
         vipLevel: lvl,
       });
     }
@@ -1189,7 +1185,6 @@ const VoiceRoom = () => {
             <div className="flex-1">
               <PKChallenge roomId={roomId} isHost={isHost} members={members} />
             </div>
-            <NovaCup roomId={roomId} />
           </div>
         )}
 
@@ -1383,7 +1378,7 @@ const VoiceRoom = () => {
                   ) : (
                     <div className={`${isBossMsg ? "bg-gradient-to-r from-accent/10 via-accent/5 to-transparent rounded-lg px-2 py-1 border border-accent/20" : ""}`}>
                       <span className="inline-flex items-center gap-1 align-middle mr-1">
-                        <DualBadge novaLevel={(msg.sender as any)?.nova_p_level || 0} vipLevel={msg.sender?.vip_level || 0} />
+                        <DualBadge vipLevel={msg.sender?.vip_level || 0} />
                       </span>
                       <span className={`font-bold ${isBossMsg ? "boss-fire-text" : "text-primary"}`}>
                         {isBossMsg ? (

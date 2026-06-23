@@ -137,7 +137,7 @@ const ChatPage = () => {
                     {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: false }) : ""}
                   </span>
                   <div className="flex items-center gap-1.5 min-w-0 justify-end">
-                    <DualBadge novaLevel={conv.other_user.nova_p_level || 0} vipLevel={conv.other_user.vip_level || 0} />
+                    <DualBadge vipLevel={conv.other_user.vip_level || 0} />
                     <span className="font-bold text-sm truncate">{conv.other_user.display_name}</span>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ const AIChatView = ({ onBack }: { onBack: () => void }) => {
 const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: string; onBack: () => void; currentUserId: string | null }) => {
   const { messages, sendMessage } = useChatMessages(conversationId);
   const [input, setInput] = useState("");
-  const [other, setOther] = useState<{ id: string; display_name: string; avatar_url: string | null; vip_level: number; nova_p_level: number } | null>(null);
+  const [other, setOther] = useState<{ id: string; display_name: string; avatar_url: string | null; vip_level: number } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -305,7 +305,7 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
       const otherId = conv.user1_id === currentUserId ? conv.user2_id : conv.user1_id;
       const { data: prof } = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, vip_level, displayed_vip_level, nova_p_level")
+        .select("id, display_name, avatar_url, vip_level, displayed_vip_level")
         .eq("id", otherId).maybeSingle();
       if (prof && !cancelled) {
         const eff: any = { ...prof, vip_level: Math.min(Math.max(0, (prof as any).displayed_vip_level || prof.vip_level || 0), prof.vip_level || 0) };
@@ -339,7 +339,7 @@ const ChatView = ({ conversationId, onBack, currentUserId }: { conversationId: s
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 justify-end">
-                  <DualBadge novaLevel={other.nova_p_level || 0} vipLevel={other.vip_level || 0} />
+                  <DualBadge vipLevel={other.vip_level || 0} />
                   <p className="font-bold text-sm truncate">{other.display_name}</p>
                 </div>
                 <p className="text-[10px] text-muted-foreground text-right">اضغط لعرض البروفايل</p>
