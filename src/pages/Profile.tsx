@@ -27,6 +27,7 @@ import LoveBadge from "@/components/LoveBadge";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
+import UserPostsSection from "@/components/UserPostsSection";
 // LevelTable hidden per design — kept import removed
 
 
