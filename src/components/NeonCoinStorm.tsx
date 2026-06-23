@@ -274,10 +274,10 @@ export default function NeonCoinStorm({
                       <div className="relative">
                         <div className="text-white font-bold text-sm mb-0.5">{tier.label}</div>
                         <div className="text-[10px] text-white/70 mb-2">
-                          {tier.coins} كوين متطاير
+                          {tier.coins} كوين متطاير • رسوم 5%
                         </div>
                         <div className="flex items-center gap-1 text-amber-300 font-extrabold text-sm">
-                          <Coins className="w-3.5 h-3.5" />
+                          <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
                           {tier.cost.toLocaleString()}
                         </div>
                       </div>
