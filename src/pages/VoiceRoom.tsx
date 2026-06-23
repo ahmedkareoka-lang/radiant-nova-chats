@@ -1429,7 +1429,7 @@ const VoiceRoom = () => {
             )}
           </AnimatePresence>
 
-          <div className="space-y-2 max-h-40 overflow-auto mb-3">
+          <div className="space-y-2 flex-1 min-h-0 overflow-auto mb-3">
             {messages.map((msg) => {
               // System "join" message detection.
               // New format: "[[JOIN:<uid>]] DisplayName"
