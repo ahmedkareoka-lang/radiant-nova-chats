@@ -12,6 +12,8 @@ import DualBadge from "@/components/DualBadge";
 import ReactMarkdown from "react-markdown";
 import VirtualizedMessageList from "@/components/VirtualizedMessageList";
 import { supabase } from "@/integrations/supabase/client";
+import LiveAvatar from "@/components/LiveAvatar";
+import { useUsersActiveRoom } from "@/hooks/useUsersActiveRoom";
 
 const ChatPage = () => {
   const { conversations, loading, currentUserId } = useConversations();
