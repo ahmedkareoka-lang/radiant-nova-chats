@@ -186,6 +186,11 @@ const UserProfile = () => {
 
             <CopyIdButton id={profile?.user_id} className="mt-2" />
 
+            {/* Prominent: "currently in a voice room" card */}
+            <div className="w-full max-w-sm">
+              <InRoomCard activeRoom={activeRoom} userName={profile?.display_name} />
+            </div>
+
             {/* Action buttons */}
             {!isMe && (
               <div className="flex flex-col gap-2 mt-4 w-full max-w-xs">
