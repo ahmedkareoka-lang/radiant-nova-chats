@@ -44,6 +44,7 @@ const ChatPage = () => {
   const filtered = conversations.filter((c) =>
     c.other_user.display_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const liveMap = useUsersActiveRoom(conversations.map((c) => c.other_user.id));
 
   return (
     <div className="min-h-screen pb-20">
