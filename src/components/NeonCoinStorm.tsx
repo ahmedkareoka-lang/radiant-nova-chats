@@ -16,14 +16,16 @@ interface NeonCoinStormProps {
 const POP_SOUND_URL = "https://cdn.pixabay.com/audio/2022/03/10/audio_38f2eb25e7.mp3";
 const THUNDER_URL = "https://cdn.pixabay.com/audio/2022/03/15/audio_d1718ab923.mp3";
 
+// Always 60 bags regardless of tier; tier only changes the prize pool inside each bag.
+const BAGS_COUNT = 60;
 const TIERS = [
-  { cost: 2500, coins: 25, label: "نسيم", color: "from-purple-500 to-fuchsia-500" },
-  { cost: 5000, coins: 45, label: "عاصفة", color: "from-fuchsia-500 to-pink-500" },
-  { cost: 15000, coins: 90, label: "إعصار", color: "from-pink-500 to-rose-500" },
-  { cost: 25000, coins: 140, label: "زلزال", color: "from-amber-500 to-orange-500" },
-  { cost: 50000, coins: 220, label: "بركان", color: "from-orange-500 to-red-500" },
-  { cost: 100000, coins: 350, label: "أسطورة", color: "from-yellow-400 via-fuchsia-500 to-cyan-400" },
-];
+  { cost: 2500, label: "نسيم", color: "from-purple-500 to-fuchsia-500" },
+  { cost: 5000, label: "عاصفة", color: "from-fuchsia-500 to-pink-500" },
+  { cost: 15000, label: "إعصار", color: "from-pink-500 to-rose-500" },
+  { cost: 25000, label: "زلزال", color: "from-amber-500 to-orange-500" },
+  { cost: 50000, label: "بركان", color: "from-orange-500 to-red-500" },
+  { cost: 100000, label: "أسطورة", color: "from-yellow-400 via-fuchsia-500 to-cyan-400" },
+].map((t) => ({ ...t, coins: BAGS_COUNT }));
 
 interface Coin {
   id: number;
@@ -45,7 +47,7 @@ interface Pop {
 export default function NeonCoinStorm({
   open,
   onClose,
-  durationMs = 10_000,
+  durationMs = 14_000,
   currentUserId,
 }: NeonCoinStormProps) {
   const profile = useProfileStore((s) => s.profile);
@@ -88,35 +90,34 @@ export default function NeonCoinStorm({
         toast.error(`رصيدك غير كافٍ! تحتاج ${tier.cost.toLocaleString()} كوين`);
         return;
       }
-      // Only 5% of the tier cost is actually deducted from the launcher;
-      // the remaining 95% becomes the prize pool that rains for everyone.
+      // 5% fee deducted up front; remaining 95% becomes the prize pool inside the 60 bags.
       const fee = Math.max(1, Math.ceil(tier.cost * 0.05));
       const pool = tier.cost - fee;
 
       const { error } = await supabase.rpc("deduct_coins", {
         _user_id: currentUserId,
-        _amount: fee,
+        _amount: tier.cost, // hold the full cost; we refund pool if nothing was collected
       });
       if (error) {
         toast.error(error.message || "تعذر خصم الرصيد");
         return;
       }
-      setProfile({ coins: balance - fee });
+      setProfile({ coins: balance - tier.cost });
 
       setSelectedTier(tier);
       setPhase("storm");
 
-      // Distribute the pool across the falling coins
-      const perCoin = Math.max(1, Math.floor(pool / tier.coins));
-      const next: Coin[] = Array.from({ length: tier.coins }, (_, i) => ({
+      // 60 bags, equal value each; slow & regular drop
+      const perBag = Math.max(1, Math.floor(pool / BAGS_COUNT));
+      const next: Coin[] = Array.from({ length: BAGS_COUNT }, (_, i) => ({
         id: i,
-        x: Math.random() * 92 + 2,
-        delay: Math.random() * 3,
-        duration: 3 + Math.random() * 2.5,
-        drift: (Math.random() - 0.5) * 30,
-        rotate: 360 + Math.random() * 720,
-        size: 38 + Math.random() * 24,
-        value: perCoin,
+        x: Math.random() * 88 + 4,
+        delay: (i / BAGS_COUNT) * 5 + Math.random() * 0.5, // staggered evenly over 5s
+        duration: 7.5 + Math.random() * 1.5, // slower fall: 7.5-9s
+        drift: (Math.random() - 0.5) * 18,
+        rotate: (Math.random() - 0.5) * 40,
+        size: 54 + Math.random() * 18,
+        value: perBag,
       }));
       setCoins(next);
 
@@ -133,13 +134,18 @@ export default function NeonCoinStorm({
         if (closedRef.current) return;
         closedRef.current = true;
         const winnings = collectedRef.current;
-        if (winnings > 0 && currentUserId) {
-          supabase.rpc("add_coins", { _user_id: currentUserId, _amount: winnings }).then(() => {
-            setProfile({ coins: (useProfileStore.getState().profile?.coins ?? 0) + winnings });
+        // If nobody grabbed any bag → refund the full pool back to the launcher.
+        // Otherwise credit them with what they collected (fastest grabs more bags = more coins).
+        const refund = winnings === 0 ? pool : winnings;
+        if (refund > 0 && currentUserId) {
+          supabase.rpc("add_coins", { _user_id: currentUserId, _amount: refund }).then(() => {
+            setProfile({ coins: (useProfileStore.getState().profile?.coins ?? 0) + refund });
           });
         }
         toast.success(
-          `انتهت ${tier.label}! جمعت ${winnings.toLocaleString()} كوين ⚡`,
+          winnings === 0
+            ? `لم يلتقط أحد أي كيس! تم إرجاع ${pool.toLocaleString()} كوين 💜`
+            : `انتهت ${tier.label}! جمعت ${winnings.toLocaleString()} كوين ⚡`,
           { description: "The storm has ended!" }
         );
         thunderRef.current?.pause();
@@ -274,7 +280,7 @@ export default function NeonCoinStorm({
                       <div className="relative">
                         <div className="text-white font-bold text-sm mb-0.5">{tier.label}</div>
                         <div className="text-[10px] text-white/70 mb-2">
-                          {tier.coins} كوين متطاير • رسوم 5%
+                          60 كيس مطر • رسوم 5%
                         </div>
                         <div className="flex items-center gap-1 text-amber-300 font-extrabold text-sm">
                           <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
@@ -287,7 +293,7 @@ export default function NeonCoinStorm({
               </div>
 
               <p className="text-[10px] text-white/50 text-center mt-3">
-                اضغط على كوين أثناء العاصفة لتجمعه ⚡
+                اضغط على الكيس أثناء المطر لتجمعه ⚡ الأسرع يأخذ أكثر
               </p>
             </div>
           </motion.div>
@@ -417,29 +423,58 @@ function StormOverlay({
             willChange: "transform, opacity",
             transform: "translateZ(0)",
           }}
-          initial={{ y: -80, opacity: 0, x: 0, rotate: 0 }}
+          initial={{ y: -120, opacity: 0, x: 0, rotate: -8 }}
           animate={{
-            y: ["0vh", "105vh"],
-            x: [0, coin.drift, -coin.drift, coin.drift / 2],
-            rotate: coin.rotate,
-            opacity: [0, 1, 1, 1, 0.9],
+            y: "108vh",
+            x: [0, coin.drift, -coin.drift / 2, coin.drift],
+            rotate: [-8, coin.rotate, coin.rotate / 2, coin.rotate],
+            opacity: [0, 1, 1, 1, 0.95],
           }}
           transition={{
             duration: coin.duration,
             delay: coin.delay,
-            ease: "linear",
-            repeat: Infinity,
-            repeatDelay: Math.random() * 1.5,
+            ease: [0.45, 0, 0.55, 1], // gentle, regular drop
           }}
-          whileTap={{ scale: 1.4 }}
-          aria-label="coin"
+          whileTap={{ scale: 1.35 }}
+          aria-label="money bag"
         >
           <div className="relative w-full h-full">
-            <div className="absolute inset-0 rounded-full bg-amber-300/40 blur-lg" />
+            {/* red glow */}
+            <div className="absolute inset-0 rounded-full bg-red-500/40 blur-xl" />
+            {/* bag svg */}
+            <svg
+              viewBox="0 0 64 72"
+              className="relative w-full h-full drop-shadow-[0_6px_14px_rgba(220,38,38,0.85)]"
+            >
+              <defs>
+                <linearGradient id={`bag-${coin.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fb7185" />
+                  <stop offset="45%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#7f1d1d" />
+                </linearGradient>
+              </defs>
+              {/* tie */}
+              <path
+                d="M22 10 Q32 2 42 10 L38 18 Q32 14 26 18 Z"
+                fill="#991b1b"
+                stroke="#fecaca"
+                strokeWidth="1"
+              />
+              {/* bag body */}
+              <path
+                d="M14 24 Q32 14 50 24 Q58 46 50 64 Q32 72 14 64 Q6 46 14 24 Z"
+                fill={`url(#bag-${coin.id})`}
+                stroke="#fecaca"
+                strokeWidth="1.2"
+              />
+              {/* highlight */}
+              <ellipse cx="24" cy="36" rx="6" ry="10" fill="#fff" opacity="0.18" />
+            </svg>
+            {/* nova coin emblem on bag */}
             <img
               src={novaCoin3d}
-              alt="nova coin"
-              className="relative w-full h-full object-contain drop-shadow-[0_0_14px_rgba(250,204,21,0.95)]"
+              alt=""
+              className="absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[55%] h-[55%] object-contain drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]"
               draggable={false}
             />
           </div>
