@@ -30,11 +30,7 @@ export function useUsersActiveRoom(userIds: (string | null | undefined)[]) {
         .in("user_id", ids);
       if (!members || cancelled) return;
 
-      const now = Date.now();
-      const fresh = members.filter(
-        (m) => now - new Date(m.joined_at as any).getTime() < FRESH_MS,
-      );
-      const roomIds = Array.from(new Set(fresh.map((m) => m.room_id)));
+      const fresh = members;
       if (!roomIds.length) {
         setMap({});
         return;
