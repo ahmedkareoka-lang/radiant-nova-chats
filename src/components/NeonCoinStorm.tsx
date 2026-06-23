@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfileStore } from "@/stores/profileStore";
-import { Zap, Coins, X } from "lucide-react";
+import { Zap, X } from "lucide-react";
+import novaCoin3d from "@/assets/nova-coin-3d.png";
 
 interface NeonCoinStormProps {
   open: boolean;
