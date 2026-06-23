@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import UserPostsSection from "@/components/UserPostsSection";
 
 
 const wealthThreshold = (lvl: number) => {
