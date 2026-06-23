@@ -8,8 +8,7 @@ export interface ActiveRoomInfo {
 }
 
 // Returns a map: userId -> active room (if the user is currently sitting in a room).
-// "Active" = present in room_members and seen within the last 3 minutes.
-const FRESH_MS = 180_000;
+// "Active" = present in room_members. Rows are deleted on leave, so presence is truth.
 
 export function useUsersActiveRoom(userIds: (string | null | undefined)[]) {
   const [map, setMap] = useState<Record<string, ActiveRoomInfo>>({});
