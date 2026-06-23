@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import UserPostsSection from "@/components/UserPostsSection";
 
 
 const wealthThreshold = (lvl: number) => {
@@ -99,7 +100,8 @@ const UserProfile = () => {
   const directFrameImage = (!frameImage && frameKey && (frameKey.startsWith("http") || frameKey.startsWith("/"))) ? frameKey : null;
   const finalFrame = frameImage || directFrameImage;
   const isMe = currentUserId === userId;
-  const tabs = ["الصفحة الشخصية", "بطاقة العلاقات", "الألعاب"];
+  const tabs = ["الصفحة الشخصية", "المنشورات", "بطاقة العلاقات", "الألعاب"];
+  const tabKeys = ["personal", "posts", "relations", "games"];
 
   return (
     <PageTransition>
@@ -252,10 +254,10 @@ const UserProfile = () => {
           <div className="mt-5">
             <div className="flex justify-center gap-6 border-b border-border/20 pb-2">
               {tabs.map((tab, i) => (
-                <button key={tab} onClick={() => setActiveTab(["personal", "relations", "games"][i])}
-                  className={`text-sm font-bold pb-1 transition-colors relative ${activeTab === ["personal", "relations", "games"][i] ? "text-primary" : "text-muted-foreground/50"}`}>
+                <button key={tab} onClick={() => setActiveTab(tabKeys[i])}
+                  className={`text-sm font-bold pb-1 transition-colors relative ${activeTab === tabKeys[i] ? "text-primary" : "text-muted-foreground/50"}`}>
                   {tab}
-                  {activeTab === ["personal", "relations", "games"][i] && (
+                  {activeTab === tabKeys[i] && (
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
                   )}
                 </button>
@@ -328,6 +330,14 @@ const UserProfile = () => {
                     </div>
                   </div>
                 </div>
+              )}
+              {activeTab === "posts" && userId && (
+                <UserPostsSection
+                  profileUserId={userId}
+                  currentUserId={currentUserId}
+                  authorName={profile?.display_name}
+                  authorAvatar={profile?.avatar_url}
+                />
               )}
               {activeTab === "games" && (
                 <div className="text-center py-8 text-muted-foreground"><p className="text-sm">قريباً...</p></div>
