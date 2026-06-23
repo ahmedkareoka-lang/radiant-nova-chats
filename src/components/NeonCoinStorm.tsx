@@ -423,29 +423,58 @@ function StormOverlay({
             willChange: "transform, opacity",
             transform: "translateZ(0)",
           }}
-          initial={{ y: -80, opacity: 0, x: 0, rotate: 0 }}
+          initial={{ y: -120, opacity: 0, x: 0, rotate: -8 }}
           animate={{
-            y: ["0vh", "105vh"],
-            x: [0, coin.drift, -coin.drift, coin.drift / 2],
-            rotate: coin.rotate,
-            opacity: [0, 1, 1, 1, 0.9],
+            y: "108vh",
+            x: [0, coin.drift, -coin.drift / 2, coin.drift],
+            rotate: [-8, coin.rotate, coin.rotate / 2, coin.rotate],
+            opacity: [0, 1, 1, 1, 0.95],
           }}
           transition={{
             duration: coin.duration,
             delay: coin.delay,
-            ease: "linear",
-            repeat: Infinity,
-            repeatDelay: Math.random() * 1.5,
+            ease: [0.45, 0, 0.55, 1], // gentle, regular drop
           }}
-          whileTap={{ scale: 1.4 }}
-          aria-label="coin"
+          whileTap={{ scale: 1.35 }}
+          aria-label="money bag"
         >
           <div className="relative w-full h-full">
-            <div className="absolute inset-0 rounded-full bg-amber-300/40 blur-lg" />
+            {/* red glow */}
+            <div className="absolute inset-0 rounded-full bg-red-500/40 blur-xl" />
+            {/* bag svg */}
+            <svg
+              viewBox="0 0 64 72"
+              className="relative w-full h-full drop-shadow-[0_6px_14px_rgba(220,38,38,0.85)]"
+            >
+              <defs>
+                <linearGradient id={`bag-${coin.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fb7185" />
+                  <stop offset="45%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#7f1d1d" />
+                </linearGradient>
+              </defs>
+              {/* tie */}
+              <path
+                d="M22 10 Q32 2 42 10 L38 18 Q32 14 26 18 Z"
+                fill="#991b1b"
+                stroke="#fecaca"
+                strokeWidth="1"
+              />
+              {/* bag body */}
+              <path
+                d="M14 24 Q32 14 50 24 Q58 46 50 64 Q32 72 14 64 Q6 46 14 24 Z"
+                fill={`url(#bag-${coin.id})`}
+                stroke="#fecaca"
+                strokeWidth="1.2"
+              />
+              {/* highlight */}
+              <ellipse cx="24" cy="36" rx="6" ry="10" fill="#fff" opacity="0.18" />
+            </svg>
+            {/* nova coin emblem on bag */}
             <img
               src={novaCoin3d}
-              alt="nova coin"
-              className="relative w-full h-full object-contain drop-shadow-[0_0_14px_rgba(250,204,21,0.95)]"
+              alt=""
+              className="absolute left-1/2 top-[55%] -translate-x-1/2 -translate-y-1/2 w-[55%] h-[55%] object-contain drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]"
               draggable={false}
             />
           </div>
