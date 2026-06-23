@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveRoomProvider } from "@/contexts/ActiveRoomContext";
+import { AgoraVoiceProvider } from "@/contexts/AgoraVoiceProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import FloatingRoomBubble from "@/components/FloatingRoomBubble";
 import GlobalGiftTicker from "@/components/GlobalGiftTicker";
