@@ -39,6 +39,7 @@ import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import NeonCoinStorm from "@/components/NeonCoinStorm";
+import MicTurfWar from "@/components/MicTurfWar";
 import { Zap } from "lucide-react";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
