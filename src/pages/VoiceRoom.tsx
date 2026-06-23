@@ -39,6 +39,7 @@ import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
 import NeonCoinStorm from "@/components/NeonCoinStorm";
+import MicTurfWar from "@/components/MicTurfWar";
 import { Zap } from "lucide-react";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
@@ -1261,10 +1262,11 @@ const VoiceRoom = () => {
         <div className="shrink-0 overflow-y-auto max-h-[58%]" style={{ scrollbarWidth: "none" }}>
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
-          <div className="mb-4 flex items-start gap-2">
-            <div className="flex-1">
+          <div className="mb-4 flex items-start gap-2 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
               <PKChallenge roomId={roomId} isHost={isHost} members={members} />
             </div>
+            <MicTurfWar roomId={roomId} isHost={isHost} ourRoomName={roomData?.name || "غرفتنا"} />
           </div>
         )}
 
