@@ -112,6 +112,7 @@ const VoiceRoom = () => {
   // Mic muted state lives in the global Agora provider so it survives navigation
   const { isMuted, setIsMuted, connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoiceState();
   const [showGifts, setShowGifts] = useState(false);
+  const [showCoinStorm, setShowCoinStorm] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
   const [giftReceiverName, setGiftReceiverName] = useState("");
