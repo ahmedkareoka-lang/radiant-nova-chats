@@ -1498,7 +1498,7 @@ const VoiceRoom = () => {
       </div>
 
       {/* Bottom Controls */}
-      <div className="bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3">
+      <div className="relative z-20 bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3">
         <div className="flex items-center justify-center gap-4 max-w-lg mx-auto">
           <button
             onClick={handleToggleMic}
