@@ -16,14 +16,16 @@ interface NeonCoinStormProps {
 const POP_SOUND_URL = "https://cdn.pixabay.com/audio/2022/03/10/audio_38f2eb25e7.mp3";
 const THUNDER_URL = "https://cdn.pixabay.com/audio/2022/03/15/audio_d1718ab923.mp3";
 
+// Always 60 bags regardless of tier; tier only changes the prize pool inside each bag.
+const BAGS_COUNT = 60;
 const TIERS = [
-  { cost: 2500, coins: 25, label: "نسيم", color: "from-purple-500 to-fuchsia-500" },
-  { cost: 5000, coins: 45, label: "عاصفة", color: "from-fuchsia-500 to-pink-500" },
-  { cost: 15000, coins: 90, label: "إعصار", color: "from-pink-500 to-rose-500" },
-  { cost: 25000, coins: 140, label: "زلزال", color: "from-amber-500 to-orange-500" },
-  { cost: 50000, coins: 220, label: "بركان", color: "from-orange-500 to-red-500" },
-  { cost: 100000, coins: 350, label: "أسطورة", color: "from-yellow-400 via-fuchsia-500 to-cyan-400" },
-];
+  { cost: 2500, label: "نسيم", color: "from-purple-500 to-fuchsia-500" },
+  { cost: 5000, label: "عاصفة", color: "from-fuchsia-500 to-pink-500" },
+  { cost: 15000, label: "إعصار", color: "from-pink-500 to-rose-500" },
+  { cost: 25000, label: "زلزال", color: "from-amber-500 to-orange-500" },
+  { cost: 50000, label: "بركان", color: "from-orange-500 to-red-500" },
+  { cost: 100000, label: "أسطورة", color: "from-yellow-400 via-fuchsia-500 to-cyan-400" },
+].map((t) => ({ ...t, coins: BAGS_COUNT }));
 
 interface Coin {
   id: number;
