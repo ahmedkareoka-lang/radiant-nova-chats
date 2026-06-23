@@ -172,7 +172,7 @@ const PostsFeedPage = () => {
       return;
     }
     const { data } = await (supabase as any).from("post_comments").select("*").eq("post_id", postId).order("created_at", { ascending: true });
-    const uids = Array.from(new Set((data || []).map((c: any) => c.user_id)));
+    const uids: string[] = Array.from(new Set((data || []).map((c: any) => c.user_id as string)));
     const { data: profs } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", uids.length ? uids : ["00000000-0000-0000-0000-000000000000"]);
     const pm = new Map((profs || []).map((p) => [p.id, p]));
     const enriched: Comment[] = (data || []).map((c: any) => ({ ...c, author: pm.get(c.user_id) as any }));
