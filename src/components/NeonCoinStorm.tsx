@@ -90,35 +90,34 @@ export default function NeonCoinStorm({
         toast.error(`رصيدك غير كافٍ! تحتاج ${tier.cost.toLocaleString()} كوين`);
         return;
       }
-      // Only 5% of the tier cost is actually deducted from the launcher;
-      // the remaining 95% becomes the prize pool that rains for everyone.
+      // 5% fee deducted up front; remaining 95% becomes the prize pool inside the 60 bags.
       const fee = Math.max(1, Math.ceil(tier.cost * 0.05));
       const pool = tier.cost - fee;
 
       const { error } = await supabase.rpc("deduct_coins", {
         _user_id: currentUserId,
-        _amount: fee,
+        _amount: tier.cost, // hold the full cost; we refund pool if nothing was collected
       });
       if (error) {
         toast.error(error.message || "تعذر خصم الرصيد");
         return;
       }
-      setProfile({ coins: balance - fee });
+      setProfile({ coins: balance - tier.cost });
 
       setSelectedTier(tier);
       setPhase("storm");
 
-      // Distribute the pool across the falling coins
-      const perCoin = Math.max(1, Math.floor(pool / tier.coins));
-      const next: Coin[] = Array.from({ length: tier.coins }, (_, i) => ({
+      // 60 bags, equal value each; slow & regular drop
+      const perBag = Math.max(1, Math.floor(pool / BAGS_COUNT));
+      const next: Coin[] = Array.from({ length: BAGS_COUNT }, (_, i) => ({
         id: i,
-        x: Math.random() * 92 + 2,
-        delay: Math.random() * 3,
-        duration: 3 + Math.random() * 2.5,
-        drift: (Math.random() - 0.5) * 30,
-        rotate: 360 + Math.random() * 720,
-        size: 38 + Math.random() * 24,
-        value: perCoin,
+        x: Math.random() * 88 + 4,
+        delay: (i / BAGS_COUNT) * 5 + Math.random() * 0.5, // staggered evenly over 5s
+        duration: 7.5 + Math.random() * 1.5, // slower fall: 7.5-9s
+        drift: (Math.random() - 0.5) * 18,
+        rotate: (Math.random() - 0.5) * 40,
+        size: 54 + Math.random() * 18,
+        value: perBag,
       }));
       setCoins(next);
 
@@ -135,13 +134,18 @@ export default function NeonCoinStorm({
         if (closedRef.current) return;
         closedRef.current = true;
         const winnings = collectedRef.current;
-        if (winnings > 0 && currentUserId) {
-          supabase.rpc("add_coins", { _user_id: currentUserId, _amount: winnings }).then(() => {
-            setProfile({ coins: (useProfileStore.getState().profile?.coins ?? 0) + winnings });
+        // If nobody grabbed any bag → refund the full pool back to the launcher.
+        // Otherwise credit them with what they collected (fastest grabs more bags = more coins).
+        const refund = winnings === 0 ? pool : winnings;
+        if (refund > 0 && currentUserId) {
+          supabase.rpc("add_coins", { _user_id: currentUserId, _amount: refund }).then(() => {
+            setProfile({ coins: (useProfileStore.getState().profile?.coins ?? 0) + refund });
           });
         }
         toast.success(
-          `انتهت ${tier.label}! جمعت ${winnings.toLocaleString()} كوين ⚡`,
+          winnings === 0
+            ? `لم يلتقط أحد أي كيس! تم إرجاع ${pool.toLocaleString()} كوين 💜`
+            : `انتهت ${tier.label}! جمعت ${winnings.toLocaleString()} كوين ⚡`,
           { description: "The storm has ended!" }
         );
         thunderRef.current?.pause();
