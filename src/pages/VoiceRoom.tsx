@@ -210,6 +210,19 @@ const VoiceRoom = () => {
     }
   }, [roomId, roomData?.name]);
 
+  // Auto-minimize on unmount unless the user explicitly left the room.
+  // This keeps the floating bubble + room membership alive when they navigate
+  // away to chat or to their profile, so others still see them as "LIVE".
+  const leavingRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      if (!leavingRef.current) {
+        minimizeRoom();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Love Quest: report 1 shared minute every 60s while in this room.
   // Server checks that the caller has an active couple AND partner is also a member.
   useEffect(() => {
