@@ -33,6 +33,7 @@ interface Coin {
   drift: number;
   rotate: number;
   size: number;
+  value: number;
 }
 
 interface Pop {
