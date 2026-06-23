@@ -47,7 +47,7 @@ interface Pop {
 export default function NeonCoinStorm({
   open,
   onClose,
-  durationMs = 10_000,
+  durationMs = 14_000,
   currentUserId,
 }: NeonCoinStormProps) {
   const profile = useProfileStore((s) => s.profile);
