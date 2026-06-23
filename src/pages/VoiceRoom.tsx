@@ -1301,7 +1301,8 @@ const VoiceRoom = () => {
         )}
 
         {/* Mic Grid — adaptive size & spacing, stable seats (no shake) */}
-        <div className={`grid ${gridCols} ${micGapClass} mb-6 justify-items-center`}>
+        <div className={`grid ${gridCols} ${micGapClass} mb-2 justify-items-center`}>
+
           {micSlots.map((slot, i) => {
             const isSlotLocked = lockedSlots.includes(i);
             const slotIsSpeaking = slot?.is_on_mic && (
