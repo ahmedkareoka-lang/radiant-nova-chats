@@ -1188,7 +1188,7 @@ const VoiceRoom = () => {
       )}
 
       {/* Header */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
+      <header className="relative z-20 bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
             <button onClick={handleLeave} className="text-muted-foreground">
