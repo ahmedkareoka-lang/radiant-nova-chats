@@ -1774,6 +1774,69 @@ export type Database = {
         }
         Relationships: []
       }
+      turf_wars: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          host_a: string
+          host_b: string
+          id: string
+          room_a: string
+          room_b: string
+          score_a: number
+          score_b: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          winner_room: string | null
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          host_a: string
+          host_b: string
+          id?: string
+          room_a: string
+          room_b: string
+          score_a?: number
+          score_b?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          winner_room?: string | null
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          host_a?: string
+          host_b?: string
+          id?: string
+          room_a?: string
+          room_b?: string
+          score_a?: number
+          score_b?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          winner_room?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turf_wars_room_a_fkey"
+            columns: ["room_a"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "turf_wars_room_b_fkey"
+            columns: ["room_b"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usdt_recharge_requests: {
         Row: {
           admin_notes: string | null
@@ -1989,6 +2052,30 @@ export type Database = {
         Args: { _diamond_amount: number; _user_id: string; _xp_amount: number }
         Returns: undefined
       }
+      add_turf_war_points: {
+        Args: { _amount: number; _room_id: string; _war_id: string }
+        Returns: {
+          created_at: string
+          ends_at: string | null
+          host_a: string
+          host_b: string
+          id: string
+          room_a: string
+          room_b: string
+          score_a: number
+          score_b: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          winner_room: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "turf_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_kick_from_mic: {
         Args: { _room_id: string; _target_user: string }
         Returns: undefined
@@ -2061,6 +2148,30 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      cancel_turf_war: {
+        Args: { _war_id: string }
+        Returns: {
+          created_at: string
+          ends_at: string | null
+          host_a: string
+          host_b: string
+          id: string
+          room_a: string
+          room_b: string
+          score_a: number
+          score_b: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          winner_room: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "turf_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       claim_daily_reward: {
         Args: { _task_type: string; _user_id: string }
         Returns: undefined
@@ -2088,6 +2199,30 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      finalize_turf_war: {
+        Args: { _war_id: string }
+        Returns: {
+          created_at: string
+          ends_at: string | null
+          host_a: string
+          host_b: string
+          id: string
+          room_a: string
+          room_b: string
+          score_a: number
+          score_b: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          winner_room: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "turf_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       generate_agency_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -2211,6 +2346,30 @@ export type Database = {
         Args: { _accept: boolean; _request_id: string }
         Returns: undefined
       }
+      respond_turf_war: {
+        Args: { _accept: boolean; _duration_seconds?: number; _war_id: string }
+        Returns: {
+          created_at: string
+          ends_at: string | null
+          host_a: string
+          host_b: string
+          id: string
+          room_a: string
+          room_b: string
+          score_a: number
+          score_b: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          winner_room: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "turf_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_agency_by_code: { Args: { _code: string }; Returns: Json }
       send_gift_atomic: {
         Args: { _gift_name: string; _gold_amount: number; _receiver_id: string }
@@ -2234,6 +2393,30 @@ export type Database = {
           _user2_id: string
         }
         Returns: string
+      }
+      start_turf_war: {
+        Args: { _room_id: string }
+        Returns: {
+          created_at: string
+          ends_at: string | null
+          host_a: string
+          host_b: string
+          id: string
+          room_a: string
+          room_b: string
+          score_a: number
+          score_b: number
+          started_at: string | null
+          status: string
+          updated_at: string
+          winner_room: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "turf_wars"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       submit_usdt_recharge: {
         Args: {
