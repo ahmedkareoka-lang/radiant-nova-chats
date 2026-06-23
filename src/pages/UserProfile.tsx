@@ -330,6 +330,14 @@ const UserProfile = () => {
                   </div>
                 </div>
               )}
+              {activeTab === "posts" && userId && (
+                <UserPostsSection
+                  profileUserId={userId}
+                  currentUserId={currentUserId}
+                  authorName={profile?.display_name}
+                  authorAvatar={profile?.avatar_url}
+                />
+              )}
               {activeTab === "games" && (
                 <div className="text-center py-8 text-muted-foreground"><p className="text-sm">قريباً...</p></div>
               )}
