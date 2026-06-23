@@ -69,6 +69,7 @@ const UserProfile = () => {
   const targetIsBD = useIsBD(userId);
   const meIsAgent = useIsRechargeAgent(currentUserId);
   const [transferOpen, setTransferOpen] = useState(false);
+  const activeRoom = useUserActiveRoom(userId);
 
   useEffect(() => {
     if (!userId) { navigate("/"); return; }
