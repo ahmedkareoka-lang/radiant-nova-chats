@@ -434,41 +434,22 @@ function StormOverlay({
           whileTap={{ scale: 1.4 }}
           aria-label="coin"
         >
-          <svg
-            viewBox="0 0 64 64"
-            className="w-full h-full drop-shadow-[0_0_12px_rgba(250,204,21,0.95)]"
-          >
-            <defs>
-              <radialGradient id={`coinGrad-${coin.id}`} cx="35%" cy="30%" r="70%">
-                <stop offset="0%" stopColor="#fffbeb" />
-                <stop offset="40%" stopColor="#fde047" />
-                <stop offset="80%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#78350f" />
-              </radialGradient>
-            </defs>
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              fill={`url(#coinGrad-${coin.id})`}
-              stroke="#fef3c7"
-              strokeWidth="2"
+          <div className="relative w-full h-full">
+            <div className="absolute inset-0 rounded-full bg-amber-300/40 blur-lg" />
+            <img
+              src={novaCoin3d}
+              alt="nova coin"
+              className="relative w-full h-full object-contain drop-shadow-[0_0_14px_rgba(250,204,21,0.95)]"
+              draggable={false}
             />
-            <circle cx="32" cy="32" r="20" fill="none" stroke="#fffbeb" strokeWidth="1.5" opacity="0.7" />
-            <text
-              x="32"
-              y="41"
-              textAnchor="middle"
-              fontSize="24"
-              fontWeight="900"
-              fill="#7c2d12"
-              fontFamily="system-ui"
-            >
-              $
-            </text>
-          </svg>
+          </div>
         </motion.button>
       ))}
+
+      {/* keep block balance */}
+      {false && (
+        <span />
+      )}
 
       {/* Pop explosions */}
       {pops.map((p) => (
