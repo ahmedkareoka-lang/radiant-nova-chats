@@ -1266,7 +1266,7 @@ const VoiceRoom = () => {
             <div className="flex-1 min-w-[200px]">
               <PKChallenge roomId={roomId} isHost={isHost} members={members} />
             </div>
-            <MicTurfWar roomId={roomId} isHost={isHost} ourRoomName={roomData?.name || "غرفتنا"} />
+            <MicTurfWar roomId={roomId} isHost={isHost} currentUserId={currentUserId} ourRoomName={roomData?.name || "غرفتنا"} />
           </div>
         )}
 
