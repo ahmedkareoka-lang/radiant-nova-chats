@@ -396,8 +396,9 @@ function StormOverlay({
         transition={{ delay: 0.25 }}
         className="absolute top-16 left-1/2 -translate-x-1/2 z-[112] pointer-events-none"
       >
-        <div className="px-4 py-1.5 rounded-full bg-black/70 border border-fuchsia-400/60 shadow-[0_0_22px_rgba(217,70,239,0.6)] text-white font-bold text-xs">
-          Coins Collected: +{collected} 🪙
+        <div className="px-4 py-1.5 rounded-full bg-black/70 border border-fuchsia-400/60 shadow-[0_0_22px_rgba(217,70,239,0.6)] text-white font-bold text-xs flex items-center gap-1.5">
+          <img src={novaCoin3d} alt="" className="w-4 h-4 object-contain" />
+          +{collected.toLocaleString()}
         </div>
       </motion.div>
 
