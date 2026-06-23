@@ -1258,7 +1258,8 @@ const VoiceRoom = () => {
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
       {/* Voice Room Area */}
-      <div className="relative z-10 flex-1 overflow-auto px-4 py-6 max-w-lg mx-auto w-full">
+      {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
         {/* PK Challenge & Trophy side by side */}
         {roomId && (
           <div className="mb-4 flex items-start gap-2">
