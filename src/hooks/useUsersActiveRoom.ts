@@ -31,6 +31,7 @@ export function useUsersActiveRoom(userIds: (string | null | undefined)[]) {
       if (!members || cancelled) return;
 
       const fresh = members;
+      const roomIds = Array.from(new Set(fresh.map((m) => m.room_id)));
       if (!roomIds.length) {
         setMap({});
         return;
