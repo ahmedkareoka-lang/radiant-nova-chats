@@ -38,6 +38,8 @@ import BDBadge from "@/components/BDBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import { logAgora } from "@/lib/agoraDebugLog";
 import AIRoomAssistant from "@/components/AIRoomAssistant";
+import NeonCoinStorm from "@/components/NeonCoinStorm";
+import { Zap } from "lucide-react";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
@@ -110,6 +112,7 @@ const VoiceRoom = () => {
   // Mic muted state lives in the global Agora provider so it survives navigation
   const { isMuted, setIsMuted, connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoiceState();
   const [showGifts, setShowGifts] = useState(false);
+  const [showCoinStorm, setShowCoinStorm] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [giftReceiverId, setGiftReceiverId] = useState<string | null>(null);
   const [giftReceiverName, setGiftReceiverName] = useState("");
@@ -1537,6 +1540,14 @@ const VoiceRoom = () => {
             <Gift className="w-6 h-6 text-accent-foreground" />
           </button>
           <button
+            onClick={() => setShowCoinStorm(true)}
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-[0_0_18px_rgba(217,70,239,0.7)] flex items-center justify-center text-white relative overflow-hidden"
+            aria-label="Launch Coin Storm"
+            title="عاصفة الكوينز النيون"
+          >
+            <Zap className="w-5 h-5" fill="currentColor" />
+          </button>
+          <button
             onClick={() => setShowInventory(true)}
             className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
             aria-label="الحقيبة"
@@ -1565,6 +1576,7 @@ const VoiceRoom = () => {
         roomId={roomId || undefined}
       />
       <InventorySheet open={showInventory} onClose={() => setShowInventory(false)} />
+      <NeonCoinStorm open={showCoinStorm} onClose={() => setShowCoinStorm(false)} />
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />
