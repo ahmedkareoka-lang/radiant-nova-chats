@@ -24,11 +24,20 @@ const SearchPage = () => {
         return;
       }
       setLoading(true);
-      // Exact ID match when input is exactly 6 digits
       const isExactId = /^\d{6}$/.test(q);
+      const isVanity = /^\d{4}$/.test(q);
       let data: any[] | null = null;
       let error: any = null;
-      if (isExactId) {
+      if (isVanity) {
+        // Search by premium 4-digit vanity ID (only if still active)
+        const res = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("vanity_id", q)
+          .gt("vanity_id_expiry", new Date().toISOString())
+          .limit(5);
+        data = res.data; error = res.error;
+      } else if (isExactId) {
         const res = await supabase.from("profiles").select("*").eq("user_id", q).limit(1);
         data = res.data; error = res.error;
       } else {
@@ -36,7 +45,7 @@ const SearchPage = () => {
         const res = await supabase
           .from("profiles")
           .select("*")
-          .or(`display_name.ilike.%${safe}%,user_id.ilike.%${safe}%`)
+          .or(`display_name.ilike.%${safe}%,user_id.ilike.%${safe}%,vanity_id.ilike.%${safe}%`)
           .limit(30);
         data = res.data; error = res.error;
       }
@@ -45,7 +54,7 @@ const SearchPage = () => {
       setLoading(false);
     };
 
-    const timer = setTimeout(fetchUsers, /^\d{6}$/.test(query.trim()) ? 0 : 250);
+    const timer = setTimeout(fetchUsers, /^\d{4,6}$/.test(query.trim()) ? 0 : 250);
     return () => clearTimeout(timer);
   }, [query]);
 
