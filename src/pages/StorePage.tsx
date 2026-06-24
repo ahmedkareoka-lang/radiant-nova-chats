@@ -260,7 +260,9 @@ const StorePage = () => {
       toast.info("لديك هذا العنصر بالفعل في الحقيبة!");
       return;
     }
-    const price = Number(item.price_coins) || 0;
+    const rawPrice = Number(item.price_coins) || 0;
+    // VIP store discount does NOT apply to buying VIP tiers themselves.
+    const price = item.type === "vip" ? rawPrice : applyVipDiscount(rawPrice, profile);
     if (profile.coins < price) {
       toast.error("رصيدك غير كافٍ!");
       return;
