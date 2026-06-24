@@ -136,7 +136,7 @@ export const VIP_TIERS: VipTier[] = [
     title: "نجم نوفا",
     titleEn: "Nova Star",
     tagline: "انفجار كوني في كل دخول",
-    price: 50_000,
+    price: 200_000,
     primary: "260 95% 65%",
     secondary: "200 95% 60%",
     glow: "240 100% 75%",
