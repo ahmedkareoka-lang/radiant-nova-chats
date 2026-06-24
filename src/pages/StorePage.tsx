@@ -174,8 +174,9 @@ const StorePage = () => {
   const buyCatalogItem = async (cat: "frame" | "gift" | "entrance", item: any) => {
     if (!profile) return;
     if (ownedItemNames.has(item.name)) { toast.info("لديك هذا العنصر بالفعل!"); return; }
-    if (profile.coins < item.price) { toast.error("رصيدك غير كافٍ!"); return; }
-    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: item.price });
+    const price = applyVipDiscount(item.price, profile);
+    if (profile.coins < price) { toast.error("رصيدك غير كافٍ!"); return; }
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
     if (error) { toast.error("فشل في الشراء"); return; }
     const itemData: any = {
       image_url: item.image,
@@ -189,7 +190,7 @@ const StorePage = () => {
       item_name: item.name,
       item_data: itemData,
     });
-    await applyInstantEquip(cat, item, itemData);
+    await applyInstantEquip(cat, { ...item, price_coins: price, price }, itemData);
     if (cat === "frame") setOwnedFrames([...ownedFrames, item.name]);
     setOwnedItemNames(new Set([...ownedItemNames, item.name]));
     await supabase.from("notifications").insert({
