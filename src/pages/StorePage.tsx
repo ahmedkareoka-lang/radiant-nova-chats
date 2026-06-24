@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import DualBadge from "@/components/DualBadge";
 import FramedAvatar from "@/components/FramedAvatar";
 import { FRAME_MAP, FRAME_ANIMATION, FRAMES } from "@/lib/frameConfig";
+import { applyVipDiscount, vipStoreDiscountPct, activeVipLevel } from "@/lib/vipBenefits";
 
 // Dynamically derived from FRAMES — adding a frame to frameConfig.ts
 // makes it appear in the store automatically (only ones flagged for sale).
@@ -135,13 +136,14 @@ const StorePage = () => {
       toast.info("لديك هذا الإطار بالفعل!");
       return;
     }
-    if (profile.coins < frame.price_coins) {
+    const price = applyVipDiscount(frame.price_coins, profile);
+    if (profile.coins < price) {
       toast.error("رصيدك غير كافٍ!");
       return;
     }
 
-    const newCoins = profile.coins - frame.price_coins;
-    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: frame.price_coins });
+    const newCoins = profile.coins - price;
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
     if (error) { toast.error("فشل في الشراء"); return; }
     await supabase.from("profiles").update({ equipped_frame: frame.data.frame_url }).eq("id", profile.id);
     await supabase.from("inventory").insert({
@@ -172,8 +174,9 @@ const StorePage = () => {
   const buyCatalogItem = async (cat: "frame" | "gift" | "entrance", item: any) => {
     if (!profile) return;
     if (ownedItemNames.has(item.name)) { toast.info("لديك هذا العنصر بالفعل!"); return; }
-    if (profile.coins < item.price) { toast.error("رصيدك غير كافٍ!"); return; }
-    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: item.price });
+    const price = applyVipDiscount(item.price, profile);
+    if (profile.coins < price) { toast.error("رصيدك غير كافٍ!"); return; }
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
     if (error) { toast.error("فشل في الشراء"); return; }
     const itemData: any = {
       image_url: item.image,
@@ -187,7 +190,7 @@ const StorePage = () => {
       item_name: item.name,
       item_data: itemData,
     });
-    await applyInstantEquip(cat, item, itemData);
+    await applyInstantEquip(cat, { ...item, price_coins: price, price }, itemData);
     if (cat === "frame") setOwnedFrames([...ownedFrames, item.name]);
     setOwnedItemNames(new Set([...ownedItemNames, item.name]));
     await supabase.from("notifications").insert({
@@ -257,7 +260,9 @@ const StorePage = () => {
       toast.info("لديك هذا العنصر بالفعل في الحقيبة!");
       return;
     }
-    const price = Number(item.price_coins) || 0;
+    const rawPrice = Number(item.price_coins) || 0;
+    // VIP store discount does NOT apply to buying VIP tiers themselves.
+    const price = item.type === "vip" ? rawPrice : applyVipDiscount(rawPrice, profile);
     if (profile.coins < price) {
       toast.error("رصيدك غير كافٍ!");
       return;
@@ -313,6 +318,17 @@ const StorePage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
+          {vipStoreDiscountPct(activeVipLevel(profile)) > 0 && (
+            <div className="rounded-xl px-3 py-2 text-center text-xs font-black border"
+              style={{
+                background: "linear-gradient(135deg, hsl(45 100% 55% / 0.15), hsl(280 90% 55% / 0.15))",
+                borderColor: "hsl(45 100% 55% / 0.5)",
+                color: "hsl(45 100% 75%)",
+              }}>
+              👑 خصم VIP فعّال — {vipStoreDiscountPct(activeVipLevel(profile))}% على كل المشتريات (عدا اشتراك VIP)
+            </div>
+          )}
+
 
           {/* Special 4-digit ID — luxury fiery orange entry */}
           <button
