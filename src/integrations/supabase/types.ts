@@ -2519,6 +2519,9 @@ export type Database = {
         Args: { _room_id: string; _slot: number; _user_id: string }
         Returns: boolean
       }
+      vip_active_level: { Args: { _user: string }; Returns: number }
+      vip_reward_multiplier: { Args: { _user: string }; Returns: number }
+      vip_store_discount: { Args: { _user: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "super_admin" | "user"
