@@ -195,6 +195,7 @@ const AnimatedRoutes = () => {
         <Route path="/love-history" element={<AuthGate><LoveHistoryPage /></AuthGate>} />
         <Route path="/dev/frames" element={<AuthGate><FramePreviewPage /></AuthGate>} />
         <Route path="/bd" element={<AuthGate><BDDashboard /></AuthGate>} />
+        <Route path="/visitors" element={<AuthGate><VisitorsPage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
