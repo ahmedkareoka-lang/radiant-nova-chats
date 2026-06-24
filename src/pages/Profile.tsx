@@ -400,7 +400,12 @@ const Profile = () => {
               <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
             </div>
 
-            <CopyIdButton id={profile?.user_id} className="mt-2" />
+            <div className="mt-2 flex items-center gap-2 flex-wrap justify-center">
+              {profile?.vanity_id && (
+                <VanityIdPill digits={profile.vanity_id} expiresAt={profile.vanity_id_expiry} size="md" />
+              )}
+              <CopyIdButton id={profile?.user_id} />
+            </div>
           </div>
 
           {/* === STATS PILL === */}
