@@ -108,7 +108,18 @@ const SearchPage = () => {
                     )}
                   </div>
                   <span className={`font-bold text-sm ${user.is_boss ? "boss-fire-text" : ""}`}>{user.display_name}</span>
-                  <span className="text-[10px] text-muted-foreground">ID: {user.user_id}</span>
+                  {user.vanity_id && new Date(user.vanity_id_expiry).getTime() > Date.now() ? (
+                    <span className="text-[10px] font-black tracking-widest px-2 py-0.5 rounded-full"
+                      style={{
+                        color: "#fff7ed",
+                        background: "linear-gradient(135deg, hsl(20 95% 52%), hsl(35 100% 55%))",
+                        boxShadow: "0 0 10px hsl(25 100% 55% / 0.7)",
+                      }}>
+                      🔥 ID {user.vanity_id}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">ID: {user.user_id}</span>
+                  )}
                   {user.vip_level > 0 && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 font-bold text-accent">
                       VIP {user.vip_level}
