@@ -313,15 +313,6 @@ const StorePage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
-          {pricing && (
-            <div className="card-nova p-3 text-center">
-              <p className="text-[10px] text-muted-foreground">الأسعار بعملة: <span className="font-bold text-primary">{pricing.currency}</span></p>
-              <div className="flex items-center justify-center gap-4 mt-1">
-                <span className="text-xs flex items-center gap-1"><CurrencyIcon type="gold" size="xs" /> 1000 = {pricing.coin_price} {pricing.currency}</span>
-                <span className="text-xs flex items-center gap-1"><CurrencyIcon type="diamond" size="xs" /> 1000 = {pricing.diamond_price} {pricing.currency}</span>
-              </div>
-            </div>
-          )}
 
           {/* Special 4-digit ID — luxury fiery orange entry */}
           <button
