@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import storeCatalog from "@/lib/storeCatalog.json";
-import { ArrowLeft, ShoppingBag, Check, Eye, Shirt } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Eye, Shirt, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
