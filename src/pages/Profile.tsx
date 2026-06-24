@@ -18,6 +18,7 @@ import BDBadge from "@/components/BDBadge";
 import AgentBadge from "@/components/AgentBadge";
 import HostBadge from "@/components/HostBadge";
 import CopyIdButton from "@/components/CopyIdButton";
+import VanityIdPill from "@/components/VanityIdPill";
 import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import { useIsBD } from "@/hooks/useIsBD";
