@@ -164,7 +164,7 @@ export const VIP_TIERS: VipTier[] = [
     title: "طائر العنقاء",
     titleEn: "Phoenix Sovereign",
     tagline: "نهض من اللهب ليحكم السماء",
-    price: 150_000,
+    price: 600_000,
     primary: "15 100% 55%",
     secondary: "35 100% 60%",
     glow: "25 100% 65%",
