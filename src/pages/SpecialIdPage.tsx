@@ -171,6 +171,26 @@ const SpecialIdPage = () => {
                 <p className="text-[10px] text-orange-200/80">
                   ⏳ متبقي {daysLeft} يوم
                 </p>
+                <div
+                  className="mt-1 px-3 py-2 rounded-xl text-[11px] leading-relaxed text-orange-100/90 text-center"
+                  style={{
+                    background: "hsl(15 60% 10% / 0.7)",
+                    border: "1px dashed hsl(30 80% 55% / 0.45)",
+                  }}
+                >
+                  <div className="font-bold text-amber-200 mb-0.5">
+                    🔁 سيتم استرجاع معرّفك الأصلي ({profile.user_id})
+                  </div>
+                  <div>
+                    في{" "}
+                    <span className="font-black text-orange-200">
+                      {new Date(activeExpiry).toLocaleString("ar-EG", {
+                        dateStyle: "full",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
           </section>
