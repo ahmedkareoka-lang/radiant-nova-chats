@@ -83,6 +83,11 @@ const UserProfile = () => {
       const { count: received } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", userId);
       setGiftStats({ sent: sent || 0, received: received || 0 });
       setLoading(false);
+      // Record a profile visit (fire and forget, skip self)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id !== userId) {
+        supabase.rpc("record_profile_visit" as any, { _profile_id: userId }).then(() => {});
+      }
     };
     load();
   }, [userId, navigate]);
