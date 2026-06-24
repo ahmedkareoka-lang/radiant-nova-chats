@@ -424,10 +424,12 @@ const Profile = () => {
                 <p className="font-black text-base text-foreground">{giftStats.received}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">هدايا</p>
               </div>
-              <div className="border-l border-border/40">
-                <p className="font-black text-base text-foreground">{profile?.charisma_level || 1}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">المستوى</p>
-              </div>
+              <button onClick={() => navigate("/visitors")} className="border-l border-border/40 cursor-pointer">
+                <p className="font-black text-base text-accent flex items-center justify-center gap-1">
+                  👁️
+                </p>
+                <p className="text-[10px] text-accent mt-0.5">الزوار</p>
+              </button>
             </div>
           </div>
 

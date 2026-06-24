@@ -1103,6 +1103,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_visits: {
+        Row: {
+          created_at: string
+          id: string
+          last_visited_at: string
+          profile_id: string
+          visit_count: number
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_visited_at?: string
+          profile_id: string
+          visit_count?: number
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_visited_at?: string
+          profile_id?: string
+          visit_count?: number
+          visitor_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
@@ -2379,6 +2406,10 @@ export type Database = {
       }
       purchase_vip: { Args: { _level: number }; Returns: Json }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }
+      record_profile_visit: {
+        Args: { _profile_id: string }
+        Returns: undefined
+      }
       redeem_code: { Args: { _code: string }; Returns: Json }
       reject_relationship_request: {
         Args: { _request_id: string }
