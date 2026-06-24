@@ -171,6 +171,7 @@ const AnimatedRoutes = () => {
         <Route path="/top-up" element={<AuthGate><TopUpPage /></AuthGate>} />
         <Route path="/admin" element={<AuthGate><AdminDashboard /></AuthGate>} />
         <Route path="/store" element={<AuthGate><StorePage /></AuthGate>} />
+        <Route path="/special-id" element={<AuthGate><SpecialIdPage /></AuthGate>} />
         <Route path="/wallet" element={<AuthGate><WalletPage /></AuthGate>} />
         <Route path="/inventory" element={<AuthGate><InventoryPage /></AuthGate>} />
         <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />
