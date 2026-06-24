@@ -460,7 +460,14 @@ const VoiceRoom = () => {
     const { error } = await supabase.rpc("admin_kick_from_mic" as any, {
       _room_id: roomId, _target_user: userId,
     });
-    if (error) { toast.error("تعذر إنزال المستخدم: " + error.message); return; }
+    if (error) {
+      if (error.message?.includes("vip_protected")) {
+        toast.error("🛡️ هذا العضو محمي بـ VIP 5+ — لا يمكن إنزاله من المايك");
+      } else {
+        toast.error("تعذر إنزال المستخدم: " + error.message);
+      }
+      return;
+    }
     fetchMembers();
     toast.success("تم إنزال المستخدم من المايك");
     setSelectedProfile(null);
@@ -472,7 +479,14 @@ const VoiceRoom = () => {
     const { error } = await supabase.rpc("admin_kick_user" as any, {
       _room_id: roomId, _target_user: userId,
     });
-    if (error) { toast.error("تعذر طرد المستخدم: " + error.message); return; }
+    if (error) {
+      if (error.message?.includes("vip_protected")) {
+        toast.error("🛡️ هذا العضو محمي بـ VIP 5+ — لا يمكن طرده");
+      } else {
+        toast.error("تعذر طرد المستخدم: " + error.message);
+      }
+      return;
+    }
     fetchMembers();
     toast.success("تم طرد المستخدم من الغرفة 🚫");
     setSelectedProfile(null);
