@@ -318,6 +318,17 @@ const StorePage = () => {
         </header>
 
         <main className="px-4 py-4 max-w-lg mx-auto space-y-4">
+          {vipStoreDiscountPct(activeVipLevel(profile)) > 0 && (
+            <div className="rounded-xl px-3 py-2 text-center text-xs font-black border"
+              style={{
+                background: "linear-gradient(135deg, hsl(45 100% 55% / 0.15), hsl(280 90% 55% / 0.15))",
+                borderColor: "hsl(45 100% 55% / 0.5)",
+                color: "hsl(45 100% 75%)",
+              }}>
+              👑 خصم VIP فعّال — {vipStoreDiscountPct(activeVipLevel(profile))}% على كل المشتريات (عدا اشتراك VIP)
+            </div>
+          )}
+
 
           {/* Special 4-digit ID — luxury fiery orange entry */}
           <button
