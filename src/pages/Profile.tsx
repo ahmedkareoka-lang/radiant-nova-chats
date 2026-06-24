@@ -634,7 +634,12 @@ const Profile = () => {
                 <FramedAvatar avatarUrl={profile?.avatar_url} equippedFrame={profile?.equipped_frame} size={56} />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate">{profile?.display_name || "مستخدم"}</p>
-                  <CopyIdButton id={profile?.user_id} className="mt-0.5" />
+                  <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    {profile?.vanity_id && (
+                      <VanityIdPill digits={profile.vanity_id} expiresAt={profile.vanity_id_expiry} size="sm" />
+                    )}
+                    <CopyIdButton id={profile?.user_id} />
+                  </div>
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
                     <span>المستوى {profile?.level || 1}</span>
                     <span>•</span>
