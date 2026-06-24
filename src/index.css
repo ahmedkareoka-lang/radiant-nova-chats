@@ -962,3 +962,26 @@
     50%     { transform: scale(1.4) rotate(180deg); opacity: 1; }
   }
 }
+
+@layer utilities {
+  @keyframes vanityGlow {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px hsl(30 100% 60% / 0.35),
+        0 0 14px hsl(25 100% 55% / 0.95),
+        0 0 32px hsl(20 100% 50% / 0.7),
+        0 0 60px hsl(15 100% 48% / 0.45),
+        inset 0 1px 0 hsl(45 100% 85% / 0.6),
+        inset 0 -1px 0 hsl(15 90% 25% / 0.4);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px hsl(35 100% 65% / 0.55),
+        0 0 22px hsl(28 100% 60% / 1),
+        0 0 48px hsl(20 100% 52% / 0.9),
+        0 0 90px hsl(15 100% 50% / 0.65),
+        inset 0 1px 0 hsl(45 100% 90% / 0.75),
+        inset 0 -1px 0 hsl(15 90% 25% / 0.5);
+    }
+  }
+}
