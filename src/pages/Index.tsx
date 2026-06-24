@@ -323,6 +323,31 @@ const Index = () => {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-fuchsia-500 flex items-center justify-center text-base">📸</div>
               <span className="text-[9px] font-bold text-foreground/90">المنشورات</span>
             </button>
+            <button
+              onClick={() => navigate("/special-id")}
+              className="flex flex-col items-center gap-1 p-2.5 rounded-2xl transition-all hover:-translate-y-0.5 relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, hsl(20 80% 18% / 0.9), hsl(15 70% 10% / 0.9))",
+                border: "1px solid hsl(30 100% 55% / 0.6)",
+                boxShadow: "0 0 14px hsl(25 100% 55% / 0.55), inset 0 1px 0 hsl(45 100% 80% / 0.35)",
+              }}
+            >
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, hsl(25 100% 55%), hsl(15 100% 48%))",
+                  boxShadow: "0 0 12px hsl(25 100% 55% / 0.85)",
+                }}
+              >
+                <span className="text-base drop-shadow-[0_0_8px_hsl(45_100%_75%)]">🔥</span>
+              </div>
+              <span
+                className="text-[9px] font-black bg-gradient-to-r from-amber-200 via-orange-300 to-red-300 bg-clip-text text-transparent"
+                style={{ textShadow: "0 0 8px hsl(25 100% 55% / 0.6)" }}
+              >
+                ID مميز
+              </span>
+            </button>
           </div>
 
           {/* Categories scrollable bar */}
