@@ -61,6 +61,7 @@ const SearchPage = lazyWithRetry(() => import("./pages/SearchPage"));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const StorePage = lazyWithRetry(() => import("./pages/StorePage"));
+const SpecialIdPage = lazyWithRetry(() => import("./pages/SpecialIdPage"));
 const WalletPage = lazyWithRetry(() => import("./pages/WalletPage"));
 const InventoryPage = lazyWithRetry(() => import("./pages/InventoryPage"));
 const AgenciesPage = lazyWithRetry(() => import("./pages/AgenciesPage"));
