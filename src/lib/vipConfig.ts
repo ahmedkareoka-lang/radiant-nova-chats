@@ -55,7 +55,7 @@ export const VIP_TIERS: VipTier[] = [
     title: "بريق الفجر",
     titleEn: "Dawn Ember",
     tagline: "أول شعاع في رحلة النجوم",
-    price: 1_000,
+    price: 4_000,
     primary: "190 90% 60%",
     secondary: "210 80% 50%",
     glow: "180 100% 70%",
