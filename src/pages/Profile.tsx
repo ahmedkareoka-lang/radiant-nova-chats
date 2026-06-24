@@ -66,7 +66,7 @@ const PROFILE_PUBLIC_FIELDS = `
   is_boss, is_verified, is_agent, is_host, is_bd, agency_eligible, agency_id,
   equipped_frame, equipped_badge, equipped_chat_bubble,
   equipped_entrance_effect, equipped_name_style,
-  entrance_video_url, entrance_audio_url, created_at
+  entrance_video_url, entrance_audio_url, vanity_id, vanity_id_expiry, created_at
 `;
 
 const Profile = () => {
