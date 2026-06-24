@@ -2475,6 +2475,7 @@ export type Database = {
         Returns: Json
       }
       sweep_expired_perks: { Args: never; Returns: undefined }
+      sweep_expired_vanity_ids: { Args: never; Returns: undefined }
       transfer_diamonds_to_user: {
         Args: { _amount: number; _recipient_user_id: string }
         Returns: Json
