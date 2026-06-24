@@ -1141,6 +1141,8 @@ export type Database = {
           telegram_username: string | null
           total_spend_gold: number
           user_id: string
+          vanity_id: string | null
+          vanity_id_expiry: string | null
           vip_expiry: string | null
           vip_level: number
           wealth_level: number
@@ -1183,6 +1185,8 @@ export type Database = {
           telegram_username?: string | null
           total_spend_gold?: number
           user_id: string
+          vanity_id?: string | null
+          vanity_id_expiry?: string | null
           vip_expiry?: string | null
           vip_level?: number
           wealth_level?: number
@@ -1225,6 +1229,8 @@ export type Database = {
           telegram_username?: string | null
           total_spend_gold?: number
           user_id?: string
+          vanity_id?: string | null
+          vanity_id_expiry?: string | null
           vip_expiry?: string | null
           vip_level?: number
           wealth_level?: number
@@ -1948,6 +1954,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vanity_ids: {
+        Row: {
+          created_at: string
+          digits: string
+          expires_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          digits: string
+          expires_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          digits?: string
+          expires_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vanity_ids_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vanity_ids_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       profiles_public: {
@@ -2330,6 +2372,10 @@ export type Database = {
       process_referral_recharge: {
         Args: { _recharge_coins: number; _user_id: string }
         Returns: undefined
+      }
+      purchase_vanity_id: {
+        Args: { _digits: string; _duration_days: number }
+        Returns: Json
       }
       purchase_vip: { Args: { _level: number }; Returns: Json }
       record_nova_p_monthly: { Args: { _user_id: string }; Returns: undefined }

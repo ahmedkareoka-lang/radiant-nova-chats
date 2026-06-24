@@ -61,6 +61,7 @@ const SearchPage = lazyWithRetry(() => import("./pages/SearchPage"));
 const ChatPage = lazyWithRetry(() => import("./pages/ChatPage"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const StorePage = lazyWithRetry(() => import("./pages/StorePage"));
+const SpecialIdPage = lazyWithRetry(() => import("./pages/SpecialIdPage"));
 const WalletPage = lazyWithRetry(() => import("./pages/WalletPage"));
 const InventoryPage = lazyWithRetry(() => import("./pages/InventoryPage"));
 const AgenciesPage = lazyWithRetry(() => import("./pages/AgenciesPage"));
@@ -170,6 +171,7 @@ const AnimatedRoutes = () => {
         <Route path="/top-up" element={<AuthGate><TopUpPage /></AuthGate>} />
         <Route path="/admin" element={<AuthGate><AdminDashboard /></AuthGate>} />
         <Route path="/store" element={<AuthGate><StorePage /></AuthGate>} />
+        <Route path="/special-id" element={<AuthGate><SpecialIdPage /></AuthGate>} />
         <Route path="/wallet" element={<AuthGate><WalletPage /></AuthGate>} />
         <Route path="/inventory" element={<AuthGate><InventoryPage /></AuthGate>} />
         <Route path="/agencies" element={<AuthGate><AgenciesPage /></AuthGate>} />

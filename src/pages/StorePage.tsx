@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import storeCatalog from "@/lib/storeCatalog.json";
-import { ArrowLeft, ShoppingBag, Check, Eye, Shirt } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Eye, Shirt, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -322,6 +322,48 @@ const StorePage = () => {
               </div>
             </div>
           )}
+
+          {/* Special 4-digit ID — luxury fiery orange entry */}
+          <button
+            onClick={() => navigate("/special-id")}
+            className="w-full rounded-2xl p-4 text-start flex items-center gap-3 relative overflow-hidden active:scale-[0.98] transition-transform"
+            style={{
+              background:
+                "linear-gradient(135deg, hsl(20 95% 28%) 0%, hsl(15 90% 18%) 60%, hsl(35 100% 35%) 100%)",
+              border: "1.5px solid hsl(35 100% 60% / 0.85)",
+              boxShadow:
+                "0 0 22px hsl(25 100% 55% / 0.7), 0 0 50px hsl(15 100% 48% / 0.4), inset 0 1px 0 hsl(45 100% 85% / 0.5)",
+            }}
+          >
+            <span aria-hidden className="absolute -right-6 -top-6 w-28 h-28 rounded-full blur-2xl"
+              style={{ background: "radial-gradient(circle, hsl(35 100% 60% / 0.55), transparent 70%)" }} />
+            <div
+              className="w-12 h-12 rounded-xl grid place-items-center shrink-0"
+              style={{
+                background: "linear-gradient(135deg, hsl(25 100% 55%), hsl(15 100% 48%))",
+                boxShadow: "0 0 16px hsl(25 100% 55% / 0.85)",
+              }}
+            >
+              <Flame className="w-6 h-6 text-white drop-shadow-[0_0_8px_hsl(45_100%_75%)]" />
+            </div>
+            <div className="flex-1 relative">
+              <p className="font-black text-base bg-gradient-to-r from-amber-100 via-orange-200 to-red-300 bg-clip-text text-transparent">
+                🔥 متجر الـ ID المميز
+              </p>
+              <p className="text-[11px] text-orange-100/80 mt-0.5">
+                معرّف من 4 أرقام يلمع بلون البرتقالي الناري على بروفايلك
+              </p>
+              <div className="flex items-center gap-2 mt-1.5 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-full bg-black/40 text-orange-200 border border-orange-400/40">
+                  أسبوع 125,000
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-black/40 text-amber-200 border border-amber-400/40">
+                  شهر 1,000,000
+                </span>
+              </div>
+            </div>
+          </button>
+
 
           <div className="flex gap-2 overflow-x-auto pb-1">
             {[

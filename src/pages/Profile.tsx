@@ -18,6 +18,7 @@ import BDBadge from "@/components/BDBadge";
 import AgentBadge from "@/components/AgentBadge";
 import HostBadge from "@/components/HostBadge";
 import CopyIdButton from "@/components/CopyIdButton";
+import VanityIdPill from "@/components/VanityIdPill";
 import AgentRechargePanel from "@/components/AgentRechargePanel";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
 import { useIsBD } from "@/hooks/useIsBD";
@@ -66,7 +67,7 @@ const PROFILE_PUBLIC_FIELDS = `
   is_boss, is_verified, is_agent, is_host, is_bd, agency_eligible, agency_id,
   equipped_frame, equipped_badge, equipped_chat_bubble,
   equipped_entrance_effect, equipped_name_style,
-  entrance_video_url, entrance_audio_url, created_at
+  entrance_video_url, entrance_audio_url, vanity_id, vanity_id_expiry, created_at
 `;
 
 const Profile = () => {
@@ -399,7 +400,12 @@ const Profile = () => {
               <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
             </div>
 
-            <CopyIdButton id={profile?.user_id} className="mt-2" />
+            <div className="mt-2 flex items-center gap-2 flex-wrap justify-center">
+              {profile?.vanity_id && (
+                <VanityIdPill digits={profile.vanity_id} expiresAt={profile.vanity_id_expiry} size="md" />
+              )}
+              <CopyIdButton id={profile?.user_id} />
+            </div>
           </div>
 
           {/* === STATS PILL === */}
@@ -628,7 +634,12 @@ const Profile = () => {
                 <FramedAvatar avatarUrl={profile?.avatar_url} equippedFrame={profile?.equipped_frame} size={56} />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate">{profile?.display_name || "مستخدم"}</p>
-                  <CopyIdButton id={profile?.user_id} className="mt-0.5" />
+                  <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    {profile?.vanity_id && (
+                      <VanityIdPill digits={profile.vanity_id} expiresAt={profile.vanity_id_expiry} size="sm" />
+                    )}
+                    <CopyIdButton id={profile?.user_id} />
+                  </div>
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
                     <span>المستوى {profile?.level || 1}</span>
                     <span>•</span>
