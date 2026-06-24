@@ -108,7 +108,7 @@ export const VIP_TIERS: VipTier[] = [
     title: "ظل التنين",
     titleEn: "Dragon Shade",
     tagline: "قوة من العتمة المضيئة",
-    price: 15_000,
+    price: 60_000,
     primary: "280 90% 55%",
     secondary: "320 80% 50%",
     glow: "290 100% 70%",
