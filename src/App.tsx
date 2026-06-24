@@ -84,6 +84,7 @@ const LoversPage = lazyWithRetry(() => import("./pages/LoversPage"));
 const LoveHistoryPage = lazyWithRetry(() => import("./pages/LoveHistoryPage"));
 const FramePreviewPage = lazyWithRetry(() => import("./pages/FramePreviewPage"));
 const BDDashboard = lazyWithRetry(() => import("./pages/BDDashboard"));
+const VisitorsPage = lazyWithRetry(() => import("./pages/VisitorsPage"));
 
 // 🚀 Singleton QueryClient — full config lives in `@/lib/react-query`
 const queryClient = createQueryClient();
