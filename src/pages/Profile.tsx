@@ -401,10 +401,11 @@ const Profile = () => {
             </div>
 
             <div className="mt-2 flex items-center gap-2 flex-wrap justify-center">
-              {profile?.vanity_id && (
+              {profile?.vanity_id && new Date(profile.vanity_id_expiry).getTime() > Date.now() ? (
                 <VanityIdPill digits={profile.vanity_id} expiresAt={profile.vanity_id_expiry} size="md" />
+              ) : (
+                <CopyIdButton id={profile?.user_id} />
               )}
-              <CopyIdButton id={profile?.user_id} />
             </div>
           </div>
 
