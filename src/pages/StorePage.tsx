@@ -136,13 +136,14 @@ const StorePage = () => {
       toast.info("لديك هذا الإطار بالفعل!");
       return;
     }
-    if (profile.coins < frame.price_coins) {
+    const price = applyVipDiscount(frame.price_coins, profile);
+    if (profile.coins < price) {
       toast.error("رصيدك غير كافٍ!");
       return;
     }
 
-    const newCoins = profile.coins - frame.price_coins;
-    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: frame.price_coins });
+    const newCoins = profile.coins - price;
+    const { error } = await supabase.rpc("deduct_coins", { _user_id: profile.id, _amount: price });
     if (error) { toast.error("فشل في الشراء"); return; }
     await supabase.from("profiles").update({ equipped_frame: frame.data.frame_url }).eq("id", profile.id);
     await supabase.from("inventory").insert({
