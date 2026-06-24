@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import DualBadge from "@/components/DualBadge";
 import FramedAvatar from "@/components/FramedAvatar";
 import { FRAME_MAP, FRAME_ANIMATION, FRAMES } from "@/lib/frameConfig";
+import { applyVipDiscount, vipStoreDiscountPct, activeVipLevel } from "@/lib/vipBenefits";
 
 // Dynamically derived from FRAMES — adding a frame to frameConfig.ts
 // makes it appear in the store automatically (only ones flagged for sale).
