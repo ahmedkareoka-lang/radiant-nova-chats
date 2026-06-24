@@ -222,7 +222,7 @@ export const VIP_TIERS: VipTier[] = [
     title: "أسطورة نوفا الخالدة",
     titleEn: "Eternal NOVA Legend",
     tagline: "اسم محفور في السماء إلى الأبد",
-    price: 2_000_000,
+    price: 8_000_000,
     primary: "50 100% 60%",
     secondary: "320 100% 60%",
     glow: "45 100% 75%",
