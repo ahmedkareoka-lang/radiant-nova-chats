@@ -183,6 +183,19 @@ const VoiceRoom = () => {
   const isHost = currentUserId === roomData?.host_id;
   const isAdmin = isBoss || isHost;
 
+  // VIP6+ — auto-enable in-room translation (one-shot when profile loads)
+  const didAutoTranslateInit = useRef(false);
+  useEffect(() => {
+    if (didAutoTranslateInit.current) return;
+    const lvl = (currentProfile as any)?.vip_level ?? 0;
+    const exp = (currentProfile as any)?.vip_expiry;
+    const active = lvl >= 6 && exp && new Date(exp).getTime() > Date.now();
+    if (active) {
+      setTranslationsEnabled(true);
+      didAutoTranslateInit.current = true;
+    }
+  }, [currentProfile]);
+
   // Determine if current user is on a mic
   const currentMember = members.find((m) => m.user_id === currentUserId);
   const isOnMic = currentMember?.mic_slot !== null && currentMember?.mic_slot !== undefined;
