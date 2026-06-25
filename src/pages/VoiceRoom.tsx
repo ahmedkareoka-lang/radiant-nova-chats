@@ -181,7 +181,50 @@ const VoiceRoom = () => {
   const currentProfile = members.find(m => m.user_id === currentUserId)?.profile;
   const isBoss = currentProfile?.is_boss || false;
   const isHost = currentUserId === roomData?.host_id;
-  const isAdmin = isBoss || isHost;
+
+  // 🛡️ Room admins (assigned by host) — fetched from `room_admins` table
+  const [roomAdminIds, setRoomAdminIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!roomId) return;
+    const load = async () => {
+      const { data } = await (supabase.from("room_admins" as any) as any)
+        .select("user_id").eq("room_id", roomId);
+      setRoomAdminIds(new Set((data || []).map((r: any) => r.user_id)));
+    };
+    load();
+    const ch = supabase.channel(`room-admins-${roomId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_admins", filter: `room_id=eq.${roomId}` }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [roomId]);
+  const isRoomAdmin = !!currentUserId && roomAdminIds.has(currentUserId);
+  const isAdmin = isBoss || isHost || isRoomAdmin;
+
+  const handleClearChat = async () => {
+    if (!isAdmin) return;
+    const res = await clearChat();
+    if (res.ok) toast.success("تم مسح الدردشة للجميع 🧹");
+    else toast.error("تعذّر مسح الدردشة");
+  };
+
+  const handleToggleFollowApproval = async () => {
+    if (!isHost || !roomId) return;
+    const cur = !!(roomData as any)?.follows_require_approval;
+    const { error } = await (supabase.from("rooms") as any).update({ follows_require_approval: !cur }).eq("id", roomId);
+    if (error) toast.error("فشل التحديث"); else toast.success(!cur ? "الغرفة خاصة: تتطلب الموافقة 🔐" : "الغرفة عامة: المتابعة مباشرة 🌍");
+  };
+
+  const handleAssignAdmin = async (uid: string) => {
+    if (!roomId) return;
+    const { error } = await (supabase.rpc as any)("assign_room_admin", { _room_id: roomId, _user_id: uid });
+    if (error) toast.error("تعذّر التعيين"); else toast.success("تم تعيين الأدمن ✅");
+  };
+  const handleRemoveAdmin = async (uid: string) => {
+    if (!roomId) return;
+    const { error } = await (supabase.rpc as any)("remove_room_admin", { _room_id: roomId, _user_id: uid });
+    if (error) toast.error("تعذّر الحذف"); else toast.success("تمت إزالة الأدمن");
+  };
+
 
   // VIP6+ — auto-enable in-room translation (one-shot when profile loads)
   const didAutoTranslateInit = useRef(false);
