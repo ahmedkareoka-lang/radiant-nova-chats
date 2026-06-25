@@ -1320,69 +1320,142 @@ const VoiceRoom = () => {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header — pixel-matched to reference: power/home/dots left, agency badge right, then top3+level+timer+rank row */}
       <header
-        className="relative z-20 shrink-0 bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+        className="relative z-30 shrink-0 px-3 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2"
       >
-        <div className="flex items-center justify-between max-w-lg mx-auto">
-          <div className="flex items-center gap-3">
-            <button onClick={handleLeave} className="text-muted-foreground">
-              <ArrowLeft className="w-5 h-5" />
+        {/* Top row: controls + agency */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Power = exit room with confirmation */}
+            <button
+              onClick={handleLeave}
+              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-95 transition"
+              title="خروج من الغرفة"
+            >
+              <Power className="w-4 h-4" />
             </button>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-bold text-sm">{roomData?.name || "Room"}</h1>
-                {roomData?.is_private && <Lock className="w-3 h-3 text-accent" />}
+            {/* Home = minimize and go home */}
+            <button
+              onClick={() => { handleMinimize(); }}
+              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-95 transition"
+              title="الرئيسية"
+            >
+              <Home className="w-4 h-4" />
+            </button>
+            {/* Three dots: opens action menu (exit / minimize / settings) */}
+            <div className="relative">
+              <button
+                onClick={() => setShowHeaderMenu((v) => !v)}
+                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-95 transition"
+                title="المزيد"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              {showHeaderMenu && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowHeaderMenu(false)} />
+                  <div className="absolute top-11 left-0 z-[61] min-w-[180px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                    <button
+                      onClick={() => { setShowHeaderMenu(false); handleMinimize(); }}
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2"
+                    >
+                      <Minimize2 className="w-3.5 h-3.5" /> تصغير الغرفة
+                    </button>
+                    {isHost && (
+                      <button
+                        onClick={() => { setShowHeaderMenu(false); setShowSettings(true); }}
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                      >
+                        <Settings2 className="w-3.5 h-3.5" /> تعديل الغرفة
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setShowHeaderMenu(false); setMuteEntrance(!muteEntrance); }}
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                    >
+                      <BellOff className="w-3.5 h-3.5" /> {muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}
+                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => { setShowHeaderMenu(false); handleClearChat(); }}
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> مسح الدردشة للجميع
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setShowHeaderMenu(false); handleLeave(); }}
+                      className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 border-t border-border/50"
+                    >
+                      <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Top 3 contributors avatars next to controls */}
+            {roomData?.host_id && roomId && (
+              <div className="ml-1 scale-[0.78] origin-left">
+                <Top3RoomSenders roomId={roomId} hostId={roomData.host_id} />
               </div>
-              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Users className="w-3 h-3" /> {members.length} متصل
-                {connectedPeers.size > 0 && (
-                  <span className="text-green-500 flex items-center gap-0.5 ml-1">
-                    <Volume2 className="w-3 h-3" /> {connectedPeers.size}
-                  </span>
-                )}
+            )}
+          </div>
+
+          {/* Agency info badge — right */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 max-w-[55%]">
+            <div className="flex flex-col items-end leading-tight min-w-0">
+              <span className="text-[11px] font-black text-amber-300 truncate max-w-[140px]">
+                {(roomData as any)?.agency_name || roomData?.name || "الغرفة"}
+              </span>
+              <span className="text-[9px] font-mono text-white/70 truncate">
+                ID {roomData?.id?.slice(0, 9) || "—"}
               </span>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {!isHost && roomId && (
-              <button
-                onClick={handleToggleFollow}
-                className={`h-8 px-2.5 rounded-full flex items-center gap-1 text-[10px] font-black ${isFollowing ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black" : isFollowPending ? "bg-secondary text-muted-foreground" : "bg-secondary text-foreground border border-border"}`}
-                title={isFollowing ? "إلغاء المتابعة" : isFollowPending ? "طلب قيد الانتظار" : "تابع الغرفة"}
-              >
-                <Star className={`w-3.5 h-3.5 ${isFollowing ? "fill-current" : ""}`} />
-                {isFollowing ? "متابَع" : isFollowPending ? "قيد الانتظار" : "تابع"}
-              </button>
+            {host?.avatar_url && (
+              <img src={host.avatar_url} alt="" loading="lazy" decoding="async" className="w-7 h-7 rounded-md object-cover ring-1 ring-amber-400/60" />
             )}
-            {isAdmin && (
-
-              <button
-                onClick={handleClearChat}
-                className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
-                title="مسح الدردشة للجميع"
-              >
-                <Trash2 className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-            {isHost && (
-              <button onClick={() => setShowSettings(true)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                <Settings2 className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-
-            <button onClick={() => setMuteEntrance(!muteEntrance)} className={`w-8 h-8 rounded-full flex items-center justify-center ${muteEntrance ? 'bg-destructive/20' : 'bg-secondary'}`} title={muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}>
-              <BellOff className={`w-4 h-4 ${muteEntrance ? 'text-destructive' : 'text-muted-foreground'}`} />
-            </button>
-            <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
-              <Minimize2 className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
-              ● LIVE
-            </span>
           </div>
         </div>
+
+        {/* Sub-row: Level badge + timer + Daily TOP rank */}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/40 backdrop-blur border border-amber-400/30 min-w-0">
+            <Trophy className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-[10px] font-black text-amber-200">LV.{(roomData as any)?.level || 1}</span>
+              <div className="w-20 h-1 rounded-full bg-white/15 overflow-hidden mt-0.5">
+                <div className="h-full bg-gradient-to-r from-amber-300 to-orange-500" style={{ width: `${Math.min(100, (((roomData as any)?.level_progress ?? 0) * 100))}%` }} />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur border border-white/10">
+            <Star className="w-3 h-3 text-amber-300" />
+            <span className="text-[10px] font-bold text-white tabular-nums">
+              {members.length} متصل
+            </span>
+            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[9px] font-bold text-emerald-300">LIVE</span>
+          </div>
+          <button className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur border border-white/10 text-white">
+            <Trophy className="w-3 h-3 text-amber-300" />
+            <span className="text-[10px] font-bold">TOP اليومي</span>
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Inline follow button — non-host only */}
+        {!isHost && roomId && (
+          <div className="mt-1.5 flex justify-end">
+            <button
+              onClick={handleToggleFollow}
+              className={`h-6 px-2.5 rounded-full flex items-center gap-1 text-[10px] font-black ${isFollowing ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black" : isFollowPending ? "bg-secondary text-muted-foreground" : "bg-black/40 text-white border border-white/15"}`}
+            >
+              <Star className={`w-3 h-3 ${isFollowing ? "fill-current" : ""}`} />
+              {isFollowing ? "متابَع" : isFollowPending ? "قيد الانتظار" : "تابع الغرفة"}
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Global Win Ticker */}
