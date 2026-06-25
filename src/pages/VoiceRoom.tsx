@@ -1612,7 +1612,7 @@ const VoiceRoom = () => {
       <BossEntrance show={showBossEntrance} onComplete={handleBossEntranceComplete} />
       <CustomEntranceEffect roomId={roomId} currentUserId={currentUserId} queue={entranceQueue} onComplete={handleEntranceComplete} muteEntrance={muteEntrance} />
       <GiftComboBar count={comboCount} visible={comboCount >= 2} />
-      <LuckyWheelButton />
+      
       {roomId && (
         <CouplePickerModal
           open={showCouplePicker}
