@@ -1734,45 +1734,108 @@ const VoiceRoom = () => {
         </div>
       </div>
 
-      {/* Bottom Controls */}
+      {/* Bottom Action Bar — pixel-matched to reference: gift, grid, gamepad, PK, chat, mic, emoji, more */}
       <div
-        className="relative z-20 shrink-0 bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+        className="relative z-20 shrink-0 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
       >
-        <div className="flex items-center justify-center gap-4 max-w-lg mx-auto">
+        <div className="flex items-center justify-between gap-1.5 max-w-lg mx-auto">
+          {/* Glowing pink gift */}
+          <button
+            onClick={() => { if (host) openGiftFor(roomData?.host_id, host.display_name); }}
+            className="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-500 via-fuchsia-500 to-rose-500 shadow-[0_0_18px_rgba(236,72,153,0.7)] flex items-center justify-center text-white active:scale-95 transition"
+            aria-label="هدية"
+          >
+            <Gift className="w-5 h-5" />
+          </button>
+          {/* Multi-window grid (inventory) */}
+          <button
+            onClick={() => setShowInventory(true)}
+            className="w-10 h-10 rounded-2xl bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-white active:scale-95 transition"
+            aria-label="الحقيبة"
+          >
+            <Grid2x2 className="w-5 h-5" />
+          </button>
+          {/* Gamepad */}
+          <button
+            onClick={() => navigate("/games")}
+            className="w-10 h-10 rounded-2xl bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-violet-300 active:scale-95 transition"
+            aria-label="الألعاب"
+          >
+            <Gamepad2 className="w-5 h-5" />
+          </button>
+          {/* PK */}
+          <button
+            onClick={() => setShowCoinStorm(true)}
+            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-fuchsia-600 shadow-[0_0_12px_rgba(99,102,241,0.6)] flex items-center justify-center text-white font-black text-[12px] active:scale-95 transition"
+            aria-label="PK"
+          >
+            PK
+          </button>
+          {/* Chat toggle — opens/focuses chat input */}
+          <button
+            onClick={() => setShowChatInput((v) => !v)}
+            className="flex-1 h-10 rounded-full bg-black/55 backdrop-blur border border-white/10 flex items-center justify-center text-white active:scale-[0.98] transition"
+            aria-label="دردشة"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </button>
+          {/* Mic toggle */}
           <button
             onClick={handleToggleMic}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-              isMuted ? "bg-destructive/20 text-destructive" : "gradient-neon glow-neon text-primary-foreground"
+            className={`w-10 h-10 rounded-full backdrop-blur border border-white/10 flex items-center justify-center transition active:scale-95 ${
+              isMuted ? "bg-destructive/30 text-destructive-foreground" : "bg-black/45 text-white"
             }`}
+            aria-label="المايك"
           >
             {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
-          <button onClick={() => {
-            if (host) openGiftFor(roomData?.host_id, host.display_name);
-          }} className="w-14 h-14 rounded-full gradient-gold glow-gold flex items-center justify-center animate-float">
-            <Gift className="w-6 h-6 text-accent-foreground" />
-          </button>
+          {/* Emoji */}
           <button
-            onClick={() => setShowCoinStorm(true)}
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-[0_0_18px_rgba(217,70,239,0.7)] flex items-center justify-center text-white relative overflow-hidden"
-            aria-label="Launch Coin Storm"
-            title="عاصفة الكوينز النيون"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="w-10 h-10 rounded-full bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-amber-200 active:scale-95 transition"
+            aria-label="الإيموجي"
           >
-            <Zap className="w-5 h-5" fill="currentColor" />
+            <Smile className="w-5 h-5" />
           </button>
-          <button
-            onClick={() => setShowInventory(true)}
-            className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
-            aria-label="الحقيبة"
-          >
-            <Package className="w-5 h-5 text-foreground" />
-          </button>
-          <button onClick={handleLeave} className="w-12 h-12 rounded-full bg-destructive/20 text-destructive flex items-center justify-center">
-            <LogOut className="w-5 h-5" />
-          </button>
+          {/* Quick options (3 dots) */}
+          <div className="relative">
+            <button
+              onClick={() => setShowQuickOptions((v) => !v)}
+              className="w-10 h-10 rounded-full bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-white active:scale-95 transition"
+              aria-label="خيارات"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {showQuickOptions && (
+              <>
+                <div className="fixed inset-0 z-[60]" onClick={() => setShowQuickOptions(false)} />
+                <div className="absolute bottom-12 right-0 z-[61] min-w-[170px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                  <button onClick={() => { setShowQuickOptions(false); setShowCouplePicker(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2">
+                    <Heart className="w-3.5 h-3.5 text-pink-400" /> ثنائي العشاق
+                  </button>
+                  <button onClick={() => { setShowQuickOptions(false); setShowCoinStorm(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50">
+                    <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> عاصفة كوينز
+                  </button>
+                  <button onClick={() => { setShowQuickOptions(false); handleLeave(); }} className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 border-t border-border/50">
+                    <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
+        {/* Floating emoji picker overlay */}
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 right-3 z-[55]">
+            <EmojiStickerPicker
+              isOpen={showEmojiPicker}
+              onToggle={() => setShowEmojiPicker(!showEmojiPicker)}
+              onSelect={(emoji) => setChatInput((prev) => prev + emoji)}
+            />
+          </div>
+        )}
       </div>
+
 
       <GiftAnimation
         isOpen={showGifts}
