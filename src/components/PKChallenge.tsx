@@ -95,6 +95,32 @@ const PKChallenge = ({ roomId, isHost, members }: PKChallengeProps) => {
         </button>
       )}
 
+      {/* Duration picker */}
+      {isHost && showDurationPicker && !pk.active && (
+        <>
+          <div className="fixed inset-0 z-[70] bg-black/50" onClick={() => setShowDurationPicker(false)} />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[71] w-[280px] rounded-2xl bg-card border border-border shadow-2xl p-4">
+            <div className="text-sm font-black text-foreground mb-3 text-center flex items-center justify-center gap-2">
+              <Clock className="w-4 h-4 text-primary" /> مدة الـ PK
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <button onClick={() => startPK(30)} className="py-2 rounded-xl bg-gradient-to-r from-yellow-500 to-red-500 text-white font-black text-xs">30 دقيقة</button>
+              <button onClick={() => startPK(60)} className="py-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-black text-xs">ساعة كاملة</button>
+              <button onClick={() => startPK(null)} className="py-2 rounded-xl bg-secondary text-foreground font-bold text-xs border border-border">يدوي (إيقاف عند الضغط)</button>
+              <button onClick={() => setShowDurationPicker(false)} className="py-1.5 mt-1 rounded-xl text-muted-foreground text-[11px]">إلغاء</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Countdown pill while running */}
+      {pk.active && remaining !== null && (
+        <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 border border-white/15 text-white text-[10px] font-black tabular-nums">
+          <Clock className="w-3 h-3" />
+          {Math.floor(remaining / 60).toString().padStart(2, "0")}:{(remaining % 60).toString().padStart(2, "0")}
+        </span>
+      )}
+
       {/* PK Display */}
       <AnimatePresence>
         {pk.active && (
