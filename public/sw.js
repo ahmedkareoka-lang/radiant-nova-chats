@@ -12,7 +12,7 @@
  *  - API/Realtime/Auth         → Bypass (always live)
  */
 
-const VERSION = "nova-cache-v1";
+const VERSION = "nova-cache-v2-room-layout";
 const ASSET_CACHE = `${VERSION}-assets`;
 const SHELL_CACHE = `${VERSION}-shell`;
 

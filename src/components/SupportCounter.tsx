@@ -7,6 +7,10 @@ interface SupportCounterProps {
   sessionStart: string;
   /** Required to subscribe to the room's PK channel */
   roomId?: string;
+  /** Authoritative PK flag from the room layout. When supplied, no stale broadcast state is used. */
+  pkActive?: boolean;
+  /** PK round start; changing this resets the counter for the new battle. */
+  pkStartTime?: string | null;
 }
 
 interface PKState {
@@ -19,14 +23,19 @@ interface PKState {
  * Only visible while the room is in PK mode. When PK starts again,
  * the counter resets (it filters gifts by pk.startTime).
  */
-const SupportCounter = ({ userId, sessionStart, roomId }: SupportCounterProps) => {
+const SupportCounter = ({ userId, sessionStart, roomId, pkActive, pkStartTime }: SupportCounterProps) => {
   const [total, setTotal] = useState(0);
   const [pk, setPK] = useState<PKState>({ active: false, startTime: null });
-  const pkRef = useRef(pk);
-  pkRef.current = pk;
+  const controlled = typeof pkActive === "boolean";
+  const effectivePK: PKState = controlled
+    ? { active: !!pkActive, startTime: pkStartTime || null }
+    : pk;
+  const pkRef = useRef(effectivePK);
+  pkRef.current = effectivePK;
 
   // Subscribe to the room-wide PK state (shared with PKChallenge.tsx)
   useEffect(() => {
+    if (controlled) return;
     if (!roomId) return;
     const ch = supabase.channel(`pk-room-${roomId}`, { config: { broadcast: { self: true } } });
     ch.on("broadcast", { event: "pk-update" }, ({ payload }) => {
@@ -34,9 +43,9 @@ const SupportCounter = ({ userId, sessionStart, roomId }: SupportCounterProps) =
     });
     ch.subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [roomId]);
+  }, [roomId, controlled]);
 
-  const cutoffIso = pk.active ? (pk.startTime || sessionStart) : sessionStart;
+  const cutoffIso = effectivePK.active ? (effectivePK.startTime || sessionStart) : sessionStart;
 
   const fetch = useCallback(async () => {
     if (!pkRef.current.active) { setTotal(0); return; }
@@ -45,37 +54,41 @@ const SupportCounter = ({ userId, sessionStart, roomId }: SupportCounterProps) =
       .select("diamond_amount")
       .eq("receiver_id", userId)
       .gte("created_at", cutoffIso);
-    setTotal(data?.reduce((s, g) => s + Number(g.diamond_amount), 0) || 0);
+    setTotal(data?.reduce((s, g) => s + Number(g.diamond_amount || 0), 0) || 0);
   }, [userId, cutoffIso]);
 
   useEffect(() => {
     // Reset & refetch whenever PK toggles or a new round starts
     setTotal(0);
-    if (!pk.active) return;
+    if (!effectivePK.active) return;
     fetch();
     const ch = supabase
-      .channel(`support-${userId}-${pk.startTime || "manual"}`)
+      .channel(`support-${userId}-${effectivePK.startTime || "manual"}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "gift_transactions" }, (p) => {
         if ((p.new as any).receiver_id === userId) fetch();
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [userId, fetch, pk.active, pk.startTime]);
+  }, [userId, fetch, effectivePK.active, effectivePK.startTime]);
 
-  if (!pk.active) return null;
+  if (!effectivePK.active) return null;
 
-  const display = total >= 1000 ? `${(total / 1000).toFixed(1)}K` : total.toLocaleString();
+  const display = total >= 1_000_000
+    ? `${(total / 1_000_000).toFixed(total >= 10_000_000 ? 0 : 1)}M`
+    : total >= 1000
+      ? `${(total / 1000).toFixed(total >= 10_000 ? 0 : 1)}K`
+      : total.toLocaleString("en-US");
 
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-[2px] rounded-md text-[10px] font-black text-white leading-none whitespace-nowrap shadow-[0_0_10px_rgba(255,60,0,0.65)] border border-orange-300/70"
+      className="inline-flex min-w-[38px] max-w-[64px] items-center justify-center gap-0.5 overflow-hidden rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[9px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)] whitespace-nowrap"
       style={{
         background: "linear-gradient(180deg,#ff5a1f 0%,#e0220c 55%,#8a0a00 100%)",
         textShadow: "0 1px 2px rgba(0,0,0,0.6)",
       }}
     >
-      <span className="text-[10px] leading-none">🔥</span>
-      <span className="tabular-nums">{display}</span>
+      <span className="text-[9px] leading-none">🔥</span>
+      <span className="tabular-nums leading-none">{display}</span>
     </span>
   );
 };
