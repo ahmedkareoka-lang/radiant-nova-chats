@@ -20,6 +20,17 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
 
+  useEffect(() => {
+    const w = window as any;
+    const run = () => preloadChat().catch(() => {});
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(run, { timeout: 1500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(run, 400);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/20"
       style={{ background: "hsl(260 28% 6% / 0.95)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}>
