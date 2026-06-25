@@ -169,14 +169,6 @@ const PKChallenge = ({ roomId, isHost, members, micCount = 8, onStateChange }: P
         </>
       )}
 
-      {/* Countdown pill while running */}
-      {pk.active && remaining !== null && (
-        <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 border border-white/15 text-white text-[10px] font-black tabular-nums">
-          <Clock className="w-3 h-3" />
-          {Math.floor(remaining / 60).toString().padStart(2, "0")}:{(remaining % 60).toString().padStart(2, "0")}
-        </span>
-      )}
-
       {/* PK Display */}
       <AnimatePresence>
         {pk.active && (
