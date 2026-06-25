@@ -18,7 +18,7 @@ import FramedAvatar from "./FramedAvatar";
 import TierBadge from "./TierBadge";
 import DualBadge from "./DualBadge";
 import RechargeAgentBadge from "./RechargeAgentBadge";
-import SupporterBadge from "./SupporterBadge";
+import SupporterBadge, { SupporterAchievementBadge, SupporterFireBadge } from "./SupporterBadge";
 import BDBadge from "./BDBadge";
 import VipName from "./VipName";
 
