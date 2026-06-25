@@ -1908,11 +1908,21 @@ const VoiceRoom = () => {
         senderId={currentUserId}
         receiverId={giftReceiverId}
         receiverName={giftReceiverName}
-        roomMembers={members.map(m => ({
-          user_id: m.user_id,
-          display_name: m.profile?.display_name || "User",
-          avatar_url: m.profile?.avatar_url || null,
-        }))}
+        roomMembers={[
+          // Include sender themselves so they can gift their own account
+          ...(currentUserId && currentUserProfile ? [{
+            user_id: currentUserId,
+            display_name: (currentUserProfile.display_name || "أنا") + " (أنا)",
+            avatar_url: currentUserProfile.avatar_url || null,
+          }] : []),
+          ...members
+            .filter(m => m.user_id !== currentUserId)
+            .map(m => ({
+              user_id: m.user_id,
+              display_name: m.profile?.display_name || "User",
+              avatar_url: m.profile?.avatar_url || null,
+            })),
+        ]}
         onMultiGiftSent={handleGiftBurst}
         broadcastGift={broadcastGiftToRoom}
         roomId={roomId || undefined}
