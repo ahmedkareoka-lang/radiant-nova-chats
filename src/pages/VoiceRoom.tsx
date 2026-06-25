@@ -836,19 +836,20 @@ const VoiceRoom = () => {
     : micCount <= 16 ? "grid-cols-4"
     : "grid-cols-5";
   // Avatar size scales down predictably so a row never overflows on 428px viewports.
+  // Reduced sizes to give more vertical space to the chat panel.
   const micAvatarPx =
-    micCount <= 6 ? 86
-    : micCount <= 9 ? 72
-    : micCount <= 12 ? 64
-    : micCount <= 16 ? 58
-    : 52;
+    micCount <= 6 ? 70
+    : micCount <= 9 ? 60
+    : micCount <= 12 ? 54
+    : micCount <= 16 ? 48
+    : 44;
   // Vertical gap is intentionally large so the small support badge under one mic
   // never visually touches the avatar of the row below.
   const micGapClass =
-    micCount <= 6 ? "gap-x-5 gap-y-8"
-    : micCount <= 9 ? "gap-x-4 gap-y-7"
-    : micCount <= 12 ? "gap-x-3 gap-y-7"
-    : "gap-x-2.5 gap-y-6";
+    micCount <= 6 ? "gap-x-4 gap-y-5"
+    : micCount <= 9 ? "gap-x-3 gap-y-5"
+    : micCount <= 12 ? "gap-x-2.5 gap-y-4"
+    : "gap-x-2 gap-y-4";
 
   // Helper: speaking animation
   const SpeakingWaves = () => (
