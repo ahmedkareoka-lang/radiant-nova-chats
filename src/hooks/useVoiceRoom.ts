@@ -52,6 +52,10 @@ export const useVoiceRoom = (roomId: string | null) => {
   const currentUserIdRef = useRef<string | null>(null);
   const roomIdRef = useRef<string | null>(roomId);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  // 🧹 Per-session chat cutoff — messages older than this are hidden for the
+  // current user only. Reset every time they enter (or re-enter) the room.
+  const sessionStartRef = useRef<number>(Date.now());
+
 
   // 🚀 Performance: micro-cache + in-flight dedup + abort for fetchMembers
   const membersCacheRef = useRef<{ ts: number; data: RoomMember[] } | null>(null);
