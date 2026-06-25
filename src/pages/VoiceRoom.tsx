@@ -104,7 +104,7 @@ const VoiceRoom = () => {
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("id");
   const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
-  const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
+  const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers, clearChat } = useVoiceRoom(roomId);
   const { t, locale } = useLanguage();
   const rechargeAgentSet = useRechargeAgentSet();
   const bdSet = useBDSet();
