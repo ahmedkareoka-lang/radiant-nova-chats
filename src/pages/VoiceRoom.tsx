@@ -1540,7 +1540,10 @@ const VoiceRoom = () => {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="اكتب رسالة..."
               maxLength={500}
-              className="flex-1 bg-secondary rounded-full px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              dir="auto"
+              autoComplete="off"
+              style={{ color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))", fontSize: "14px" }}
+              className="flex-1 bg-secondary rounded-full px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <button onClick={handleSend} className="w-8 h-8 rounded-full gradient-neon flex items-center justify-center">
               <Send className="w-3.5 h-3.5 text-primary-foreground" />
