@@ -86,6 +86,10 @@ const FramePreviewPage = lazyWithRetry(() => import("./pages/FramePreviewPage"))
 const BDDashboard = lazyWithRetry(() => import("./pages/BDDashboard"));
 const VisitorsPage = lazyWithRetry(() => import("./pages/VisitorsPage"));
 const VipStatusPage = lazyWithRetry(() => import("./pages/VipStatusPage"));
+const LanguagePage = lazyWithRetry(() => import("./pages/LanguagePage"));
+const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
+const HelpPage = lazyWithRetry(() => import("./pages/HelpPage"));
+const NovaBulkImportPage = lazyWithRetry(() => import("./pages/NovaBulkImportPage"));
 
 // 🚀 Singleton QueryClient — full config lives in `@/lib/react-query`
 const queryClient = createQueryClient();
@@ -198,6 +202,10 @@ const AnimatedRoutes = () => {
         <Route path="/bd" element={<AuthGate><BDDashboard /></AuthGate>} />
         <Route path="/visitors" element={<AuthGate><VisitorsPage /></AuthGate>} />
         <Route path="/vip-status" element={<AuthGate><VipStatusPage /></AuthGate>} />
+        <Route path="/language" element={<AuthGate><LanguagePage /></AuthGate>} />
+        <Route path="/privacy" element={<AuthGate><PrivacyPage /></AuthGate>} />
+        <Route path="/help" element={<AuthGate><HelpPage /></AuthGate>} />
+        <Route path="/admin/bulk-import" element={<AuthGate><NovaBulkImportPage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />

@@ -678,9 +678,9 @@ const Profile = () => {
                 { icon: User, label: "تعديل الملف الشخصي", onClick: () => { setSettingsOpen(false); navigate("/edit-profile"); } },
                 { icon: Palette, label: "الإطارات والمظهر", onClick: () => { setSettingsOpen(false); navigate("/inventory"); } },
                 { icon: Bell, label: "الإشعارات", onClick: () => { setSettingsOpen(false); navigate("/notifications"); } },
-                { icon: Globe, label: "اللغة", onClick: () => toast.info("قريباً") },
-                { icon: Lock, label: "الخصوصية والأمان", onClick: () => toast.info("قريباً") },
-                { icon: HelpCircle, label: "المساعدة والدعم", onClick: () => toast.info("قريباً") },
+                { icon: Globe, label: "اللغة", onClick: () => { setSettingsOpen(false); navigate("/language"); } },
+                { icon: Lock, label: "الخصوصية والأمان", onClick: () => { setSettingsOpen(false); navigate("/privacy"); } },
+                { icon: HelpCircle, label: "المساعدة والدعم", onClick: () => { setSettingsOpen(false); navigate("/help"); } },
               ].map((item) => (
                 <button
                   key={item.label}
