@@ -324,9 +324,27 @@ export default function RoomUserProfileCard({
                     <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
                   </button>
                 )}
+                {viewerIsHost && !isHostOfRoom && (
+                  targetIsRoomAdmin ? (
+                    <button
+                      onClick={onRemoveAdmin}
+                      className="w-full mt-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold flex items-center justify-center gap-2"
+                    >
+                      <Shield className="w-3.5 h-3.5" /> إزالة من الأدمن
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onAssignAdmin}
+                      className="w-full mt-2 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-xs font-black flex items-center justify-center gap-2 shadow-[0_4px_18px_-4px_hsl(220_85%_55%/0.7)]"
+                    >
+                      <Shield className="w-3.5 h-3.5" /> تعيين كأدمن للروم
+                    </button>
+                  )
+                )}
               </div>
             )}
           </div>
+
         )}
       </motion.div>
     </div>
