@@ -1712,6 +1712,7 @@ export type Database = {
           muted_users: string[] | null
           name: string
           password: string | null
+          room_code: string | null
           room_image: string | null
           type: string
         }
@@ -1729,6 +1730,7 @@ export type Database = {
           muted_users?: string[] | null
           name: string
           password?: string | null
+          room_code?: string | null
           room_image?: string | null
           type?: string
         }
@@ -1746,6 +1748,7 @@ export type Database = {
           muted_users?: string[] | null
           name?: string
           password?: string | null
+          room_code?: string | null
           room_image?: string | null
           type?: string
         }
@@ -2374,6 +2377,7 @@ export type Database = {
       }
       generate_agency_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
+      generate_room_code: { Args: never; Returns: string }
       generate_user_id: { Args: never; Returns: string }
       get_agency_join_requests: { Args: never; Returns: Json }
       get_agency_payroll_report: { Args: { _ref?: string }; Returns: Json }

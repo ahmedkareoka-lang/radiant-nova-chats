@@ -1458,7 +1458,7 @@ const VoiceRoom = () => {
                 {hostAgency?.name || (roomData as any)?.agency_name || roomData?.name || "الغرفة"}
               </span>
               <span className="text-[10px] font-bold font-mono text-amber-100/90 truncate tabular-nums">
-                ID: {hostAgency?.agency_code || "—"}
+                ID: {(roomData as any)?.room_code || hostAgency?.agency_code || "—"}
               </span>
             </div>
             {(hostAgency as any)?.logo_url || host?.avatar_url ? (
