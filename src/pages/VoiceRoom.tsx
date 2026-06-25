@@ -1578,14 +1578,7 @@ const VoiceRoom = () => {
                         size="sm"
                       />
                     </span>
-                    {slot.user_id === roomData?.host_id && roomId && currentUserId && (
-                      <HostIncomeCounter
-                        hostId={slot.user_id}
-                        roomOwnerId={roomData?.host_id}
-                        currentUserId={currentUserId}
-                        sessionStart={roomData?.created_at || new Date().toISOString()}
-                      />
-                    )}
+                    {/* Diamond income counter removed by request — no persistent 💎 number under names */}
                   </div>
                 ) : (
                   <>
