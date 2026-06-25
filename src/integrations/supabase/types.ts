@@ -1521,6 +1521,38 @@ export type Database = {
         }
         Relationships: []
       }
+      room_admins: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          id: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          id?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_admins_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_bans: {
         Row: {
           banned_by: string
@@ -1580,6 +1612,41 @@ export type Database = {
           user2_id?: string
         }
         Relationships: []
+      }
+      room_follows: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          id: string
+          room_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          room_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          room_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_follows_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_members: {
         Row: {
@@ -2188,6 +2255,10 @@ export type Database = {
         Args: { _agent_id: string; _resignation_id: string }
         Returns: undefined
       }
+      approve_room_follow: {
+        Args: { _approve: boolean; _follow_id: string }
+        Returns: undefined
+      }
       approve_usdt_recharge: {
         Args: { _approve: boolean; _notes?: string; _request_id: string }
         Returns: Json
@@ -2195,6 +2266,10 @@ export type Database = {
       assign_agency_to_bd: {
         Args: { _agency_id: string; _bd_user_id: string }
         Returns: Json
+      }
+      assign_room_admin: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: undefined
       }
       award_love_points: {
         Args: { _couple_id: string; _points: number }
@@ -2250,6 +2325,7 @@ export type Database = {
       claim_monthly_anniversary: { Args: never; Returns: Json }
       claim_weekly_couple_gift: { Args: never; Returns: Json }
       cleanup_stale_room_members: { Args: never; Returns: undefined }
+      clear_room_chat: { Args: { _room_id: string }; Returns: undefined }
       deactivate_bd_account: { Args: { _user_id: string }; Returns: Json }
       deactivate_love_couple: { Args: never; Returns: undefined }
       deduct_coins: {
@@ -2367,6 +2443,10 @@ export type Database = {
         Returns: undefined
       }
       is_own_profile: { Args: { _profile_id: string }; Returns: boolean }
+      is_room_admin: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_bd_activity: {
         Args: {
           _action_type: string
@@ -2419,6 +2499,11 @@ export type Database = {
         Args: { _agency_id: string; _agent_id: string; _host_id: string }
         Returns: undefined
       }
+      remove_room_admin: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: undefined
+      }
+      request_room_follow: { Args: { _room_id: string }; Returns: string }
       respond_join_request: {
         Args: { _accept: boolean; _request_id: string }
         Returns: undefined
