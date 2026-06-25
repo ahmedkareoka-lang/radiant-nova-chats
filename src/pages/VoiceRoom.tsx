@@ -44,6 +44,9 @@ import { Zap } from "lucide-react";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
+import { useRoomFollows } from "@/hooks/useRoomFollows";
+import { Star } from "lucide-react";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
