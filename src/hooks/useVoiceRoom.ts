@@ -231,6 +231,9 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   useEffect(() => {
     if (!roomId) return;
+    // 🧹 Reset chat cutoff every time the user (re)enters a room
+    sessionStartRef.current = Date.now();
+    setMessages([]);
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -241,6 +244,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     };
 
     init();
+
 
     // 🚀 Apply a single mic-update payload to the local members array.
     const applyMicUpdate = (payload: any) => {
