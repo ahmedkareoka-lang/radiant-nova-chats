@@ -68,7 +68,17 @@ const SupportCounter = ({ userId, sessionStart, roomId, pkActive, pkStartTime }:
         if ((p.new as any).receiver_id === userId) fetch();
       })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    // Instant local update for self-gifts (no realtime round-trip).
+    const onLocalGift = (e: Event) => {
+      const detail: any = (e as CustomEvent).detail;
+      if (!detail || detail.receiverId !== userId) return;
+      setTotal((t) => t + Number(detail.diamondAmount || 0));
+    };
+    window.addEventListener("gift-sent", onLocalGift);
+    return () => {
+      supabase.removeChannel(ch);
+      window.removeEventListener("gift-sent", onLocalGift);
+    };
   }, [userId, fetch, effectivePK.active, effectivePK.startTime]);
 
   if (!effectivePK.active) return null;
