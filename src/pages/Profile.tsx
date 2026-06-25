@@ -27,6 +27,7 @@ import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import SupporterBadge from "@/components/SupporterBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import UserPostsSection from "@/components/UserPostsSection";
 // LevelTable hidden per design — kept import removed
@@ -392,6 +393,7 @@ const Profile = () => {
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {meIsAgent && <RechargeAgentBadge size="md" />}
               {meIsBD && <BDBadge size="md" />}
+              <SupporterBadge coinsSpent={profile?.total_spend_gold} size="md" />
             </div>
 
             {/* Wealth & Charm visual tier badges */}

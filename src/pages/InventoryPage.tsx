@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import BottomNav from "@/components/BottomNav";
-import { FRAME_MAP, FRAME_ANIMATION } from "@/lib/frameConfig";
+import { FRAME_MAP, FRAME_ANIMATION, REMOVED_FRAME_KEYS } from "@/lib/frameConfig";
 import EquippedBadge from "@/components/EquippedBadge";
 import BDFrame from "@/components/BDFrame";
 import RechargeAgentFrame from "@/components/RechargeAgentFrame";
@@ -94,7 +94,13 @@ const InventoryPage = () => {
         item_data: { frame_url: "frame-recharge-agent", special: "agent" },
       });
     }
-    return [...virtuals, ...items];
+    // Hide retired legendary/mythic frames so they no longer appear in the bag
+    const cleaned = items.filter((i) => {
+      if (i.item_type !== "frame") return true;
+      const key = i.item_data?.frame_url;
+      return !key || !REMOVED_FRAME_KEYS.has(key);
+    });
+    return [...virtuals, ...cleaned];
   }, [items, isBD, isAgent]);
 
   const filtered = activeTab === "all" ? allItems : allItems.filter((i) => i.item_type === activeTab);
