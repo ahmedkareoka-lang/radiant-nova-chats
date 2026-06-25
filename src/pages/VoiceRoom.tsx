@@ -1343,7 +1343,18 @@ const VoiceRoom = () => {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
+            {!isHost && roomId && (
+              <button
+                onClick={handleToggleFollow}
+                className={`h-8 px-2.5 rounded-full flex items-center gap-1 text-[10px] font-black ${isFollowing ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black" : isFollowPending ? "bg-secondary text-muted-foreground" : "bg-secondary text-foreground border border-border"}`}
+                title={isFollowing ? "إلغاء المتابعة" : isFollowPending ? "طلب قيد الانتظار" : "تابع الغرفة"}
+              >
+                <Star className={`w-3.5 h-3.5 ${isFollowing ? "fill-current" : ""}`} />
+                {isFollowing ? "متابَع" : isFollowPending ? "قيد الانتظار" : "تابع"}
+              </button>
+            )}
             {isAdmin && (
+
               <button
                 onClick={handleClearChat}
                 className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
