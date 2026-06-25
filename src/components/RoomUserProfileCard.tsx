@@ -79,6 +79,8 @@ export default function RoomUserProfileCard({
   isRechargeAgent,
   currentUserId,
   isAdmin,
+  viewerIsHost,
+  targetIsRoomAdmin,
   isOnMic,
   muted,
   onClose,
@@ -88,7 +90,10 @@ export default function RoomUserProfileCard({
   onKick,
   onBan,
   onKickFromMic,
+  onAssignAdmin,
+  onRemoveAdmin,
 }: Props) {
+
   const [copied, setCopied] = useState(false);
   const [registeredId, setRegisteredId] = useState<string>("");
 
