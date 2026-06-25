@@ -52,6 +52,10 @@ export const useVoiceRoom = (roomId: string | null) => {
   const currentUserIdRef = useRef<string | null>(null);
   const roomIdRef = useRef<string | null>(roomId);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  // 🧹 Per-session chat cutoff — messages older than this are hidden for the
+  // current user only. Reset every time they enter (or re-enter) the room.
+  const sessionStartRef = useRef<number>(Date.now());
+
 
   // 🚀 Performance: micro-cache + in-flight dedup + abort for fetchMembers
   const membersCacheRef = useRef<{ ts: number; data: RoomMember[] } | null>(null);
@@ -159,10 +163,15 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const fetchMessages = useCallback(async () => {
     if (!roomId) return;
+    // Only load messages created AT OR AFTER this user's session join time.
+    // Each user that re-enters the room gets a fresh chat view; chat for other
+    // users currently inside is unaffected (cutoff is purely client-side).
+    const cutoffIso = new Date(sessionStartRef.current).toISOString();
     const { data, error } = await supabase
       .from("messages")
       .select("*")
       .eq("room_id", roomId)
+      .gte("created_at", cutoffIso)
       .order("created_at", { ascending: true })
       .limit(100);
 
@@ -190,6 +199,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       setMessages((prev) => (prev.length === 0 ? [] : prev));
     }
   }, [roomId]);
+
 
   const fetchRoomData = useCallback(async () => {
     if (!roomId) return;
@@ -221,6 +231,9 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   useEffect(() => {
     if (!roomId) return;
+    // 🧹 Reset chat cutoff every time the user (re)enters a room
+    sessionStartRef.current = Date.now();
+    setMessages([]);
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -231,6 +244,7 @@ export const useVoiceRoom = (roomId: string | null) => {
     };
 
     init();
+
 
     // 🚀 Apply a single mic-update payload to the local members array.
     const applyMicUpdate = (payload: any) => {
@@ -548,5 +562,14 @@ export const useVoiceRoom = (roomId: string | null) => {
     }
   };
 
-  return { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers };
+  const clearChat = async () => {
+    if (!roomId) return { ok: false, error: "no_room" };
+    const { error } = await (supabase.rpc as any)("clear_room_chat", { _room_id: roomId });
+    if (error) return { ok: false, error: error.message };
+    setMessages([]);
+    return { ok: true };
+  };
+
+  return { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers, clearChat };
+
 };

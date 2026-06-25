@@ -18,7 +18,7 @@ import FramedAvatar from "./FramedAvatar";
 import TierBadge from "./TierBadge";
 import DualBadge from "./DualBadge";
 import RechargeAgentBadge from "./RechargeAgentBadge";
-import SupporterBadge from "./SupporterBadge";
+import SupporterBadge, { SupporterAchievementBadge, SupporterFireBadge } from "./SupporterBadge";
 import BDBadge from "./BDBadge";
 import VipName from "./VipName";
 
@@ -47,6 +47,10 @@ interface Props {
   isRechargeAgent?: boolean;
   currentUserId?: string | null;
   isAdmin?: boolean;
+  /** True when the *viewer* is the room host — enables admin assignment UI. */
+  viewerIsHost?: boolean;
+  /** True when the *target* user is currently a room admin. */
+  targetIsRoomAdmin?: boolean;
   isOnMic?: boolean;
   muted?: boolean;
   onClose: () => void;
@@ -56,7 +60,10 @@ interface Props {
   onKick?: () => void;
   onBan?: () => void;
   onKickFromMic?: () => void;
+  onAssignAdmin?: () => void;
+  onRemoveAdmin?: () => void;
 }
+
 
 const GAMES = [
   { id: "lucky", emoji: "🎰", label: "الحظ" },
@@ -72,6 +79,8 @@ export default function RoomUserProfileCard({
   isRechargeAgent,
   currentUserId,
   isAdmin,
+  viewerIsHost,
+  targetIsRoomAdmin,
   isOnMic,
   muted,
   onClose,
@@ -81,7 +90,10 @@ export default function RoomUserProfileCard({
   onKick,
   onBan,
   onKickFromMic,
+  onAssignAdmin,
+  onRemoveAdmin,
 }: Props) {
+
   const [copied, setCopied] = useState(false);
   const [registeredId, setRegisteredId] = useState<string>("");
 
@@ -198,12 +210,16 @@ export default function RoomUserProfileCard({
           </button>
         </div>
 
-        {/* Showcase Badges – same components used in Profile page */}
+        {/* Showcase Badges – each badge type rendered as an INDEPENDENT pill */}
         {(() => {
           const hasVip = (profile.vip_level || 0) > 0;
           const supportCoins = (profile as any)?.total_spend_gold || 0;
-          const hasSupporter = supportCoins >= 500_000;
-          const count = (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0) + (hasSupporter ? 1 : 0);
+          const hasAchievement = supportCoins >= 500_000;
+          const hasFire = supportCoins >= 5_000_000;
+          const count =
+            (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0) +
+            (hasAchievement ? 1 : 0) + (hasFire ? 1 : 0) +
+            (targetIsRoomAdmin ? 1 : 0);
           return (
             <div className="rounded-2xl bg-gradient-to-b from-white/5 to-white/[0.02] border border-white/10 p-3">
               <div className="flex items-center justify-between mb-3">
@@ -221,12 +237,19 @@ export default function RoomUserProfileCard({
                   {hasVip && <DualBadge vipLevel={profile.vip_level || 0} />}
                   {isRechargeAgent && <RechargeAgentBadge size="md" />}
                   {isBD && <BDBadge size="md" />}
-                  <SupporterBadge coinsSpent={supportCoins} size="md" />
+                  <SupporterAchievementBadge coinsSpent={supportCoins} size="md" />
+                  <SupporterFireBadge coinsSpent={supportCoins} size="md" />
+                  {targetIsRoomAdmin && (
+                    <span className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-black bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-[0_0_10px_hsl(220_90%_60%/0.6)]">
+                      <Shield className="w-3 h-3" /> أدمن
+                    </span>
+                  )}
                 </div>
               )}
             </div>
           );
         })()}
+
 
         {/* Games section */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-600/25 to-cyan-600/25 border border-cyan-400/20 p-3">
@@ -301,9 +324,27 @@ export default function RoomUserProfileCard({
                     <UserMinus className="w-3.5 h-3.5" /> إنزال من المايك
                   </button>
                 )}
+                {viewerIsHost && !isHostOfRoom && (
+                  targetIsRoomAdmin ? (
+                    <button
+                      onClick={onRemoveAdmin}
+                      className="w-full mt-2 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold flex items-center justify-center gap-2"
+                    >
+                      <Shield className="w-3.5 h-3.5" /> إزالة من الأدمن
+                    </button>
+                  ) : (
+                    <button
+                      onClick={onAssignAdmin}
+                      className="w-full mt-2 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-xs font-black flex items-center justify-center gap-2 shadow-[0_4px_18px_-4px_hsl(220_85%_55%/0.7)]"
+                    >
+                      <Shield className="w-3.5 h-3.5" /> تعيين كأدمن للروم
+                    </button>
+                  )
+                )}
               </div>
             )}
           </div>
+
         )}
       </motion.div>
     </div>

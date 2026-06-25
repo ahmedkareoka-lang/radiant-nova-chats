@@ -8,6 +8,7 @@ import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import BannerCarousel from "@/components/BannerCarousel";
 import { useRooms } from "@/hooks/useRooms";
+import { useRoomFollows } from "@/hooks/useRoomFollows";
 import { getTelegramUser } from "@/lib/telegramWebApp";
 import { useMyRoom } from "@/hooks/useMyRoom";
 import { usePresence } from "@/hooks/usePresence";
@@ -15,12 +16,14 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+
 const TOP_TABS = [
   { id: "party", label: "حفلة", emoji: "🎉" },
 ];
 
 const CATEGORIES = [
   { id: "hot", label: "🔥 شائع" },
+  { id: "followed", label: "⭐ متابَع" },
   { id: "chat", label: "💬 دردشة", type: "Chat" },
   { id: "music", label: "🎤 غناء", type: "Music" },
   { id: "gaming", label: "🎮 ألعاب", type: "Gaming" },
@@ -28,9 +31,13 @@ const CATEGORIES = [
   { id: "new", label: "🆕 جديد" },
 ];
 
+
 const Index = () => {
   const navigate = useNavigate();
   const { rooms, loading } = useRooms();
+  const { followed: followedFollows } = useRoomFollows();
+  const followedRoomIds = useMemo(() => new Set(followedFollows.map(f => f.room_id)), [followedFollows]);
+
   const { onlineUsers } = usePresence();
   const { unreadCount, notifications } = useNotifications();
   const [profile, setProfile] = useState<any>(null);
@@ -149,9 +156,13 @@ const Index = () => {
 
   // Filter & sort rooms based on active category (only public rooms shown on home)
   const filteredRooms = useMemo(() => {
-    let list = [...rooms].filter((r: any) => !r.is_private);
+    let list = [...rooms];
+    if (activeCategory !== "followed") list = list.filter((r: any) => !r.is_private);
     const cat = CATEGORIES.find((c) => c.id === activeCategory);
-    if (cat?.type) {
+    if (activeCategory === "followed") {
+      list = list.filter((r: any) => followedRoomIds.has(r.id));
+    } else if (cat?.type) {
+
       list = list.filter((r: any) => r.type === cat.type);
     } else if (activeCategory === "hot") {
       list = list.sort((a: any, b: any) => (b.hot_score || 0) - (a.hot_score || 0) || (b.member_count || 0) - (a.member_count || 0));
@@ -159,7 +170,8 @@ const Index = () => {
       list = list.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
     return list;
-  }, [rooms, activeCategory]);
+  }, [rooms, activeCategory, followedRoomIds]);
+
 
   // Determine which rooms are "hot" (top 3 by hot_score)
   const hotRoomIds = useMemo(() => {

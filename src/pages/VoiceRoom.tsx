@@ -44,6 +44,9 @@ import { Zap } from "lucide-react";
 import TranslatedMessage from "@/components/TranslatedMessage";
 import RoomUserProfileCard from "@/components/RoomUserProfileCard";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
+import { useRoomFollows } from "@/hooks/useRoomFollows";
+import { Star } from "lucide-react";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertDialog,
@@ -104,11 +107,29 @@ const VoiceRoom = () => {
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("id");
   const { openRoom, minimizeRoom, closeRoom } = useActiveRoom();
-  const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers } = useVoiceRoom(roomId);
+  const { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers, clearChat } = useVoiceRoom(roomId);
   const { t, locale } = useLanguage();
   const rechargeAgentSet = useRechargeAgentSet();
   const bdSet = useBDSet();
   const mediaUpload = useMediaUpload();
+  const { followed: followedFollows, pending: pendingFollows, follow: followRoom, unfollow: unfollowRoom } = useRoomFollows();
+  const isFollowing = !!roomId && followedFollows.some(f => f.room_id === roomId);
+  const isFollowPending = !!roomId && pendingFollows.some(f => f.room_id === roomId);
+  const handleToggleFollow = async () => {
+    if (!roomId) return;
+    try {
+      if (isFollowing || isFollowPending) {
+        await unfollowRoom(roomId);
+        toast.success("تم إلغاء المتابعة");
+      } else {
+        const status = await followRoom(roomId);
+        toast.success(status === "pending" ? "تم إرسال طلب المتابعة 🔐" : "تمت المتابعة ⭐");
+      }
+    } catch (e: any) {
+      toast.error(e?.message === "cannot_follow_own_room" ? "لا يمكنك متابعة غرفتك" : "تعذّر تنفيذ الإجراء");
+    }
+  };
+
 
   // Mic muted state lives in the global Agora provider so it survives navigation
   const { isMuted, setIsMuted, connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoiceState();
@@ -181,7 +202,50 @@ const VoiceRoom = () => {
   const currentProfile = members.find(m => m.user_id === currentUserId)?.profile;
   const isBoss = currentProfile?.is_boss || false;
   const isHost = currentUserId === roomData?.host_id;
-  const isAdmin = isBoss || isHost;
+
+  // 🛡️ Room admins (assigned by host) — fetched from `room_admins` table
+  const [roomAdminIds, setRoomAdminIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!roomId) return;
+    const load = async () => {
+      const { data } = await (supabase.from("room_admins" as any) as any)
+        .select("user_id").eq("room_id", roomId);
+      setRoomAdminIds(new Set((data || []).map((r: any) => r.user_id)));
+    };
+    load();
+    const ch = supabase.channel(`room-admins-${roomId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "room_admins", filter: `room_id=eq.${roomId}` }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [roomId]);
+  const isRoomAdmin = !!currentUserId && roomAdminIds.has(currentUserId);
+  const isAdmin = isBoss || isHost || isRoomAdmin;
+
+  const handleClearChat = async () => {
+    if (!isAdmin) return;
+    const res = await clearChat();
+    if (res.ok) toast.success("تم مسح الدردشة للجميع 🧹");
+    else toast.error("تعذّر مسح الدردشة");
+  };
+
+  const handleToggleFollowApproval = async () => {
+    if (!isHost || !roomId) return;
+    const cur = !!(roomData as any)?.follows_require_approval;
+    const { error } = await (supabase.from("rooms") as any).update({ follows_require_approval: !cur }).eq("id", roomId);
+    if (error) toast.error("فشل التحديث"); else toast.success(!cur ? "الغرفة خاصة: تتطلب الموافقة 🔐" : "الغرفة عامة: المتابعة مباشرة 🌍");
+  };
+
+  const handleAssignAdmin = async (uid: string) => {
+    if (!roomId) return;
+    const { error } = await (supabase.rpc as any)("assign_room_admin", { _room_id: roomId, _user_id: uid });
+    if (error) toast.error("تعذّر التعيين"); else toast.success("تم تعيين الأدمن ✅");
+  };
+  const handleRemoveAdmin = async (uid: string) => {
+    if (!roomId) return;
+    const { error } = await (supabase.rpc as any)("remove_room_admin", { _room_id: roomId, _user_id: uid });
+    if (error) toast.error("تعذّر الحذف"); else toast.success("تمت إزالة الأدمن");
+  };
+
 
   // VIP6+ — auto-enable in-room translation (one-shot when profile loads)
   const didAutoTranslateInit = useRef(false);
@@ -1069,6 +1133,10 @@ const VoiceRoom = () => {
           isRechargeAgent={rechargeAgentSet.has(selectedProfile.user_id)}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
+          viewerIsHost={isHost}
+          targetIsRoomAdmin={roomAdminIds.has(selectedProfile.user_id)}
+          onAssignAdmin={() => handleAssignAdmin(selectedProfile.user_id)}
+          onRemoveAdmin={() => handleRemoveAdmin(selectedProfile.user_id)}
           isOnMic={
             members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
             members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined
@@ -1082,6 +1150,7 @@ const VoiceRoom = () => {
           onBan={() => setConfirmAction({ type: "ban", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
           onKickFromMic={() => setConfirmAction({ type: "kickMic", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
         />
+
       )}
 
       {/* Settings Modal */}
@@ -1184,6 +1253,24 @@ const VoiceRoom = () => {
               </button>
             </div>
 
+            {/* Follow approval mode */}
+            <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold">متابعة الغرفة</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {(roomData as any)?.follows_require_approval ? "خاص: تتطلب موافقتك" : "عام: أي شخص يتابع"}
+                  </span>
+                </div>
+              </div>
+              <button onClick={handleToggleFollowApproval}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${(roomData as any)?.follows_require_approval ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+                {(roomData as any)?.follows_require_approval ? "🔐 خاص" : "🌍 عام"}
+              </button>
+            </div>
+
+
             {/* Mute Entrance Sounds */}
             <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
               <div className="flex items-center gap-2">
@@ -1256,11 +1343,32 @@ const VoiceRoom = () => {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
+            {!isHost && roomId && (
+              <button
+                onClick={handleToggleFollow}
+                className={`h-8 px-2.5 rounded-full flex items-center gap-1 text-[10px] font-black ${isFollowing ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black" : isFollowPending ? "bg-secondary text-muted-foreground" : "bg-secondary text-foreground border border-border"}`}
+                title={isFollowing ? "إلغاء المتابعة" : isFollowPending ? "طلب قيد الانتظار" : "تابع الغرفة"}
+              >
+                <Star className={`w-3.5 h-3.5 ${isFollowing ? "fill-current" : ""}`} />
+                {isFollowing ? "متابَع" : isFollowPending ? "قيد الانتظار" : "تابع"}
+              </button>
+            )}
+            {isAdmin && (
+
+              <button
+                onClick={handleClearChat}
+                className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
+                title="مسح الدردشة للجميع"
+              >
+                <Trash2 className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
             {isHost && (
               <button onClick={() => setShowSettings(true)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
                 <Settings2 className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
+
             <button onClick={() => setMuteEntrance(!muteEntrance)} className={`w-8 h-8 rounded-full flex items-center justify-center ${muteEntrance ? 'bg-destructive/20' : 'bg-secondary'}`} title={muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}>
               <BellOff className={`w-4 h-4 ${muteEntrance ? 'text-destructive' : 'text-muted-foreground'}`} />
             </button>
