@@ -322,6 +322,24 @@ const VoiceRoom = () => {
     }
   }, [roomId, roomData?.name]);
 
+  // Fetch the host's agency (if any) to display the real Agency ID/code in header
+  const [hostAgency, setHostAgency] = useState<{ id: string; name: string; agency_code: string } | null>(null);
+  useEffect(() => {
+    const hostId = roomData?.host_id;
+    if (!hostId) { setHostAgency(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("agencies")
+        .select("id, name, agency_code")
+        .eq("owner_id", hostId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!cancelled) setHostAgency(data as any || null);
+    })();
+    return () => { cancelled = true; };
+  }, [roomData?.host_id]);
+
   // Auto-minimize on unmount unless the user explicitly left the room.
   // This keeps the floating bubble + room membership alive when they navigate
   // away to chat or to their profile, so others still see them as "LIVE".
