@@ -21,12 +21,14 @@ const TOP_TABS = [
 
 const CATEGORIES = [
   { id: "hot", label: "🔥 شائع" },
+  { id: "followed", label: "⭐ متابَع" },
   { id: "chat", label: "💬 دردشة", type: "Chat" },
   { id: "music", label: "🎤 غناء", type: "Music" },
   { id: "gaming", label: "🎮 ألعاب", type: "Gaming" },
   { id: "vip", label: "👑 VIP", type: "VIP" },
   { id: "new", label: "🆕 جديد" },
 ];
+
 
 const Index = () => {
   const navigate = useNavigate();
