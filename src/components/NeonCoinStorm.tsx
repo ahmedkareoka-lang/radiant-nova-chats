@@ -266,7 +266,7 @@ export default function NeonCoinStorm({
                       whileHover={canAfford ? { scale: 1.03 } : {}}
                       whileTap={canAfford ? { scale: 0.97 } : {}}
                       disabled={!canAfford}
-                      onClick={() => launchStorm(tier)}
+                      onClick={() => setPendingTier(tier)}
                       className={`relative rounded-2xl p-3 text-left overflow-hidden border transition-all ${
                         canAfford
                           ? "border-white/20 hover:border-fuchsia-400/60"
