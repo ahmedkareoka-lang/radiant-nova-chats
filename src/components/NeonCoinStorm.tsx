@@ -56,6 +56,7 @@ export default function NeonCoinStorm({
 
   const [phase, setPhase] = useState<"select" | "storm">("select");
   const [selectedTier, setSelectedTier] = useState<typeof TIERS[number] | null>(null);
+  const [pendingTier, setPendingTier] = useState<typeof TIERS[number] | null>(null);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [pops, setPops] = useState<Pop[]>([]);
   const [collected, setCollected] = useState(0);
