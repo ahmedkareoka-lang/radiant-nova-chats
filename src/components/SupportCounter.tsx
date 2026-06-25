@@ -81,13 +81,12 @@ const SupportCounter = ({ userId, sessionStart, roomId, pkActive, pkStartTime }:
 
   return (
     <span
-      className="inline-flex min-w-[38px] max-w-[64px] items-center justify-center gap-0.5 overflow-hidden rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[9px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)] whitespace-nowrap"
+      className="inline-flex min-w-[38px] max-w-[64px] items-center justify-center overflow-hidden rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[10px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)] whitespace-nowrap"
       style={{
         background: "linear-gradient(180deg,#ff5a1f 0%,#e0220c 55%,#8a0a00 100%)",
         textShadow: "0 1px 2px rgba(0,0,0,0.6)",
       }}
     >
-      <span className="text-[9px] leading-none">🔥</span>
       <span className="tabular-nums leading-none">{display}</span>
     </span>
   );
