@@ -54,6 +54,14 @@ export const useGifts = () => {
       diamond_amount: diamondAmount,
     });
 
+    // Local broadcast so support counters / UI listeners react instantly
+    // without waiting for the realtime round-trip (matters for self-gifts).
+    try {
+      window.dispatchEvent(new CustomEvent("gift-sent", {
+        detail: { receiverId, senderId, diamondAmount, giftName },
+      }));
+    } catch {}
+
     // Create notifications
     await supabase.from("notifications").insert({
       user_id: receiverId,
