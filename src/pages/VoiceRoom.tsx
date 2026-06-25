@@ -72,6 +72,14 @@ interface UserProfile {
   equipped_frame?: string | null;
 }
 
+type RoomPKSnapshot = {
+  active: boolean;
+  startTime: string | null;
+  score1?: number;
+  score2?: number;
+  durationMin?: number | null;
+};
+
 const ENTRANCE_EFFECTS = [
   { minLevel: 0, color: "from-muted/20 to-transparent", label: "", border: "border-border", icon: "" },
   { minLevel: 3, color: "from-blue-500/20 to-transparent", label: "⭐", border: "border-blue-500/50", icon: "⭐" },
@@ -146,22 +154,27 @@ const VoiceRoom = () => {
   const [showChatInput, setShowChatInput] = useState(true);
   const [chatInputFocused, setChatInputFocused] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [viewportSize, setViewportSize] = useState({ width: 390, height: 702 });
+  const [roomPK, setRoomPK] = useState<RoomPKSnapshot>({ active: false, startTime: null, score1: 0, score2: 0, durationMin: null });
   const chatInputRef = useRef<HTMLInputElement>(null);
 
-  // Track on-screen keyboard via VisualViewport so the chat input floats above it
+  // Track viewport + on-screen keyboard so the room grid auto-scales and input floats above keyboard.
   useEffect(() => {
-    if (typeof window === "undefined" || !window.visualViewport) return;
+    if (typeof window === "undefined") return;
     const vv = window.visualViewport;
     const handler = () => {
-      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const offset = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
       setKeyboardOffset(offset);
+      setViewportSize({ width: Math.round(window.innerWidth), height: Math.round(window.innerHeight) });
     };
-    vv.addEventListener("resize", handler);
-    vv.addEventListener("scroll", handler);
+    window.addEventListener("resize", handler);
+    vv?.addEventListener("resize", handler);
+    vv?.addEventListener("scroll", handler);
     handler();
     return () => {
-      vv.removeEventListener("resize", handler);
-      vv.removeEventListener("scroll", handler);
+      window.removeEventListener("resize", handler);
+      vv?.removeEventListener("resize", handler);
+      vv?.removeEventListener("scroll", handler);
     };
   }, []);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
@@ -848,28 +861,25 @@ const VoiceRoom = () => {
     return member || null;
   });
 
-  // Stable, fixed grid configuration for 0–20 mics — no shake, no overlap between rows.
-  // Columns are predetermined per range so layout never reflows mid-session.
-  const gridCols =
-    micCount <= 4 ? "grid-cols-2"
-    : micCount <= 9 ? "grid-cols-3"
-    : micCount <= 16 ? "grid-cols-4"
-    : "grid-cols-5";
-  // Avatar size scales down predictably so a row never overflows on 428px viewports.
-  // Reduced sizes to give more vertical space to the chat panel.
-  const micAvatarPx =
-    micCount <= 6 ? 70
-    : micCount <= 9 ? 60
-    : micCount <= 12 ? 54
-    : micCount <= 16 ? 48
-    : 44;
-  // Vertical gap is intentionally large so the small support badge under one mic
-  // never visually touches the avatar of the row below.
-  const micGapClass =
-    micCount <= 6 ? "gap-x-4 gap-y-5"
-    : micCount <= 9 ? "gap-x-3 gap-y-5"
-    : micCount <= 12 ? "gap-x-2.5 gap-y-4"
-    : "gap-x-2 gap-y-4";
+  // Dynamic mic grid: 8/12/16 use 4 columns, 20 uses 5 columns, and seat size is
+  // calculated from both viewport width and height so chat never gets squeezed out.
+  const micCols = micCount <= 5 ? Math.min(3, micCount) : micCount <= 16 ? 4 : 5;
+  const micRows = Math.ceil(micCount / micCols);
+  const micGapPx = micCount >= 20 ? 6 : micCount >= 16 ? 7 : micCount >= 12 ? 8 : 10;
+  const micMaxPx = micCount >= 20 ? 42 : micCount >= 16 ? 48 : micCount >= 12 ? 54 : 64;
+  const micMinPx = micCount >= 20 ? 34 : micCount >= 16 ? 38 : 42;
+  const roomMaxWidth = Math.min(viewportSize.width || 390, 512);
+  const availableGridWidth = Math.max(280, roomMaxWidth - 24 - micGapPx * (micCols - 1));
+  const byWidthPx = Math.floor(availableGridWidth / micCols) - 8;
+  const reservedVerticalPx = roomPK.active ? 438 : 330;
+  const byHeightPx = Math.floor(((viewportSize.height || 702) - reservedVerticalPx - micGapPx * (micRows - 1)) / micRows) - 17;
+  const micAvatarPx = Math.max(micMinPx, Math.min(micMaxPx, byWidthPx, byHeightPx));
+  const micSeatWidth = Math.max(micAvatarPx + 8, Math.floor(availableGridWidth / micCols));
+  const micNameClass = micCount >= 16 ? "text-[8px] mt-1" : micCount >= 12 ? "text-[9px] mt-1" : "text-[10px] mt-1.5";
+  const micGridStyle = {
+    gridTemplateColumns: `repeat(${micCols}, minmax(0, ${micSeatWidth}px))`,
+    gap: `${micGapPx}px`,
+  };
 
   // Helper: speaking animation
   const SpeakingWaves = () => (
@@ -918,8 +928,8 @@ const VoiceRoom = () => {
 
   return (
     <div
-      className={`h-[100dvh] max-h-[100dvh] flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}
-      style={{ touchAction: "pan-x" }}
+      className={`h-screen max-h-screen supports-[height:100dvh]:h-[100dvh] supports-[height:100dvh]:max-h-[100dvh] flex flex-col ${currentTheme.bg} transition-all duration-700 relative overflow-hidden`}
+      style={{ touchAction: "pan-x", overscrollBehavior: "none" }}
     >
       {/* Soft animated luxury backdrop (drifting orbs + sparkles) */}
       <VoiceRoomBackdrop backgroundUrl={(roomData as any)?.background_url} />
@@ -1376,38 +1386,38 @@ const VoiceRoom = () => {
               {showHeaderMenu && (
                 <>
                   <div className="fixed inset-0 z-[60]" onClick={() => setShowHeaderMenu(false)} />
-                  <div className="absolute top-11 left-0 z-[61] w-max min-w-[220px] max-w-[80vw] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                  <div dir="rtl" className="fixed right-2 top-[calc(env(safe-area-inset-top,0px)+3.5rem)] z-[80] w-56 max-w-[calc(100vw-1rem)] max-h-[70vh] overflow-y-auto rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl">
                     <button
                       onClick={() => { setShowHeaderMenu(false); handleMinimize(); }}
-                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap"
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap overflow-visible"
                     >
                       <Minimize2 className="w-3.5 h-3.5" /> تصغير الغرفة
                     </button>
                     {isHost && (
                       <button
                         onClick={() => { setShowHeaderMenu(false); setShowSettings(true); }}
-                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap overflow-visible border-t border-border/50"
                       >
                         <Settings2 className="w-3.5 h-3.5" /> تعديل الغرفة
                       </button>
                     )}
                     <button
                       onClick={() => { setShowHeaderMenu(false); setMuteEntrance(!muteEntrance); }}
-                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap overflow-visible border-t border-border/50"
                     >
                       <BellOff className="w-3.5 h-3.5" /> {muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}
                     </button>
                     {isAdmin && (
                       <button
                         onClick={() => { setShowHeaderMenu(false); handleClearChat(); }}
-                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap overflow-visible border-t border-border/50"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> مسح الدردشة للجميع
                       </button>
                     )}
                     <button
                       onClick={() => { setShowHeaderMenu(false); handleLeave(); }}
-                      className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
+                      className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 whitespace-nowrap overflow-visible border-t border-border/50"
                     >
                       <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
                     </button>
@@ -1491,20 +1501,20 @@ const VoiceRoom = () => {
       {/* Voice Room Area — single-screen, no scroll, mic grid auto-fits */}
       <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-3 pt-1 pb-1 max-w-lg mx-auto w-full">
         {/* Compact PK + Couple row (auto-hides on tiny screens via overflow) */}
-        <div className="shrink-0">
+        <div className="shrink-0 min-h-0">
         {roomId && (
-          <div className="mb-1.5 flex items-start gap-2">
-            <div className="flex-1 min-w-0 scale-90 origin-top-left">
-              <PKChallenge roomId={roomId} isHost={isHost} members={members} />
+          <div className="mb-1 flex max-h-[54px] items-start gap-1.5 overflow-visible">
+            <div className="min-w-0 flex-1">
+              <PKChallenge roomId={roomId} isHost={isAdmin} members={members} micCount={micCount} onStateChange={setRoomPK} />
             </div>
-            <div className="scale-90 origin-top-right">
+            <div className="shrink-0 scale-[0.82] origin-top-right overflow-hidden">
               <MicTurfWar roomId={roomId} isHost={isHost} currentUserId={currentUserId} ourRoomName={roomData?.name || "غرفتنا"} />
             </div>
           </div>
         )}
 
         {/* Mic Grid — adaptive size & spacing, stable seats (no shake) */}
-        <div className={`grid ${gridCols} ${micGapClass} mb-1.5 justify-items-center`}>
+        <div className="grid mb-1 justify-center justify-items-center transition-[gap] duration-200" style={micGridStyle}>
 
 
 
@@ -1519,8 +1529,8 @@ const VoiceRoom = () => {
             return (
               <div
                 key={i}
-                className="flex flex-col items-center"
-                style={{ width: micAvatarPx + 12 }}
+                className="flex flex-col items-center min-w-0"
+                style={{ width: micSeatWidth }}
               >
                 {slot ? (
                   <div
@@ -1546,17 +1556,21 @@ const VoiceRoom = () => {
                       )}
                       {/* Fiery red PK support counter — pinned to the BOTTOM of the frame,
                           overlapping it slightly so it never pushes the name or the next mic row */}
+                      {roomPK.active && (
                       <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 z-30 pointer-events-none">
                         <SupportCounter
                           userId={slot.user_id}
                           roomId={roomId || undefined}
                           sessionStart={roomData?.created_at || new Date().toISOString()}
+                          pkActive={roomPK.active}
+                          pkStartTime={roomPK.startTime}
                         />
                       </div>
+                      )}
                     </div>
                     {/* Username — full width of slot, single line, never covered by support badge */}
                     <span
-                      className="text-[10px] truncate block text-center mt-1.5 leading-tight w-full px-0.5"
+                      className={`${micNameClass} truncate block text-center leading-tight w-full px-0.5`}
                     >
                       <VipName
                         name={slot.profile?.display_name || "User"}
@@ -1639,7 +1653,7 @@ const VoiceRoom = () => {
         })()}
 
         {/* Chat — premium dark bubble panel, takes the remaining space */}
-        <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden">
+        <div className="flex-1 basis-[160px] min-h-[130px] flex flex-col rounded-2xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden">
           <div className="flex items-center gap-2 px-3 pt-2 pb-1">
             <MessageCircle className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold text-white/90">الدردشة الحية</span>
@@ -1856,12 +1870,12 @@ const VoiceRoom = () => {
             {showQuickOptions && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setShowQuickOptions(false)} />
-                <div className="absolute bottom-12 right-0 z-[61] w-max min-w-[220px] max-w-[80vw] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                <div dir="rtl" className="fixed right-2 bottom-[calc(env(safe-area-inset-bottom,0px)+4.25rem)] z-[80] w-56 max-w-[calc(100vw-1rem)] max-h-[60vh] overflow-y-auto rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl">
                   <button onClick={() => { setShowQuickOptions(false); setShowCouplePicker(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap">
                     <Heart className="w-3.5 h-3.5 text-pink-400" /> ثنائي العشاق
                   </button>
                   <button onClick={() => { setShowQuickOptions(false); setShowCoinStorm(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50">
-                    <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> عاصفة كوينز
+                    <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> مطر عملات
                   </button>
                   <button onClick={() => { setShowQuickOptions(false); handleLeave(); }} className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 whitespace-nowrap border-t border-border/50">
                     <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
