@@ -183,6 +183,7 @@ const UserProfile = () => {
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {targetIsAgent && <RechargeAgentBadge size="md" />}
               {targetIsBD && <BDBadge size="md" />}
+              <SupporterBadge coinsSpent={(profile as any)?.total_spend_gold} size="md" />
             </div>
 
             {/* Wealth & Charm tier badges */}
