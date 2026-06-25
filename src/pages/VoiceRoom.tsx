@@ -98,7 +98,7 @@ const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
   return effect;
 };
 
-const MIC_OPTIONS = [5, 8, 12, 15, 20];
+const MIC_OPTIONS = [8, 12, 16, 20];
 
 const ROOM_THEMES: { id: string; label: string; emoji: string; bg: string }[] = [
   { id: "default", label: "Default", emoji: "🌑", bg: "bg-background" },
@@ -1605,9 +1605,20 @@ const VoiceRoom = () => {
                         <Mic className="w-4 h-4 text-muted-foreground" />
                       )}
                     </div>
-                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                    <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 leading-tight">
                       {isSlotLocked ? "🔒" : ""} مايك {i + 1}
                     </span>
+                    {roomPK.active && (
+                      <span
+                        className="mt-0.5 inline-flex min-w-[38px] justify-center rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[9px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)]"
+                        style={{
+                          background: "linear-gradient(180deg,#ff5a1f 0%,#e0220c 55%,#8a0a00 100%)",
+                          textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+                        }}
+                      >
+                        🔥 0
+                      </span>
+                    )}
                     {isAdmin && (
                       <button onClick={() => handleToggleLockSlot(i)} className="text-[8px] text-muted-foreground hover:text-primary">
                         {isSlotLocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
