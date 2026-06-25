@@ -147,6 +147,9 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
     else setSelectedRecipients(new Set());
   }, [isOpen, receiverId]);
 
+  if (!isOpen) return null;
+
+
   const toggleRecipient = (userId: string) => {
     setSelectedRecipients(prev => {
       const next = new Set(prev);
