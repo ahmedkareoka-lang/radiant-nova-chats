@@ -562,5 +562,14 @@ export const useVoiceRoom = (roomId: string | null) => {
     }
   };
 
-  return { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers };
+  const clearChat = async () => {
+    if (!roomId) return { ok: false, error: "no_room" };
+    const { error } = await (supabase.rpc as any)("clear_room_chat", { _room_id: roomId });
+    if (error) return { ok: false, error: error.message };
+    setMessages([]);
+    return { ok: true };
+  };
+
+  return { members, messages, roomData, currentUserId, joinRoom, leaveRoom, sendMessage, toggleMic, updateMicSlot, fetchMembers, clearChat };
+
 };
