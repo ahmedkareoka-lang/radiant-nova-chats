@@ -1467,57 +1467,25 @@ const VoiceRoom = () => {
       {/* Treasure Box (auto-trigger at 300K daily room support) */}
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
-      {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
-      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
-        {/* Top fixed region: PK + couple seats + host info + mic grid (no page scroll) */}
-        <div className="shrink-0 overflow-y-auto max-h-[58%]" style={{ scrollbarWidth: "none" }}>
-        {/* PK Challenge & Trophy side by side */}
+      {/* Voice Room Area — single-screen, no scroll, mic grid auto-fits */}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-3 pt-1 pb-1 max-w-lg mx-auto w-full">
+        {/* Compact PK + Couple row (auto-hides on tiny screens via overflow) */}
+        <div className="shrink-0">
         {roomId && (
-          <div className="mb-4 flex items-start gap-2 flex-wrap">
-            <div className="flex-1 min-w-[200px]">
+          <div className="mb-1.5 flex items-start gap-2">
+            <div className="flex-1 min-w-0 scale-90 origin-top-left">
               <PKChallenge roomId={roomId} isHost={isHost} members={members} />
             </div>
-            <MicTurfWar roomId={roomId} isHost={isHost} currentUserId={currentUserId} ourRoomName={roomData?.name || "غرفتنا"} />
-          </div>
-        )}
-
-        {/* Couple Seats — heart-shaped pairing */}
-        {roomId && (
-          <div className="mb-4">
-            <CoupleSeats
-              roomId={roomId}
-              isHost={isHost}
-              members={members}
-              onOpenPicker={() => setShowCouplePicker(true)}
-            />
-          </div>
-        )}
-
-        {/* Host Info Banner with Top 3 Senders strip */}
-        {host && (
-          <div className="mb-2">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
-              <div className="relative">
-                <img loading="lazy" decoding="async" src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
-                <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className={`text-sm ${host.is_boss ? "boss-fire-text font-bold" : "glow-neon-text font-bold"}`}>{host.is_boss ? host.display_name : <VipName name={host.display_name} level={host.vip_level} size="md" />}</span>
-                <p className="text-[10px] text-muted-foreground">مضيف الغرفة</p>
-              </div>
-              <VipBadge level={host.vip_level} size="sm" />
+            <div className="scale-90 origin-top-right">
+              <MicTurfWar roomId={roomId} isHost={isHost} currentUserId={currentUserId} ourRoomName={roomData?.name || "غرفتنا"} />
             </div>
-            {/* Top 3 senders chip */}
-            {roomData?.host_id && roomId && (
-              <div className="flex justify-center mt-2">
-                <Top3RoomSenders roomId={roomId} hostId={roomData.host_id} />
-              </div>
-            )}
           </div>
         )}
 
         {/* Mic Grid — adaptive size & spacing, stable seats (no shake) */}
-        <div className={`grid ${gridCols} ${micGapClass} mb-2 justify-items-center`}>
+        <div className={`grid ${gridCols} ${micGapClass} mb-1.5 justify-items-center`}>
+
+
 
           {micSlots.map((slot, i) => {
             const isSlotLocked = lockedSlots.includes(i);
