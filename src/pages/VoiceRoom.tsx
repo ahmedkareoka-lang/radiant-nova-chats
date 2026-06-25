@@ -144,6 +144,26 @@ const VoiceRoom = () => {
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [showQuickOptions, setShowQuickOptions] = useState(false);
   const [showChatInput, setShowChatInput] = useState(true);
+  const [chatInputFocused, setChatInputFocused] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+
+  // Track on-screen keyboard via VisualViewport so the chat input floats above it
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const handler = () => {
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardOffset(offset);
+    };
+    vv.addEventListener("resize", handler);
+    vv.addEventListener("scroll", handler);
+    handler();
+    return () => {
+      vv.removeEventListener("resize", handler);
+      vv.removeEventListener("scroll", handler);
+    };
+  }, []);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
@@ -1717,22 +1737,42 @@ const VoiceRoom = () => {
             <div ref={chatEndRef} />
           </div>
           {showChatInput && (
-            <div className="flex gap-2 items-center px-3 pb-2">
+            <div
+              className={
+                chatInputFocused
+                  ? "fixed left-0 right-0 z-[80] flex gap-2 items-center px-3 py-2 bg-background/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-8px_24px_rgba(0,0,0,0.4)]"
+                  : "flex gap-2 items-center px-3 pb-2"
+              }
+              style={
+                chatInputFocused
+                  ? { bottom: keyboardOffset, paddingBottom: keyboardOffset > 0 ? 8 : "calc(env(safe-area-inset-bottom,0px) + 8px)" }
+                  : undefined
+              }
+            >
               <input
+                ref={chatInputRef}
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                onFocus={() => {
+                  setChatInputFocused(true);
+                  setTimeout(() => chatInputRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
+                }}
+                onBlur={() => setTimeout(() => setChatInputFocused(false), 100)}
                 placeholder="اكتب رسالة..."
                 maxLength={500}
                 dir="auto"
                 autoComplete="off"
-                style={{ color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))", fontSize: "14px" }}
+                style={{ color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))", fontSize: "16px" }}
                 className="flex-1 bg-white/10 backdrop-blur rounded-full px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-primary border border-white/10"
-                autoFocus
               />
-              <button onClick={handleSend} className="w-8 h-8 rounded-full gradient-neon flex items-center justify-center">
-                <Send className="w-3.5 h-3.5 text-primary-foreground" />
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleSend}
+                className="w-9 h-9 rounded-full gradient-neon flex items-center justify-center shrink-0"
+              >
+                <Send className="w-4 h-4 text-primary-foreground" />
               </button>
             </div>
           )}
