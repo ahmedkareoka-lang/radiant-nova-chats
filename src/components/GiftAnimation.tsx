@@ -279,13 +279,9 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
 
         {availableMembers.length > 0 && (
           <div className="flex items-center justify-center gap-2 mb-2">
-            {receiverName && !showMulti && (
-              <p className="text-xs text-muted-foreground">إرسال إلى: <span className="text-primary font-bold">{receiverName}</span></p>
-            )}
-            <button onClick={() => setShowMulti(!showMulti)}
-              className={`text-[10px] px-3 py-1 rounded-full font-bold transition-all ${showMulti ? 'gradient-neon text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
-              {showMulti ? '✓ إرسال جماعي' : '👥 إرسال جماعي'}
-            </button>
+            <p className="text-[10px] text-muted-foreground">
+              المستلمون المختارون: <span className="text-primary font-bold">{selectedRecipients.size}</span>
+            </p>
           </div>
         )}
 
