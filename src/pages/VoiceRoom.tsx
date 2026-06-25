@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package, Power, Home, MoreHorizontal, Grid2x2, Gamepad2, Swords, Smile, Trophy, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package, Power, Home, MoreHorizontal, Grid2x2, Gamepad2, Swords, Smile, Trophy, ChevronLeft, CloudRain } from "lucide-react";
 
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
@@ -836,19 +836,20 @@ const VoiceRoom = () => {
     : micCount <= 16 ? "grid-cols-4"
     : "grid-cols-5";
   // Avatar size scales down predictably so a row never overflows on 428px viewports.
+  // Reduced sizes to give more vertical space to the chat panel.
   const micAvatarPx =
-    micCount <= 6 ? 86
-    : micCount <= 9 ? 72
-    : micCount <= 12 ? 64
-    : micCount <= 16 ? 58
-    : 52;
+    micCount <= 6 ? 70
+    : micCount <= 9 ? 60
+    : micCount <= 12 ? 54
+    : micCount <= 16 ? 48
+    : 44;
   // Vertical gap is intentionally large so the small support badge under one mic
   // never visually touches the avatar of the row below.
   const micGapClass =
-    micCount <= 6 ? "gap-x-5 gap-y-8"
-    : micCount <= 9 ? "gap-x-4 gap-y-7"
-    : micCount <= 12 ? "gap-x-3 gap-y-7"
-    : "gap-x-2.5 gap-y-6";
+    micCount <= 6 ? "gap-x-4 gap-y-5"
+    : micCount <= 9 ? "gap-x-3 gap-y-5"
+    : micCount <= 12 ? "gap-x-2.5 gap-y-4"
+    : "gap-x-2 gap-y-4";
 
   // Helper: speaking animation
   const SpeakingWaves = () => (
@@ -1763,13 +1764,14 @@ const VoiceRoom = () => {
           >
             <Gamepad2 className="w-5 h-5" />
           </button>
-          {/* PK */}
+          {/* مطر عملات */}
           <button
             onClick={() => setShowCoinStorm(true)}
-            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-fuchsia-600 shadow-[0_0_12px_rgba(99,102,241,0.6)] flex items-center justify-center text-white font-black text-[12px] active:scale-95 transition"
-            aria-label="PK"
+            className="h-10 px-2.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-fuchsia-600 shadow-[0_0_14px_rgba(236,72,153,0.55)] flex items-center gap-1 text-white font-extrabold text-[10px] active:scale-95 transition"
+            aria-label="مطر عملات"
           >
-            PK
+            <CloudRain className="w-4 h-4" />
+            <span className="leading-none">مطر عملات</span>
           </button>
           {/* Chat toggle — opens/focuses chat input */}
           <button

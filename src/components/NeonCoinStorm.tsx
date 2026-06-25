@@ -56,6 +56,7 @@ export default function NeonCoinStorm({
 
   const [phase, setPhase] = useState<"select" | "storm">("select");
   const [selectedTier, setSelectedTier] = useState<typeof TIERS[number] | null>(null);
+  const [pendingTier, setPendingTier] = useState<typeof TIERS[number] | null>(null);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [pops, setPops] = useState<Pop[]>([]);
   const [collected, setCollected] = useState(0);
@@ -73,6 +74,7 @@ export default function NeonCoinStorm({
     if (open) {
       setPhase("select");
       setSelectedTier(null);
+      setPendingTier(null);
       setCollected(0);
       setCoins([]);
       setPops([]);
@@ -264,7 +266,7 @@ export default function NeonCoinStorm({
                       whileHover={canAfford ? { scale: 1.03 } : {}}
                       whileTap={canAfford ? { scale: 0.97 } : {}}
                       disabled={!canAfford}
-                      onClick={() => launchStorm(tier)}
+                      onClick={() => setPendingTier(tier)}
                       className={`relative rounded-2xl p-3 text-left overflow-hidden border transition-all ${
                         canAfford
                           ? "border-white/20 hover:border-fuchsia-400/60"
@@ -295,6 +297,64 @@ export default function NeonCoinStorm({
               <p className="text-[10px] text-white/50 text-center mt-3">
                 اضغط على الكيس أثناء المطر لتجمعه ⚡ الأسرع يأخذ أكثر
               </p>
+
+              {/* Price confirmation overlay */}
+              <AnimatePresence>
+                {pendingTier && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-3xl p-4"
+                    onClick={() => setPendingTier(null)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, y: 10 }}
+                      animate={{ scale: 1, y: 0 }}
+                      exit={{ scale: 0.9, y: 10 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-white/15 p-4 shadow-2xl"
+                    >
+                      <div className="text-center">
+                        <div className={`mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br ${pendingTier.color} flex items-center justify-center mb-3`}>
+                          <Zap className="w-7 h-7 text-white" />
+                        </div>
+                        <div className="text-white font-bold text-base mb-1">
+                          تأكيد إطلاق "{pendingTier.label}"
+                        </div>
+                        <div className="text-[12px] text-white/70 mb-3">
+                          سيتم خصم المبلغ التالي من رصيدك:
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5 text-amber-300 font-extrabold text-xl mb-1">
+                          <img src={novaCoin3d} alt="" className="w-6 h-6 object-contain" />
+                          {pendingTier.cost.toLocaleString()}
+                        </div>
+                        <div className="text-[10px] text-white/50 mb-4">
+                          رسوم 5% • 60 كيس مطر للجمهور
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPendingTier(null)}
+                            className="flex-1 h-10 rounded-xl bg-white/10 text-white text-sm font-semibold hover:bg-white/15"
+                          >
+                            إلغاء
+                          </button>
+                          <button
+                            onClick={() => {
+                              const t = pendingTier;
+                              setPendingTier(null);
+                              launchStorm(t);
+                            }}
+                            className={`flex-1 h-10 rounded-xl bg-gradient-to-br ${pendingTier.color} text-white text-sm font-bold shadow-lg`}
+                          >
+                            تأكيد ودفع
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </motion.div>
