@@ -1582,12 +1582,43 @@ const VoiceRoom = () => {
         </div>
         {/* /top fixed region */}
 
-        {/* Chat — only this section scrolls inside the locked room view */}
-        <div className="card-nova p-3 flex-1 min-h-[180px] flex flex-col mt-2 overflow-hidden">
-          <div className="flex items-center gap-2 mb-2">
+        {/* Audience strip — viewers count + horizontal avatar bubbles */}
+        {(() => {
+          const audience = members.filter((m: any) => m.mic_slot === null || m.mic_slot === undefined);
+          return (
+            <div className="shrink-0 mb-1.5 flex items-center gap-2 rounded-2xl bg-black/35 backdrop-blur border border-white/10 px-2 py-1.5">
+              <div className="shrink-0 min-w-[34px] h-7 px-2 rounded-lg bg-black/55 flex items-center justify-center text-white text-[11px] font-black tabular-nums border border-white/10">
+                {audience.length}
+              </div>
+              <div className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-1.5">
+                {audience.slice(0, 24).map((m: any) => (
+                  <button
+                    key={m.user_id}
+                    onClick={() => handleAvatarClick(m)}
+                    className="shrink-0"
+                    title={m.profile?.display_name}
+                  >
+                    <img
+                      loading="lazy"
+                      decoding="async"
+                      src={m.profile?.avatar_url || "https://i.pravatar.cc/40"}
+                      alt=""
+                      className="w-7 h-7 rounded-full object-cover ring-1 ring-white/30"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Chat — premium dark bubble panel, takes the remaining space */}
+        <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 pt-2 pb-1">
             <MessageCircle className="w-4 h-4 text-primary" />
-            <span className="text-xs font-semibold">الدردشة الحية</span>
+            <span className="text-xs font-semibold text-white/90">الدردشة الحية</span>
           </div>
+
 
           {/* Pinned Message */}
           <AnimatePresence>
