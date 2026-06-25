@@ -1451,19 +1451,25 @@ const VoiceRoom = () => {
             )}
           </div>
 
-          {/* Agency info badge — right */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 max-w-[55%]">
+          {/* Agency info badge — right (enlarged avatar + name, real agency code) */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-black/45 backdrop-blur-md border border-amber-300/40 max-w-[62%] shadow-[0_0_18px_rgba(255,191,0,0.25)]">
             <div className="flex flex-col items-end leading-tight min-w-0">
-              <span className="text-[11px] font-black text-amber-300 truncate max-w-[140px]">
-                {(roomData as any)?.agency_name || roomData?.name || "الغرفة"}
+              <span className="text-base sm:text-xl font-black text-amber-300 truncate max-w-[160px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+                {hostAgency?.name || (roomData as any)?.agency_name || roomData?.name || "الغرفة"}
               </span>
-              <span className="text-[9px] font-mono text-white/70 truncate">
-                ID {roomData?.id?.slice(0, 9) || "—"}
+              <span className="text-[10px] font-bold font-mono text-amber-100/90 truncate tabular-nums">
+                ID: {hostAgency?.agency_code || "—"}
               </span>
             </div>
-            {host?.avatar_url && (
-              <img src={host.avatar_url} alt="" loading="lazy" decoding="async" className="w-7 h-7 rounded-md object-cover ring-1 ring-amber-400/60" />
-            )}
+            {(hostAgency as any)?.logo_url || host?.avatar_url ? (
+              <img
+                src={(hostAgency as any)?.logo_url || host?.avatar_url}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover ring-2 ring-amber-300 shadow-[0_0_18px_rgba(255,191,0,0.85)]"
+              />
+            ) : null}
           </div>
         </div>
 
