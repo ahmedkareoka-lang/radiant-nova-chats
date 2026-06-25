@@ -8,12 +8,14 @@ import PageTransition from "@/components/PageTransition";
 import RoomSkeleton from "@/components/RoomSkeleton";
 import BannerCarousel from "@/components/BannerCarousel";
 import { useRooms } from "@/hooks/useRooms";
+import { useRoomFollows } from "@/hooks/useRoomFollows";
 import { getTelegramUser } from "@/lib/telegramWebApp";
 import { useMyRoom } from "@/hooks/useMyRoom";
 import { usePresence } from "@/hooks/usePresence";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 
 const TOP_TABS = [
   { id: "party", label: "حفلة", emoji: "🎉" },
