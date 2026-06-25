@@ -18,6 +18,7 @@ import FramedAvatar from "./FramedAvatar";
 import TierBadge from "./TierBadge";
 import DualBadge from "./DualBadge";
 import RechargeAgentBadge from "./RechargeAgentBadge";
+import SupporterBadge from "./SupporterBadge";
 import BDBadge from "./BDBadge";
 import VipName from "./VipName";
 
@@ -200,7 +201,9 @@ export default function RoomUserProfileCard({
         {/* Showcase Badges – same components used in Profile page */}
         {(() => {
           const hasVip = (profile.vip_level || 0) > 0;
-          const count = (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0);
+          const supportCoins = (profile as any)?.total_spend_gold || 0;
+          const hasSupporter = supportCoins >= 500_000;
+          const count = (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0) + (hasSupporter ? 1 : 0);
           return (
             <div className="rounded-2xl bg-gradient-to-b from-white/5 to-white/[0.02] border border-white/10 p-3">
               <div className="flex items-center justify-between mb-3">
@@ -218,6 +221,7 @@ export default function RoomUserProfileCard({
                   {hasVip && <DualBadge vipLevel={profile.vip_level || 0} />}
                   {isRechargeAgent && <RechargeAgentBadge size="md" />}
                   {isBD && <BDBadge size="md" />}
+                  <SupporterBadge coinsSpent={supportCoins} size="md" />
                 </div>
               )}
             </div>

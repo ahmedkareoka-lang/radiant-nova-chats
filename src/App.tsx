@@ -85,6 +85,7 @@ const LoveHistoryPage = lazyWithRetry(() => import("./pages/LoveHistoryPage"));
 const FramePreviewPage = lazyWithRetry(() => import("./pages/FramePreviewPage"));
 const BDDashboard = lazyWithRetry(() => import("./pages/BDDashboard"));
 const VisitorsPage = lazyWithRetry(() => import("./pages/VisitorsPage"));
+const VipStatusPage = lazyWithRetry(() => import("./pages/VipStatusPage"));
 
 // 🚀 Singleton QueryClient — full config lives in `@/lib/react-query`
 const queryClient = createQueryClient();
@@ -196,6 +197,7 @@ const AnimatedRoutes = () => {
         <Route path="/dev/frames" element={<AuthGate><FramePreviewPage /></AuthGate>} />
         <Route path="/bd" element={<AuthGate><BDDashboard /></AuthGate>} />
         <Route path="/visitors" element={<AuthGate><VisitorsPage /></AuthGate>} />
+        <Route path="/vip-status" element={<AuthGate><VipStatusPage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />

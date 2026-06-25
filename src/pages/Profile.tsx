@@ -27,6 +27,7 @@ import TierBadge from "@/components/TierBadge";
 import LoveBadge from "@/components/LoveBadge";
 import VipName from "@/components/VipName";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import SupporterBadge from "@/components/SupporterBadge";
 import { useLoveCouple } from "@/hooks/useLoveCouple";
 import UserPostsSection from "@/components/UserPostsSection";
 // LevelTable hidden per design — kept import removed
@@ -392,9 +393,17 @@ const Profile = () => {
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {meIsAgent && <RechargeAgentBadge size="md" />}
               {meIsBD && <BDBadge size="md" />}
+              <SupporterBadge coinsSpent={profile?.total_spend_gold} size="md" />
             </div>
 
-            {/* Wealth & Charm visual tier badges */}
+            <button
+              onClick={() => navigate("/vip-status")}
+              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-amber-200 bg-amber-500/10 border border-amber-400/30 hover:bg-amber-500/20 transition"
+            >
+              <Crown className="w-3.5 h-3.5" /> حالة مزايا VIP
+              <ChevronRight className="w-3 h-3" />
+            </button>
+
             <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
               <TierBadge level={profile?.wealth_level || 1} type="wealth" size="md" />
               <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />

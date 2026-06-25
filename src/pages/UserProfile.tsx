@@ -16,6 +16,7 @@ import AgentBadge from "@/components/AgentBadge";
 import HostBadge from "@/components/HostBadge";
 import CopyIdButton from "@/components/CopyIdButton";
 import VanityIdPill from "@/components/VanityIdPill";
+import SupporterBadge from "@/components/SupporterBadge";
 import CurrencyIcon from "@/components/CurrencyIcon";
 import AgentTransferModal from "@/components/AgentTransferModal";
 import { useIsRechargeAgent } from "@/hooks/useIsRechargeAgent";
@@ -182,6 +183,7 @@ const UserProfile = () => {
               {profile?.equipped_badge && <EquippedBadge badgeName={profile.equipped_badge} />}
               {targetIsAgent && <RechargeAgentBadge size="md" />}
               {targetIsBD && <BDBadge size="md" />}
+              <SupporterBadge coinsSpent={(profile as any)?.total_spend_gold} size="md" />
             </div>
 
             {/* Wealth & Charm tier badges */}

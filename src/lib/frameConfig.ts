@@ -32,63 +32,31 @@ export type FrameDef = {
   };
 };
 
+/**
+ * Keys of frames retired from the store / inventory.
+ * The artwork is still mapped in FRAME_MAP so legacy equipped users keep
+ * their look, but they no longer appear in StorePage or InventoryPage.
+ */
+export const REMOVED_FRAME_KEYS = new Set<string>([
+  "frame-purple-wings",
+  "frame-royal-crown",
+  "lion-frame",
+  "frame-fire",
+  "frame-ice",
+  "frame-rainbow",
+  "frame-dragon",
+]);
+
 export const FRAMES: FrameDef[] = [
-  {
-    key: "frame-purple-wings",
-    name: "إطار الأجنحة البنفسجية",
-    image: framePurpleWings,
-    aspect: 1080 / 1920,
-    innerScale: 0.62,
-    store: { price_coins: 25000, rarity: "legendary" },
-  },
-  {
-    key: "frame-royal-crown",
-    name: "إطار التاج الملكي",
-    image: frameRoyalCrown,
-    innerScale: 0.66,
-    innerOffsetY: 0.06,
-    store: { price_coins: 50000, rarity: "mythic" },
-  },
-  {
-    key: "lion-frame",
-    name: "إطار الأسد",
-    image: lionFrame,
-    aspect: 1638 / 1920,
-    innerScale: 0.6,
-    store: { price_coins: 75000, rarity: "mythic" },
-  },
-  {
-    key: "frame-fire",
-    name: "إطار النار 🔥",
-    image: frameFire,
-    innerScale: 0.64,
-    animation: "frame-animate-fire",
-    store: { price_coins: 150000, rarity: "mythic", vipRequired: 3 },
-  },
-  {
-    key: "frame-ice",
-    name: "إطار الجليد ❄️",
-    image: frameIce,
-    innerScale: 0.64,
-    animation: "frame-animate-ice",
-    store: { price_coins: 150000, rarity: "mythic", vipRequired: 3 },
-  },
-  {
-    key: "frame-rainbow",
-    name: "إطار قوس قزح 🌈",
-    image: frameRainbow,
-    innerScale: 0.64,
-    animation: "frame-animate-rainbow",
-    store: { price_coins: 200000, rarity: "mythic", vipRequired: 5 },
-  },
-  {
-    key: "frame-dragon",
-    name: "إطار التنين الذهبي 🐉",
-    image: frameDragon,
-    innerScale: 0.6,
-    animation: "frame-animate-dragon",
-    store: { price_coins: 300000, rarity: "mythic", vipRequired: 7 },
-  },
+  // Legendary / mythic frames were removed from the store per design request.
+  // Their artwork is still resolvable via FRAME_MAP below for legacy equipped users.
+  { key: "frame-purple-wings", name: "إطار الأجنحة البنفسجية", image: framePurpleWings, aspect: 1080 / 1920, innerScale: 0.62 },
+  { key: "frame-royal-crown",  name: "إطار التاج الملكي",      image: frameRoyalCrown,  innerScale: 0.66, innerOffsetY: 0.06 },
+  { key: "lion-frame",         name: "إطار الأسد",             image: lionFrame,        aspect: 1638 / 1920, innerScale: 0.6 },
+  { key: "frame-fire",         name: "إطار النار 🔥",          image: frameFire,        innerScale: 0.64, animation: "frame-animate-fire" },
+  { key: "frame-ice",          name: "إطار الجليد ❄️",         image: frameIce,         innerScale: 0.64, animation: "frame-animate-ice" },
+  { key: "frame-rainbow",      name: "إطار قوس قزح 🌈",        image: frameRainbow,     innerScale: 0.64, animation: "frame-animate-rainbow" },
+  { key: "frame-dragon",       name: "إطار التنين الذهبي 🐉",  image: frameDragon,      innerScale: 0.6,  animation: "frame-animate-dragon" },
 ];
 
 // Backwards-compatible maps used across the app
