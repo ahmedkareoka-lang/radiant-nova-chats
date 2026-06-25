@@ -1356,38 +1356,38 @@ const VoiceRoom = () => {
               {showHeaderMenu && (
                 <>
                   <div className="fixed inset-0 z-[60]" onClick={() => setShowHeaderMenu(false)} />
-                  <div className="absolute top-11 left-0 z-[61] min-w-[180px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                  <div className="absolute top-11 left-0 z-[61] w-max min-w-[220px] max-w-[80vw] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
                     <button
                       onClick={() => { setShowHeaderMenu(false); handleMinimize(); }}
-                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2"
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap"
                     >
                       <Minimize2 className="w-3.5 h-3.5" /> تصغير الغرفة
                     </button>
                     {isHost && (
                       <button
                         onClick={() => { setShowHeaderMenu(false); setShowSettings(true); }}
-                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
                       >
                         <Settings2 className="w-3.5 h-3.5" /> تعديل الغرفة
                       </button>
                     )}
                     <button
                       onClick={() => { setShowHeaderMenu(false); setMuteEntrance(!muteEntrance); }}
-                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
                     >
                       <BellOff className="w-3.5 h-3.5" /> {muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}
                     </button>
                     {isAdmin && (
                       <button
                         onClick={() => { setShowHeaderMenu(false); handleClearChat(); }}
-                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> مسح الدردشة للجميع
                       </button>
                     )}
                     <button
                       onClick={() => { setShowHeaderMenu(false); handleLeave(); }}
-                      className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 border-t border-border/50"
+                      className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 whitespace-nowrap border-t border-border/50"
                     >
                       <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
                     </button>
@@ -1524,6 +1524,15 @@ const VoiceRoom = () => {
                           <VolumeX className="w-3 h-3 text-destructive-foreground" />
                         </div>
                       )}
+                      {/* Fiery red PK support counter — pinned to the BOTTOM of the frame,
+                          overlapping it slightly so it never pushes the name or the next mic row */}
+                      <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 z-30 pointer-events-none">
+                        <SupportCounter
+                          userId={slot.user_id}
+                          roomId={roomId || undefined}
+                          sessionStart={roomData?.created_at || new Date().toISOString()}
+                        />
+                      </div>
                     </div>
                     {/* Username — full width of slot, single line, never covered by support badge */}
                     <span
@@ -1535,10 +1544,6 @@ const VoiceRoom = () => {
                         size="sm"
                       />
                     </span>
-                    {/* Compact diamond support icon — fixed-height row reserved so it cannot bleed onto the next row */}
-                    <div className="h-[14px] flex items-center justify-center mt-0.5">
-                      <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
-                    </div>
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
                         hostId={slot.user_id}
@@ -1812,13 +1817,13 @@ const VoiceRoom = () => {
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setShowQuickOptions(false)} />
                 <div className="absolute bottom-12 right-0 z-[61] min-w-[170px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
-                  <button onClick={() => { setShowQuickOptions(false); setShowCouplePicker(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2">
+                  <button onClick={() => { setShowQuickOptions(false); setShowCouplePicker(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap">
                     <Heart className="w-3.5 h-3.5 text-pink-400" /> ثنائي العشاق
                   </button>
-                  <button onClick={() => { setShowQuickOptions(false); setShowCoinStorm(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50">
+                  <button onClick={() => { setShowQuickOptions(false); setShowCoinStorm(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap border-t border-border/50">
                     <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> عاصفة كوينز
                   </button>
-                  <button onClick={() => { setShowQuickOptions(false); handleLeave(); }} className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 border-t border-border/50">
+                  <button onClick={() => { setShowQuickOptions(false); handleLeave(); }} className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 whitespace-nowrap border-t border-border/50">
                     <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
                   </button>
                 </div>
