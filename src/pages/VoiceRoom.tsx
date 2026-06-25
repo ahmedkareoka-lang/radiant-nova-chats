@@ -112,6 +112,24 @@ const VoiceRoom = () => {
   const rechargeAgentSet = useRechargeAgentSet();
   const bdSet = useBDSet();
   const mediaUpload = useMediaUpload();
+  const { followed: followedFollows, pending: pendingFollows, follow: followRoom, unfollow: unfollowRoom } = useRoomFollows();
+  const isFollowing = !!roomId && followedFollows.some(f => f.room_id === roomId);
+  const isFollowPending = !!roomId && pendingFollows.some(f => f.room_id === roomId);
+  const handleToggleFollow = async () => {
+    if (!roomId) return;
+    try {
+      if (isFollowing || isFollowPending) {
+        await unfollowRoom(roomId);
+        toast.success("تم إلغاء المتابعة");
+      } else {
+        const status = await followRoom(roomId);
+        toast.success(status === "pending" ? "تم إرسال طلب المتابعة 🔐" : "تمت المتابعة ⭐");
+      }
+    } catch (e: any) {
+      toast.error(e?.message === "cannot_follow_own_room" ? "لا يمكنك متابعة غرفتك" : "تعذّر تنفيذ الإجراء");
+    }
+  };
+
 
   // Mic muted state lives in the global Agora provider so it survives navigation
   const { isMuted, setIsMuted, connectedPeers, speakingPeers, localSpeaking, audioBlocked, unlockAudio } = useAgoraVoiceState();
