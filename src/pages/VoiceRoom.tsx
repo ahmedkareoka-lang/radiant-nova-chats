@@ -322,6 +322,24 @@ const VoiceRoom = () => {
     }
   }, [roomId, roomData?.name]);
 
+  // Fetch the host's agency (if any) to display the real Agency ID/code in header
+  const [hostAgency, setHostAgency] = useState<{ id: string; name: string; agency_code: string } | null>(null);
+  useEffect(() => {
+    const hostId = roomData?.host_id;
+    if (!hostId) { setHostAgency(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("agencies")
+        .select("id, name, agency_code")
+        .eq("owner_id", hostId)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!cancelled) setHostAgency(data as any || null);
+    })();
+    return () => { cancelled = true; };
+  }, [roomData?.host_id]);
+
   // Auto-minimize on unmount unless the user explicitly left the room.
   // This keeps the floating bubble + room membership alive when they navigate
   // away to chat or to their profile, so others still see them as "LIVE".
@@ -1433,19 +1451,25 @@ const VoiceRoom = () => {
             )}
           </div>
 
-          {/* Agency info badge — right */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 max-w-[55%]">
+          {/* Agency info badge — right (enlarged avatar + name, real agency code) */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-black/45 backdrop-blur-md border border-amber-300/40 max-w-[62%] shadow-[0_0_18px_rgba(255,191,0,0.25)]">
             <div className="flex flex-col items-end leading-tight min-w-0">
-              <span className="text-[11px] font-black text-amber-300 truncate max-w-[140px]">
-                {(roomData as any)?.agency_name || roomData?.name || "الغرفة"}
+              <span className="text-base sm:text-xl font-black text-amber-300 truncate max-w-[160px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+                {hostAgency?.name || (roomData as any)?.agency_name || roomData?.name || "الغرفة"}
               </span>
-              <span className="text-[9px] font-mono text-white/70 truncate">
-                ID {roomData?.id?.slice(0, 9) || "—"}
+              <span className="text-[10px] font-bold font-mono text-amber-100/90 truncate tabular-nums">
+                ID: {hostAgency?.agency_code || "—"}
               </span>
             </div>
-            {host?.avatar_url && (
-              <img src={host.avatar_url} alt="" loading="lazy" decoding="async" className="w-7 h-7 rounded-md object-cover ring-1 ring-amber-400/60" />
-            )}
+            {(hostAgency as any)?.logo_url || host?.avatar_url ? (
+              <img
+                src={(hostAgency as any)?.logo_url || host?.avatar_url}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover ring-2 ring-amber-300 shadow-[0_0_18px_rgba(255,191,0,0.85)]"
+              />
+            ) : null}
           </div>
         </div>
 
@@ -1603,13 +1627,13 @@ const VoiceRoom = () => {
                     </span>
                     {roomPK.active && (
                       <span
-                        className="mt-0.5 inline-flex min-w-[38px] justify-center rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[9px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)]"
+                        className="mt-0.5 inline-flex min-w-[38px] justify-center rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[10px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)] tabular-nums"
                         style={{
                           background: "linear-gradient(180deg,#ff5a1f 0%,#e0220c 55%,#8a0a00 100%)",
                           textShadow: "0 1px 2px rgba(0,0,0,0.6)",
                         }}
                       >
-                        🔥 0
+                        0
                       </span>
                     )}
                     {isAdmin && (
