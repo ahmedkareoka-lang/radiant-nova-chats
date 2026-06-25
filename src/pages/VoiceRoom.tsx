@@ -1356,7 +1356,7 @@ const VoiceRoom = () => {
               {showHeaderMenu && (
                 <>
                   <div className="fixed inset-0 z-[60]" onClick={() => setShowHeaderMenu(false)} />
-                  <div className="absolute top-11 left-0 z-[61] min-w-[180px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                  <div className="absolute top-11 left-0 z-[61] w-max min-w-[220px] max-w-[80vw] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
                     <button
                       onClick={() => { setShowHeaderMenu(false); handleMinimize(); }}
                       className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2"
