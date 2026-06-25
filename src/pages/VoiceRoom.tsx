@@ -883,17 +883,25 @@ const VoiceRoom = () => {
   // calculated from both viewport width and height so chat never gets squeezed out.
   const micCols = micCount <= 5 ? Math.min(3, micCount) : micCount <= 16 ? 4 : 5;
   const micRows = Math.ceil(micCount / micCols);
-  const micGapPx = micCount >= 20 ? 6 : micCount >= 16 ? 7 : micCount >= 12 ? 8 : 10;
-  const micMaxPx = micCount >= 20 ? 42 : micCount >= 16 ? 48 : micCount >= 12 ? 54 : 64;
-  const micMinPx = micCount >= 20 ? 34 : micCount >= 16 ? 38 : 42;
+  // 🔥 Compression mode: when PK is active and we have a packed grid (>12 mics),
+  // shrink gaps by ~25% and avatars by ~12% so the chat keeps room to breathe.
+  const pkCompress = roomPK.active && micCount > 12;
+  const baseGapPx = micCount >= 20 ? 6 : micCount >= 16 ? 7 : micCount >= 12 ? 8 : 10;
+  const baseMaxPx = micCount >= 20 ? 42 : micCount >= 16 ? 48 : micCount >= 12 ? 54 : 64;
+  const baseMinPx = micCount >= 20 ? 34 : micCount >= 16 ? 38 : 42;
+  const micGapPx = pkCompress ? Math.max(4, Math.round(baseGapPx * 0.75)) : baseGapPx;
+  const micMaxPx = pkCompress ? Math.round(baseMaxPx * 0.88) : baseMaxPx;
+  const micMinPx = pkCompress ? Math.round(baseMinPx * 0.88) : baseMinPx;
   const roomMaxWidth = Math.min(viewportSize.width || 390, 512);
   const availableGridWidth = Math.max(280, roomMaxWidth - 24 - micGapPx * (micCols - 1));
   const byWidthPx = Math.floor(availableGridWidth / micCols) - 8;
-  const reservedVerticalPx = roomPK.active ? 438 : 330;
+  // When compressed, also reclaim ~60px of reserved vertical space for chat.
+  const reservedVerticalPx = roomPK.active ? (pkCompress ? 378 : 438) : 330;
   const byHeightPx = Math.floor(((viewportSize.height || 702) - reservedVerticalPx - micGapPx * (micRows - 1)) / micRows) - 17;
   const micAvatarPx = Math.max(micMinPx, Math.min(micMaxPx, byWidthPx, byHeightPx));
   const micSeatWidth = Math.max(micAvatarPx + 8, Math.floor(availableGridWidth / micCols));
   const micNameClass = micCount >= 16 ? "text-[8px] mt-1" : micCount >= 12 ? "text-[9px] mt-1" : "text-[10px] mt-1.5";
+
   const micGridStyle = {
     gridTemplateColumns: `repeat(${micCols}, minmax(0, ${micSeatWidth}px))`,
     gap: `${micGapPx}px`,
