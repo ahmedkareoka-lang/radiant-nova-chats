@@ -396,9 +396,6 @@ const Profile = () => {
               <SupporterBadge coinsSpent={profile?.total_spend_gold} size="md" />
             </div>
 
-              <SupporterBadge coinsSpent={profile?.total_spend_gold} size="md" />
-            </div>
-
             <button
               onClick={() => navigate("/vip-status")}
               className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-amber-200 bg-amber-500/10 border border-amber-400/30 hover:bg-amber-500/20 transition"
@@ -407,21 +404,6 @@ const Profile = () => {
               <ChevronRight className="w-3 h-3" />
             </button>
 
-            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
-              <TierBadge level={profile?.wealth_level || 1} type="wealth" size="md" />
-              <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
-            </div>
-
-            <div className="mt-2 flex items-center gap-2 flex-wrap justify-center">
-              {profile?.vanity_id && new Date(profile.vanity_id_expiry).getTime() > Date.now() ? (
-                <VanityIdPill digits={profile.vanity_id} expiresAt={profile.vanity_id_expiry} size="md" />
-              ) : (
-                <CopyIdButton id={profile?.user_id} />
-              )}
-            </div>
-
-            {/* === END inserted block === */}
-            <div style={{display:"none"}}>
             <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
               <TierBadge level={profile?.wealth_level || 1} type="wealth" size="md" />
               <TierBadge level={profile?.charisma_level || 1} type="charm" size="md" />
