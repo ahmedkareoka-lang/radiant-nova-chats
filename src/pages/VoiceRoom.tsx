@@ -1627,13 +1627,13 @@ const VoiceRoom = () => {
                     </span>
                     {roomPK.active && (
                       <span
-                        className="mt-0.5 inline-flex min-w-[38px] justify-center rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[9px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)]"
+                        className="mt-0.5 inline-flex min-w-[38px] justify-center rounded-[5px] border border-orange-300/70 px-1.5 py-[2px] text-[10px] font-black leading-none text-white shadow-[0_0_10px_rgba(255,60,0,0.65)] tabular-nums"
                         style={{
                           background: "linear-gradient(180deg,#ff5a1f 0%,#e0220c 55%,#8a0a00 100%)",
                           textShadow: "0 1px 2px rgba(0,0,0,0.6)",
                         }}
                       >
-                        🔥 0
+                        0
                       </span>
                     )}
                     {isAdmin && (
