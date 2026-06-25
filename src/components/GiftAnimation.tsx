@@ -136,10 +136,16 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
     useProfileStore.getState().fetchProfile(senderId);
   }, [senderId, isOpen]);
 
-  if (!isOpen) return null;
+  // Always-on multi-recipient bar: every active user in the room (including self) is selectable.
+  const isMultiMode = !!roomMembers && roomMembers.length > 0;
+  const availableMembers = roomMembers || [];
 
-  const isMultiMode = showMulti && roomMembers && roomMembers.length > 0;
-  const availableMembers = roomMembers?.filter(m => m.user_id !== senderId) || [];
+  // Pre-select the tapped recipient when the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (receiverId) setSelectedRecipients(new Set([receiverId]));
+    else setSelectedRecipients(new Set());
+  }, [isOpen, receiverId]);
 
   const toggleRecipient = (userId: string) => {
     setSelectedRecipients(prev => {
