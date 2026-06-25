@@ -1,6 +1,11 @@
 import { Home, MessageCircle, FileText, Gamepad2, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useEffect } from "react";
+
+// Preload heavy chat route as soon as the bottom nav mounts so tapping
+// "الرسائل" feels instant instead of waiting on the lazy chunk.
+const preloadChat = () => import("@/pages/ChatPage");
 
 const navItems = [
   { icon: Home, label: "الغرفة", path: "/", activeColor: "text-primary" },
