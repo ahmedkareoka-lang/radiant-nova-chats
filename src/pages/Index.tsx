@@ -35,6 +35,9 @@ const CATEGORIES = [
 const Index = () => {
   const navigate = useNavigate();
   const { rooms, loading } = useRooms();
+  const { followed: followedFollows } = useRoomFollows();
+  const followedRoomIds = useMemo(() => new Set(followedFollows.map(f => f.room_id)), [followedFollows]);
+
   const { onlineUsers } = usePresence();
   const { unreadCount, notifications } = useNotifications();
   const [profile, setProfile] = useState<any>(null);
