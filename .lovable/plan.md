@@ -1,32 +1,62 @@
-## الهدف
-عند شراء ID مميز: يحل محل الـ UID الأصلي في كل العرض والبحث، وعند انتهاء المدة يرجع الـ UID القديم تلقائيًا.
+# خطة التنفيذ
 
-## التغييرات
+## 1. فصل شارة الداعم عن شارة الدعم
+- `SupporterBadge.tsx`: تقسيمه إلى شارتين منفصلتين
+  - **شارة الإنجاز** (500K → 100M): تعرض المبلغ فقط بألوان متدرجة الفخامة
+  - **شارة "داعم" الناريّة**: تظهر بشكل مستقل عند تجاوز 5M coin، بألوانها الذهبية/النارية
+- كل واحدة تُعرض بشكل منفصل في الملف الشخصي والغرفة بدل دمجهما في نفس البلّورة
 
-### 1) قاعدة البيانات (migration)
-- التأكد أن `profiles.vanity_id` و `vanity_id_expiry` موجودان (موجودان من قبل).
-- تحديث دالة `purchase_vanity_id` لتخزين الـ ID المميز فقط (الـ UID الأصلي يبقى كما هو في `id` لكن لا يُعرض).
-- دالة جديدة `get_active_vanity(profile_row)` أو view بسيط يرجع `display_uid` = `vanity_id` لو لسه فعال، وإلا الـ UID الأصلي/الرقمي الحالي.
-- دالة بحث `search_users_by_id(_query)` تبحث في:
-  - `vanity_id` (لو `expiry > now()`)
-  - الـ UID الرقمي الأصلي (الـ short id الحالي المستخدم في البحث).
-  ترجع الـ profile مع `display_uid` المناسب.
-- Cron job (pg_cron) كل ساعة ينظف `vanity_id` و `vanity_id_expiry` للسجلات المنتهية → تلقائيًا يرجع الـ UID القديم للظهور.
+## 2. مسح شات الروم لكل مستخدم عند الخروج/الدخول
+- في `useVoiceRoom.ts` نسجّل وقت دخول المستخدم محليًا (في الذاكرة)
+- عند جلب الرسائل، نعرض فقط الرسائل التي `created_at >= my_join_time`
+- المستخدمون الآخرون في الغرفة يظلّ شاتهم كاملًا (لأن قطع العرض محلي فقط لكل جلسة)
+- عند الخروج والعودة، يُحدَّث وقت الانضمام → الشات يبدأ من جديد لهذا المستخدم وحده
 
-### 2) الواجهة (Frontend)
-- `Profile.tsx` و `UserProfile.tsx`: لو فيه `vanity_id` فعال → اعرض `VanityIdPill` فقط بدل الـ UID الأصلي (إخفاء سطر الـ ID العادي).
-- `SearchPage.tsx`: استخدام الدالة الجديدة `search_users_by_id` بحيث البحث بالـ 4 أرقام يلاقي صاحب الـ vanity ID.
-- `RoomUserProfileCard.tsx` و أي مكان آخر يعرض الـ UID: نفس المنطق (vanity أولًا، fallback للأصلي).
-- Helper صغير `getDisplayUid(profile)` في `src/lib/utils.ts` لتوحيد المنطق.
-- على client side: فلتر إضافي يخفي vanity المنتهي (في حال الـ cron لم يشتغل بعد).
+## 3. مسح الشات للجميع (Admin/Owner فقط)
+- زر "مسح الشات" داخل الغرفة يظهر فقط للمالك أو الـ Admin (أو BOSS)
+- يستدعي RPC `clear_room_chat(room_id)` يحذف كل رسائل الغرفة من الـ DB
+- الجميع يرون الشات فارغًا عبر realtime
 
-### 3) السلوك عند الانتهاء
-- الـ cron ينظف الحقول → البحث القديم بالأرقام المميزة يفشل، والـ UID الأصلي يعود للظهور تلقائيًا في البروفايل وكل الواجهات.
-- الـ UID الأصلي لم يُحذف أبدًا (مخزن في `profiles.id` / الـ short uid)، فالاسترجاع فوري.
+## 4. نظام Admins للغرفة
+- جدول جديد `room_admins(room_id, user_id, assigned_by, created_at)`
+- صاحب الروم يستطيع تعيين/إزالة أي مستخدم كـ Admin من بطاقة المستخدم داخل الغرفة
+- الـ Admin يحصل على: مسح الشات، طرد المستخدمين من الميك/الغرفة، قبول طلبات المتابعة (لو خاص)
+- شارة صغيرة "Admin" تظهر بجانب اسمه
 
-## الملفات المتأثرة
-- migration جديد (تحديث RPC + إضافة `search_users_by_id` + cron)
-- `src/lib/utils.ts` (إضافة `getDisplayUid`)
-- `src/pages/Profile.tsx`, `src/pages/UserProfile.tsx`
-- `src/pages/SearchPage.tsx`
-- `src/components/RoomUserProfileCard.tsx` (وأي UID آخر ظاهر)
+## 5. متابعة الرومات (Room Follows)
+- جدول جديد `room_follows(room_id, user_id, status, created_at, approved_by)`
+  - status: `pending` | `approved`
+- جدول `rooms` يُضاف له عمود `is_private boolean default false`
+- إعدادات الروم (للمالك فقط): تبديل بين `عام` و `خاص`
+  - عام: المتابعة تُقبل تلقائيًا (`approved` مباشرة)
+  - خاص: تنشئ طلب `pending` ويظهر للمالك/الـ Admin للقبول أو الرفض
+- زر "تابع" يظهر في بطاقة الروم ومن داخل الروم — لا يظهر لمالك الروم على رومه
+- إشعار للمالك/الأدمن عند طلب جديد
+
+## 6. قسم "متابع" في الصفحة الرئيسية
+- في `Index.tsx`: تبويب/سكشن جديد بعنوان **متابَع** يعرض الرومات التي تابعها المستخدم (status=approved)
+- يستخدم نفس `RoomCard` ويسمح بدخول الروم بنقرة واحدة
+
+---
+
+## التقنيات المعنية
+
+**Migrations (SQL)**:
+- `room_admins` + policies + GRANTs
+- `room_follows` + policies + GRANTs
+- `rooms.is_private`
+- RPCs: `clear_room_chat`, `assign_room_admin`, `remove_room_admin`, `request_room_follow`, `approve_room_follow`
+- تحديث `admin_kick_user`/`admin_kick_from_mic` لتقبل room admin أيضًا
+
+**Frontend**:
+- `SupporterBadge.tsx` → تقسيم
+- استخدامات الشارات في: `Profile.tsx`, `UserProfile.tsx`, `RoomUserProfileCard.tsx`
+- `useVoiceRoom.ts`: فلتر الرسائل حسب وقت الدخول، RPC مسح الشات
+- `VoiceRoom.tsx`: زر مسح الشات، زر إعدادات (خاص/عام)، زر تعيين Admin في بطاقة المستخدم
+- `Index.tsx`: قسم "متابَع"
+- `RoomCard.tsx`: زر تابع
+- ملف جديد `useRoomFollows.ts` للهوك
+
+---
+
+هل أبدأ التنفيذ بهذا الترتيب؟
