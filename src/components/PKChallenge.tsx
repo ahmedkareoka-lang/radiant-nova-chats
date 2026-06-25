@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Swords, Trophy, Flame } from "lucide-react";
+import { Swords, Trophy, Flame, Clock } from "lucide-react";
 
 interface PKChallengeProps {
   roomId: string;
@@ -16,17 +16,22 @@ interface PKState {
   score1: number;
   score2: number;
   startTime: string | null;
+  /** Duration in minutes; null = manual (no auto-close) */
+  durationMin: number | null;
 }
 
 const PKChallenge = ({ roomId, isHost, members }: PKChallengeProps) => {
-  const [pk, setPK] = useState<PKState>({ active: false, team1: [], team2: [], score1: 0, score2: 0, startTime: null });
+  const [pk, setPK] = useState<PKState>({ active: false, team1: [], team2: [], score1: 0, score2: 0, startTime: null, durationMin: null });
   const [showPK, setShowPK] = useState(false);
+  const [showDurationPicker, setShowDurationPicker] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const channelRef = useRef<any>(null);
 
   useEffect(() => {
-    const channel = supabase.channel(`pk-${roomId}-${Date.now()}`);
+    // Stable channel name shared with SupportCounter so they stay in sync.
+    const channel = supabase.channel(`pk-room-${roomId}`, { config: { broadcast: { self: true } } });
     channel.on("broadcast", { event: "pk-update" }, ({ payload }) => {
-      if (payload) setPK(payload as PKState);
+      if (payload) setPK((prev) => ({ ...prev, ...(payload as PKState) }));
     });
     channel.subscribe();
     channelRef.current = channel;
@@ -38,12 +43,30 @@ const PKChallenge = ({ roomId, isHost, members }: PKChallengeProps) => {
     channelRef.current?.send({ type: "broadcast", event: "pk-update", payload: state });
   }, []);
 
+  // Countdown + auto-close when a duration was set
+  useEffect(() => {
+    if (!pk.active || !pk.startTime || !pk.durationMin) { setRemaining(null); return; }
+    const endMs = new Date(pk.startTime).getTime() + pk.durationMin * 60_000;
+    const tick = () => {
+      const left = Math.max(0, Math.round((endMs - Date.now()) / 1000));
+      setRemaining(left);
+      if (left === 0 && isHost) {
+        broadcastPK({ ...pk, active: false });
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [pk, isHost, broadcastPK]);
+
+  const startPK = (durationMin: number | null) => {
+    setShowDurationPicker(false);
+    broadcastPK({ active: true, team1: [], team2: [], score1: 0, score2: 0, startTime: new Date().toISOString(), durationMin });
+  };
+
   const togglePK = () => {
-    if (pk.active) {
-      broadcastPK({ ...pk, active: false });
-    } else {
-      broadcastPK({ active: true, team1: [], team2: [], score1: 0, score2: 0, startTime: new Date().toISOString() });
-    }
+    if (pk.active) broadcastPK({ ...pk, active: false });
+    else setShowDurationPicker(true);
   };
 
   const addScore = (team: 1 | 2, amount: number) => {
