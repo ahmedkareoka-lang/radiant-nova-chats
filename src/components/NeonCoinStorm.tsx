@@ -74,6 +74,7 @@ export default function NeonCoinStorm({
     if (open) {
       setPhase("select");
       setSelectedTier(null);
+      setPendingTier(null);
       setCollected(0);
       setCoins([]);
       setPops([]);
