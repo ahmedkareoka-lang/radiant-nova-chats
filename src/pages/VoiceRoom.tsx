@@ -1578,14 +1578,7 @@ const VoiceRoom = () => {
                         size="sm"
                       />
                     </span>
-                    {slot.user_id === roomData?.host_id && roomId && currentUserId && (
-                      <HostIncomeCounter
-                        hostId={slot.user_id}
-                        roomOwnerId={roomData?.host_id}
-                        currentUserId={currentUserId}
-                        sessionStart={roomData?.created_at || new Date().toISOString()}
-                      />
-                    )}
+                    {/* Diamond income counter removed by request — no persistent 💎 number under names */}
                   </div>
                 ) : (
                   <>
@@ -1915,11 +1908,21 @@ const VoiceRoom = () => {
         senderId={currentUserId}
         receiverId={giftReceiverId}
         receiverName={giftReceiverName}
-        roomMembers={members.map(m => ({
-          user_id: m.user_id,
-          display_name: m.profile?.display_name || "User",
-          avatar_url: m.profile?.avatar_url || null,
-        }))}
+        roomMembers={[
+          // Include sender themselves so they can gift their own account
+          ...(currentUserId && currentProfile ? [{
+            user_id: currentUserId,
+            display_name: (currentProfile.display_name || "أنا") + " (أنا)",
+            avatar_url: currentProfile.avatar_url || null,
+          }] : []),
+          ...members
+            .filter(m => m.user_id !== currentUserId)
+            .map(m => ({
+              user_id: m.user_id,
+              display_name: m.profile?.display_name || "User",
+              avatar_url: m.profile?.avatar_url || null,
+            })),
+        ]}
         onMultiGiftSent={handleGiftBurst}
         broadcastGift={broadcastGiftToRoom}
         roomId={roomId || undefined}

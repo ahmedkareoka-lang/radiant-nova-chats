@@ -136,10 +136,19 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
     useProfileStore.getState().fetchProfile(senderId);
   }, [senderId, isOpen]);
 
+  // Always-on multi-recipient bar: every active user in the room (including self) is selectable.
+  const isMultiMode = !!roomMembers && roomMembers.length > 0;
+  const availableMembers = roomMembers || [];
+
+  // Pre-select the tapped recipient when the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (receiverId) setSelectedRecipients(new Set([receiverId]));
+    else setSelectedRecipients(new Set());
+  }, [isOpen, receiverId]);
+
   if (!isOpen) return null;
 
-  const isMultiMode = showMulti && roomMembers && roomMembers.length > 0;
-  const availableMembers = roomMembers?.filter(m => m.user_id !== senderId) || [];
 
   const toggleRecipient = (userId: string) => {
     setSelectedRecipients(prev => {
@@ -270,13 +279,9 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
 
         {availableMembers.length > 0 && (
           <div className="flex items-center justify-center gap-2 mb-2">
-            {receiverName && !showMulti && (
-              <p className="text-xs text-muted-foreground">إرسال إلى: <span className="text-primary font-bold">{receiverName}</span></p>
-            )}
-            <button onClick={() => setShowMulti(!showMulti)}
-              className={`text-[10px] px-3 py-1 rounded-full font-bold transition-all ${showMulti ? 'gradient-neon text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
-              {showMulti ? '✓ إرسال جماعي' : '👥 إرسال جماعي'}
-            </button>
+            <p className="text-[10px] text-muted-foreground">
+              المستلمون المختارون: <span className="text-primary font-bold">{selectedRecipients.size}</span>
+            </p>
           </div>
         )}
 
