@@ -1910,10 +1910,10 @@ const VoiceRoom = () => {
         receiverName={giftReceiverName}
         roomMembers={[
           // Include sender themselves so they can gift their own account
-          ...(currentUserId && currentUserProfile ? [{
+          ...(currentUserId && currentProfile ? [{
             user_id: currentUserId,
-            display_name: (currentUserProfile.display_name || "أنا") + " (أنا)",
-            avatar_url: currentUserProfile.avatar_url || null,
+            display_name: (currentProfile.display_name || "أنا") + " (أنا)",
+            avatar_url: currentProfile.avatar_url || null,
           }] : []),
           ...members
             .filter(m => m.user_id !== currentUserId)
