@@ -1702,6 +1702,7 @@ export type Database = {
           background_theme: string
           background_url: string | null
           created_at: string
+          follows_require_approval: boolean
           host_id: string
           id: string
           is_active: boolean
@@ -1718,6 +1719,7 @@ export type Database = {
           background_theme?: string
           background_url?: string | null
           created_at?: string
+          follows_require_approval?: boolean
           host_id: string
           id?: string
           is_active?: boolean
@@ -1734,6 +1736,7 @@ export type Database = {
           background_theme?: string
           background_url?: string | null
           created_at?: string
+          follows_require_approval?: boolean
           host_id?: string
           id?: string
           is_active?: boolean
