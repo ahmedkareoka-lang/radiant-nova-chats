@@ -1112,6 +1112,10 @@ const VoiceRoom = () => {
           isRechargeAgent={rechargeAgentSet.has(selectedProfile.user_id)}
           currentUserId={currentUserId}
           isAdmin={isAdmin}
+          viewerIsHost={isHost}
+          targetIsRoomAdmin={roomAdminIds.has(selectedProfile.user_id)}
+          onAssignAdmin={() => handleAssignAdmin(selectedProfile.user_id)}
+          onRemoveAdmin={() => handleRemoveAdmin(selectedProfile.user_id)}
           isOnMic={
             members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== null &&
             members.find(m => m.user_id === selectedProfile.user_id)?.mic_slot !== undefined
@@ -1125,6 +1129,7 @@ const VoiceRoom = () => {
           onBan={() => setConfirmAction({ type: "ban", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
           onKickFromMic={() => setConfirmAction({ type: "kickMic", userId: selectedProfile.user_id, name: selectedProfile.display_name })}
         />
+
       )}
 
       {/* Settings Modal */}
