@@ -210,12 +210,16 @@ export default function RoomUserProfileCard({
           </button>
         </div>
 
-        {/* Showcase Badges – same components used in Profile page */}
+        {/* Showcase Badges – each badge type rendered as an INDEPENDENT pill */}
         {(() => {
           const hasVip = (profile.vip_level || 0) > 0;
           const supportCoins = (profile as any)?.total_spend_gold || 0;
-          const hasSupporter = supportCoins >= 500_000;
-          const count = (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0) + (hasSupporter ? 1 : 0);
+          const hasAchievement = supportCoins >= 500_000;
+          const hasFire = supportCoins >= 5_000_000;
+          const count =
+            (hasVip ? 1 : 0) + (isRechargeAgent ? 1 : 0) + (isBD ? 1 : 0) +
+            (hasAchievement ? 1 : 0) + (hasFire ? 1 : 0) +
+            (targetIsRoomAdmin ? 1 : 0);
           return (
             <div className="rounded-2xl bg-gradient-to-b from-white/5 to-white/[0.02] border border-white/10 p-3">
               <div className="flex items-center justify-between mb-3">
@@ -233,12 +237,19 @@ export default function RoomUserProfileCard({
                   {hasVip && <DualBadge vipLevel={profile.vip_level || 0} />}
                   {isRechargeAgent && <RechargeAgentBadge size="md" />}
                   {isBD && <BDBadge size="md" />}
-                  <SupporterBadge coinsSpent={supportCoins} size="md" />
+                  <SupporterAchievementBadge coinsSpent={supportCoins} size="md" />
+                  <SupporterFireBadge coinsSpent={supportCoins} size="md" />
+                  {targetIsRoomAdmin && (
+                    <span className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-black bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-[0_0_10px_hsl(220_90%_60%/0.6)]">
+                      <Shield className="w-3 h-3" /> أدمن
+                    </span>
+                  )}
                 </div>
               )}
             </div>
           );
         })()}
+
 
         {/* Games section */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-600/25 to-cyan-600/25 border border-cyan-400/20 p-3">
