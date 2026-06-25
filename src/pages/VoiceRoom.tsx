@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Gift, LogOut, Crown, MessageCircle, Send, Users, TrendingUp, Heart, X, Settings2, Volume2, Pin, UserMinus, Minimize2, Lock, Unlock, VolumeX, Trash2, Ban, Shield, BellOff, Package, Power, Home, MoreHorizontal, Grid2x2, Gamepad2, Swords, Smile, Trophy, ChevronLeft } from "lucide-react";
 
 import HostIncomeCounter from "@/components/HostIncomeCounter";
 import SupportCounter from "@/components/SupportCounter";
@@ -141,6 +141,9 @@ const VoiceRoom = () => {
   const [chatInput, setChatInput] = useState("");
   const [showBossEntrance, setShowBossEntrance] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const [showQuickOptions, setShowQuickOptions] = useState(false);
+  const [showChatInput, setShowChatInput] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
@@ -1317,69 +1320,142 @@ const VoiceRoom = () => {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header — pixel-matched to reference: power/home/dots left, agency badge right, then top3+level+timer+rank row */}
       <header
-        className="relative z-20 shrink-0 bg-card/90 backdrop-blur-xl border-b border-border px-4 py-3"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
+        className="relative z-30 shrink-0 px-3 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-2"
       >
-        <div className="flex items-center justify-between max-w-lg mx-auto">
-          <div className="flex items-center gap-3">
-            <button onClick={handleLeave} className="text-muted-foreground">
-              <ArrowLeft className="w-5 h-5" />
+        {/* Top row: controls + agency */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Power = exit room with confirmation */}
+            <button
+              onClick={handleLeave}
+              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-95 transition"
+              title="خروج من الغرفة"
+            >
+              <Power className="w-4 h-4" />
             </button>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-bold text-sm">{roomData?.name || "Room"}</h1>
-                {roomData?.is_private && <Lock className="w-3 h-3 text-accent" />}
+            {/* Home = minimize and go home */}
+            <button
+              onClick={() => { handleMinimize(); }}
+              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-95 transition"
+              title="الرئيسية"
+            >
+              <Home className="w-4 h-4" />
+            </button>
+            {/* Three dots: opens action menu (exit / minimize / settings) */}
+            <div className="relative">
+              <button
+                onClick={() => setShowHeaderMenu((v) => !v)}
+                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-95 transition"
+                title="المزيد"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              {showHeaderMenu && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowHeaderMenu(false)} />
+                  <div className="absolute top-11 left-0 z-[61] min-w-[180px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                    <button
+                      onClick={() => { setShowHeaderMenu(false); handleMinimize(); }}
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2"
+                    >
+                      <Minimize2 className="w-3.5 h-3.5" /> تصغير الغرفة
+                    </button>
+                    {isHost && (
+                      <button
+                        onClick={() => { setShowHeaderMenu(false); setShowSettings(true); }}
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                      >
+                        <Settings2 className="w-3.5 h-3.5" /> تعديل الغرفة
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setShowHeaderMenu(false); setMuteEntrance(!muteEntrance); }}
+                      className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                    >
+                      <BellOff className="w-3.5 h-3.5" /> {muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}
+                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => { setShowHeaderMenu(false); handleClearChat(); }}
+                        className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> مسح الدردشة للجميع
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setShowHeaderMenu(false); handleLeave(); }}
+                      className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 border-t border-border/50"
+                    >
+                      <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Top 3 contributors avatars next to controls */}
+            {roomData?.host_id && roomId && (
+              <div className="ml-1 scale-[0.78] origin-left">
+                <Top3RoomSenders roomId={roomId} hostId={roomData.host_id} />
               </div>
-              <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <Users className="w-3 h-3" /> {members.length} متصل
-                {connectedPeers.size > 0 && (
-                  <span className="text-green-500 flex items-center gap-0.5 ml-1">
-                    <Volume2 className="w-3 h-3" /> {connectedPeers.size}
-                  </span>
-                )}
+            )}
+          </div>
+
+          {/* Agency info badge — right */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-2xl bg-black/45 backdrop-blur-md border border-white/10 max-w-[55%]">
+            <div className="flex flex-col items-end leading-tight min-w-0">
+              <span className="text-[11px] font-black text-amber-300 truncate max-w-[140px]">
+                {(roomData as any)?.agency_name || roomData?.name || "الغرفة"}
+              </span>
+              <span className="text-[9px] font-mono text-white/70 truncate">
+                ID {roomData?.id?.slice(0, 9) || "—"}
               </span>
             </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {!isHost && roomId && (
-              <button
-                onClick={handleToggleFollow}
-                className={`h-8 px-2.5 rounded-full flex items-center gap-1 text-[10px] font-black ${isFollowing ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black" : isFollowPending ? "bg-secondary text-muted-foreground" : "bg-secondary text-foreground border border-border"}`}
-                title={isFollowing ? "إلغاء المتابعة" : isFollowPending ? "طلب قيد الانتظار" : "تابع الغرفة"}
-              >
-                <Star className={`w-3.5 h-3.5 ${isFollowing ? "fill-current" : ""}`} />
-                {isFollowing ? "متابَع" : isFollowPending ? "قيد الانتظار" : "تابع"}
-              </button>
+            {host?.avatar_url && (
+              <img src={host.avatar_url} alt="" loading="lazy" decoding="async" className="w-7 h-7 rounded-md object-cover ring-1 ring-amber-400/60" />
             )}
-            {isAdmin && (
-
-              <button
-                onClick={handleClearChat}
-                className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center"
-                title="مسح الدردشة للجميع"
-              >
-                <Trash2 className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-            {isHost && (
-              <button onClick={() => setShowSettings(true)} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                <Settings2 className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-
-            <button onClick={() => setMuteEntrance(!muteEntrance)} className={`w-8 h-8 rounded-full flex items-center justify-center ${muteEntrance ? 'bg-destructive/20' : 'bg-secondary'}`} title={muteEntrance ? "تفعيل أصوات الدخول" : "كتم أصوات الدخول"}>
-              <BellOff className={`w-4 h-4 ${muteEntrance ? 'text-destructive' : 'text-muted-foreground'}`} />
-            </button>
-            <button onClick={handleMinimize} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center" title="تصغير">
-              <Minimize2 className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold animate-pulse">
-              ● LIVE
-            </span>
           </div>
         </div>
+
+        {/* Sub-row: Level badge + timer + Daily TOP rank */}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/40 backdrop-blur border border-amber-400/30 min-w-0">
+            <Trophy className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-[10px] font-black text-amber-200">LV.{(roomData as any)?.level || 1}</span>
+              <div className="w-20 h-1 rounded-full bg-white/15 overflow-hidden mt-0.5">
+                <div className="h-full bg-gradient-to-r from-amber-300 to-orange-500" style={{ width: `${Math.min(100, (((roomData as any)?.level_progress ?? 0) * 100))}%` }} />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur border border-white/10">
+            <Star className="w-3 h-3 text-amber-300" />
+            <span className="text-[10px] font-bold text-white tabular-nums">
+              {members.length} متصل
+            </span>
+            <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[9px] font-bold text-emerald-300">LIVE</span>
+          </div>
+          <button className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur border border-white/10 text-white">
+            <Trophy className="w-3 h-3 text-amber-300" />
+            <span className="text-[10px] font-bold">TOP اليومي</span>
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Inline follow button — non-host only */}
+        {!isHost && roomId && (
+          <div className="mt-1.5 flex justify-end">
+            <button
+              onClick={handleToggleFollow}
+              className={`h-6 px-2.5 rounded-full flex items-center gap-1 text-[10px] font-black ${isFollowing ? "bg-gradient-to-r from-amber-400 to-orange-500 text-black" : isFollowPending ? "bg-secondary text-muted-foreground" : "bg-black/40 text-white border border-white/15"}`}
+            >
+              <Star className={`w-3 h-3 ${isFollowing ? "fill-current" : ""}`} />
+              {isFollowing ? "متابَع" : isFollowPending ? "قيد الانتظار" : "تابع الغرفة"}
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Global Win Ticker */}
@@ -1391,57 +1467,25 @@ const VoiceRoom = () => {
       {/* Treasure Box (auto-trigger at 300K daily room support) */}
       {roomId && <TreasureBox roomId={roomId} isHost={isHost} currentUserId={currentUserId} />}
 
-      {/* Voice Room Area — locked: top fixed, only the chat scrolls internally */}
-      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-2 max-w-lg mx-auto w-full">
-        {/* Top fixed region: PK + couple seats + host info + mic grid (no page scroll) */}
-        <div className="shrink-0 overflow-y-auto max-h-[58%]" style={{ scrollbarWidth: "none" }}>
-        {/* PK Challenge & Trophy side by side */}
+      {/* Voice Room Area — single-screen, no scroll, mic grid auto-fits */}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden px-3 pt-1 pb-1 max-w-lg mx-auto w-full">
+        {/* Compact PK + Couple row (auto-hides on tiny screens via overflow) */}
+        <div className="shrink-0">
         {roomId && (
-          <div className="mb-4 flex items-start gap-2 flex-wrap">
-            <div className="flex-1 min-w-[200px]">
+          <div className="mb-1.5 flex items-start gap-2">
+            <div className="flex-1 min-w-0 scale-90 origin-top-left">
               <PKChallenge roomId={roomId} isHost={isHost} members={members} />
             </div>
-            <MicTurfWar roomId={roomId} isHost={isHost} currentUserId={currentUserId} ourRoomName={roomData?.name || "غرفتنا"} />
-          </div>
-        )}
-
-        {/* Couple Seats — heart-shaped pairing */}
-        {roomId && (
-          <div className="mb-4">
-            <CoupleSeats
-              roomId={roomId}
-              isHost={isHost}
-              members={members}
-              onOpenPicker={() => setShowCouplePicker(true)}
-            />
-          </div>
-        )}
-
-        {/* Host Info Banner with Top 3 Senders strip */}
-        {host && (
-          <div className="mb-2">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-card/80 border border-border cursor-pointer" onClick={() => handleAvatarClick({ user_id: roomData?.host_id, profile: host })}>
-              <div className="relative">
-                <img loading="lazy" decoding="async" src={host.avatar_url || "https://i.pravatar.cc/100"} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-accent" />
-                <Crown className="w-4 h-4 text-accent absolute -top-1 -right-1" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className={`text-sm ${host.is_boss ? "boss-fire-text font-bold" : "glow-neon-text font-bold"}`}>{host.is_boss ? host.display_name : <VipName name={host.display_name} level={host.vip_level} size="md" />}</span>
-                <p className="text-[10px] text-muted-foreground">مضيف الغرفة</p>
-              </div>
-              <VipBadge level={host.vip_level} size="sm" />
+            <div className="scale-90 origin-top-right">
+              <MicTurfWar roomId={roomId} isHost={isHost} currentUserId={currentUserId} ourRoomName={roomData?.name || "غرفتنا"} />
             </div>
-            {/* Top 3 senders chip */}
-            {roomData?.host_id && roomId && (
-              <div className="flex justify-center mt-2">
-                <Top3RoomSenders roomId={roomId} hostId={roomData.host_id} />
-              </div>
-            )}
           </div>
         )}
 
         {/* Mic Grid — adaptive size & spacing, stable seats (no shake) */}
-        <div className={`grid ${gridCols} ${micGapClass} mb-2 justify-items-center`}>
+        <div className={`grid ${gridCols} ${micGapClass} mb-1.5 justify-items-center`}>
+
+
 
           {micSlots.map((slot, i) => {
             const isSlotLocked = lockedSlots.includes(i);
@@ -1538,12 +1582,43 @@ const VoiceRoom = () => {
         </div>
         {/* /top fixed region */}
 
-        {/* Chat — only this section scrolls inside the locked room view */}
-        <div className="card-nova p-3 flex-1 min-h-[180px] flex flex-col mt-2 overflow-hidden">
-          <div className="flex items-center gap-2 mb-2">
+        {/* Audience strip — viewers count + horizontal avatar bubbles */}
+        {(() => {
+          const audience = members.filter((m: any) => m.mic_slot === null || m.mic_slot === undefined);
+          return (
+            <div className="shrink-0 mb-1.5 flex items-center gap-2 rounded-2xl bg-black/35 backdrop-blur border border-white/10 px-2 py-1.5">
+              <div className="shrink-0 min-w-[34px] h-7 px-2 rounded-lg bg-black/55 flex items-center justify-center text-white text-[11px] font-black tabular-nums border border-white/10">
+                {audience.length}
+              </div>
+              <div className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-1.5">
+                {audience.slice(0, 24).map((m: any) => (
+                  <button
+                    key={m.user_id}
+                    onClick={() => handleAvatarClick(m)}
+                    className="shrink-0"
+                    title={m.profile?.display_name}
+                  >
+                    <img
+                      loading="lazy"
+                      decoding="async"
+                      src={m.profile?.avatar_url || "https://i.pravatar.cc/40"}
+                      alt=""
+                      className="w-7 h-7 rounded-full object-cover ring-1 ring-white/30"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Chat — premium dark bubble panel, takes the remaining space */}
+        <div className="flex-1 min-h-0 flex flex-col rounded-2xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 pt-2 pb-1">
             <MessageCircle className="w-4 h-4 text-primary" />
-            <span className="text-xs font-semibold">الدردشة الحية</span>
+            <span className="text-xs font-semibold text-white/90">الدردشة الحية</span>
           </div>
+
 
           {/* Pinned Message */}
           <AnimatePresence>
@@ -1565,7 +1640,7 @@ const VoiceRoom = () => {
             )}
           </AnimatePresence>
 
-          <div className="space-y-2 flex-1 min-h-0 overflow-auto mb-3">
+          <div className="space-y-2 flex-1 min-h-0 overflow-auto mb-2 px-3">
             {messages.map((msg) => {
               // System "join" message detection.
               // New format: "[[JOIN:<uid>]] DisplayName"
@@ -1635,70 +1710,132 @@ const VoiceRoom = () => {
             })}
             <div ref={chatEndRef} />
           </div>
-          <div className="flex gap-2 items-center">
+          {showChatInput && (
+            <div className="flex gap-2 items-center px-3 pb-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                placeholder="اكتب رسالة..."
+                maxLength={500}
+                dir="auto"
+                autoComplete="off"
+                style={{ color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))", fontSize: "14px" }}
+                className="flex-1 bg-white/10 backdrop-blur rounded-full px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-1 focus:ring-primary border border-white/10"
+                autoFocus
+              />
+              <button onClick={handleSend} className="w-8 h-8 rounded-full gradient-neon flex items-center justify-center">
+                <Send className="w-3.5 h-3.5 text-primary-foreground" />
+              </button>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* Bottom Action Bar — pixel-matched to reference: gift, grid, gamepad, PK, chat, mic, emoji, more */}
+      <div
+        className="relative z-20 shrink-0 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)]"
+      >
+        <div className="flex items-center justify-between gap-1.5 max-w-lg mx-auto">
+          {/* Glowing pink gift */}
+          <button
+            onClick={() => { if (host) openGiftFor(roomData?.host_id, host.display_name); }}
+            className="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-500 via-fuchsia-500 to-rose-500 shadow-[0_0_18px_rgba(236,72,153,0.7)] flex items-center justify-center text-white active:scale-95 transition"
+            aria-label="هدية"
+          >
+            <Gift className="w-5 h-5" />
+          </button>
+          {/* Multi-window grid (inventory) */}
+          <button
+            onClick={() => setShowInventory(true)}
+            className="w-10 h-10 rounded-2xl bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-white active:scale-95 transition"
+            aria-label="الحقيبة"
+          >
+            <Grid2x2 className="w-5 h-5" />
+          </button>
+          {/* Gamepad */}
+          <button
+            onClick={() => navigate("/games")}
+            className="w-10 h-10 rounded-2xl bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-violet-300 active:scale-95 transition"
+            aria-label="الألعاب"
+          >
+            <Gamepad2 className="w-5 h-5" />
+          </button>
+          {/* PK */}
+          <button
+            onClick={() => setShowCoinStorm(true)}
+            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-fuchsia-600 shadow-[0_0_12px_rgba(99,102,241,0.6)] flex items-center justify-center text-white font-black text-[12px] active:scale-95 transition"
+            aria-label="PK"
+          >
+            PK
+          </button>
+          {/* Chat toggle — opens/focuses chat input */}
+          <button
+            onClick={() => setShowChatInput((v) => !v)}
+            className="flex-1 h-10 rounded-full bg-black/55 backdrop-blur border border-white/10 flex items-center justify-center text-white active:scale-[0.98] transition"
+            aria-label="دردشة"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </button>
+          {/* Mic toggle */}
+          <button
+            onClick={handleToggleMic}
+            className={`w-10 h-10 rounded-full backdrop-blur border border-white/10 flex items-center justify-center transition active:scale-95 ${
+              isMuted ? "bg-destructive/30 text-destructive-foreground" : "bg-black/45 text-white"
+            }`}
+            aria-label="المايك"
+          >
+            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
+          {/* Emoji */}
+          <button
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="w-10 h-10 rounded-full bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-amber-200 active:scale-95 transition"
+            aria-label="الإيموجي"
+          >
+            <Smile className="w-5 h-5" />
+          </button>
+          {/* Quick options (3 dots) */}
+          <div className="relative">
+            <button
+              onClick={() => setShowQuickOptions((v) => !v)}
+              className="w-10 h-10 rounded-full bg-black/45 backdrop-blur border border-white/10 flex items-center justify-center text-white active:scale-95 transition"
+              aria-label="خيارات"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+            {showQuickOptions && (
+              <>
+                <div className="fixed inset-0 z-[60]" onClick={() => setShowQuickOptions(false)} />
+                <div className="absolute bottom-12 right-0 z-[61] min-w-[170px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                  <button onClick={() => { setShowQuickOptions(false); setShowCouplePicker(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2">
+                    <Heart className="w-3.5 h-3.5 text-pink-400" /> ثنائي العشاق
+                  </button>
+                  <button onClick={() => { setShowQuickOptions(false); setShowCoinStorm(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 border-t border-border/50">
+                    <Zap className="w-3.5 h-3.5 text-fuchsia-400" /> عاصفة كوينز
+                  </button>
+                  <button onClick={() => { setShowQuickOptions(false); handleLeave(); }} className="w-full px-4 py-2.5 text-right text-xs font-black text-destructive hover:bg-destructive/15 flex items-center gap-2 border-t border-border/50">
+                    <LogOut className="w-3.5 h-3.5" /> خروج من الغرفة
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        {/* Floating emoji picker overlay */}
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 right-3 z-[55]">
             <EmojiStickerPicker
               isOpen={showEmojiPicker}
               onToggle={() => setShowEmojiPicker(!showEmojiPicker)}
               onSelect={(emoji) => setChatInput((prev) => prev + emoji)}
             />
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="اكتب رسالة..."
-              maxLength={500}
-              dir="auto"
-              autoComplete="off"
-              style={{ color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))", fontSize: "14px" }}
-              className="flex-1 bg-secondary rounded-full px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <button onClick={handleSend} className="w-8 h-8 rounded-full gradient-neon flex items-center justify-center">
-              <Send className="w-3.5 h-3.5 text-primary-foreground" />
-            </button>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Bottom Controls */}
-      <div
-        className="relative z-20 shrink-0 bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
-      >
-        <div className="flex items-center justify-center gap-4 max-w-lg mx-auto">
-          <button
-            onClick={handleToggleMic}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-              isMuted ? "bg-destructive/20 text-destructive" : "gradient-neon glow-neon text-primary-foreground"
-            }`}
-          >
-            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
-          <button onClick={() => {
-            if (host) openGiftFor(roomData?.host_id, host.display_name);
-          }} className="w-14 h-14 rounded-full gradient-gold glow-gold flex items-center justify-center animate-float">
-            <Gift className="w-6 h-6 text-accent-foreground" />
-          </button>
-          <button
-            onClick={() => setShowCoinStorm(true)}
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-700 shadow-[0_0_18px_rgba(217,70,239,0.7)] flex items-center justify-center text-white relative overflow-hidden"
-            aria-label="Launch Coin Storm"
-            title="عاصفة الكوينز النيون"
-          >
-            <Zap className="w-5 h-5" fill="currentColor" />
-          </button>
-          <button
-            onClick={() => setShowInventory(true)}
-            className="w-12 h-12 rounded-full bg-secondary/60 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-secondary/80 transition-colors"
-            aria-label="الحقيبة"
-          >
-            <Package className="w-5 h-5 text-foreground" />
-          </button>
-          <button onClick={handleLeave} className="w-12 h-12 rounded-full bg-destructive/20 text-destructive flex items-center justify-center">
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
 
       <GiftAnimation
         isOpen={showGifts}
