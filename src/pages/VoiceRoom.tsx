@@ -141,6 +141,9 @@ const VoiceRoom = () => {
   const [chatInput, setChatInput] = useState("");
   const [showBossEntrance, setShowBossEntrance] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const [showQuickOptions, setShowQuickOptions] = useState(false);
+  const [showChatInput, setShowChatInput] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pinnedMessage, setPinnedMessage] = useState<string | null>(null);
