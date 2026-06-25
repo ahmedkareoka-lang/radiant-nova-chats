@@ -158,7 +158,9 @@ const Index = () => {
   const filteredRooms = useMemo(() => {
     let list = [...rooms].filter((r: any) => !r.is_private);
     const cat = CATEGORIES.find((c) => c.id === activeCategory);
-    if (cat?.type) {
+    if (activeCategory === "followed") {
+      list = list.filter((r: any) => followedRoomIds.has(r.id));
+    } else if (cat?.type) {
       list = list.filter((r: any) => r.type === cat.type);
     } else if (activeCategory === "hot") {
       list = list.sort((a: any, b: any) => (b.hot_score || 0) - (a.hot_score || 0) || (b.member_count || 0) - (a.member_count || 0));
@@ -166,7 +168,8 @@ const Index = () => {
       list = list.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
     return list;
-  }, [rooms, activeCategory]);
+  }, [rooms, activeCategory, followedRoomIds]);
+
 
   // Determine which rooms are "hot" (top 3 by hot_score)
   const hotRoomIds = useMemo(() => {
