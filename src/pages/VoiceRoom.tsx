@@ -37,7 +37,7 @@ import { useBDSet } from "@/hooks/useBDSet";
 import BDBadge from "@/components/BDBadge";
 import RechargeAgentBadge from "@/components/RechargeAgentBadge";
 import { logAgora } from "@/lib/agoraDebugLog";
-import AIRoomAssistant from "@/components/AIRoomAssistant";
+// AIRoomAssistant removed by request — no in-room AI helper.
 import NeonCoinStorm from "@/components/NeonCoinStorm";
 import MicTurfWar from "@/components/MicTurfWar";
 import { Zap } from "lucide-react";
@@ -1816,7 +1816,7 @@ const VoiceRoom = () => {
             {showQuickOptions && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setShowQuickOptions(false)} />
-                <div className="absolute bottom-12 right-0 z-[61] min-w-[170px] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
+                <div className="absolute bottom-12 right-0 z-[61] w-max min-w-[220px] max-w-[80vw] rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl overflow-hidden">
                   <button onClick={() => { setShowQuickOptions(false); setShowCouplePicker(true); }} className="w-full px-4 py-2.5 text-right text-xs font-bold text-foreground hover:bg-secondary/70 flex items-center gap-2 whitespace-nowrap">
                     <Heart className="w-3.5 h-3.5 text-pink-400" /> ثنائي العشاق
                   </button>
@@ -1874,15 +1874,7 @@ const VoiceRoom = () => {
         />
       )}
 
-      {/* AI Room Moderator (summary + auto-translate) */}
-      <AIRoomAssistant
-        messages={messages}
-        translationsEnabled={translationsEnabled}
-        onToggleTranslations={(v) => {
-          setTranslationsEnabled(v);
-          toast.success(v ? "الترجمة الفورية شغّالة 🌐" : "تم إيقاف الترجمة");
-        }}
-      />
+      {/* AI Room Moderator removed */}
 
       {/* Confirmation dialog for destructive admin actions */}
       <AlertDialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>
