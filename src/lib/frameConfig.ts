@@ -33,14 +33,11 @@ export type FrameDef = {
 };
 
 /**
- * Keys of frames retired from the store / inventory.
- * The artwork is still mapped in FRAME_MAP so legacy equipped users keep
- * their look, but they no longer appear in StorePage or InventoryPage.
+ * Keys of legendary/elemental frames retired from the store / inventory.
+ * Their artwork stays mapped in FRAME_MAP for legacy equipped users, but
+ * they no longer appear in StorePage or InventoryPage.
  */
 export const REMOVED_FRAME_KEYS = new Set<string>([
-  "frame-purple-wings",
-  "frame-royal-crown",
-  "lion-frame",
   "frame-fire",
   "frame-ice",
   "frame-rainbow",
@@ -48,11 +45,14 @@ export const REMOVED_FRAME_KEYS = new Set<string>([
 ]);
 
 export const FRAMES: FrameDef[] = [
-  // Legendary / mythic frames were removed from the store per design request.
-  // Their artwork is still resolvable via FRAME_MAP below for legacy equipped users.
-  { key: "frame-purple-wings", name: "إطار الأجنحة البنفسجية", image: framePurpleWings, aspect: 1080 / 1920, innerScale: 0.62 },
-  { key: "frame-royal-crown",  name: "إطار التاج الملكي",      image: frameRoyalCrown,  innerScale: 0.66, innerOffsetY: 0.06 },
-  { key: "lion-frame",         name: "إطار الأسد",             image: lionFrame,        aspect: 1638 / 1920, innerScale: 0.6 },
+  // Normal frames — available in the store.
+  { key: "frame-purple-wings", name: "إطار الأجنحة البنفسجية", image: framePurpleWings, aspect: 1080 / 1920, innerScale: 0.62,
+    store: { price_coins: 50000, rarity: "epic" } },
+  { key: "frame-royal-crown",  name: "إطار التاج الملكي",      image: frameRoyalCrown,  innerScale: 0.66, innerOffsetY: 0.06,
+    store: { price_coins: 80000, rarity: "epic" } },
+  { key: "lion-frame",         name: "إطار الأسد",             image: lionFrame,        aspect: 1638 / 1920, innerScale: 0.6,
+    store: { price_coins: 120000, rarity: "epic" } },
+  // Legendary elemental frames — kept for legacy users but hidden from store/inventory.
   { key: "frame-fire",         name: "إطار النار 🔥",          image: frameFire,        innerScale: 0.64, animation: "frame-animate-fire" },
   { key: "frame-ice",          name: "إطار الجليد ❄️",         image: frameIce,         innerScale: 0.64, animation: "frame-animate-ice" },
   { key: "frame-rainbow",      name: "إطار قوس قزح 🌈",        image: frameRainbow,     innerScale: 0.64, animation: "frame-animate-rainbow" },

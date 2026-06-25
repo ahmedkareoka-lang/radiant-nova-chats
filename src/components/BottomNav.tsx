@@ -1,6 +1,11 @@
 import { Home, MessageCircle, FileText, Gamepad2, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useEffect } from "react";
+
+// Preload heavy chat route as soon as the bottom nav mounts so tapping
+// "الرسائل" feels instant instead of waiting on the lazy chunk.
+const preloadChat = () => import("@/pages/ChatPage");
 
 const navItems = [
   { icon: Home, label: "الغرفة", path: "/", activeColor: "text-primary" },
@@ -14,6 +19,17 @@ const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
+
+  useEffect(() => {
+    const w = window as any;
+    const run = () => preloadChat().catch(() => {});
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(run, { timeout: 1500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(run, 400);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/20"
@@ -34,6 +50,8 @@ const BottomNav = () => {
 
           return (
             <button key={item.path} onClick={() => navigate(item.path)}
+              onMouseEnter={item.path === "/chat" ? preloadChat : undefined}
+              onTouchStart={item.path === "/chat" ? preloadChat : undefined}
               className="relative flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl transition-all duration-200">
               <div className="relative">
                 <Icon className={`w-5 h-5 transition-colors ${isActive ? item.activeColor : "text-muted-foreground/60"}`}
