@@ -47,6 +47,10 @@ interface Props {
   isRechargeAgent?: boolean;
   currentUserId?: string | null;
   isAdmin?: boolean;
+  /** True when the *viewer* is the room host — enables admin assignment UI. */
+  viewerIsHost?: boolean;
+  /** True when the *target* user is currently a room admin. */
+  targetIsRoomAdmin?: boolean;
   isOnMic?: boolean;
   muted?: boolean;
   onClose: () => void;
@@ -56,7 +60,10 @@ interface Props {
   onKick?: () => void;
   onBan?: () => void;
   onKickFromMic?: () => void;
+  onAssignAdmin?: () => void;
+  onRemoveAdmin?: () => void;
 }
+
 
 const GAMES = [
   { id: "lucky", emoji: "🎰", label: "الحظ" },
