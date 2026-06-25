@@ -163,10 +163,15 @@ export const useVoiceRoom = (roomId: string | null) => {
 
   const fetchMessages = useCallback(async () => {
     if (!roomId) return;
+    // Only load messages created AT OR AFTER this user's session join time.
+    // Each user that re-enters the room gets a fresh chat view; chat for other
+    // users currently inside is unaffected (cutoff is purely client-side).
+    const cutoffIso = new Date(sessionStartRef.current).toISOString();
     const { data, error } = await supabase
       .from("messages")
       .select("*")
       .eq("room_id", roomId)
+      .gte("created_at", cutoffIso)
       .order("created_at", { ascending: true })
       .limit(100);
 
@@ -194,6 +199,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       setMessages((prev) => (prev.length === 0 ? [] : prev));
     }
   }, [roomId]);
+
 
   const fetchRoomData = useCallback(async () => {
     if (!roomId) return;
