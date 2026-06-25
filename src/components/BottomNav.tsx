@@ -50,6 +50,8 @@ const BottomNav = () => {
 
           return (
             <button key={item.path} onClick={() => navigate(item.path)}
+              onMouseEnter={item.path === "/chat" ? preloadChat : undefined}
+              onTouchStart={item.path === "/chat" ? preloadChat : undefined}
               className="relative flex flex-col items-center gap-0.5 py-1.5 px-4 rounded-xl transition-all duration-200">
               <div className="relative">
                 <Icon className={`w-5 h-5 transition-colors ${isActive ? item.activeColor : "text-muted-foreground/60"}`}
