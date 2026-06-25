@@ -156,11 +156,13 @@ const Index = () => {
 
   // Filter & sort rooms based on active category (only public rooms shown on home)
   const filteredRooms = useMemo(() => {
-    let list = [...rooms].filter((r: any) => !r.is_private);
+    let list = [...rooms];
+    if (activeCategory !== "followed") list = list.filter((r: any) => !r.is_private);
     const cat = CATEGORIES.find((c) => c.id === activeCategory);
     if (activeCategory === "followed") {
       list = list.filter((r: any) => followedRoomIds.has(r.id));
     } else if (cat?.type) {
+
       list = list.filter((r: any) => r.type === cat.type);
     } else if (activeCategory === "hot") {
       list = list.sort((a: any, b: any) => (b.hot_score || 0) - (a.hot_score || 0) || (b.member_count || 0) - (a.member_count || 0));
