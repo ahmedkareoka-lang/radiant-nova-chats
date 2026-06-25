@@ -1524,6 +1524,15 @@ const VoiceRoom = () => {
                           <VolumeX className="w-3 h-3 text-destructive-foreground" />
                         </div>
                       )}
+                      {/* Fiery red PK support counter — pinned to the BOTTOM of the frame,
+                          overlapping it slightly so it never pushes the name or the next mic row */}
+                      <div className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 z-30 pointer-events-none">
+                        <SupportCounter
+                          userId={slot.user_id}
+                          roomId={roomId || undefined}
+                          sessionStart={roomData?.created_at || new Date().toISOString()}
+                        />
+                      </div>
                     </div>
                     {/* Username — full width of slot, single line, never covered by support badge */}
                     <span
@@ -1535,10 +1544,6 @@ const VoiceRoom = () => {
                         size="sm"
                       />
                     </span>
-                    {/* Compact diamond support icon — fixed-height row reserved so it cannot bleed onto the next row */}
-                    <div className="h-[14px] flex items-center justify-center mt-0.5">
-                      <SupportCounter userId={slot.user_id} sessionStart={roomData?.created_at || new Date().toISOString()} />
-                    </div>
                     {slot.user_id === roomData?.host_id && roomId && currentUserId && (
                       <HostIncomeCounter
                         hostId={slot.user_id}
