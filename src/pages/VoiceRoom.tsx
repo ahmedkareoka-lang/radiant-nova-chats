@@ -1764,13 +1764,14 @@ const VoiceRoom = () => {
           >
             <Gamepad2 className="w-5 h-5" />
           </button>
-          {/* PK */}
+          {/* مطر عملات */}
           <button
             onClick={() => setShowCoinStorm(true)}
-            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-fuchsia-600 shadow-[0_0_12px_rgba(99,102,241,0.6)] flex items-center justify-center text-white font-black text-[12px] active:scale-95 transition"
-            aria-label="PK"
+            className="h-10 px-2.5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-fuchsia-600 shadow-[0_0_14px_rgba(236,72,153,0.55)] flex items-center gap-1 text-white font-extrabold text-[10px] active:scale-95 transition"
+            aria-label="مطر عملات"
           >
-            PK
+            <CloudRain className="w-4 h-4" />
+            <span className="leading-none">مطر عملات</span>
           </button>
           {/* Chat toggle — opens/focuses chat input */}
           <button
