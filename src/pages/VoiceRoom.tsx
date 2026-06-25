@@ -1232,6 +1232,24 @@ const VoiceRoom = () => {
               </button>
             </div>
 
+            {/* Follow approval mode */}
+            <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold">متابعة الغرفة</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {(roomData as any)?.follows_require_approval ? "خاص: تتطلب موافقتك" : "عام: أي شخص يتابع"}
+                  </span>
+                </div>
+              </div>
+              <button onClick={handleToggleFollowApproval}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${(roomData as any)?.follows_require_approval ? "gradient-neon text-primary-foreground" : "bg-secondary text-muted-foreground border border-border"}`}>
+                {(roomData as any)?.follows_require_approval ? "🔐 خاص" : "🌍 عام"}
+              </button>
+            </div>
+
+
             {/* Mute Entrance Sounds */}
             <div className="flex items-center justify-between bg-secondary/50 rounded-xl p-3">
               <div className="flex items-center gap-2">
