@@ -1,6 +1,8 @@
 import { Users, Flame } from "lucide-react";
 import DualBadge from "./DualBadge";
 import SmartImage from "./SmartImage";
+import { getRoomTier, getRoomTierByLevel, type RoomLevelTier } from "@/lib/roomLevels";
+import { Crown, Gem, Star, Shield, Sparkles } from "lucide-react";
 
 interface MicPreview {
   user_id: string;
@@ -21,6 +23,8 @@ interface RoomCardProps {
   micPreviews?: MicPreview[];
   isHot?: boolean;
   roomImage?: string | null;
+  roomLevel?: number;
+  totalSupportCoins?: number;
 }
 
 const COVER_GRADIENTS: Record<string, string> = {
@@ -44,7 +48,30 @@ const RoomCard = ({
   micPreviews = [],
   isHot = false,
   roomImage,
+  roomLevel,
+  totalSupportCoins,
 }: RoomCardProps) => {
+  // Derive tier from explicit level when given, else from coin total (live-safe fallback).
+  const tier: RoomLevelTier =
+    typeof roomLevel === "number" && roomLevel > 0
+      ? getRoomTierByLevel(roomLevel)
+      : getRoomTier(Number(totalSupportCoins || 0));
+  const LevelIcon = ({ lvl }: { lvl: number }) =>
+    lvl >= 6 ? <Flame className="w-2.5 h-2.5" /> :
+    lvl >= 5 ? <Sparkles className="w-2.5 h-2.5" /> :
+    lvl >= 4 ? <Crown className="w-2.5 h-2.5" /> :
+    lvl >= 3 ? <Gem className="w-2.5 h-2.5" /> :
+    lvl >= 2 ? <Shield className="w-2.5 h-2.5" /> :
+               <Star className="w-2.5 h-2.5" />;
+  const levelStyles: Record<number, string> = {
+    1: "bg-slate-800/70 border-slate-400/40 text-slate-100",
+    2: "bg-gradient-to-r from-slate-500/60 to-slate-300/50 border-slate-100/70 text-white shadow-[0_0_8px_rgba(203,213,225,0.5)]",
+    3: "bg-gradient-to-r from-sky-600/80 to-cyan-400/70 border-sky-200/80 text-white shadow-[0_0_10px_rgba(56,189,248,0.7)]",
+    4: "bg-gradient-to-r from-purple-700/85 to-fuchsia-500/80 border-fuchsia-200/90 text-white shadow-[0_0_12px_rgba(217,70,239,0.8)]",
+    5: "bg-gradient-to-r from-amber-600/90 via-orange-500/90 to-rose-500/80 border-amber-100 text-white shadow-[0_0_14px_rgba(245,158,11,0.95)]",
+    6: "bg-[conic-gradient(at_top_left,#ef4444,#f59e0b,#ef4444,#7f1d1d,#ef4444)] border-red-200 text-white shadow-[0_0_16px_rgba(239,68,68,1)] animate-pulse",
+  };
+
   return (
     <div
       onClick={onClick}
@@ -68,6 +95,17 @@ const RoomCard = ({
       <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-destructive/90 backdrop-blur rounded-full px-1.5 py-0.5">
         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
         <span className="text-[9px] font-black text-white tracking-wide">LIVE</span>
+      </div>
+
+      {/* Room LEVEL premium mini-badge — top-right (yields to HOT badge when hot) */}
+      <div className={`absolute ${isHot ? "top-9" : "top-2"} right-2 z-10`}>
+        <div
+          className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full border backdrop-blur font-black text-[9px] tracking-wide ${levelStyles[tier.level] || levelStyles[1]}`}
+          title={tier.label}
+        >
+          <LevelIcon lvl={tier.level} />
+          <span>LV.{tier.level}</span>
+        </div>
       </div>
 
       {/* HOT badge top-right */}

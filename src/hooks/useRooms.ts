@@ -21,6 +21,8 @@ export interface Room {
   hot_score?: number;
   background_theme?: string;
   room_image?: string | null;
+  room_level?: number;
+  total_support_coins?: number;
 }
 
 export const useRooms = () => {

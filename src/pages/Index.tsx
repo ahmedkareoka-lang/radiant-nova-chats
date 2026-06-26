@@ -415,6 +415,8 @@ const Index = () => {
                     micPreviews={room.mic_previews || []}
                     isHot={hotRoomIds.has(room.id)}
                     roomImage={room.room_image}
+                    roomLevel={room.room_level}
+                    totalSupportCoins={room.total_support_coins}
                     onClick={() => navigate(`/voice-room?id=${room.id}`)}
                   />
                 </div>
