@@ -745,6 +745,13 @@ const VoiceRoom = () => {
 
   const changeMicCount = async (count: number) => {
     if (!roomId) return;
+    const lvl = Number((roomData as any)?.room_level || 1);
+    const cap = getRoomTierByLevel(lvl).maxMics;
+    if (count > cap) {
+      const nextTier = getRoomTierByLevel(Math.min(lvl + 1, 6));
+      toast.error(`المايك ${count} مقفول — ارفع مستوى الغرفة (LV.${nextTier.level}: ${nextTier.threshold.toLocaleString()} عملة) لفتح ${nextTier.maxMics} مايك`);
+      return;
+    }
     await supabase.from("rooms").update({ mic_count: count }).eq("id", roomId);
     toast.success(`تم تغيير عدد المايكات إلى ${count}`);
     setShowSettings(false);
