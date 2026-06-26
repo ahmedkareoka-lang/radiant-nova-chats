@@ -127,7 +127,7 @@ export default function RoomUserProfileCard({
       const { data } = await supabase
         .from("rooms")
         .select("room_level")
-        .eq("owner_id", profile.user_id);
+        .eq("host_id", profile.user_id);
       if (cancelled || !data) return;
       const levels = new Set<number>();
       let max = 0;
