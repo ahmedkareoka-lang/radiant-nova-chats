@@ -90,6 +90,7 @@ const LanguagePage = lazyWithRetry(() => import("./pages/LanguagePage"));
 const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
 const HelpPage = lazyWithRetry(() => import("./pages/HelpPage"));
 const NovaBulkImportPage = lazyWithRetry(() => import("./pages/NovaBulkImportPage"));
+const AgencyQAPage = lazyWithRetry(() => import("./pages/AgencyQAPage"));
 
 // 🚀 Singleton QueryClient — full config lives in `@/lib/react-query`
 const queryClient = createQueryClient();
