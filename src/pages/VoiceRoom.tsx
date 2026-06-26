@@ -1359,14 +1359,27 @@ const VoiceRoom = () => {
             </button>
 
             <div>
-              <p className="text-xs text-muted-foreground mb-2">عدد المايكات</p>
-              <div className="grid grid-cols-4 gap-2">
-                {MIC_OPTIONS.map((count) => (
-                  <button key={count} onClick={() => changeMicCount(count)}
-                    className={`py-3 rounded-xl font-bold text-sm transition-all ${micCount === count ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"}`}>
-                    {count}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">عدد المايكات</p>
+                {(() => {
+                  const lvl = Number((roomData as any)?.room_level || 1);
+                  const cap = getRoomTierByLevel(lvl).maxMics;
+                  return <span className="text-[10px] font-bold text-amber-300">الحد الأقصى المفتوح: {cap} (LV.{lvl})</span>;
+                })()}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {MIC_OPTIONS.map((count) => {
+                  const lvl = Number((roomData as any)?.room_level || 1);
+                  const cap = getRoomTierByLevel(lvl).maxMics;
+                  const locked = count > cap;
+                  return (
+                    <button key={count} disabled={locked} onClick={() => changeMicCount(count)}
+                      className={`relative py-3 rounded-xl font-bold text-sm transition-all ${micCount === count ? "gradient-neon text-primary-foreground glow-neon" : locked ? "bg-secondary/40 text-muted-foreground/50 cursor-not-allowed" : "bg-secondary text-muted-foreground"}`}>
+                      {locked && <span className="absolute top-1 right-1 text-[9px]">🔒</span>}
+                      {count}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div>
