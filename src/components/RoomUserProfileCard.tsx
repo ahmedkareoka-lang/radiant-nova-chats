@@ -21,6 +21,7 @@ import RechargeAgentBadge from "./RechargeAgentBadge";
 import SupporterBadge, { SupporterAchievementBadge, SupporterFireBadge } from "./SupporterBadge";
 import BDBadge from "./BDBadge";
 import VipName from "./VipName";
+import RoomBadgesShowcase from "./RoomBadgesShowcase";
 
 export interface RoomUserProfileData {
   user_id: string;
@@ -96,6 +97,8 @@ export default function RoomUserProfileCard({
 
   const [copied, setCopied] = useState(false);
   const [registeredId, setRegisteredId] = useState<string>("");
+  const [unlockedRoomLevels, setUnlockedRoomLevels] = useState<number[]>([]);
+  const [currentRoomLevel, setCurrentRoomLevel] = useState<number | undefined>(undefined);
 
   const isMe = profile.user_id === currentUserId;
 
@@ -115,6 +118,28 @@ export default function RoomUserProfileCard({
     return () => {
       cancelled = true;
     };
+  }, [profile.user_id]);
+
+  // Fetch room-level badges this user has earned across rooms they own.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("rooms")
+        .select("room_level")
+        .eq("host_id", profile.user_id);
+      if (cancelled || !data) return;
+      const levels = new Set<number>();
+      let max = 0;
+      for (const r of data as any[]) {
+        const lvl = Number(r?.room_level || 1);
+        for (let i = 1; i <= lvl; i++) levels.add(i);
+        if (lvl > max) max = lvl;
+      }
+      setUnlockedRoomLevels(Array.from(levels).sort((a, b) => a - b));
+      setCurrentRoomLevel(max || undefined);
+    })();
+    return () => { cancelled = true; };
   }, [profile.user_id]);
 
 
@@ -250,6 +275,11 @@ export default function RoomUserProfileCard({
           );
         })()}
 
+        {/* Premium 6-slot Room-Level Badges Showcase */}
+        <RoomBadgesShowcase
+          unlockedLevels={unlockedRoomLevels}
+          currentLevel={currentRoomLevel}
+        />
 
         {/* Games section */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-600/25 to-cyan-600/25 border border-cyan-400/20 p-3">
