@@ -206,6 +206,7 @@ const AnimatedRoutes = () => {
         <Route path="/privacy" element={<AuthGate><PrivacyPage /></AuthGate>} />
         <Route path="/help" element={<AuthGate><HelpPage /></AuthGate>} />
         <Route path="/admin/bulk-import" element={<AuthGate><NovaBulkImportPage /></AuthGate>} />
+        <Route path="/admin/agency-qa" element={<AuthGate><AgencyQAPage /></AuthGate>} />
         {/* Deep link routes */}
         <Route path="/room" element={<AuthGate><RoomRedirect /></AuthGate>} />
         <Route path="/invite" element={<AuthGate><InviteRedirect /></AuthGate>} />
