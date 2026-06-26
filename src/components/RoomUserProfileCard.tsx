@@ -97,6 +97,8 @@ export default function RoomUserProfileCard({
 
   const [copied, setCopied] = useState(false);
   const [registeredId, setRegisteredId] = useState<string>("");
+  const [unlockedRoomLevels, setUnlockedRoomLevels] = useState<number[]>([]);
+  const [currentRoomLevel, setCurrentRoomLevel] = useState<number | undefined>(undefined);
 
   const isMe = profile.user_id === currentUserId;
 
