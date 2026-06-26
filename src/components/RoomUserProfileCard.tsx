@@ -275,6 +275,11 @@ export default function RoomUserProfileCard({
           );
         })()}
 
+        {/* Premium 6-slot Room-Level Badges Showcase */}
+        <RoomBadgesShowcase
+          unlockedLevels={unlockedRoomLevels}
+          currentLevel={currentRoomLevel}
+        />
 
         {/* Games section */}
         <div className="rounded-2xl bg-gradient-to-r from-emerald-600/25 to-cyan-600/25 border border-cyan-400/20 p-3">
