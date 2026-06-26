@@ -28,6 +28,8 @@ import TreasureBox from "@/components/TreasureBox";
 import VoiceRoomBackdrop from "@/components/VoiceRoomBackdrop";
 import Top3RoomSenders from "@/components/Top3RoomSenders";
 import GiftComboBar from "@/components/GiftComboBar";
+import RoomLevelBadge from "@/components/RoomLevelBadge";
+import { getRoomTierByLevel } from "@/lib/roomLevels";
 
 import FullscreenGiftEffect from "@/components/FullscreenGiftEffect";
 import { FRAME_MAP, FRAME_ANIMATION, bossFrame } from "@/lib/frameConfig";
@@ -1491,7 +1493,7 @@ const VoiceRoom = () => {
             const lvl = Number(rd.room_level || 1);
             const tier = getRoomTierByLevel(lvl);
             const progress = tier.nextThreshold == null ? 1 : Math.min(1, Math.max(0, (coins - tier.threshold) / (tier.nextThreshold - tier.threshold)));
-            const isOwner = userId && (userId === rd.host_id || userId === (hostAgency as any)?.owner_id);
+            const isOwner = !!currentUserId && (currentUserId === rd.host_id || currentUserId === (hostAgency as any)?.owner_id);
             return (
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/40 backdrop-blur border border-amber-400/30 min-w-0">
                 <RoomLevelBadge level={lvl} size="sm" visible={lvl >= 3 ? !!isOwner : true} />
