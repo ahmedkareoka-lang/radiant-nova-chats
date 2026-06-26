@@ -100,7 +100,7 @@ const getEntranceEffect = (wealthLevel: number, charismaLevel: number) => {
   return effect;
 };
 
-const MIC_OPTIONS = [8, 12, 16, 20];
+const MIC_OPTIONS = [5, 8, 12, 16, 18, 20];
 
 const ROOM_THEMES: { id: string; label: string; emoji: string; bg: string }[] = [
   { id: "default", label: "Default", emoji: "🌑", bg: "bg-background" },
@@ -745,6 +745,13 @@ const VoiceRoom = () => {
 
   const changeMicCount = async (count: number) => {
     if (!roomId) return;
+    const lvl = Number((roomData as any)?.room_level || 1);
+    const cap = getRoomTierByLevel(lvl).maxMics;
+    if (count > cap) {
+      const nextTier = getRoomTierByLevel(Math.min(lvl + 1, 6));
+      toast.error(`المايك ${count} مقفول — ارفع مستوى الغرفة (LV.${nextTier.level}: ${nextTier.threshold.toLocaleString()} عملة) لفتح ${nextTier.maxMics} مايك`);
+      return;
+    }
     await supabase.from("rooms").update({ mic_count: count }).eq("id", roomId);
     toast.success(`تم تغيير عدد المايكات إلى ${count}`);
     setShowSettings(false);
@@ -1352,14 +1359,27 @@ const VoiceRoom = () => {
             </button>
 
             <div>
-              <p className="text-xs text-muted-foreground mb-2">عدد المايكات</p>
-              <div className="grid grid-cols-4 gap-2">
-                {MIC_OPTIONS.map((count) => (
-                  <button key={count} onClick={() => changeMicCount(count)}
-                    className={`py-3 rounded-xl font-bold text-sm transition-all ${micCount === count ? "gradient-neon text-primary-foreground glow-neon" : "bg-secondary text-muted-foreground"}`}>
-                    {count}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">عدد المايكات</p>
+                {(() => {
+                  const lvl = Number((roomData as any)?.room_level || 1);
+                  const cap = getRoomTierByLevel(lvl).maxMics;
+                  return <span className="text-[10px] font-bold text-amber-300">الحد الأقصى المفتوح: {cap} (LV.{lvl})</span>;
+                })()}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {MIC_OPTIONS.map((count) => {
+                  const lvl = Number((roomData as any)?.room_level || 1);
+                  const cap = getRoomTierByLevel(lvl).maxMics;
+                  const locked = count > cap;
+                  return (
+                    <button key={count} disabled={locked} onClick={() => changeMicCount(count)}
+                      className={`relative py-3 rounded-xl font-bold text-sm transition-all ${micCount === count ? "gradient-neon text-primary-foreground glow-neon" : locked ? "bg-secondary/40 text-muted-foreground/50 cursor-not-allowed" : "bg-secondary text-muted-foreground"}`}>
+                      {locked && <span className="absolute top-1 right-1 text-[9px]">🔒</span>}
+                      {count}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div>
