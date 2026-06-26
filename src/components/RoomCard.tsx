@@ -23,6 +23,8 @@ interface RoomCardProps {
   micPreviews?: MicPreview[];
   isHot?: boolean;
   roomImage?: string | null;
+  roomLevel?: number;
+  totalSupportCoins?: number;
 }
 
 const COVER_GRADIENTS: Record<string, string> = {
