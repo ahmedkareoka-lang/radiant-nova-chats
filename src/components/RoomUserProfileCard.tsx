@@ -21,6 +21,7 @@ import RechargeAgentBadge from "./RechargeAgentBadge";
 import SupporterBadge, { SupporterAchievementBadge, SupporterFireBadge } from "./SupporterBadge";
 import BDBadge from "./BDBadge";
 import VipName from "./VipName";
+import RoomBadgesShowcase from "./RoomBadgesShowcase";
 
 export interface RoomUserProfileData {
   user_id: string;
