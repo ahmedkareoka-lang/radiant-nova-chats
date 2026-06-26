@@ -1,6 +1,8 @@
 import { Users, Flame } from "lucide-react";
 import DualBadge from "./DualBadge";
 import SmartImage from "./SmartImage";
+import { getRoomTier, getRoomTierByLevel, type RoomLevelTier } from "@/lib/roomLevels";
+import { Crown, Gem, Star, Shield, Sparkles } from "lucide-react";
 
 interface MicPreview {
   user_id: string;
