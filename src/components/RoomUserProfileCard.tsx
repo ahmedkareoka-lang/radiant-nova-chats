@@ -120,6 +120,28 @@ export default function RoomUserProfileCard({
     };
   }, [profile.user_id]);
 
+  // Fetch room-level badges this user has earned across rooms they own.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("rooms")
+        .select("room_level")
+        .eq("owner_id", profile.user_id);
+      if (cancelled || !data) return;
+      const levels = new Set<number>();
+      let max = 0;
+      for (const r of data as any[]) {
+        const lvl = Number(r?.room_level || 1);
+        for (let i = 1; i <= lvl; i++) levels.add(i);
+        if (lvl > max) max = lvl;
+      }
+      setUnlockedRoomLevels(Array.from(levels).sort((a, b) => a - b));
+      setCurrentRoomLevel(max || undefined);
+    })();
+    return () => { cancelled = true; };
+  }, [profile.user_id]);
+
 
 
   const copyId = async () => {
