@@ -45,13 +45,15 @@ export const useGifts = () => {
       return false;
     }
 
-    // Log transaction
+    // Log transaction — `room_id` is required for room support roll-up and
+    // for the agency target trigger to credit the receiver's agency.
     await supabase.from("gift_transactions").insert({
       sender_id: senderId,
       receiver_id: receiverId,
       gift_name: giftName,
       gold_amount: goldAmount,
       diamond_amount: diamondAmount,
+      room_id: extras?.roomId || null,
     });
 
     // Local broadcast so support counters / UI listeners react instantly

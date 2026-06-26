@@ -238,7 +238,7 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
       onClose();
       (async () => {
         for (const rid of selectedRecipients) {
-          await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
+          await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl, roomId: roomId || null });
         }
       })();
     } else if (receiverId) {
@@ -260,7 +260,7 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
       onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
       setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1);
       onClose();
-      sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl });
+      sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl, roomId: roomId || null });
     }
   };
 

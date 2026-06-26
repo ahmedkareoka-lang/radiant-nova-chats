@@ -95,6 +95,13 @@ export type Database = {
             referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agency_invites_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_target_qa"
+            referencedColumns: ["agency_id"]
+          },
         ]
       }
       agency_join_requests: {
@@ -132,6 +139,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agencies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_join_requests_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_target_qa"
+            referencedColumns: ["agency_id"]
           },
         ]
       }
@@ -174,6 +188,13 @@ export type Database = {
             referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_target_qa"
+            referencedColumns: ["agency_id"]
+          },
         ]
       }
       agency_resignations: {
@@ -205,6 +226,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agencies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_resignations_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_target_qa"
+            referencedColumns: ["agency_id"]
           },
         ]
       }
@@ -519,6 +547,7 @@ export type Database = {
           gold_amount: number
           id: string
           receiver_id: string
+          room_id: string | null
           sender_id: string
         }
         Insert: {
@@ -528,6 +557,7 @@ export type Database = {
           gold_amount: number
           id?: string
           receiver_id: string
+          room_id?: string | null
           sender_id: string
         }
         Update: {
@@ -537,6 +567,7 @@ export type Database = {
           gold_amount?: number
           id?: string
           receiver_id?: string
+          room_id?: string | null
           sender_id?: string
         }
         Relationships: []
@@ -1271,6 +1302,13 @@ export type Database = {
             referencedRelation: "agencies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_target_qa"
+            referencedColumns: ["agency_id"]
+          },
         ]
       }
       recharge_agents: {
@@ -1714,6 +1752,8 @@ export type Database = {
           password: string | null
           room_code: string | null
           room_image: string | null
+          room_level: number
+          total_support_coins: number
           type: string
         }
         Insert: {
@@ -1732,6 +1772,8 @@ export type Database = {
           password?: string | null
           room_code?: string | null
           room_image?: string | null
+          room_level?: number
+          total_support_coins?: number
           type?: string
         }
         Update: {
@@ -1750,6 +1792,8 @@ export type Database = {
           password?: string | null
           room_code?: string | null
           room_image?: string | null
+          room_level?: number
+          total_support_coins?: number
           type?: string
         }
         Relationships: [
@@ -2092,6 +2136,22 @@ export type Database = {
       }
     }
     Views: {
+      agency_target_qa: {
+        Row: {
+          agency_id: string | null
+          agency_name: string | null
+          agency_owner_id: string | null
+          hours_target: number | null
+          is_agent: boolean | null
+          is_host: boolean | null
+          joined_at: string | null
+          member_id: string | null
+          member_name: string | null
+          member_role: string | null
+          support_target_coins: number | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           agency_id: string | null
@@ -2166,6 +2226,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "agencies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agency_target_qa"
+            referencedColumns: ["agency_id"]
           },
         ]
       }
@@ -2332,6 +2399,8 @@ export type Database = {
       claim_weekly_couple_gift: { Args: never; Returns: Json }
       cleanup_stale_room_members: { Args: never; Returns: undefined }
       clear_room_chat: { Args: { _room_id: string }; Returns: undefined }
+      compute_room_level: { Args: { _coins: number }; Returns: number }
+      compute_room_max_mics: { Args: { _level: number }; Returns: number }
       deactivate_bd_account: { Args: { _user_id: string }; Returns: Json }
       deactivate_love_couple: { Args: never; Returns: undefined }
       deduct_coins: {
