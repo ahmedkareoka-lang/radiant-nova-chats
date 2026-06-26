@@ -1481,17 +1481,32 @@ const VoiceRoom = () => {
           </div>
         </div>
 
-        {/* Sub-row: Level badge + timer + Daily TOP rank */}
+        {/* Sub-row: Room-level badge + progress + count */}
         <div className="mt-2 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/40 backdrop-blur border border-amber-400/30 min-w-0">
-            <Trophy className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-            <div className="flex flex-col leading-tight min-w-0">
-              <span className="text-[10px] font-black text-amber-200">LV.{(roomData as any)?.level || 1}</span>
-              <div className="w-20 h-1 rounded-full bg-white/15 overflow-hidden mt-0.5">
-                <div className="h-full bg-gradient-to-r from-amber-300 to-orange-500" style={{ width: `${Math.min(100, (((roomData as any)?.level_progress ?? 0) * 100))}%` }} />
+          {(() => {
+            // Lifetime support drives the live room tier.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rd: any = roomData || {};
+            const coins = Number(rd.total_support_coins || 0);
+            const lvl = Number(rd.room_level || 1);
+            const tier = getRoomTierByLevel(lvl);
+            const progress = tier.nextThreshold == null ? 1 : Math.min(1, Math.max(0, (coins - tier.threshold) / (tier.nextThreshold - tier.threshold)));
+            const isOwner = userId && (userId === rd.host_id || userId === (hostAgency as any)?.owner_id);
+            return (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-black/40 backdrop-blur border border-amber-400/30 min-w-0">
+                <RoomLevelBadge level={lvl} size="sm" visible={lvl >= 3 ? !!isOwner : true} />
+                {lvl < 3 && (
+                  <span className="text-[10px] font-black text-amber-200">LV.{lvl}</span>
+                )}
+                <div className="w-20 h-1 rounded-full bg-white/15 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-amber-300 to-orange-500" style={{ width: `${Math.round(progress * 100)}%` }} />
+                </div>
+                <span className="text-[9px] font-bold text-amber-100/80 tabular-nums">
+                  {tier.nextThreshold == null ? "MAX" : `${Math.round(progress * 100)}%`}
+                </span>
               </div>
-            </div>
-          </div>
+            );
+          })()}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/45 backdrop-blur border border-white/10">
             <Star className="w-3 h-3 text-amber-300" />
             <span className="text-[10px] font-bold text-white tabular-nums">
