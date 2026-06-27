@@ -299,6 +299,9 @@ export const useVoiceRoom = (roomId: string | null) => {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` }, () => {
         fetchRoomData();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions", filter: `room_id=eq.${roomId}` }, () => {
+        fetchRoomData();
+      })
       // 🔄 React instantly when ANY profile updates equipped frame/badge etc.
       // We refetch members so the new look (frame, name, avatar) appears in real time.
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, () => {
@@ -313,7 +316,12 @@ export const useVoiceRoom = (roomId: string | null) => {
       fetchMembers(true);
       fetchRoomData();
     };
+    const handleLocalGiftSent = (event: Event) => {
+      const detail = (event as CustomEvent)?.detail;
+      if (!detail?.roomId || detail.roomId === roomId) fetchRoomData();
+    };
     window.addEventListener("profile-cosmetics-changed", handleLocalEquip);
+    window.addEventListener("gift-sent", handleLocalGiftSent as EventListener);
 
     // Cleanup function using refs to avoid stale closures
     const cleanupMember = async () => {
@@ -400,24 +408,16 @@ export const useVoiceRoom = (roomId: string | null) => {
         // 🚀 Use queued helper — coalesces with any visibility/focus beat in flight
         await sendHeartbeat();
 
-        // Daily task: increment room_minutes every 4 ticks (= 1 minute at 15s/tick)
-        heartbeatTickCount += 1;
-        if (heartbeatTickCount % 4 === 0) {
-          supabase.rpc("increment_daily_task", {
-            _user_id: uid,
-            _task_type: "room",
-            _amount: 1,
-          });
-        }
-
-        // Check if user is on mic and is an agency host/owner, then increment mic_hours.
-        // Use RPC because direct client updates can be blocked by agency_members RLS.
         const currentMember = membersRef.current.find(m => m.user_id === uid);
-        if (currentMember?.is_on_mic) {
-          const hoursIncrement = HEARTBEAT_INTERVAL / 3600000; // convert ms to hours
+
+        // Agency target hours are MIC hours, so only count time while actually on mic.
+        // One update every 4 ticks (= 1 minute at 15s/tick) keeps daily target
+        // counters and lifetime agency mic_hours in sync without fractional daily rows.
+        heartbeatTickCount += 1;
+        if (heartbeatTickCount % 4 === 0 && currentMember?.is_on_mic) {
           await (supabase.rpc as any)("increment_agency_mic_hours", {
             _user_id: uid,
-            _hours: hoursIncrement,
+            _hours: 1 / 60,
           });
         }
       }
@@ -432,6 +432,7 @@ export const useVoiceRoom = (roomId: string | null) => {
       window.removeEventListener("beforeunload", handleUnload);
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("profile-cosmetics-changed", handleLocalEquip);
+      window.removeEventListener("gift-sent", handleLocalGiftSent as EventListener);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (heartbeatRef.current) clearInterval(heartbeatRef.current);
       clearInterval(staleSweepRef);
