@@ -236,11 +236,9 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
       onMultiGiftSent?.(giftEmoji, selectedRecipients.size * multiplier, giftImageUrl);
       setBurst(false); setSelectedGift(null); setSending(false); setSelectedRecipients(new Set()); setShowMulti(false); setMultiplier(1);
       onClose();
-      (async () => {
-        for (const rid of selectedRecipients) {
-          await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl, roomId: roomId || null });
-        }
-      })();
+      for (const rid of selectedRecipients) {
+        await sendGift(senderId!, rid, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl, roomId: roomId || null });
+      }
     } else if (receiverId) {
       const recipientLabel = receiverName || "مستخدم";
       logAgora("info", "Gift", `→ broadcasting gift '${gift.name}' x${giftCost}`, { recipient: recipientLabel });
@@ -258,9 +256,13 @@ const GiftAnimation = memo(({ isOpen, onClose, senderId, receiverId, receiverNam
       });
       sendBigGiftAnnounce(giftEmoji, gift.name, senderName, giftCost, recipientLabel, giftImageUrl);
       onMultiGiftSent?.(giftEmoji, multiplier, giftImageUrl);
+      const ok = await sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl, roomId: roomId || null });
+      if (!ok) {
+        setSending(false);
+        return;
+      }
       setBurst(false); setSelectedGift(null); setSending(false); setMultiplier(1);
       onClose();
-      sendGift(senderId!, receiverId, gift.name, giftCost, { giftEmoji, imageUrl: giftImageUrl, roomId: roomId || null });
     }
   };
 

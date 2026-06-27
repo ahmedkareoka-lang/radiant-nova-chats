@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getRoomTierByLevel } from "@/lib/roomLevels";
 
 export interface Room {
   id: string;
@@ -135,7 +136,17 @@ export const useRooms = () => {
       .limit(1)
       .maybeSingle();
 
+    let allowedMicCount = micCount;
+
     if (existing) {
+      const { data: existingFull } = await supabase
+        .from("rooms")
+        .select("room_level, mic_count")
+        .eq("id", existing.id)
+        .maybeSingle();
+      const cap = getRoomTierByLevel(Number((existingFull as any)?.room_level || 1)).maxMics;
+      allowedMicCount = Math.min(Math.max(5, micCount), cap);
+
       // Update settings + reactivate, keep all stats/history intact
       const { data: updated } = await supabase
         .from("rooms")
@@ -144,7 +155,7 @@ export const useRooms = () => {
           type,
           is_private: isPrivate,
           password: isPrivate ? password : null,
-          mic_count: micCount,
+          mic_count: allowedMicCount,
           is_active: true,
         })
         .eq("id", existing.id)
@@ -159,14 +170,15 @@ export const useRooms = () => {
       return updated;
     }
 
-    // First-time creation
+    // First-time creation: LV.1 rooms start with 5 unlocked microphones.
+    allowedMicCount = 5;
     const { data, error } = await supabase.from("rooms").insert({
       name,
       type,
       host_id: user.id,
       is_private: isPrivate,
       password: isPrivate ? password : null,
-      mic_count: micCount,
+      mic_count: allowedMicCount,
     }).select().single();
 
     if (!error && data) {
