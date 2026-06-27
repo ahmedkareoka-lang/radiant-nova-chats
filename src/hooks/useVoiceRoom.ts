@@ -51,6 +51,7 @@ export const useVoiceRoom = (roomId: string | null) => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
   const roomIdRef = useRef<string | null>(roomId);
+  const membersRef = useRef<RoomMember[]>([]);
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   // 🧹 Per-session chat cutoff — messages older than this are hidden for the
   // current user only. Reset every time they enter (or re-enter) the room.
@@ -75,6 +76,9 @@ export const useVoiceRoom = (roomId: string | null) => {
   useEffect(() => {
     roomIdRef.current = roomId;
   }, [roomId]);
+  useEffect(() => {
+    membersRef.current = members;
+  }, [members]);
 
   const fetchMembers = useCallback(async (force = false) => {
     if (!roomId) return;
@@ -408,7 +412,7 @@ export const useVoiceRoom = (roomId: string | null) => {
 
         // Check if user is on mic and is an agency host/owner, then increment mic_hours.
         // Use RPC because direct client updates can be blocked by agency_members RLS.
-        const currentMember = members.find(m => m.user_id === uid);
+        const currentMember = membersRef.current.find(m => m.user_id === uid);
         if (currentMember?.is_on_mic) {
           const hoursIncrement = HEARTBEAT_INTERVAL / 3600000; // convert ms to hours
           await (supabase.rpc as any)("increment_agency_mic_hours", {
