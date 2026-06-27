@@ -2514,6 +2514,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_agency_mic_hours: {
+        Args: { _hours: number; _user_id: string }
+        Returns: undefined
+      }
       increment_daily_task: {
         Args: { _amount?: number; _task_type: string; _user_id: string }
         Returns: undefined
