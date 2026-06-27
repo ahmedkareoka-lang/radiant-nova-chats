@@ -48,7 +48,9 @@ BEGIN
   v_cap := public.compute_room_max_mics(v_level);
   NEW.room_level := v_level;
 
-  IF TG_OP = 'INSERT' OR NEW.total_support_coins IS DISTINCT FROM OLD.total_support_coins THEN
+  IF TG_OP = 'INSERT' THEN
+    NEW.mic_count := v_cap;
+  ELSIF NEW.total_support_coins IS DISTINCT FROM OLD.total_support_coins THEN
     NEW.mic_count := v_cap;
   ELSE
     NEW.mic_count := LEAST(GREATEST(COALESCE(NEW.mic_count, v_cap), 5), v_cap);
