@@ -235,6 +235,32 @@ const AgenciesPage = () => {
 
   useEffect(() => { loadAll(); }, []);
 
+  // Realtime: agency target counters depend on gifts + mic minutes + membership totals.
+  // Refresh this screen as soon as any of those source tables changes.
+  useEffect(() => {
+    if (!userId) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleReload = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        loadAll();
+      }, 700);
+    };
+
+    const channel = supabase
+      .channel(`agency-target-live-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, scheduleReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "agency_members" }, scheduleReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "daily_tasks" }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
   // Realtime: refresh sent/pending invites when statuses change
   useEffect(() => {
     if (!userId) return;
