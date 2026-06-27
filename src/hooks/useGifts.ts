@@ -32,35 +32,28 @@ export const useGifts = () => {
       return false;
     }
 
-    const diamondAmount = Math.floor((goldAmount * rate) / 100);
+    const estimatedDiamondAmount = Math.floor((goldAmount * rate) / 100);
 
-    // Atomic gift send via secure RPC (validates sender = auth.uid())
-    const { error: giftErr } = await supabase.rpc("send_gift_atomic", {
+    // Atomic gift send via secure RPC (validates sender = auth.uid()).
+    // The RPC now writes the gift transaction itself so room level + agency
+    // target triggers run exactly once, with the current room id attached.
+    const { data: giftResult, error: giftErr } = await (supabase.rpc as any)("send_gift_atomic", {
       _receiver_id: receiverId,
       _gold_amount: goldAmount,
       _gift_name: giftName,
+      _room_id: extras?.roomId || null,
     });
     if (giftErr) {
       toast.error("فشل في إرسال الهدية");
       return false;
     }
-
-    // Log transaction — `room_id` is required for room support roll-up and
-    // for the agency target trigger to credit the receiver's agency.
-    await supabase.from("gift_transactions").insert({
-      sender_id: senderId,
-      receiver_id: receiverId,
-      gift_name: giftName,
-      gold_amount: goldAmount,
-      diamond_amount: diamondAmount,
-      room_id: extras?.roomId || null,
-    });
+    const diamondAmount = Number(giftResult?.diamond_amount ?? estimatedDiamondAmount);
 
     // Local broadcast so support counters / UI listeners react instantly
     // without waiting for the realtime round-trip (matters for self-gifts).
     try {
       window.dispatchEvent(new CustomEvent("gift-sent", {
-        detail: { receiverId, senderId, diamondAmount, giftName },
+        detail: { receiverId, senderId, diamondAmount, giftName, roomId: extras?.roomId || null, goldAmount },
       }));
     } catch {}
 

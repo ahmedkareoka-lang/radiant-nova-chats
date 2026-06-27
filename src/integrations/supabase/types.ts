@@ -2514,6 +2514,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_agency_mic_hours: {
+        Args: { _hours: number; _user_id: string }
+        Returns: undefined
+      }
       increment_daily_task: {
         Args: { _amount?: number; _task_type: string; _user_id: string }
         Returns: undefined
@@ -2609,10 +2613,24 @@ export type Database = {
         }
       }
       search_agency_by_code: { Args: { _code: string }; Returns: Json }
-      send_gift_atomic: {
-        Args: { _gift_name: string; _gold_amount: number; _receiver_id: string }
-        Returns: Json
-      }
+      send_gift_atomic:
+        | {
+            Args: {
+              _gift_name: string
+              _gold_amount: number
+              _receiver_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _gift_name: string
+              _gold_amount: number
+              _receiver_id: string
+              _room_id?: string
+            }
+            Returns: Json
+          }
       send_love_heart: { Args: never; Returns: Json }
       send_relationship_request: {
         Args: { _message?: string; _receiver_id: string; _type: string }

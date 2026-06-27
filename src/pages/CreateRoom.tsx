@@ -12,7 +12,7 @@ const roomTypes = [
   { label: "VIP", emoji: "👑" },
 ];
 
-const micCounts = [8, 12, 16, 20];
+const micCounts = [5, 8, 12, 16, 20];
 
 const CreateRoom = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const CreateRoom = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
   const [selectedType, setSelectedType] = useState(0);
-  const [selectedMics, setSelectedMics] = useState(8);
+  const [selectedMics, setSelectedMics] = useState(5);
   const [creating, setCreating] = useState(false);
 
   const handleCreate = async () => {

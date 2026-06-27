@@ -195,7 +195,8 @@ const AgenciesPage = () => {
       }
 
       // Host stats + cycle dashboard (today/cycle 15-day)
-      if (membership?.badge === "host") {
+      const isTargetTrackedHost = membership?.badge === "host" || membership?.role === "owner" || activeAgency?.owner_id === user.id;
+      if (isTargetTrackedHost) {
         const { count: giftCount } = await supabase.from("gift_transactions").select("*", { count: "exact", head: true }).eq("receiver_id", user.id);
         const { data: giftSum } = await supabase.from("gift_transactions").select("diamond_amount").eq("receiver_id", user.id);
         const totalDiamonds = giftSum?.reduce((sum: number, g: any) => sum + (g.diamond_amount || 0), 0) || 0;
@@ -210,7 +211,7 @@ const AgenciesPage = () => {
       }
 
       // Host: full event log within the 15-day cycle
-      if (membership?.badge === "host") {
+      if (isTargetTrackedHost) {
         const { data: ev } = await supabase.rpc("get_my_host_events" as any);
         if (ev && (ev as any).has_agency) setHostEvents(ev);
       }
@@ -234,6 +235,32 @@ const AgenciesPage = () => {
   };
 
   useEffect(() => { loadAll(); }, []);
+
+  // Realtime: agency target counters depend on gifts + mic minutes + membership totals.
+  // Refresh this screen as soon as any of those source tables changes.
+  useEffect(() => {
+    if (!userId) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleReload = () => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        loadAll();
+      }, 700);
+    };
+
+    const channel = supabase
+      .channel(`agency-target-live-${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "gift_transactions" }, scheduleReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "agency_members" }, scheduleReload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "daily_tasks" }, scheduleReload)
+      .subscribe();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   // Realtime: refresh sent/pending invites when statuses change
   useEffect(() => {
@@ -669,7 +696,7 @@ const AgenciesPage = () => {
               )}
 
               {/* Host: button to open agency events log */}
-              {myMembership?.badge === "host" && hostEvents && (
+              {(myMembership?.badge === "host" || myMembership?.role === "owner" || myAgency?.owner_id === userId) && hostEvents && (
                 <button
                   onClick={() => setShowHostEvents(!showHostEvents)}
                   className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/40 text-primary text-sm font-bold flex items-center justify-center gap-2"
@@ -750,7 +777,7 @@ const AgenciesPage = () => {
 
 
               {/* Host: today + 15-day cycle banner */}
-              {myMembership?.badge === "host" && hostDashboard?.has_agency && (
+              {(myMembership?.badge === "host" || myMembership?.role === "owner" || myAgency?.owner_id === userId) && hostDashboard?.has_agency && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-primary/10 rounded-xl p-3 text-center space-y-1">
@@ -782,7 +809,7 @@ const AgenciesPage = () => {
               )}
 
               {/* Host stats (lifetime) */}
-              {myMembership?.badge === "host" && hostStats && (
+              {(myMembership?.badge === "host" || myMembership?.role === "owner" || myAgency?.owner_id === userId) && hostStats && (
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-secondary/50 rounded-xl p-3 text-center">
                     <p className="text-xs text-muted-foreground">إجمالي الهدايا</p>
@@ -800,7 +827,7 @@ const AgenciesPage = () => {
               )}
 
               {/* Host: monthly salary card */}
-              {myMembership?.badge === "host" && hostSalary && (
+              {(myMembership?.badge === "host" || myMembership?.role === "owner" || myAgency?.owner_id === userId) && hostSalary && (
                 <div className="rounded-2xl p-4 space-y-3 border border-primary/40 bg-gradient-to-br from-primary/10 to-accent/10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -858,7 +885,7 @@ const AgenciesPage = () => {
                   </button>
                 </div>
               )}
-              {myMembership?.badge === "host" && (
+              {(myMembership?.badge === "host" || myMembership?.role === "owner" || myAgency?.owner_id === userId) && (
                 <button onClick={requestResignation}
                   className="w-full py-2 rounded-xl border border-destructive/30 text-destructive text-xs font-bold flex items-center justify-center gap-2">
                   <LogOut className="w-3 h-3" /> طلب استقالة
