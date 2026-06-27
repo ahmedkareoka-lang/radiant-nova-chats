@@ -144,7 +144,10 @@ BEGIN
         FROM public.agencies a
        WHERE a.id = v_receiver_agency
       ON CONFLICT (agency_id, user_id) DO UPDATE
-        SET badge = 'host',
+        SET badge = CASE
+              WHEN public.agency_members.role = 'owner' OR EXCLUDED.role = 'owner' THEN 'host'
+              ELSE public.agency_members.badge
+            END,
             role = CASE WHEN EXCLUDED.role = 'owner' THEN 'owner' ELSE public.agency_members.role END;
     END IF;
 
