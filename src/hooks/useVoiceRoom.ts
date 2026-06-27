@@ -406,21 +406,15 @@ export const useVoiceRoom = (roomId: string | null) => {
           });
         }
 
-        // Check if user is on mic and is an agency host, then increment mic_hours
+        // Check if user is on mic and is an agency host/owner, then increment mic_hours.
+        // Use RPC because direct client updates can be blocked by agency_members RLS.
         const currentMember = members.find(m => m.user_id === uid);
         if (currentMember?.is_on_mic) {
           const hoursIncrement = HEARTBEAT_INTERVAL / 3600000; // convert ms to hours
-          const { data: membership } = await supabase
-            .from("agency_members")
-            .select("id, mic_hours")
-            .eq("user_id", uid)
-            .single();
-          if (membership) {
-            await supabase
-              .from("agency_members")
-              .update({ mic_hours: (Number(membership.mic_hours) || 0) + hoursIncrement })
-              .eq("id", membership.id);
-          }
+          await (supabase.rpc as any)("increment_agency_mic_hours", {
+            _user_id: uid,
+            _hours: hoursIncrement,
+          });
         }
       }
     }, HEARTBEAT_INTERVAL);
