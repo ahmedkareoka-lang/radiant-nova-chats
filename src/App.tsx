@@ -91,6 +91,7 @@ const PrivacyPage = lazyWithRetry(() => import("./pages/PrivacyPage"));
 const HelpPage = lazyWithRetry(() => import("./pages/HelpPage"));
 const NovaBulkImportPage = lazyWithRetry(() => import("./pages/NovaBulkImportPage"));
 const AgencyQAPage = lazyWithRetry(() => import("./pages/AgencyQAPage"));
+const OAuthConsent = lazyWithRetry(() => import("./pages/OAuthConsent"));
 
 // 🚀 Singleton QueryClient — full config lives in `@/lib/react-query`
 const queryClient = createQueryClient();
@@ -169,6 +170,7 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
         <Route path="/" element={<AuthGate><DeepLinkRedirector /><Index /></AuthGate>} />
         <Route path="/create-room" element={<AuthGate><CreateRoom /></AuthGate>} />
         <Route path="/voice-room" element={<AuthGate><VoiceRoom /></AuthGate>} />
