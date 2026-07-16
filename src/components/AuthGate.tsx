@@ -26,6 +26,20 @@ export const AuthGate = memo(function AuthGate({
   useEffect(() => {
     let mounted = true;
 
+    const applySavedRedirect = (s: Session | null) => {
+      if (!s) return;
+      try {
+        const saved = sessionStorage.getItem("nova-redirect-after-login");
+        if (!saved) return;
+        const here = window.location.pathname + window.location.search;
+        if (saved === here) return;
+        // Only same-origin relative paths
+        if (!saved.startsWith("/") || saved.startsWith("//")) return;
+        sessionStorage.removeItem("nova-redirect-after-login");
+        window.location.replace(saved);
+      } catch {}
+    };
+
     // ⚠️ ALWAYS set up listener BEFORE getSession to avoid race conditions
     const {
       data: { subscription },
@@ -38,6 +52,7 @@ export const AuthGate = memo(function AuthGate({
 
       setSession(newSession);
       onAuthChange?.(newSession);
+      if (event === "SIGNED_IN") applySavedRedirect(newSession);
 
       // 🗑️ مسح الكاش عند تسجيل الخروج لمنع تسرب البيانات
       if (event === "SIGNED_OUT") {
@@ -60,6 +75,7 @@ export const AuthGate = memo(function AuthGate({
         if (!mounted) return;
         setSession(initialSession);
         onAuthChange?.(initialSession);
+        applySavedRedirect(initialSession);
       })
       .catch((error) => {
         console.error("❌ Auth initialization failed:", error);
