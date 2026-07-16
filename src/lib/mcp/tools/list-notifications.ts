@@ -25,7 +25,7 @@ export default defineTool({
     const sb = supabaseForUser(ctx);
     let query = sb
       .from("notifications")
-      .select("id, type, title, body, is_read, created_at")
+      .select("id, type, title, message, is_read, created_at")
       .eq("user_id", ctx.getUserId())
       .order("created_at", { ascending: false })
       .limit(limit ?? 20);
