@@ -256,9 +256,9 @@ const Index = () => {
             </div>
           )}
           {/* Banner Carousel (Soulmatch style with auto-rotation) */}
-          {banners.length > 0 ? (
+          {true ? (
             <BannerCarousel
-              banners={banners}
+              banners={[FEATURED_BANNER, ...banners]}
               onBannerClick={(b) => {
                 if (b.link_url) window.location.href = b.link_url;
               }}
