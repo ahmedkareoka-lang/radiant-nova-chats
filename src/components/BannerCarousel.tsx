@@ -8,6 +8,7 @@ interface Banner {
   link_url?: string | null;
   title?: string;
   description?: string | null;
+  featured?: boolean;
 }
 
 interface BannerCarouselProps {
