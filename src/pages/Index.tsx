@@ -15,6 +15,16 @@ import { usePresence } from "@/hooks/usePresence";
 import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import loxBanner from "@/assets/lox-supporter-banner.png.asset.json";
+
+const FEATURED_BANNER = {
+  id: "featured-lox-supporter",
+  image_url: loxBanner.url,
+  title: "أهلاً بك يا LOX — الداعم الأكبر",
+  description: "إلى أكبر داعم، وسند هذه الرحلة، ولشخص عزيز جداً على القلب.\nلك كل التقدير والاحترام 🔥",
+  featured: true,
+};
+
 
 
 const TOP_TABS = [
