@@ -115,7 +115,9 @@ export default function BannerCarousel({ banners, onBannerClick }: BannerCarouse
             ))}
           </div>
         )}
+        </div>
       </div>
+
 
       {/* Fullscreen banner modal */}
       <AnimatePresence>
