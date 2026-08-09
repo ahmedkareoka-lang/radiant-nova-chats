@@ -8,6 +8,7 @@ interface Banner {
   link_url?: string | null;
   title?: string;
   description?: string | null;
+  featured?: boolean;
 }
 
 interface BannerCarouselProps {
@@ -40,9 +41,24 @@ export default function BannerCarousel({ banners, onBannerClick }: BannerCarouse
     onBannerClick?.(b);
   };
 
+  const isFeatured = !!current.featured;
+
   return (
     <>
-      <div className="relative w-full h-32 rounded-2xl overflow-hidden mb-4">
+      <div
+        className={`relative w-full mb-4 rounded-2xl overflow-hidden transition-all duration-500 ${
+          isFeatured ? "h-36 p-[2px]" : "h-32"
+        }`}
+        style={
+          isFeatured
+            ? {
+                background: "linear-gradient(135deg, hsl(20 100% 55%), hsl(40 100% 60%), hsl(12 95% 45%))",
+                boxShadow: "0 0 28px hsl(24 100% 55% / 0.55), 0 0 70px hsl(14 100% 50% / 0.35)",
+              }
+            : undefined
+        }
+      >
+        <div className="relative w-full h-full rounded-2xl overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={current.id}
@@ -54,9 +70,38 @@ export default function BannerCarousel({ banners, onBannerClick }: BannerCarouse
             onClick={() => handleBannerTap(current)}
           >
             <img loading="lazy" decoding="async" src={current.image_url} alt={current.title || "banner"} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
+            {isFeatured ? (
+              <>
+                {/* Fiery orange wash */}
+                <div
+                  className="absolute inset-0 pointer-events-none mix-blend-overlay"
+                  style={{ background: "linear-gradient(120deg, hsl(18 100% 50% / 0.55), transparent 55%, hsl(38 100% 55% / 0.45))" }}
+                />
+                {/* Sweeping light beam */}
+                <motion.div
+                  className="absolute inset-y-0 w-1/3 pointer-events-none"
+                  style={{ background: "linear-gradient(90deg, transparent, hsl(40 100% 75% / 0.55), transparent)" }}
+                  animate={{ x: ["-120%", "420%"] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                {/* Pulsing inner fire glow */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none rounded-2xl"
+                  animate={{ opacity: [0.35, 0.8, 0.35] }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ boxShadow: "inset 0 0 40px hsl(22 100% 55% / 0.8)" }}
+                />
+                <span className="absolute top-2 right-2 z-10 text-[10px] font-black px-2 py-1 rounded-full text-white"
+                  style={{ background: "linear-gradient(135deg, hsl(14 95% 48%), hsl(38 100% 55%))", boxShadow: "0 0 14px hsl(24 100% 55% / 0.8)" }}>
+                  🔥 مميز
+                </span>
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent pointer-events-none" />
+            )}
           </motion.div>
         </AnimatePresence>
+
 
         {banners.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
@@ -70,7 +115,9 @@ export default function BannerCarousel({ banners, onBannerClick }: BannerCarouse
             ))}
           </div>
         )}
+        </div>
       </div>
+
 
       {/* Fullscreen banner modal */}
       <AnimatePresence>
