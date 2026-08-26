@@ -27,10 +27,12 @@ export function useLevelUpDetector() {
 
   useEffect(() => {
     let channel: any = null;
+    let cancelled = false;
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || cancelled) return;
+
       userIdRef.current = user.id;
 
       const { data: prof } = await supabase
